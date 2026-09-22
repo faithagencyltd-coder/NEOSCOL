@@ -1,6 +1,6 @@
 import type { Permission } from "@/config/permissions";
 
-export type NavIcon = "dashboard" | "account";
+export type NavIcon = "dashboard" | "account" | "students" | "enrollments" | "guardians" | "classes" | "structure" | "forms";
 
 export type NavItem = {
   href: string;
@@ -21,6 +21,17 @@ export const NAVIGATION: NavSection[] = [
   {
     label: "Pilotage",
     items: [{ href: "/tableau-de-bord", label: "Tableau de bord", icon: "dashboard", anyOf: [], keywords: "accueil statistiques" }],
+  },
+  {
+    label: "Scolarité",
+    items: [
+      { href: "/eleves", label: "Élèves", icon: "students", anyOf: ["students.read"], keywords: "dossier matricule" },
+      { href: "/inscriptions", label: "Inscriptions", icon: "enrollments", anyOf: ["enrollments.read"], keywords: "réinscription validation" },
+      { href: "/parents", label: "Parents et tuteurs", icon: "guardians", anyOf: ["guardians.read"], keywords: "famille tuteur" },
+      { href: "/classes", label: "Classes", icon: "classes", anyOf: ["academic.read"], keywords: "effectif session" },
+      { href: "/structure", label: "Structure académique", icon: "structure", anyOf: ["academic.manage"], keywords: "années périodes niveaux filières matières salles" },
+      { href: "/formulaires", label: "Formulaires", icon: "forms", anyOf: ["forms.manage"], keywords: "champs personnalisés pièces" },
+    ],
   },
   {
     label: "Compte",

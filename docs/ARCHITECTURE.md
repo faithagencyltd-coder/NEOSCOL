@@ -143,6 +143,13 @@ permission explicite.
 - **Mutations** par Server Actions typées retournant un `ActionResult`
   (`{ ok: true, data } | { ok: false, error, fieldErrors }`), consommées avec
   `useActionState`.
+- **Formulaires sans réinitialisation forcée** (D-13) : React 19 vide les champs
+  après chaque action de formulaire, même en cas d'erreur. Les formulaires
+  passent par `ActionForm` (`src/components/shared/action-form.tsx`), qui
+  soumet sans réinitialisation : la saisie est conservée si la validation échoue.
+- **Opérations multi-tables atomiques** (D-14) : création d'un dossier élève +
+  parent, dossier d'inscription complet, validation + facture sont des fonctions
+  SQL `SECURITY INVOKER` (une transaction, RLS appliquée) : tout ou rien.
 - **URL = état** pour la recherche, les filtres, le tri et la pagination
   (`?q=&classe=&page=`) : partageable, rechargeable, compatible SSR.
 - **Design system** dans `src/components/ui` (boutons, champs, tableaux,

@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 
+import { ActionForm } from "@/components/shared/action-form";
 import { SubmitButton } from "@/components/shared/submit-button";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -11,8 +12,8 @@ import { requestPhoneOtp, verifyPhoneOtp } from "@/features/auth/actions";
 
 /** Connexion parents / élèves : téléphone puis code à usage unique (SMS). */
 export function PhoneSignInForm({ next }: { next?: string }) {
-  const [requestState, requestAction] = useActionState(requestPhoneOtp, null);
-  const [verifyState, verifyAction] = useActionState(verifyPhoneOtp, null);
+  const [requestState, requestAction, requestPending] = useActionState(requestPhoneOtp, null);
+  const [verifyState, verifyAction, verifyPending] = useActionState(verifyPhoneOtp, null);
   const [editing, setEditing] = useState(false);
 
   const phone = requestState?.ok && !editing ? requestState.data?.phone : undefined;
@@ -20,7 +21,15 @@ export function PhoneSignInForm({ next }: { next?: string }) {
   if (!phone) {
     const errors = requestState && !requestState.ok ? requestState.fieldErrors : undefined;
     return (
-      <form action={(formData) => { setEditing(false); requestAction(formData); }} className="grid gap-4" noValidate>
+      <ActionForm
+        dispatch={(formData) => {
+          setEditing(false);
+          requestAction(formData);
+        }}
+        pending={requestPending}
+        className="grid gap-4"
+        noValidate
+      >
         {requestState && !requestState.ok ? <Alert tone="danger">{requestState.message}</Alert> : null}
         <FormField id="phone" label="Numéro de téléphone" hint="Format international, ex. +225 07 00 00 00 01" errors={errors?.phone}>
           <Input
@@ -38,13 +47,13 @@ export function PhoneSignInForm({ next }: { next?: string }) {
         <SubmitButton className="w-full" size="lg" pendingLabel="Envoi du code…">
           Recevoir un code par SMS
         </SubmitButton>
-      </form>
+      </ActionForm>
     );
   }
 
   const errors = verifyState && !verifyState.ok ? verifyState.fieldErrors : undefined;
   return (
-    <form action={verifyAction} className="grid gap-4" noValidate>
+    <ActionForm dispatch={verifyAction} pending={verifyPending} className="grid gap-4" noValidate>
       <Alert tone="info">{requestState?.message}</Alert>
       {verifyState && !verifyState.ok ? <Alert tone="danger">{verifyState.message}</Alert> : null}
       <input type="hidden" name="phone" value={phone} />
@@ -70,6 +79,6 @@ export function PhoneSignInForm({ next }: { next?: string }) {
       <Button type="button" variant="link" onClick={() => setEditing(true)}>
         Modifier le numéro
       </Button>
-    </form>
+    </ActionForm>
   );
 }

@@ -12,6 +12,7 @@ import {
   Wallet,
 } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Badge } from "@/components/ui/badge";
@@ -114,14 +115,17 @@ export default async function DashboardPage() {
     (overview.overdue_invoices ?? 0) > 0 && {
       label: `${overview.overdue_invoices} facture(s) en retard de paiement`,
       tone: "danger" as const,
+      href: undefined,
     },
     (overview.enrollments_pending ?? 0) > 0 && {
       label: `${overview.enrollments_pending} inscription(s) en attente de validation`,
       tone: "warning" as const,
+      href: "/inscriptions?statut=pending",
     },
     (overview.absences_today ?? 0) > 0 && {
       label: `${overview.absences_today} absence(s) aujourd'hui`,
       tone: "info" as const,
+      href: undefined,
     },
   ].filter((alert) => alert !== false);
   const showAlerts = overview.enrollments_pending !== undefined || overview.overdue_invoices !== undefined;
@@ -301,7 +305,13 @@ export default async function DashboardPage() {
                       )}
                     >
                       <AlertTriangle className="size-[18px] shrink-0" aria-hidden />
-                      <span className="text-foreground">{alert.label}</span>
+                      {alert.href ? (
+                        <Link href={alert.href} className="flex-1 text-foreground hover:underline">
+                          {alert.label}
+                        </Link>
+                      ) : (
+                        <span className="text-foreground">{alert.label}</span>
+                      )}
                     </li>
                   ))}
                 </ul>

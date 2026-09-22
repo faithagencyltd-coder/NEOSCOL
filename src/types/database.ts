@@ -250,10 +250,24 @@ export type Database = {
             referencedColumns: ["organization_id", "id"]
           },
           {
+            foreignKeyName: "assessments_organization_id_class_id_fkey"
+            columns: ["organization_id", "class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
             foreignKeyName: "assessments_organization_id_class_subject_id_fkey"
             columns: ["organization_id", "class_subject_id"]
             isOneToOne: false
             referencedRelation: "class_subjects"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "assessments_organization_id_subject_id_fkey"
+            columns: ["organization_id", "subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
             referencedColumns: ["organization_id", "id"]
           }
         ]
@@ -3080,6 +3094,20 @@ export type Database = {
       }
     }
     Functions: {
+      add_student_guardian: {
+        Args: {
+          p_student_id: string
+          p_guardian: Json
+        }
+        Returns: string
+      }
+      create_enrollment_application: {
+        Args: {
+          p_organization_id: string
+          p_payload: Json
+        }
+        Returns: string
+      }
       create_organization: {
         Args: {
           p_name: string
@@ -3093,11 +3121,31 @@ export type Database = {
         }
         Returns: string
       }
+      create_student_record: {
+        Args: {
+          p_organization_id: string
+          p_payload: Json
+        }
+        Returns: string
+      }
       dashboard_overview: {
         Args: {
           p_organization_id: string
         }
         Returns: Json
+      }
+      enrollment_fee_preview: {
+        Args: {
+          p_enrollment_id: string
+        }
+        Returns: {
+          fee_rate_id: string
+          fee_type_id: string
+          fee_type_name: string
+          category: string
+          amount: number
+          installment_plan: Json
+        }[]
       }
       global_search: {
         Args: {
@@ -3139,6 +3187,13 @@ export type Database = {
           p_org: string
         }
         Returns: string[]
+      }
+      validate_enrollment: {
+        Args: {
+          p_enrollment_id: string
+          p_generate_invoice?: boolean
+        }
+        Returns: Json
       }
       verify_document: {
         Args: {

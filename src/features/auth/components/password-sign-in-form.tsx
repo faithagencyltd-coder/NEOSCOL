@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
+import { ActionForm } from "@/components/shared/action-form";
 import { SubmitButton } from "@/components/shared/submit-button";
 import { Alert } from "@/components/ui/alert";
 import { FormField } from "@/components/ui/form-field";
@@ -10,11 +11,11 @@ import { Input } from "@/components/ui/input";
 import { signInWithPassword } from "@/features/auth/actions";
 
 export function PasswordSignInForm({ next }: { next?: string }) {
-  const [state, action] = useActionState(signInWithPassword, null);
+  const [state, action, pending] = useActionState(signInWithPassword, null);
   const errors = state && !state.ok ? state.fieldErrors : undefined;
 
   return (
-    <form action={action} className="grid gap-4" noValidate>
+    <ActionForm dispatch={action} pending={pending} className="grid gap-4" noValidate>
       {state && !state.ok ? <Alert tone="danger">{state.message}</Alert> : null}
       <input type="hidden" name="suite" value={next ?? ""} />
       <FormField id="email" label="Adresse e-mail" errors={errors?.email}>
@@ -48,6 +49,6 @@ export function PasswordSignInForm({ next }: { next?: string }) {
       <SubmitButton className="w-full" size="lg" pendingLabel="Connexion…">
         Se connecter
       </SubmitButton>
-    </form>
+    </ActionForm>
   );
 }

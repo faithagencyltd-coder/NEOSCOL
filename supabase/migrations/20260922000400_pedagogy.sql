@@ -28,6 +28,8 @@ create table public.assessments (
   created_by uuid default auth.uid() references public.profiles (id) on delete set null,
   unique (organization_id, id),
   foreign key (organization_id, class_subject_id) references public.class_subjects (organization_id, id) on delete restrict,
+  foreign key (organization_id, class_id) references public.classes (organization_id, id) on delete restrict,
+  foreign key (organization_id, subject_id) references public.subjects (organization_id, id) on delete restrict,
   foreign key (organization_id, academic_period_id) references public.academic_periods (organization_id, id) on delete restrict
 );
 create index assessments_class_subject_idx on public.assessments (class_subject_id, academic_period_id);
