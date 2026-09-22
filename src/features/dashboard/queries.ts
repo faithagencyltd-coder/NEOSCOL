@@ -65,3 +65,32 @@ export async function getMyTeaching(organizationId: string, userId: string) {
     }))
     .sort((a, b) => a.className.localeCompare(b.className, "fr") || a.subjectName.localeCompare(b.subjectName, "fr"));
 }
+
+export type InvoiceSummary = { paid: number; partial: number; unpaid: number; outstanding: number };
+
+/** Répartition des factures émises par situation de paiement (RLS : finance.read). */
+export async function getInvoiceSummary(organizationId: string): Promise<InvoiceSummary | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("invoice_status_summary", { p_organization_id: organizationId });
+  // Pas de faux zéros : en cas d'erreur, la carte n'est pas affichée.
+  if (error) return null;
+  const summary: InvoiceSummary = { paid: 0, partial: 0, unpaid: 0, outstanding: 0 };
+  for (const row of data) {
+    if (row.payment_status === "paid" || row.payment_status === "partial" || row.payment_status === "unpaid") {
+      summary[row.payment_status] = Number(row.invoices);
+    }
+    summary.outstanding += Number(row.balance);
+  }
+  return summary;
+}
+
+export async function getRecentPayments(organizationId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("payments")
+    .select("id, number, amount, method, paid_at, status, payer_name")
+    .eq("organization_id", organizationId)
+    .order("paid_at", { ascending: false })
+    .limit(5);
+  return data ?? [];
+}

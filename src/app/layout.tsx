@@ -1,7 +1,11 @@
 import type { Metadata, Viewport } from "next";
+import { DM_Sans, Poppins } from "next/font/google";
 import { Toaster } from "sonner";
 
 import "./globals.css";
+
+const body = DM_Sans({ subsets: ["latin"], variable: "--font-body", display: "swap" });
+const heading = Poppins({ subsets: ["latin"], weight: ["500", "600", "700"], variable: "--font-heading", display: "swap" });
 
 export const metadata: Metadata = {
   title: { default: "NéoScol", template: "%s · NéoScol" },
@@ -11,14 +15,14 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f6f7fb" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f7fc" },
     { media: "(prefers-color-scheme: dark)", color: "#0b1020" },
   ],
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fr">
+    <html lang="fr" className={`${body.variable} ${heading.variable}`}>
       <body className="min-h-dvh">
         {children}
         <Toaster position="top-right" richColors closeButton />

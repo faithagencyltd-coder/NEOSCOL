@@ -22,9 +22,9 @@ export function MobileNav({ sections, organizationName }: { sections: NavSection
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40 lg:hidden" />
         <Dialog.Content className="fixed inset-y-0 left-0 z-50 flex w-[82vw] max-w-xs flex-col gap-6 bg-sidebar p-4 shadow-xl lg:hidden">
           <div className="flex items-center justify-between">
-            <Logo inverted />
+            <Logo inverted tagline />
             <Dialog.Close asChild>
-              <Button variant="ghost" size="icon" className="text-white hover:bg-sidebar-active" aria-label="Fermer le menu">
+              <Button variant="ghost" size="icon" className="text-white hover:bg-sidebar-muted" aria-label="Fermer le menu">
                 <X />
               </Button>
             </Dialog.Close>

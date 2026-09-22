@@ -1,3 +1,4 @@
+import { Lock } from "lucide-react";
 import type { Metadata } from "next";
 
 import { Alert } from "@/components/ui/alert";
@@ -13,8 +14,8 @@ export default async function SignInPage({ searchParams }: PageProps<"/connexion
   return (
     <div className="grid gap-6">
       <div className="grid gap-1.5">
-        <h1 className="text-2xl font-semibold tracking-tight">Connexion</h1>
-        <p className="text-sm text-muted-foreground">Accédez à l&apos;espace de votre établissement.</p>
+        <h1 className="text-2xl font-semibold">Connexion à votre espace</h1>
+        <p className="text-sm text-muted-foreground">Accédez au portail NéoScol de votre établissement.</p>
       </div>
       {expired ? (
         <Alert tone="warning" title="Lien expiré">
@@ -22,8 +23,9 @@ export default async function SignInPage({ searchParams }: PageProps<"/connexion
         </Alert>
       ) : null}
       <SignInTabs next={next} />
-      <p className="text-center text-xs text-muted-foreground">
-        Les comptes sont créés par votre établissement. Si vous n&apos;en avez pas, contactez son secrétariat.
+      <p className="flex items-start gap-2.5 rounded-xl bg-background p-3 text-xs text-muted-foreground">
+        <Lock className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+        Les comptes sont créés par votre établissement. Première connexion ? Contactez son secrétariat.
       </p>
     </div>
   );

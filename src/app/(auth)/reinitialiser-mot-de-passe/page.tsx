@@ -10,7 +10,7 @@ export default async function ResetPasswordPage() {
   return (
     <div className="grid gap-6">
       <div className="grid gap-1.5">
-        <h1 className="text-2xl font-semibold tracking-tight">Nouveau mot de passe</h1>
+        <h1 className="text-2xl font-semibold">Nouveau mot de passe</h1>
         <p className="text-sm text-muted-foreground">Choisissez un mot de passe que vous n&apos;utilisez nulle part ailleurs.</p>
       </div>
       <ResetPasswordForm />

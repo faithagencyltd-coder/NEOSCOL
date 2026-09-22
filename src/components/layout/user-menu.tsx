@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, Check, LogOut, UserRound } from "lucide-react";
+import { Building2, Check, ChevronDown, LogOut, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useTransition } from "react";
 
@@ -19,11 +19,13 @@ import type { OrganizationSummary } from "@/lib/auth/session";
 export function UserMenu({
   name,
   email,
+  roleLabel,
   organizations,
   activeOrganizationId,
 }: {
   name: string;
   email: string | null;
+  roleLabel: string;
   organizations: OrganizationSummary[];
   activeOrganizationId: string;
 }) {
@@ -37,9 +39,13 @@ export function UserMenu({
   };
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg p-1 pr-2 hover:bg-surface-muted" aria-label="Menu du compte">
+      <DropdownMenuTrigger className="flex items-center gap-2.5 rounded-xl p-1 pr-2 hover:bg-surface-muted" aria-label="Menu du compte">
         <Avatar name={name} />
-        <span className="hidden max-w-40 truncate text-sm font-medium md:inline">{name}</span>
+        <span className="hidden flex-col items-start leading-tight md:flex">
+          <span className="max-w-44 truncate text-sm font-semibold">{name}</span>
+          <span className="max-w-44 truncate text-xs text-muted-foreground">{roleLabel}</span>
+        </span>
+        <ChevronDown className="hidden size-4 text-muted-foreground md:block" aria-hidden />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
         <div className="px-2.5 py-2">

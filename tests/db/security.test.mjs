@@ -352,4 +352,17 @@ describe("Vérification publique et recherche", () => {
       assert.match(await rejects(q("select dashboard_overview($1)", [ORG_DEMO])), /non autorisé/);
     });
   });
+
+  test("la synthèse des factures suit les droits financiers", async () => {
+    await as(USERS.accountant, async (q) => {
+      const rows = await q("select payment_status, invoices from invoice_status_summary($1) order by 1", [ORG_DEMO]);
+      assert.deepEqual(
+        rows.map((r) => [r.payment_status, Number(r.invoices)]),
+        [["paid", 6], ["partial", 13], ["unpaid", 5]],
+      );
+    });
+    await as(USERS.teacher, async (q) => {
+      assert.equal((await q("select * from invoice_status_summary($1)", [ORG_DEMO])).length, 0);
+    });
+  });
 });

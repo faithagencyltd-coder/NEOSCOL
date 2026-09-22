@@ -30,14 +30,14 @@ export function CommandPalette({ sections }: { sections: NavSection[] }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex h-10 w-full max-w-md items-center gap-2 rounded-lg border border-border bg-surface-muted px-3 text-sm text-muted-foreground transition-colors hover:border-input"
+        className="flex h-11 w-full max-w-xl items-center gap-2.5 rounded-xl border border-border bg-background px-3.5 text-sm text-muted-foreground transition-colors hover:border-input"
       >
         <Search className="size-4" aria-hidden />
         <span className="flex-1 truncate text-left">
           <span className="sm:hidden">Rechercher…</span>
-          <span className="hidden sm:inline">Rechercher un module…</span>
+          <span className="hidden sm:inline">Rechercher une fonctionnalité…</span>
         </span>
-        <kbd className="hidden rounded border border-border bg-surface px-1.5 text-[11px] font-medium sm:inline">Ctrl K</kbd>
+        <kbd className="hidden rounded-md border border-border bg-surface px-1.5 py-0.5 text-[11px] font-semibold sm:inline">Ctrl K</kbd>
       </button>
       <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Portal>

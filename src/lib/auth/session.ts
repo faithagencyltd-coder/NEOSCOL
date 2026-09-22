@@ -23,6 +23,8 @@ export type SessionContext = {
   organization: OrganizationSummary | null;
   permissions: ReadonlySet<Permission>;
   personas: ReadonlySet<Persona>;
+  /** Libellés des rôles dans l'établissement actif (ex. « Direction »). */
+  roleNames: string[];
 };
 
 /**
@@ -42,7 +44,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext | null> 
     supabase
       .from("memberships")
       .select(
-        "status, organization:organizations(id, name, short_name, code, type, currency, locale, timezone, is_demo, settings), membership_roles(role:roles(persona))",
+        "status, organization:organizations(id, name, short_name, code, type, currency, locale, timezone, is_demo, settings), membership_roles(role:roles(persona, name))",
       )
       .eq("user_id", user.id)
       .eq("status", "active"),
@@ -60,6 +62,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext | null> 
 
   let permissions = new Set<Permission>();
   let personas = new Set<Persona>();
+  let roleNames: string[] = [];
   if (organization) {
     const { data: codes } = await supabase.rpc("my_permissions", { p_org: organization.id });
     permissions = new Set((codes ?? []).filter(isPermission));
@@ -69,6 +72,9 @@ export const getSessionContext = cache(async (): Promise<SessionContext | null> 
         .map((mr) => mr.role?.persona)
         .filter((p): p is Persona => p === "staff" || p === "teacher" || p === "parent" || p === "student"),
     );
+    roleNames = (membership?.membership_roles ?? [])
+      .map((mr) => mr.role?.name)
+      .filter((name): name is string => Boolean(name));
   }
 
   return {
@@ -78,6 +84,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext | null> 
     organization,
     permissions,
     personas,
+    roleNames,
   };
 });
 

@@ -3113,6 +3113,16 @@ export type Database = {
           score: number
         }[]
       }
+      invoice_status_summary: {
+        Args: {
+          p_organization_id: string
+        }
+        Returns: {
+          payment_status: string
+          invoices: number
+          balance: number
+        }[]
+      }
       log_event: {
         Args: {
           p_action: string

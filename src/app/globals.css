@@ -4,36 +4,38 @@
    NéoScol — jetons du design system (clair / sombre)
    ========================================================================== */
 :root {
-  --background: #f6f7fb;
+  --background: #f4f7fc;
   --surface: #ffffff;
-  --surface-muted: #f1f3f8;
-  --foreground: #0f172a;
-  --muted-foreground: #5b6477;
-  --border: #e3e7ef;
-  --input: #d5dbe6;
-  --ring: #3b5bdb;
+  --surface-muted: #eef2f9;
+  --foreground: #0f1b3d;
+  --muted-foreground: #5b6b8c;
+  --border: #e3e9f4;
+  --input: #d5ddec;
+  --ring: #1d63ed;
 
-  --primary: #2f4fd1;
-  --primary-hover: #2743b5;
+  --primary: #1d63ed;
+  --primary-hover: #1350c4;
   --primary-foreground: #ffffff;
-  --primary-soft: #e8edff;
+  --primary-soft: #e8f0fe;
 
-  --success: #147a4b;
-  --success-soft: #e3f5ec;
-  --warning: #9a5b00;
-  --warning-soft: #fff3db;
-  --danger: #c02929;
-  --danger-soft: #fde8e8;
-  --info: #1f6fb2;
-  --info-soft: #e3f0fb;
+  --success: #15803d;
+  --success-soft: #dcfce7;
+  --warning: #b45309;
+  --warning-soft: #fff1dc;
+  --danger: #b91c1c;
+  --danger-soft: #fee2e2;
+  --info: #0369a1;
+  --info-soft: #e0f2fe;
 
-  --chart-1: #2f4fd1;
-  --sidebar: #0f1b3d;
-  --sidebar-foreground: #c9d2ea;
-  --sidebar-active: #1e2d5c;
+  --chart-1: #1d63ed;
+  --sidebar: #0b2559;
+  --sidebar-foreground: #c7d3f0;
+  --sidebar-active: #1d63ed;
   --sidebar-active-foreground: #ffffff;
 
-  --radius: 0.625rem;
+  --accent: #f59e0b;
+  --sidebar-muted: #122f6b;
+  --radius: 0.75rem;
   color-scheme: light;
 }
 
@@ -62,8 +64,10 @@
     --chart-1: #6d87ff;
     --sidebar: #0a1226;
     --sidebar-foreground: #aab4cf;
-    --sidebar-active: #1a2548;
+    --sidebar-active: #2f6ff0;
     --sidebar-active-foreground: #ffffff;
+    --accent: #f5a524;
+    --sidebar-muted: #13244a;
     color-scheme: dark;
   }
 }
@@ -92,8 +96,10 @@
   --chart-1: #6d87ff;
   --sidebar: #0a1226;
   --sidebar-foreground: #aab4cf;
-  --sidebar-active: #1a2548;
+  --sidebar-active: #2f6ff0;
   --sidebar-active-foreground: #ffffff;
+  --accent: #f5a524;
+  --sidebar-muted: #13244a;
   color-scheme: dark;
 }
 
@@ -123,8 +129,11 @@
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-active: var(--sidebar-active);
   --color-sidebar-active-foreground: var(--sidebar-active-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-accent: var(--accent);
   --radius-lg: var(--radius);
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-heading), var(--font-body), ui-sans-serif, sans-serif;
 }
 
 html,
@@ -151,4 +160,11 @@ body {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+h1,
+h2,
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
 }

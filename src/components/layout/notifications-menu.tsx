@@ -18,7 +18,7 @@ export function NotificationsMenu({ items, unread, timezone }: { items: Notifica
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative" aria-label={`Notifications (${unread} non lues)`}>
+        <Button variant="ghost" size="icon" className="relative rounded-xl bg-surface-muted hover:bg-border" aria-label={`Notifications (${unread} non lues)`}>
           <Bell />
           {unread > 0 ? (
             <span className="absolute right-1.5 top-1.5 flex min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold leading-4 text-white">
