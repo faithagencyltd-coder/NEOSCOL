@@ -1,26 +1,154 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   NéoScol — jetons du design system (clair / sombre)
+   ========================================================================== */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f6f7fb;
+  --surface: #ffffff;
+  --surface-muted: #f1f3f8;
+  --foreground: #0f172a;
+  --muted-foreground: #5b6477;
+  --border: #e3e7ef;
+  --input: #d5dbe6;
+  --ring: #3b5bdb;
+
+  --primary: #2f4fd1;
+  --primary-hover: #2743b5;
+  --primary-foreground: #ffffff;
+  --primary-soft: #e8edff;
+
+  --success: #147a4b;
+  --success-soft: #e3f5ec;
+  --warning: #9a5b00;
+  --warning-soft: #fff3db;
+  --danger: #c02929;
+  --danger-soft: #fde8e8;
+  --info: #1f6fb2;
+  --info-soft: #e3f0fb;
+
+  --chart-1: #2f4fd1;
+  --sidebar: #0f1b3d;
+  --sidebar-foreground: #c9d2ea;
+  --sidebar-active: #1e2d5c;
+  --sidebar-active-foreground: #ffffff;
+
+  --radius: 0.625rem;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --background: #0b1020;
+    --surface: #121a2e;
+    --surface-muted: #18223a;
+    --foreground: #e6eaf4;
+    --muted-foreground: #9aa4bb;
+    --border: #243049;
+    --input: #2d3a57;
+    --ring: #7b93ff;
+    --primary: #6d87ff;
+    --primary-hover: #8499ff;
+    --primary-foreground: #0b1020;
+    --primary-soft: #1c2750;
+    --success: #4cc38a;
+    --success-soft: #0f2c20;
+    --warning: #f0b44c;
+    --warning-soft: #33250b;
+    --danger: #ff7a7a;
+    --danger-soft: #3a1418;
+    --info: #6cb4f0;
+    --info-soft: #102a40;
+    --chart-1: #6d87ff;
+    --sidebar: #0a1226;
+    --sidebar-foreground: #aab4cf;
+    --sidebar-active: #1a2548;
+    --sidebar-active-foreground: #ffffff;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --background: #0b1020;
+  --surface: #121a2e;
+  --surface-muted: #18223a;
+  --foreground: #e6eaf4;
+  --muted-foreground: #9aa4bb;
+  --border: #243049;
+  --input: #2d3a57;
+  --ring: #7b93ff;
+  --primary: #6d87ff;
+  --primary-hover: #8499ff;
+  --primary-foreground: #0b1020;
+  --primary-soft: #1c2750;
+  --success: #4cc38a;
+  --success-soft: #0f2c20;
+  --warning: #f0b44c;
+  --warning-soft: #33250b;
+  --danger: #ff7a7a;
+  --danger-soft: #3a1418;
+  --info: #6cb4f0;
+  --info-soft: #102a40;
+  --chart-1: #6d87ff;
+  --sidebar: #0a1226;
+  --sidebar-foreground: #aab4cf;
+  --sidebar-active: #1a2548;
+  --sidebar-active-foreground: #ffffff;
+  color-scheme: dark;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft: var(--primary-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-chart-1: var(--chart-1);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-active-foreground: var(--sidebar-active-foreground);
+  --radius-lg: var(--radius);
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

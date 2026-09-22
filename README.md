@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NéoScol
 
-## Getting Started
+> Plus qu'un logiciel, une vision pour l'éducation.
 
-First, run the development server:
+Plateforme SaaS multi-établissements de gestion scolaire et de formation :
+écoles, collèges, lycées, universités, instituts et centres de formation.
+
+- **Conception complète** : [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- **Stack** : Next.js 16 (App Router) · React 19 · TypeScript strict · Tailwind CSS 4 · Supabase (PostgreSQL + RLS, Auth, Storage, Realtime)
+
+## État d'avancement
+
+| Phase | Statut |
+|---|---|
+| 0 — Analyse et conception | ✅ |
+| 1 — Structure du projet | ✅ |
+| 2 — Base de données (schéma complet, RLS, seed, tests) | ✅ |
+| 3 — Authentification, rôles, permissions, multi-établissements | ✅ |
+| 4 — Design system et mise en page | ✅ (socle) |
+| 5 — Tableau de bord | ✅ (indicateurs réels par rôle) |
+| 6 → 16 — Modules métier, portails, PWA, tests E2E | à venir |
+
+## Démarrage
+
+Prérequis : Node.js ≥ 20.9 et un projet Supabase (ou `supabase start` avec le CLI Supabase et Docker).
 
 ```bash
+npm install
+cp .env.example .env.local        # renseigner l'URL et les clés Supabase
+supabase db push                  # applique supabase/migrations
+psql "$DATABASE_URL" -f supabase/seed.sql   # optionnel : données de DÉMONSTRATION
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Sans variables Supabase, l'application affiche une page `/configuration` explicative.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Comptes de démonstration (seed)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+⚠ Données **fictives**, établissements marqués `is_demo` (un bandeau l'indique dans l'interface).
+Mot de passe commun : `NeoScol-Demo-2026!`
 
-## Learn More
+| Compte | Rôle |
+|---|---|
+| `admin@demo.neoscol.app` | Administrateur (GS Démo) |
+| `direction@demo.neoscol.app` | Direction |
+| `secretariat@demo.neoscol.app` | Secrétariat |
+| `comptable@demo.neoscol.app` | Comptabilité |
+| `enseignant@demo.neoscol.app` / `enseignante@…` | Enseignants |
+| `parent@demo.neoscol.app` (tél. `+2250700000001`) | Parent de 2 élèves |
+| `eleve@demo.neoscol.app` | Élève |
+| `formation@demo.neoscol.app` | Administrateur d'un 2ᵉ établissement (tests d'isolation) |
+| `superadmin@demo.neoscol.app` | Super administrateur plateforme |
 
-To learn more about Next.js, take a look at the following resources:
+## Commandes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Commande | Rôle |
+|---|---|
+| `npm run dev` / `build` / `start` | Application Next.js |
+| `npm run typecheck` · `npm run lint` | Vérifications TypeScript et ESLint |
+| `npm run db:reset` | Recrée une base PostgreSQL locale de test (émulation Supabase + migrations + seed) |
+| `npm run db:test` | Tests de sécurité et d'invariants (isolation, portées par rôle, finance, audit…) |
+| `npm run db:types` | Régénère `src/types/database.ts` depuis le schéma |
+| `npm run check` | Tout ce qui précède + build |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Les tests base de données utilisent les variables `PG*` (par défaut `postgres:postgres@localhost`).
 
-## Deploy on Vercel
+## Structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+docs/                  Conception et décisions d'architecture
+supabase/migrations/   Schéma PostgreSQL (source de vérité) : tables, RLS, triggers, RPC
+supabase/seed.sql      Données de démonstration
+scripts/db/            Émulation Supabase pour les tests, génération des types
+tests/db/              Tests de sécurité exécutés contre PostgreSQL
+src/app/               Routes (auth), (app), routes techniques
+src/components/        Design system (ui), mise en page (layout), composants partagés
+src/features/          Modules métier : actions, requêtes, schémas, composants
+src/lib/               Supabase, session, permissions, utilitaires
+```
