@@ -1,0 +1,65 @@
+/**
+ * Catalogue des permissions — miroir de la table `permissions`
+ * (supabase/migrations/20260922000200_tenancy_rbac.sql).
+ * La cohérence est vérifiée par tests/db/permissions.test.mjs.
+ */
+export const PERMISSIONS = [
+  "settings.manage",
+  "users.read",
+  "users.manage",
+  "roles.manage",
+  "audit.read",
+  "academic.read",
+  "academic.manage",
+  "staff.read",
+  "staff.manage",
+  "students.read",
+  "students.create",
+  "students.update",
+  "students.archive",
+  "students.medical.read",
+  "students.medical.manage",
+  "guardians.read",
+  "guardians.manage",
+  "conduct.read",
+  "conduct.manage",
+  "enrollments.read",
+  "enrollments.manage",
+  "enrollments.validate",
+  "forms.manage",
+  "grades.read",
+  "grades.enter",
+  "grades.manage",
+  "periods.lock",
+  "report_cards.manage",
+  "report_cards.publish",
+  "attendance.read",
+  "attendance.take",
+  "attendance.manage",
+  "attendance.justify",
+  "timetable.read",
+  "timetable.manage",
+  "finance.read",
+  "finance.fees.manage",
+  "finance.invoices.manage",
+  "finance.payments.create",
+  "finance.payments.cancel",
+  "documents.read",
+  "documents.generate",
+  "documents.revoke",
+  "documents.templates.manage",
+  "communication.announce",
+  "communication.message",
+  "reports.read",
+  "reports.finance",
+  "reports.export",
+  "portal.parent",
+  "portal.student",
+  "assistant.use",
+] as const;
+
+export type Permission = (typeof PERMISSIONS)[number];
+
+export function isPermission(value: string): value is Permission {
+  return (PERMISSIONS as readonly string[]).includes(value);
+}
