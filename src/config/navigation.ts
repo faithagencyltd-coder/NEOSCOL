@@ -1,6 +1,6 @@
 import type { Permission } from "@/config/permissions";
 
-export type NavIcon = "dashboard" | "account" | "students" | "enrollments" | "guardians" | "classes" | "structure" | "forms";
+export type NavIcon = "dashboard" | "account" | "students" | "enrollments" | "guardians" | "classes" | "structure" | "forms" | "timetable" | "attendance" | "grades" | "reportCards";
 
 export type NavItem = {
   href: string;
@@ -31,6 +31,15 @@ export const NAVIGATION: NavSection[] = [
       { href: "/classes", label: "Classes", icon: "classes", anyOf: ["academic.read"], keywords: "effectif session" },
       { href: "/structure", label: "Structure académique", icon: "structure", anyOf: ["academic.manage"], keywords: "années périodes niveaux filières matières salles" },
       { href: "/formulaires", label: "Formulaires", icon: "forms", anyOf: ["forms.manage"], keywords: "champs personnalisés pièces" },
+    ],
+  },
+  {
+    label: "Pédagogie",
+    items: [
+      { href: "/emploi-du-temps", label: "Emploi du temps", icon: "timetable", anyOf: ["timetable.read", "timetable.manage"], keywords: "cours horaires salles" },
+      { href: "/presences", label: "Présences", icon: "attendance", anyOf: ["attendance.take", "attendance.read", "attendance.manage"], keywords: "appel absences retards" },
+      { href: "/notes", label: "Notes", icon: "grades", anyOf: ["grades.read", "grades.enter", "grades.manage"], keywords: "évaluations devoirs saisie" },
+      { href: "/bulletins", label: "Bulletins", icon: "reportCards", anyOf: ["report_cards.manage", "grades.read"], keywords: "moyennes rangs appréciations" },
     ],
   },
   {

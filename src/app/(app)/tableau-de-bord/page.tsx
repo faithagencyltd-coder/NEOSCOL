@@ -26,8 +26,10 @@ import {
   getInvoiceSummary,
   getMyTeaching,
   getRecentPayments,
+  getTodayLessons,
   getVisibleAnnouncements,
 } from "@/features/dashboard/queries";
+import { isoWeekday, todayIn } from "@/lib/dates";
 import { requireOrganization } from "@/lib/auth/guards";
 import { can, displayName } from "@/lib/auth/session";
 import { cn } from "@/lib/utils/cn";
@@ -52,12 +54,14 @@ export default async function DashboardPage() {
   const isTeacher = context.personas.has("teacher");
   const canFinance = can(context, "finance.read");
 
-  const [overview, announcements, teaching, invoiceSummary, payments] = await Promise.all([
+  const today = todayIn(organization.timezone);
+  const [overview, announcements, teaching, invoiceSummary, payments, lessons] = await Promise.all([
     getDashboardOverview(organization.id),
     getVisibleAnnouncements(organization.id),
     isTeacher ? getMyTeaching(organization.id, context.user.id) : Promise.resolve([]),
     canFinance ? getInvoiceSummary(organization.id) : Promise.resolve(null),
     canFinance ? getRecentPayments(organization.id) : Promise.resolve([]),
+    isTeacher ? getTodayLessons(organization.id, context.user.id, isoWeekday(today)) : Promise.resolve([]),
   ]);
 
   const currency = overview.currency ?? organization.currency;
@@ -320,6 +324,42 @@ export default async function DashboardPage() {
           </Card>
         ) : null}
       </div>
+
+      {isTeacher ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Mes cours aujourd&apos;hui</CardTitle>
+            <CardDescription>D&apos;après l&apos;emploi du temps · appel en un clic</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {lessons.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Aucun cours prévu aujourd&apos;hui.</p>
+            ) : (
+              <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                {lessons.map((lesson) => (
+                  <li key={lesson.id} className="flex items-center justify-between gap-3 rounded-xl border border-border p-3">
+                    <span className="grid">
+                      <span className="text-xs font-semibold text-primary">
+                        {lesson.startsAt}–{lesson.endsAt}
+                      </span>
+                      <span className="font-semibold">
+                        {lesson.className} · {lesson.subject}
+                      </span>
+                      {lesson.room ? <span className="text-xs text-muted-foreground">{lesson.room}</span> : null}
+                    </span>
+                    <Link
+                      href={`/presences?onglet=appel&classe=${lesson.classId}&date=${today}&debut=${lesson.startsAt}&fin=${lesson.endsAt}`}
+                      className="shrink-0 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
+                    >
+                      Faire l&apos;appel
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
         {teaching.length > 0 ? (

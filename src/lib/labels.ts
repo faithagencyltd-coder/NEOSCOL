@@ -46,6 +46,16 @@ export const PERIOD_TYPE: Record<string, string> = {
 
 export const CLASS_KIND: Record<string, string> = { class: "Classe", training_session: "Session de formation" };
 
+export const ASSESSMENT_KINDS = {
+  test: "Devoir surveillé",
+  homework: "Devoir / interrogation",
+  exam: "Examen / composition",
+  oral: "Oral",
+  practical: "Travaux pratiques",
+  project: "Projet",
+  other: "Autre",
+} as const;
+
 export function options(record: Record<string, string>) {
   return Object.entries(record).map(([value, label]) => ({ value, label }));
 }

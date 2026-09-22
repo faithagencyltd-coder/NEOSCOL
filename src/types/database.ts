@@ -3101,6 +3101,13 @@ export type Database = {
         }
         Returns: string
       }
+      compute_report_cards: {
+        Args: {
+          p_class_id: string
+          p_period_id: string
+        }
+        Returns: number
+      }
       create_enrollment_application: {
         Args: {
           p_organization_id: string
@@ -3187,6 +3194,24 @@ export type Database = {
           p_org: string
         }
         Returns: string[]
+      }
+      record_attendance: {
+        Args: {
+          p_class_id: string
+          p_session_date: string
+          p_starts_at: string
+          p_ends_at: string
+          p_class_subject_id?: string
+          p_records?: Json
+        }
+        Returns: string
+      }
+      save_grades: {
+        Args: {
+          p_assessment_id: string
+          p_grades: Json
+        }
+        Returns: number
       }
       validate_enrollment: {
         Args: {

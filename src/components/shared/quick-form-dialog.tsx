@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils/cn";
 export type QuickField = {
   name: string;
   label: string;
-  type?: "text" | "number" | "date" | "select" | "textarea" | "checkbox";
+  type?: "text" | "number" | "date" | "time" | "select" | "textarea" | "checkbox";
   required?: boolean;
   options?: { value: string; label: string }[];
   placeholder?: string;

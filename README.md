@@ -19,7 +19,8 @@ Plateforme SaaS multi-établissements de gestion scolaire et de formation :
 | 4 — Design system et mise en page | ✅ (socle) |
 | 5 — Tableau de bord | ✅ (indicateurs réels par rôle) |
 | 6 — Scolarité : élèves, dossier 360°, parents, classes, structure, inscriptions, formulaires | ✅ |
-| 7 → 16 — Pédagogie, finance, documents, portails, communication, rapports, PWA, tests E2E | à venir |
+| 7 — Pédagogie : emploi du temps, appel, registre des absences, notes, bulletins | ✅ |
+| 8 → 16 — Finance, documents, portails, communication, rapports, PWA, tests E2E | à venir |
 
 ## Démarrage
 

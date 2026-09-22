@@ -1,5 +1,9 @@
 import {
+  CalendarClock,
+  ClipboardCheck,
   ClipboardList,
+  FileText,
+  NotebookPen,
   GraduationCap,
   Layers,
   LayoutDashboard,
@@ -21,6 +25,10 @@ const ICONS: Record<NavIconName, LucideIcon> = {
   classes: School,
   structure: Layers,
   forms: ListChecks,
+  timetable: CalendarClock,
+  attendance: ClipboardCheck,
+  grades: NotebookPen,
+  reportCards: FileText,
 };
 
 export function NavIcon({ name, className }: { name: NavIconName; className?: string }) {
