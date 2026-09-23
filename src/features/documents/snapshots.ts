@@ -19,7 +19,8 @@ import type {
   TextDocumentKind,
   TranscriptSnapshot,
 } from "./types";
-import { TEMPLATE_DEFAULTS } from "./templates";
+import { creditThreshold, subjectCredits, summarizeCredits } from "./credits";
+import { isStandardLayout, TEMPLATE_DEFAULTS } from "./templates";
 
 const STUDENT_FIELDS =
   "id, first_name, last_name, other_names, matricule, sex, birth_date, birth_place, nationality, address, city, phone, email, photo_path";
@@ -52,14 +53,16 @@ const num = (value: unknown): number | null => (typeof value === "number" ? valu
 async function currentClass(supabase: Client, organizationId: string, studentId: string) {
   const { data } = await supabase
     .from("enrollments")
-    .select("class:classes(name, program:programs(name)), program:programs(name), academic_year:academic_years!inner(name, is_current)")
+    .select("class:classes(name, program:programs(name, duration_hours)), program:programs(name, duration_hours), academic_year:academic_years!inner(name, is_current)")
     .eq("organization_id", organizationId)
     .eq("student_id", studentId)
     .eq("status", "validated")
     .eq("academic_year.is_current", true)
     .limit(1)
     .maybeSingle();
-  return { className: data?.class?.name ?? null, year: data?.academic_year?.name ?? null, program: data?.program?.name ?? data?.class?.program?.name ?? null };
+  return { className: data?.class?.name ?? null, year: data?.academic_year?.name ?? null, program: data?.program?.name ?? data?.class?.program?.name ?? null,
+    programHours: data?.program?.duration_hours ?? data?.class?.program?.duration_hours ?? null,
+  };
 }
 
 export function reportConfig(raw: unknown, organization: DocOrganization): ReportCardConfig {
@@ -135,7 +138,7 @@ export async function buildReportCardSnapshots(
   let query = supabase
     .from("report_cards")
     .select(
-      `id, status, average, rank, class_size, appreciation, head_teacher_comment, decision, data,
+      `id, class_id, status, average, rank, class_size, appreciation, head_teacher_comment, decision, data,
        student:students(${STUDENT_FIELDS}),
        class:classes(name, head_teacher:staff_members(first_name, last_name), academic_year:academic_years(name)),
        period:academic_periods(name)`,
@@ -151,11 +154,17 @@ export async function buildReportCardSnapshots(
     supabase.from("report_card_settings").select("config").eq("organization_id", organization.id).maybeSingle(),
   ]);
   const config = reportConfig(settings?.config, organization);
+  const [creditsByClass, threshold] = await Promise.all([
+    subjectCredits(supabase, [...new Set((cards ?? []).map((c) => c.class_id))]),
+    creditThreshold(supabase, organization.id),
+  ]);
   return (cards ?? [])
     .filter((card) => card.student && card.class)
     .sort((a, b) => (a.student!.last_name + a.student!.first_name).localeCompare(b.student!.last_name + b.student!.first_name, "fr"))
     .map((card) => {
       const computed = reportCardData(card.data);
+      const credits = creditsByClass.get(card.class_id);
+      if (credits) computed.subjects = computed.subjects.map((s) => ({ ...s, credits: credits.get(s.subject) ?? null }));
       const head = card.class!.head_teacher;
       return {
         kind: "report_card" as const,
@@ -167,6 +176,7 @@ export async function buildReportCardSnapshots(
         year: card.class!.academic_year?.name ?? "",
         period: card.period?.name ?? "",
         ranking_enabled: rankingEnabled,
+        credits: summarizeCredits(computed.subjects, threshold),
         card: {
           id: card.id,
           status: card.status,
@@ -283,8 +293,8 @@ export async function buildCertificateSnapshot(
   const [student, { data: template }] = await Promise.all([loadStudent(supabase, organization.id, studentId), templateQuery.limit(1).maybeSingle()]);
   if (!student) return null;
   if (kind === "custom" && !template) return null;
-  const { className, year, program } = await currentClass(supabase, organization.id, studentId);
-  const layout = (template?.layout ?? {}) as Record<string, unknown>;
+  const { className, year, program, programHours } = await currentClass(supabase, organization.id, studentId);
+  const layout = (template && !isStandardLayout(template.layout, kind) ? template.layout : {}) as Record<string, unknown>;
   const defaults = TEMPLATE_DEFAULTS[kind];
   const text = (key: "title" | "body" | "closing") => (typeof layout[key] === "string" && (layout[key] as string).trim() ? (layout[key] as string) : defaults[key]);
   return {
@@ -294,6 +304,7 @@ export async function buildCertificateSnapshot(
     class_name: className,
     year,
     program,
+    program_hours: programHours,
     title: text("title"),
     body: text("body"),
     closing: typeof layout.closing === "string" ? layout.closing : defaults.closing,
@@ -308,7 +319,7 @@ export async function buildTranscriptSnapshot(supabase: Client, organization: Do
   if (!student) return null;
   const { data: cards } = await supabase
     .from("report_cards")
-    .select("average, rank, data, period:academic_periods!inner(name, sequence, academic_year:academic_years!inner(name, is_current)), class:classes(name)")
+    .select("average, rank, data, class_id, period:academic_periods!inner(name, sequence, academic_year:academic_years!inner(name, is_current)), class:classes(name)")
     .eq("organization_id", organization.id)
     .eq("student_id", studentId)
     .eq("status", "published")
@@ -324,6 +335,15 @@ export async function buildTranscriptSnapshot(supabase: Client, organization: Do
   });
   const averages = sorted.map((c) => num(c.average));
   const values = averages.filter((v): v is number => v !== null);
+  // Crédits : une matière est acquise si sa moyenne annuelle atteint le seuil.
+  const [creditsByClass, threshold] = await Promise.all([subjectCredits(supabase, [...new Set(sorted.map((c) => c.class_id))]), creditThreshold(supabase, organization.id)]);
+  const creditMap = new Map<string, number>();
+  for (const map of creditsByClass.values()) for (const [name, value] of map) creditMap.set(name, value);
+  const subjectRows = [...subjects.values()].map((s) => ({ ...s, credits: creditMap.get(s.subject) ?? null }));
+  const annualOf = (a: (number | null)[]) => {
+    const list = a.filter((v): v is number => v !== null);
+    return list.length ? list.reduce((x, y) => x + y, 0) / list.length : null;
+  };
   return {
     kind: "transcript",
     organization,
@@ -331,7 +351,8 @@ export async function buildTranscriptSnapshot(supabase: Client, organization: Do
     class_name: sorted.at(-1)?.class?.name ?? null,
     year: sorted[0]?.period?.academic_year?.name ?? null,
     periods: sorted.map((c) => c.period?.name ?? ""),
-    subjects: [...subjects.values()],
+    subjects: subjectRows,
+    credits: summarizeCredits(subjectRows.map((s) => ({ credits: s.credits, average: annualOf(s.averages) })), threshold),
     averages,
     ranks: sorted.map((c) => (rankingEnabled ? c.rank : null)),
     annual_average: values.length ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 100) / 100 : null,

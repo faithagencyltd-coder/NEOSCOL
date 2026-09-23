@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { deleteTemplate } from "@/features/documents/actions";
 import { TemplateEditor } from "@/features/documents/components/template-editor";
 import { listTemplates } from "@/features/documents/queries";
-import { TEMPLATE_DEFAULTS } from "@/features/documents/templates";
+import { isStandardLayout, TEMPLATE_DEFAULTS } from "@/features/documents/templates";
 import { TEXT_DOCUMENT_KINDS } from "@/features/documents/types";
 import { getBranding } from "@/features/report-cards/queries";
 import { requireOrganization } from "@/lib/auth/guards";
@@ -33,6 +33,7 @@ export default async function DocumentStudioPage() {
   const [templates, branding] = await Promise.all([listTemplates(org.id), getBranding(org.id)]);
   const organization = {
     name: org.name,
+    type: org.type,
     color: branding?.secondary_color ?? "#0F172A",
     accent: branding?.primary_color ?? "#1D4ED8",
     logoId: branding?.logo_path && isUuid(branding.logo_path) ? branding.logo_path : null,
@@ -74,7 +75,8 @@ export default async function DocumentStudioPage() {
       <section aria-label="Documents standard" className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {standard.map((kind, i) => {
           const d = TEMPLATE_DEFAULTS[kind];
-          const t = templates.find((x) => x.kind === kind && x.is_default);
+          const found = templates.find((x) => x.kind === kind && x.is_default);
+          const t = found && !isStandardLayout(found.layout, kind) ? found : undefined;
           return (
             <Card key={kind} className="rise grid content-between gap-3 p-4" style={{ "--delay": `${i * 35}ms` } as React.CSSProperties}>
               <div className="grid gap-1">

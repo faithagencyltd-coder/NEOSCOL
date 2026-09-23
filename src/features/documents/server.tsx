@@ -24,7 +24,7 @@ export async function loadDocOrganization(supabase: Client, organizationId: stri
   const [{ data: org }, { data: branding }, { data: settings }] = await Promise.all([
     supabase
       .from("organizations")
-      .select("id, name, code, address, city, phone, email, timezone, currency, is_demo")
+      .select("id, name, code, type, address, city, phone, email, timezone, currency, is_demo")
       .eq("id", organizationId)
       .maybeSingle(),
     supabase

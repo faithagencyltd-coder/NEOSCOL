@@ -47,11 +47,13 @@ import { can } from "@/lib/auth/session";
 import { STUDENT_STATUS } from "@/lib/labels";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/utils/format";
 import { isUuid, param } from "@/lib/utils/search-params";
+import { vocabularyFor } from "@/lib/vocabulary";
 
 export const metadata: Metadata = { title: "Dossier élève" };
 
 export default async function StudentPage({ params, searchParams }: PageProps<"/eleves/[id]">) {
   const context = await requirePermission("students.read");
+  const v = vocabularyFor(context.organization.type);
   const { id } = await params;
   if (!isUuid(id)) notFound();
   const query = await searchParams;
@@ -94,7 +96,7 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
     <div className="grid gap-5">
       <nav aria-label="Fil d'Ariane" className="text-sm text-muted-foreground">
         <Link href="/eleves" className="hover:text-primary">
-          Élèves
+          {v.students}
         </Link>{" "}
         / <span className="text-foreground">{fullName}</span>
       </nav>

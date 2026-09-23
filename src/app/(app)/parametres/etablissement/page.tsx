@@ -21,7 +21,7 @@ export default async function OrganizationIdentityPage() {
   const orgId = context.organization.id;
   const supabase = await createClient();
   const [{ data: org }, branding] = await Promise.all([
-    supabase.from("organizations").select("name, short_name, code, email, phone, website, address, city").eq("id", orgId).single(),
+    supabase.from("organizations").select("name, type, short_name, code, email, phone, website, address, city").eq("id", orgId).single(),
     getBranding(orgId),
   ]);
   return (
@@ -53,6 +53,7 @@ export default async function OrganizationIdentityPage() {
             canEdit={can(context, "settings.manage")}
             values={{
               name: org?.name ?? context.organization.name,
+              type: org?.type ?? context.organization.type,
               short_name: org?.short_name ?? null,
               email: org?.email ?? null,
               phone: org?.phone ?? null,

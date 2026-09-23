@@ -36,6 +36,7 @@ import { requireOrganization } from "@/lib/auth/guards";
 import { can, displayName, isPortalOnly } from "@/lib/auth/session";
 import { cn } from "@/lib/utils/cn";
 import { formatDate, formatDateTime, formatMoney, formatNumber } from "@/lib/utils/format";
+import { vocabularyFor } from "@/lib/vocabulary";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
 
@@ -52,6 +53,7 @@ const STATUS_COLORS = { paid: "#16a34a", partial: "#f59e0b", unpaid: "#dc2626" }
 
 export default async function DashboardPage() {
   const context = await requireOrganization();
+  const v = vocabularyFor(context.organization.type);
   // Compte « tablette de pointage » : directement l'écran de scan.
   if (context.permissions.size === 1 && can(context, "staff_attendance.scan")) redirect("/pointage");
   // Parents et élèves : portail mobile dédié.
@@ -76,10 +78,12 @@ export default async function DashboardPage() {
 
   const stats = [
     overview.students_active !== undefined && {
-      label: "Élèves actifs",
+      label: `${v.students} actifs`,
       value: formatNumber(overview.students_active),
       hint: overview.students_by_sex
-        ? `${overview.students_by_sex.F ?? 0} filles · ${overview.students_by_sex.M ?? 0} garçons`
+        ? v.family === "school"
+          ? `${overview.students_by_sex.F ?? 0} filles · ${overview.students_by_sex.M ?? 0} garçons`
+          : `${overview.students_by_sex.F ?? 0} femmes · ${overview.students_by_sex.M ?? 0} hommes`
         : undefined,
       icon: GraduationCap,
       tone: "primary" as const,
@@ -92,9 +96,9 @@ export default async function DashboardPage() {
       tone: "warning" as const,
     },
     overview.classes !== undefined && {
-      label: "Classes",
+      label: v.classes,
       value: formatNumber(overview.classes),
-      hint: overview.teachers !== undefined ? `${overview.teachers} enseignants` : undefined,
+      hint: overview.teachers !== undefined ? `${overview.teachers} ${v.teachers.toLowerCase()}` : undefined,
       icon: School,
       tone: "info" as const,
     },

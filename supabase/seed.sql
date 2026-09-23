@@ -61,6 +61,7 @@ select pg_temp.demo_user('00000000-0000-4000-a000-000000000008', 'parent@demo.ne
 select pg_temp.demo_user('00000000-0000-4000-a000-000000000009', 'eleve@demo.neoscol.app', 'Kofi', 'BAMBA');
 select pg_temp.demo_user('00000000-0000-4000-a000-000000000010', 'formation@demo.neoscol.app', 'Moussa', 'DIALLO');
 select pg_temp.demo_user('00000000-0000-4000-a000-000000000011', 'pointage@demo.neoscol.app', 'Tablette', 'ACCUEIL');
+select pg_temp.demo_user('00000000-0000-4000-a000-000000000012', 'universite@demo.neoscol.app', 'Clarisse', 'ADOU');
 
 insert into public.platform_admins (user_id) values ('00000000-0000-4000-a000-000000000001');
 
@@ -70,7 +71,9 @@ values
   ('10000000-0000-4000-a000-000000000001', 'Groupe Scolaire Démo NéoScol', 'GS Démo', 'DEMO', 'demo',
    'school_complex', 'contact@demo.neoscol.app', '+225 27 00 00 00 00', 'Boulevard de la Démonstration', 'Abidjan', true),
   ('10000000-0000-4000-a000-000000000002', 'Institut Démo de Formation Professionnelle', 'IDFP Démo', 'DEMOF', 'demo-formation',
-   'vocational_center', 'contact@formation.demo.neoscol.app', '+225 27 00 00 00 01', 'Rue des Métiers', 'Bouaké', true);
+   'vocational_center', 'contact@formation.demo.neoscol.app', '+225 27 00 00 00 01', 'Rue des Métiers', 'Bouaké', true),
+  ('10000000-0000-4000-a000-000000000003', 'Université Démo NéoScol', 'UDN', 'DEMOU', 'demo-universite',
+   'university', 'scolarite@universite.demo.neoscol.app', '+225 27 00 00 00 02', 'Campus de la Démonstration', 'Yamoussoukro', true);
 
 update public.organization_branding
    set signatory_name = 'Jean-Marc KOUASSI', signatory_title = 'Directeur des études',
@@ -88,6 +91,7 @@ select pg_temp.grant_role('10000000-0000-4000-a000-000000000001', '00000000-0000
 select pg_temp.grant_role('10000000-0000-4000-a000-000000000001', '00000000-0000-4000-a000-000000000009', 'student');
 select pg_temp.grant_role('10000000-0000-4000-a000-000000000002', '00000000-0000-4000-a000-000000000010', 'org_admin');
 select pg_temp.grant_role('10000000-0000-4000-a000-000000000001', '00000000-0000-4000-a000-000000000011', 'kiosk');
+select pg_temp.grant_role('10000000-0000-4000-a000-000000000003', '00000000-0000-4000-a000-000000000012', 'org_admin');
 
 -- Données scolaires de l'établissement DEMO -------------------------------------------
 do $$
@@ -588,3 +592,118 @@ $$;
 update public.organizations
    set settings = jsonb_set(settings, '{portal_restrictions,enabled}', 'true')
  where id = '10000000-0000-4000-a000-000000000001';
+
+-- Université de démonstration (LMD) : semestres, unités d'enseignement avec crédits
+-- ECTS, une promotion de Licence 1, notes et relevés du semestre 1 publiés.
+do $$
+declare
+  v_org constant uuid := '10000000-0000-4000-a000-000000000003';
+  v_admin constant uuid := '00000000-0000-4000-a000-000000000012';
+  v_year uuid;
+  v_s1 uuid;
+  v_level uuid;
+  v_program uuid;
+  v_class uuid;
+  v_teachers uuid[] := '{}';
+  v_staff uuid;
+  v_subject uuid;
+  v_cs uuid;
+  v_student uuid;
+  v_assessment uuid;
+  i integer;
+  k integer;
+  v_ue_names text[] := array['Algorithmique et programmation', 'Mathématiques discrètes', 'Architecture des ordinateurs',
+                             'Programmation web', 'Anglais scientifique', 'Méthodologie du travail universitaire'];
+  v_ue_codes text[] := array['INF101', 'MAT101', 'INF102', 'INF103', 'LAN101', 'MET101'];
+  v_ue_credits numeric[] := array[6, 6, 6, 6, 3, 3];
+  v_first text[] := array['Kouamé', 'Aïcha', 'Brice', 'Fanta', 'Hervé', 'Josiane', 'Lamine', 'Mireille', 'Olivier', 'Sandrine'];
+  v_last text[] := array['KONAN', 'CISSÉ', 'ZADI', 'KEITA', 'GNAHORÉ', 'AMANI', 'FOFANA', 'YAPI', 'TANOH', 'BROU'];
+begin
+  perform set_config('app.skip_audit', 'on', true);
+  -- Les calculs de relevés s'exécutent au nom de l'administratrice de l'université.
+  perform set_config('request.jwt.claims', json_build_object('sub', v_admin, 'role', 'authenticated')::text, true);
+
+  insert into public.academic_years (organization_id, name, starts_on, ends_on, is_current, status)
+  values (v_org, '2026-2027', date '2026-10-05', date '2027-07-16', true, 'active') returning id into v_year;
+  insert into public.academic_periods (organization_id, academic_year_id, name, type, sequence, starts_on, ends_on)
+  values (v_org, v_year, 'Semestre 1', 'semester', 1, date '2026-10-05', date '2027-02-12') returning id into v_s1;
+  insert into public.academic_periods (organization_id, academic_year_id, name, type, sequence, starts_on, ends_on)
+  values (v_org, v_year, 'Semestre 2', 'semester', 2, date '2027-02-22', date '2027-07-16');
+
+  insert into public.levels (organization_id, name, short_name, cycle, sequence)
+  values (v_org, 'Licence 1', 'L1', 'Licence', 1) returning id into v_level;
+  insert into public.levels (organization_id, name, short_name, cycle, sequence)
+  values (v_org, 'Licence 2', 'L2', 'Licence', 2), (v_org, 'Licence 3', 'L3', 'Licence', 3), (v_org, 'Master 1', 'M1', 'Master', 4);
+  insert into public.programs (organization_id, name, code, kind)
+  values (v_org, 'Licence Informatique', 'LINFO', 'degree') returning id into v_program;
+
+  for i in 1..3 loop
+    insert into public.staff_members (organization_id, first_name, last_name, sex, email, job_title, is_teacher, hired_on)
+    values (v_org, (array['Clément', 'Rachelle', 'Désiré'])[i], (array['KOUAKOU', 'ADJOBI', 'N''DRI'])[i], (array['M', 'F', 'M'])[i],
+            (array['c.kouakou', 'r.adjobi', 'd.ndri'])[i] || '@universite.demo.neoscol.app',
+            (array['Maître de conférences', 'Professeure titulaire', 'Chargé de cours'])[i], true, date '2018-10-01')
+    returning id into v_staff;
+    v_teachers := v_teachers || v_staff;
+  end loop;
+
+  insert into public.classes (organization_id, academic_year_id, level_id, program_id, name, code, capacity, head_teacher_id)
+  values (v_org, v_year, v_level, v_program, 'L1 Informatique', 'L1INF', 60, v_teachers[1]) returning id into v_class;
+
+  for i in 1..array_length(v_ue_codes, 1) loop
+    insert into public.subjects (organization_id, name, code, kind, program_id, credits)
+    values (v_org, v_ue_names[i], v_ue_codes[i], 'module', v_program, v_ue_credits[i]) returning id into v_subject;
+    insert into public.class_subjects (organization_id, class_id, subject_id, teacher_id, coefficient, weekly_hours)
+    values (v_org, v_class, v_subject, v_teachers[1 + (i - 1) % 3], v_ue_credits[i], v_ue_credits[i]);
+  end loop;
+
+  for i in 1..array_length(v_first, 1) loop
+    insert into public.students (organization_id, first_name, last_name, sex, birth_date, city, status)
+    values (v_org, v_first[i], v_last[i], case when i % 2 = 0 then 'F' else 'M' end,
+            date '2006-01-15' + (i * 47), 'Yamoussoukro', 'active') returning id into v_student;
+    insert into public.enrollments (organization_id, student_id, academic_year_id, class_id, level_id, program_id, type, status)
+    values (v_org, v_student, v_year, v_class, v_level, v_program, 'new', 'validated');
+  end loop;
+
+  -- Semestre 1 : contrôle continu (coef. 1) et examen (coef. 2) par unité d'enseignement
+  for v_cs in select id from public.class_subjects where class_id = v_class loop
+    for k in 1..2 loop
+      insert into public.assessments (organization_id, class_subject_id, academic_period_id, title, kind, column_key,
+                                      assessed_on, coefficient, max_score, is_published)
+      values (v_org, v_cs, v_s1, (array['Contrôle continu', 'Examen du semestre 1'])[k], (array['test', 'exam'])[k],
+              (array['cc', 'examen'])[k], date '2026-12-01' + (k - 1) * 60, k, 20, true)
+      returning id into v_assessment;
+      insert into public.grades (organization_id, assessment_id, student_id, score)
+      select v_org, v_assessment, e.student_id,
+             least(19, greatest(4, round((5 + abs(hashtext(e.student_id::text)) % 10
+                   + (abs(hashtext(e.student_id::text || v_assessment::text)) % 60) / 10.0)::numeric * 2) / 2))
+      from public.enrollments e where e.class_id = v_class and e.status = 'validated';
+      update public.assessments set grades_status = 'validated', grades_validated_at = now() where id = v_assessment;
+    end loop;
+  end loop;
+
+  update public.organization_branding
+     set signatory_name = 'Pr. Clarisse ADOU', signatory_title = 'Présidente de l''université',
+         header_text = 'Université de démonstration — données fictives', primary_color = '#0E7490', secondary_color = '#172554'
+   where organization_id = v_org;
+  -- Relevé LMD : contrôle continu et examen ; décisions de jury ; pas de classement.
+  update public.report_card_settings
+     set config = config
+       || jsonb_build_object('title', 'RELEVÉ DE NOTES DU SEMESTRE',
+            'columns', '[{"key":"cc","label":"CC","kinds":["test","homework","oral","practical","project"],"weight":1},
+                         {"key":"examen","label":"EXAMEN","kinds":["exam","other"],"weight":2}]'::jsonb,
+            'decisions', '[{"min":10,"label":"Semestre validé"},{"min":8,"label":"Semestre non validé — compensation possible"},
+                           {"min":0,"label":"Ajourné(e)"}]'::jsonb,
+            'signatures', '[{"label":"Le responsable de la promotion"},{"label":"La présidente de l''université"}]'::jsonb,
+            'show_rank', false)
+   where organization_id = v_org;
+
+  perform public.compute_report_cards(v_class, v_s1);
+  update public.report_cards set status = 'published', published_at = now()
+   where class_id = v_class and academic_period_id = v_s1;
+
+  update public.organizations
+     set settings = jsonb_set(jsonb_set(settings, '{grading,credit_threshold}', '10'), '{features,ranking}', 'false')
+   where id = v_org;
+  perform set_config('request.jwt.claims', '', true);
+end;
+$$;

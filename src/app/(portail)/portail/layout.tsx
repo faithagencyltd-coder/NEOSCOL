@@ -9,6 +9,7 @@ import { PortalNav } from "@/features/portal/components/portal-nav";
 import { requirePortal } from "@/features/portal/context";
 import { displayName } from "@/lib/auth/session";
 import { isDemoMode } from "@/lib/demo";
+import { vocabularyFor } from "@/lib/vocabulary";
 
 /** Portail parent / élève : interface mobile (bleu nuit, blanc, cyan), navigation en bas d'écran. */
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
@@ -37,7 +38,7 @@ export default async function PortalLayout({ children }: { children: React.React
               <UserMenu
                 name={name}
                 email={context.user.email ?? context.user.phone}
-                roleLabel={parent ? "Espace parent" : "Espace élève"}
+                roleLabel={parent ? "Espace parent" : vocabularyFor(organization.type).studentSpace}
                 organizations={context.organizations}
                 activeOrganizationId={organization.id}
                 accountHref="/portail/plus"
@@ -46,7 +47,7 @@ export default async function PortalLayout({ children }: { children: React.React
             </div>
           </div>
           <div className="grid gap-0.5">
-            <p className="text-xs font-medium uppercase tracking-wider text-cyan-300">{parent ? "Espace parent" : "Espace élève"}</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-cyan-300">{parent ? "Espace parent" : vocabularyFor(organization.type).studentSpace}</p>
             <p className="truncate text-sm text-white/80">{organization.name}</p>
           </div>
           {parent && student && students.length > 1 ? <ChildSwitcher students={students} selectedId={student.id} /> : null}

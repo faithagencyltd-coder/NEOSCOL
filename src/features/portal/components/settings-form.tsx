@@ -26,6 +26,7 @@ export type SettingsValues = {
   duplicate_window_seconds: number;
   track_departure: boolean;
   lock_after_validation: boolean;
+  credit_threshold: number;
 };
 
 function NumberField({ name, label, hint, value, min = 0, max }: { name: string; label: string; hint?: string; value: number; min?: number; max: number }) {
@@ -68,8 +69,9 @@ export function SettingsForm({ values, currency }: { values: SettingsValues; cur
         <NumberField name="duplicate_window_seconds" label="Anti double-scan (secondes)" value={values.duplicate_window_seconds} max={3600} />
         <Checkbox name="track_departure" label="Enregistrer aussi les départs" defaultChecked={values.track_departure} className="self-end" />
       </FormSection>
-      <FormSection title="Notes" description="Après validation par l'enseignant, les notes ne sont plus modifiables sans réouverture par l'administration.">
+      <FormSection title="Notes et crédits" description="Après validation par l'enseignant, les notes ne sont plus modifiables sans réouverture par l'administration. Crédits (ECTS) : une matière est acquise si sa moyenne atteint le seuil.">
         <Checkbox name="lock_after_validation" label="Verrouiller les notes validées" defaultChecked={values.lock_after_validation} className="sm:col-span-2" />
+        <NumberField name="credit_threshold" label="Seuil d'acquisition des crédits (sur 20)" value={values.credit_threshold} min={1} max={20} />
       </FormSection>
       <div className="flex justify-end">
         <SubmitButton size="lg" pendingLabel="Enregistrement…">

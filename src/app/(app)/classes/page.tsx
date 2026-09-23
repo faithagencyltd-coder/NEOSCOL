@@ -24,11 +24,13 @@ import { can } from "@/lib/auth/session";
 import { CLASS_KIND } from "@/lib/labels";
 import { cn } from "@/lib/utils/cn";
 import { isUuid, param } from "@/lib/utils/search-params";
+import { vocabularyFor } from "@/lib/vocabulary";
 
 export const metadata: Metadata = { title: "Classes" };
 
 export default async function ClassesPage({ searchParams }: PageProps<"/classes">) {
   const context = await requirePermission("academic.read");
+  const v = vocabularyFor(context.organization.type);
   const organizationId = context.organization.id;
   const params = await searchParams;
   const years = await getAcademicYears(organizationId);
@@ -52,9 +54,9 @@ export default async function ClassesPage({ searchParams }: PageProps<"/classes"
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="grid gap-1">
           <p className="text-sm text-muted-foreground">Scolarité</p>
-          <h1 className="text-2xl font-semibold sm:text-[26px]">Classes et sessions</h1>
+          <h1 className="text-2xl font-semibold sm:text-[26px]">{v.classes}</h1>
           <p className="text-sm text-muted-foreground">
-            {classes.length} classe{classes.length > 1 ? "s" : ""}
+            {classes.length} {(classes.length > 1 ? v.classes : v.klass).toLowerCase()}
             {year ? ` · année ${year.name}` : ""}
           </p>
         </div>
@@ -78,8 +80,8 @@ export default async function ClassesPage({ searchParams }: PageProps<"/classes"
           ) : null}
           {manage && year ? (
             <QuickFormDialog
-              title={`Nouvelle classe — ${year.name}`}
-              triggerLabel="Nouvelle classe"
+              title={`Nouvelle ${v.klass.toLowerCase()} — ${year.name}`}
+              triggerLabel={`Nouvelle ${v.klass.toLowerCase()}`}
               action={createClass}
               hidden={{ academic_year_id: year.id }}
               fields={classFields({ levels, programs, rooms, teachers })}
@@ -97,7 +99,7 @@ export default async function ClassesPage({ searchParams }: PageProps<"/classes"
       ) : classes.length === 0 ? (
         <Card>
           <CardContent className="pt-5">
-            <EmptyState icon={School} title="Aucune classe pour cette année" />
+            <EmptyState icon={School} title={`Aucune ${v.klass.toLowerCase()} pour cette année`} />
           </CardContent>
         </Card>
       ) : (

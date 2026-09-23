@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { saveTemplate } from "@/features/documents/actions";
 import { fillText, sampleValues, TEMPLATE_DEFAULTS, TEMPLATE_VARIABLES } from "@/features/documents/templates";
 import type { TextDocumentKind } from "@/features/documents/types";
+import { vocabularyFor } from "@/lib/vocabulary";
 
 type Initial = { id?: string; name: string; description: string; title: string; body: string; closing: string };
 
@@ -29,7 +30,7 @@ export function TemplateEditor({
 }: {
   kind: TextDocumentKind;
   initial?: Initial;
-  organization: { name: string; color: string; accent: string; logoId: string | null; header: string | null; footer: string | null; signatory: string | null; signatoryTitle: string | null };
+  organization: { name: string; type?: string | null; color: string; accent: string; logoId: string | null; header: string | null; footer: string | null; signatory: string | null; signatoryTitle: string | null };
   mode: "edit" | "create";
 }) {
   const defaults = TEMPLATE_DEFAULTS[kind];
@@ -43,8 +44,12 @@ export function TemplateEditor({
     if (result.ok) setOpen(false);
     return result;
   }, null);
+  const v = vocabularyFor(organization.type);
   const values = sampleValues({
     "etablissement.nom": organization.name,
+    "eleve.qualite": v.theStudent,
+    "classe.nom": v.family === "school" ? "6e A" : v.family === "higher" ? "Licence 1 Informatique" : "Électricité bâtiment 2026",
+    "classe.intitule": v.family === "school" ? "classe de 6e A" : v.family === "higher" ? "promotion Licence 1 Informatique" : "session Électricité bâtiment 2026",
     ...(organization.signatory ? { "signataire.nom": organization.signatory } : {}),
     ...(organization.signatoryTitle ? { "signataire.fonction": organization.signatoryTitle } : {}),
     contenu: defaults.content?.placeholder || "…",

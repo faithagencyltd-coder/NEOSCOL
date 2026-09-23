@@ -113,7 +113,7 @@ describe("Isolation multi-établissements", () => {
 
   test("le super administrateur n'a pas d'accès implicite aux élèves", async () => {
     await as(USERS.superadmin, async (q) => {
-      assert.equal((await q("select id from organizations")).length, 2);
+      assert.equal((await q("select id from organizations")).length, 3);
       assert.equal(count(await q("select count(*) from students")), 0);
     });
   });
@@ -602,6 +602,20 @@ describe("Recherche globale", () => {
     await as(USERS.director, async (q) => {
       const classes = (await q("select title from global_search($1, 'e A', 50) where entity_type = 'class'", [ORG_DEMO])).map((r) => r.title);
       assert.ok(classes.includes("5e A"), "direction : toutes les classes");
+    });
+  });
+});
+
+describe("Université (LMD)", () => {
+  test("crédits par unité d'enseignement et relevés du semestre isolés des autres établissements", async () => {
+    await as("00000000-0000-4000-a000-000000000012", async (q) => {
+      const [{ total }] = await q("select sum(s.credits)::int as total from class_subjects cs join subjects s on s.id = cs.subject_id join classes c on c.id = cs.class_id where c.name = 'L1 Informatique'");
+      assert.equal(total, 30, "30 crédits ECTS au semestre");
+      assert.equal((await q("select id from report_cards where status = 'published'")).length, 10);
+      assert.equal((await q("select id from students where organization_id = $1", [ORG_DEMO])).length, 0);
+    });
+    await as(USERS.admin, async (q) => {
+      assert.equal((await q("select rc.id from report_cards rc join classes c on c.id = rc.class_id where c.name = 'L1 Informatique'")).length, 0);
     });
   });
 });

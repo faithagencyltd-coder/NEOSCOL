@@ -8,6 +8,8 @@ import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/utils/action-result";
 import { dbErrorMessage } from "@/lib/utils/db-error";
 import { readFields } from "@/lib/utils/form-data";
+import { ORGANIZATION_TYPE_LABELS } from "@/lib/vocabulary";
+import type { Database } from "@/types/database";
 
 const color = z.string().regex(/^#[0-9A-Fa-f]{6}$/, { error: "Couleur invalide (format #RRGGBB)." });
 const optional = (max: number) => z.string().trim().max(max).optional();
@@ -22,6 +24,7 @@ const identitySchema = z.object({
   city: optional(120),
   primary_color: color,
   secondary_color: color,
+  type: z.enum(Object.keys(ORGANIZATION_TYPE_LABELS) as [string, ...string[]], { error: "Type d'établissement invalide." }),
 });
 
 /**
@@ -32,7 +35,7 @@ const identitySchema = z.object({
 export async function saveIdentity(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const auth = await authorize("settings.manage");
   if (!auth.ok) return auth;
-  const parsed = identitySchema.safeParse(readFields(formData, ["name", "short_name", "email", "phone", "website", "address", "city", "primary_color", "secondary_color"]));
+  const parsed = identitySchema.safeParse(readFields(formData, ["name", "short_name", "email", "phone", "website", "address", "city", "primary_color", "secondary_color", "type"]));
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Champs invalides.", fieldErrors: z.flattenError(parsed.error).fieldErrors };
   const { primary_color, secondary_color, ...info } = parsed.data;
   const organizationId = auth.context.organization.id;
@@ -41,6 +44,7 @@ export async function saveIdentity(_: ActionResult | null, formData: FormData): 
     .from("organizations")
     .update({
       name: info.name,
+      type: info.type as Database["public"]["Enums"]["organization_type"],
       short_name: info.short_name ?? null,
       email: info.email ?? null,
       phone: info.phone ?? null,
@@ -55,5 +59,5 @@ export async function saveIdentity(_: ActionResult | null, formData: FormData): 
     .upsert({ organization_id: organizationId, primary_color: primary_color.toUpperCase(), secondary_color: secondary_color.toUpperCase() });
   if (brandingError) return { ok: false, message: dbErrorMessage(brandingError) };
   revalidatePath("/", "layout");
-  return { ok: true, message: "Identité de l'établissement enregistrée : elle s'applique aux prochains documents." };
+  return { ok: true, message: "Identité enregistrée : vocabulaire, écrans et prochains documents sont mis à jour." };
 }

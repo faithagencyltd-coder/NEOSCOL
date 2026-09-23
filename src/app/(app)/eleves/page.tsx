@@ -19,11 +19,13 @@ import { can } from "@/lib/auth/session";
 import { STUDENT_STATUS } from "@/lib/labels";
 import { formatDate } from "@/lib/utils/format";
 import { isUuid, pageParam, param } from "@/lib/utils/search-params";
+import { vocabularyFor } from "@/lib/vocabulary";
 
 export const metadata: Metadata = { title: "Élèves" };
 
 export default async function StudentsPage({ searchParams }: PageProps<"/eleves">) {
   const context = await requirePermission("students.read");
+  const v = vocabularyFor(context.organization.type);
   const organizationId = context.organization.id;
   const params = await searchParams;
   const year = await getCurrentYear(organizationId);
@@ -47,7 +49,7 @@ export default async function StudentsPage({ searchParams }: PageProps<"/eleves"
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="grid gap-1">
           <p className="text-sm text-muted-foreground">Scolarité</p>
-          <h1 className="text-2xl font-semibold sm:text-[26px]">Élèves</h1>
+          <h1 className="text-2xl font-semibold sm:text-[26px]">{v.students}</h1>
           <p className="text-sm text-muted-foreground">
             {total} dossier{total > 1 ? "s" : ""}
             {year ? ` · année ${year.name}` : ""}
@@ -56,7 +58,7 @@ export default async function StudentsPage({ searchParams }: PageProps<"/eleves"
         {can(context, "students.create") ? (
           <Button asChild>
             <Link href="/eleves/nouveau">
-              <Plus aria-hidden /> Nouvel élève
+              <Plus aria-hidden /> Nouvel {v.student.toLowerCase()}
             </Link>
           </Button>
         ) : null}
@@ -85,8 +87,8 @@ export default async function StudentsPage({ searchParams }: PageProps<"/eleves"
           <div className="border-t border-border">
             <EmptyState
               icon={GraduationCap}
-              title={hasFilters ? "Aucun élève ne correspond" : "Aucun élève pour le moment"}
-              description={hasFilters ? "Modifiez la recherche ou les filtres." : "Créez le premier dossier élève."}
+              title={hasFilters ? `Aucun ${v.student.toLowerCase()} ne correspond` : `Aucun ${v.student.toLowerCase()} pour le moment`}
+              description={hasFilters ? "Modifiez la recherche ou les filtres." : `Créez le premier dossier ${v.student.toLowerCase()}.`}
             />
           </div>
         ) : (
@@ -95,7 +97,7 @@ export default async function StudentsPage({ searchParams }: PageProps<"/eleves"
               <Table>
                 <THead>
                   <tr className="border-t border-border">
-                    <TH>Élève</TH>
+                    <TH>{v.student}</TH>
                     <TH>Classe</TH>
                     <TH>Naissance</TH>
                     <TH>Parent principal</TH>

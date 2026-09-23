@@ -25,6 +25,8 @@ export type DocOrganization = {
   stamp_file_id: string | null;
   signature_file_id: string | null;
   is_demo: boolean;
+  /** Type d'établissement (vocabulaire des documents) ; absent des anciens instantanés. */
+  type?: string | null;
 };
 
 export type DocStudent = {
@@ -58,7 +60,12 @@ export type ReportSubjectRow = {
   min: number | null;
   max: number | null;
   mention?: string | null;
+  /** Crédits (ECTS) de la matière / unité d'enseignement, si l'établissement en utilise. */
+  credits?: number | null;
 };
+
+/** Crédits acquis : une matière est validée si sa moyenne atteint le seuil. */
+export type CreditSummary = { threshold: number; earned: number; total: number };
 
 export type ReportCardConfig = {
   title: string;
@@ -87,6 +94,7 @@ export type ReportCardSnapshot = {
   year: string;
   period: string;
   ranking_enabled: boolean;
+  credits?: CreditSummary | null;
   card: {
     id: string;
     status: string;
@@ -163,6 +171,7 @@ export type CertificateSnapshot = {
   class_name: string | null;
   year: string | null;
   program?: string | null;
+  program_hours?: number | null;
   title: string;
   body: string;
   closing: string;
@@ -177,10 +186,11 @@ export type TranscriptSnapshot = {
   class_name: string | null;
   year: string | null;
   periods: string[];
-  subjects: { subject: string; coefficient: number; averages: (number | null)[] }[];
+  subjects: { subject: string; coefficient: number; averages: (number | null)[]; credits?: number | null }[];
   averages: (number | null)[];
   ranks: (number | null)[];
   annual_average: number | null;
+  credits?: CreditSummary | null;
 };
 
 export type EnrollmentFormSnapshot = {

@@ -1,4 +1,5 @@
 import type { Permission } from "@/config/permissions";
+import { vocabularyFor, type Vocabulary } from "@/lib/vocabulary";
 
 export type NavIcon =
   | "dashboard"
@@ -149,12 +150,22 @@ export const NAVIGATION: NavSection[] = [
 /** Entrée « Mode démonstration », ajoutée uniquement lorsque NEOSCOL_DEMO_MODE est actif. */
 export const DEMO_NAV_ITEM: NavItem = { href: "/demo", label: "Mode démonstration", icon: "demo", anyOf: [], keywords: "démo rôles scénarios" };
 
-export function visibleNavigation(permissions: ReadonlySet<Permission>, options: { demo?: boolean } = {}): NavSection[] {
+/** Libellés dépendant du type d'établissement (élèves / étudiants / apprenants…). */
+function localizedLabel(item: NavItem, v: Vocabulary): string {
+  if (item.href === "/eleves") return v.students;
+  if (item.href === "/classes") return v.classes;
+  return item.label;
+}
+
+export function visibleNavigation(permissions: ReadonlySet<Permission>, options: { demo?: boolean; organizationType?: string | null } = {}): NavSection[] {
+  const v = vocabularyFor(options.organizationType);
   const sections = options.demo
     ? NAVIGATION.map((section) => (section.label === "Portails" ? { ...section, items: [...section.items, DEMO_NAV_ITEM] } : section))
     : NAVIGATION;
   return sections.map((section) => ({
     ...section,
-    items: section.items.filter((item) => item.anyOf.length === 0 || item.anyOf.some((p) => permissions.has(p))),
+    items: section.items
+      .filter((item) => item.anyOf.length === 0 || item.anyOf.some((p) => permissions.has(p)))
+      .map((item) => ({ ...item, label: localizedLabel(item, v) })),
   })).filter((section) => section.items.length > 0);
 }

@@ -28,11 +28,13 @@ import { can } from "@/lib/auth/session";
 import { CLASS_KIND } from "@/lib/labels";
 import { formatDate } from "@/lib/utils/format";
 import { isUuid } from "@/lib/utils/search-params";
+import { vocabularyFor } from "@/lib/vocabulary";
 
 export const metadata: Metadata = { title: "Classe" };
 
 export default async function ClassPage({ params }: PageProps<"/classes/[id]">) {
   const context = await requirePermission("academic.read");
+  const v = vocabularyFor(context.organization.type);
   const { id } = await params;
   if (!isUuid(id)) notFound();
   const organizationId = context.organization.id;
@@ -230,7 +232,7 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
         {canSeeStudents ? (
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle>Élèves</CardTitle>
+              <CardTitle>{v.students}</CardTitle>
               <CardDescription>
                 {students.length}
                 {klass.capacity ? ` / ${klass.capacity}` : ""} inscrits · {girls} filles · {students.length - girls} garçons
@@ -238,7 +240,7 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
             </CardHeader>
             <CardContent>
               {students.length === 0 ? (
-                <EmptyState icon={Users} title="Aucun élève inscrit" />
+                <EmptyState icon={Users} title={`Aucun ${v.student.toLowerCase()} inscrit`} />
               ) : (
                 <ul className="grid gap-1">
                   {students.map((student) => (

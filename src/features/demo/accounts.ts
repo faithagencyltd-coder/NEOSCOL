@@ -3,7 +3,7 @@
  * servent qu'en mode démonstration (NEOSCOL_DEMO_MODE=1) pour changer de rôle
  * en un clic ; chaque compte n'a que les droits de son rôle réel.
  */
-export type DemoAccountKey = "admin" | "direction" | "secretariat" | "comptable" | "enseignant" | "parent" | "eleve" | "pointage";
+export type DemoAccountKey = "admin" | "direction" | "secretariat" | "comptable" | "enseignant" | "parent" | "eleve" | "pointage" | "universite" | "formation";
 
 export type DemoAccount = {
   key: DemoAccountKey;
@@ -78,6 +78,22 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
     role: "Tablette de pointage",
     description: "Borne « Scannez votre badge ».",
     sees: ["Uniquement l'écran de scan"],
+  },
+  {
+    key: "universite",
+    email: "universite@demo.neoscol.app",
+    name: "Clarisse ADOU",
+    role: "Université",
+    description: "Administratrice de l'Université Démo : étudiants, promotions, semestres.",
+    sees: ["Vocabulaire universitaire (étudiants, promotions)", "Unités d'enseignement et crédits ECTS", "Relevés du semestre 1"],
+  },
+  {
+    key: "formation",
+    email: "formation@demo.neoscol.app",
+    name: "Moussa DIALLO",
+    role: "Centre de formation",
+    description: "Administrateur de l'Institut de formation professionnelle.",
+    sees: ["Vocabulaire formation (apprenants, sessions, formateurs)", "Formations en heures", "Certificat de formation"],
   },
 ];
 

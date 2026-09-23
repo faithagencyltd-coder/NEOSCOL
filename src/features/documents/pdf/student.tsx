@@ -13,8 +13,17 @@ import type {
   TranscriptSnapshot,
   Verification,
 } from "../types";
+import { vocabularyFor } from "@/lib/vocabulary";
+
 import { fillText } from "../templates";
 import { COLORS, DataTable, DemoMark, DocFooter, DocHeader, DocTitle, InfoGrid, OrgMark, Signatures, styles } from "./common";
+
+/** « classe de 6e A », « promotion L1 Informatique », « session Électricité 2026 ». */
+function classTitle(type: string | null | undefined, name: string | null): string {
+  const v = vocabularyFor(type);
+  if (!name) return v.family === "school" ? "classe" : v.klass.toLowerCase();
+  return v.family === "school" ? `classe de ${name}` : `${v.klass.toLowerCase()} ${name}`;
+}
 
 /** Remplace les variables {{eleve.nom}}… d'un document rédigé (Document Studio). */
 export function fillTemplate(text: string, snapshot: CertificateSnapshot, issuedAt?: string): string {
@@ -27,7 +36,10 @@ export function fillTemplate(text: string, snapshot: CertificateSnapshot, issued
     "eleve.date_naissance": pdfDate(s.birth_date, tz, true),
     "eleve.lieu_naissance": s.birth_place ?? "—",
     "classe.nom": snapshot.class_name ?? "—",
+    "classe.intitule": classTitle(snapshot.organization.type, snapshot.class_name),
+    "eleve.qualite": vocabularyFor(snapshot.organization.type).theStudent,
     "formation.nom": snapshot.program ?? snapshot.class_name ?? "—",
+    "formation.duree": snapshot.program_hours ? String(snapshot.program_hours) : "—",
     "annee.nom": snapshot.year ?? "—",
     "etablissement.nom": snapshot.organization.name,
     "signataire.nom": snapshot.organization.signatory_name ?? "le chef d'établissement",
@@ -104,7 +116,7 @@ export function EnrollmentFormPage({ snapshot, images, verification, issuedAt }:
       <Text style={styles.sectionTitle}>Scolarité demandée</Text>
       <InfoGrid
         rows={[
-          ["Classe", enrollment.class_name],
+          [vocabularyFor(snapshot.organization.type).klass, enrollment.class_name],
           ["Niveau", enrollment.level],
           ["Filière / formation", enrollment.program],
           ["Statut", ENROLLMENT_STATUS[enrollment.status]?.label ?? enrollment.status],
@@ -272,7 +284,8 @@ export function TranscriptPage({ snapshot, images, verification, issuedAt }: { s
   const org = snapshot.organization;
   const n = snapshot.periods.length;
   const fmt = (v: number | null) => (v === null ? "—" : v.toFixed(2).replace(".", ","));
-  const width = `${Math.floor(46 / Math.max(n + 1, 1))}%`;
+  const credits = snapshot.credits ?? null;
+  const width = `${Math.floor((credits ? 34 : 46) / Math.max(n + 1, 1))}%`;
   return (
     <Page size="A4" style={styles.page}>
       <DemoMark organization={org} />
@@ -280,9 +293,9 @@ export function TranscriptPage({ snapshot, images, verification, issuedAt }: { s
       <DocTitle color={org.primary_color}>{`RELEVÉ DE NOTES${snapshot.year ? ` — ${snapshot.year}` : ""}`}</DocTitle>
       <InfoGrid
         rows={[
-          ["Élève", `${snapshot.student.last_name} ${snapshot.student.first_name}`],
+          [vocabularyFor(snapshot.organization.type).student, `${snapshot.student.last_name} ${snapshot.student.first_name}`],
           ["Matricule", snapshot.student.matricule],
-          ["Classe", snapshot.class_name],
+          [vocabularyFor(snapshot.organization.type).klass, snapshot.class_name],
           ["Né(e) le", pdfDate(snapshot.student.birth_date, org.timezone, true)],
         ]}
       />
@@ -294,15 +307,34 @@ export function TranscriptPage({ snapshot, images, verification, issuedAt }: { s
             { label: "Coef.", width: "12%", align: "center" },
             ...snapshot.periods.map((p) => ({ label: p, width, align: "center" as const })),
             ...(n > 1 ? [{ label: "Année", width, align: "center" as const }] : []),
+            ...(credits ? [{ label: "Crédits", width: "12%", align: "center" as const }] : []),
           ]}
           rows={snapshot.subjects.map((s) => {
             const values = s.averages.filter((v): v is number => v !== null);
             const annual = values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
-            return [s.subject, String(s.coefficient).replace(".", ","), ...s.averages.map(fmt), ...(n > 1 ? [fmt(annual)] : [])];
+            const earned = credits && s.credits ? (annual !== null && annual >= credits.threshold ? s.credits : 0) : null;
+            return [
+              s.subject,
+              String(s.coefficient).replace(".", ","),
+              ...s.averages.map(fmt),
+              ...(n > 1 ? [fmt(annual)] : []),
+              ...(credits ? [s.credits ? `${earned} / ${s.credits}` : "—"] : []),
+            ];
           })}
-          footer={["Moyenne générale", "", ...snapshot.averages.map(fmt), ...(n > 1 ? [fmt(snapshot.annual_average)] : [])]}
+          footer={[
+            "Moyenne générale",
+            "",
+            ...snapshot.averages.map(fmt),
+            ...(n > 1 ? [fmt(snapshot.annual_average)] : []),
+            ...(credits ? [`${credits.earned} / ${credits.total}`] : []),
+          ]}
         />
       </View>
+      {credits ? (
+        <Text style={{ marginTop: 8 }}>
+          {pdfText(`Crédits ECTS acquis : ${credits.earned} / ${credits.total} (unité acquise si la moyenne annuelle atteint ${credits.threshold}/20).`)}
+        </Text>
+      ) : null}
       {snapshot.ranks.some((r) => r !== null) ? (
         <Text style={{ marginTop: 8, color: COLORS.muted }}>
           {pdfText(`Rang : ${snapshot.periods.map((p, i) => `${p} ${snapshot.ranks[i] ?? "—"}`).join(" · ")}`)}

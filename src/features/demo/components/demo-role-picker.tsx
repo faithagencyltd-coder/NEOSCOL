@@ -4,10 +4,12 @@ import {
   Calculator,
   ClipboardList,
   GraduationCap,
+  Landmark,
   Presentation,
   ScanLine,
   ShieldCheck,
   Users,
+  Wrench,
   type LucideIcon,
 } from "lucide-react";
 
@@ -25,6 +27,8 @@ const ICONS: Record<DemoAccountKey, LucideIcon> = {
   parent: Users,
   eleve: GraduationCap,
   pointage: ScanLine,
+  universite: Landmark,
+  formation: Wrench,
 };
 
 /**

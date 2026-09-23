@@ -15,7 +15,7 @@ import { isDemoMode } from "@/lib/demo";
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const context = await requireOrganization();
   const demo = isDemoMode() && context.organization.is_demo;
-  const sections = visibleNavigation(context.permissions, { demo });
+  const sections = visibleNavigation(context.permissions, { demo, organizationType: context.organization.type });
   const notifications = await getRecentNotifications(context.organization.id);
   const name = displayName(context);
   const roleLabel = context.roleNames.join(" · ") || "Membre";

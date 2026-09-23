@@ -7,10 +7,13 @@ import { SubmitButton } from "@/components/shared/submit-button";
 import { Alert } from "@/components/ui/alert";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { saveIdentity } from "@/features/organization/actions";
+import { ORGANIZATION_TYPE_LABELS, vocabularyFor } from "@/lib/vocabulary";
 
 type Values = {
   name: string;
+  type: string;
   short_name: string | null;
   email: string | null;
   phone: string | null;
@@ -28,6 +31,8 @@ export function IdentityForm({ values, canEdit }: { values: Values; canEdit: boo
   const [name, setName] = useState(values.name);
   const [primary, setPrimary] = useState(values.primary_color);
   const [secondary, setSecondary] = useState(values.secondary_color);
+  const [type, setType] = useState(values.type);
+  const vocab = vocabularyFor(type);
   const errors = state && !state.ok ? (state.fieldErrors ?? {}) : {};
   const text = (key: keyof Values, label: string, props: React.ComponentProps<typeof Input> = {}) => (
     <FormField id={`org-${key}`} label={label} errors={errors[key]}>
@@ -41,6 +46,15 @@ export function IdentityForm({ values, canEdit }: { values: Values; canEdit: boo
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField id="org-name" label="Nom officiel *" errors={errors.name} className="sm:col-span-2">
             <Input id="org-name" name="name" required maxLength={200} value={name} onChange={(e) => setName(e.target.value)} disabled={!canEdit} />
+          </FormField>
+          <FormField id="org-type" label="Type d'établissement" errors={errors.type} hint={`Vocabulaire : ${vocab.students.toLowerCase()}, ${vocab.classes.toLowerCase()}, ${vocab.teachers.toLowerCase()}.`}>
+            <Select id="org-type" name="type" value={type} onChange={(e) => setType(e.target.value)} disabled={!canEdit}>
+              {Object.entries(ORGANIZATION_TYPE_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </Select>
           </FormField>
           {text("short_name", "Sigle / nom court", { maxLength: 40 })}
           {text("phone", "Téléphone", { type: "tel", maxLength: 40 })}

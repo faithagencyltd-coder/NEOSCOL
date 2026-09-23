@@ -22,7 +22,7 @@ export async function demoSignIn(formData: FormData): Promise<void> {
   (await cookies()).delete(ACTIVE_ORG_COOKIE);
   const { error } = await supabase.auth.signInWithPassword({ email: account.email, password: demoPassword() });
   if (error) redirect("/connexion?erreur=demo");
-  const { data: org } = await supabase.from("organizations").select("id").eq("code", "DEMO").maybeSingle();
+  const { data: org } = await supabase.from("organizations").select("id").eq("is_demo", true).limit(1).maybeSingle();
   await supabase.rpc("log_event", {
     p_organization_id: org?.id,
     p_action: "auth.login",

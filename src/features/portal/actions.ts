@@ -175,6 +175,7 @@ const settingsSchema = z.object({
   duplicate_window_seconds: z.coerce.number().int().min(0).max(3600),
   track_departure: z.boolean(),
   lock_after_validation: z.boolean(),
+  credit_threshold: z.coerce.number().min(1).max(20),
 });
 
 /** Paramètres de l'établissement : restrictions d'impayé, rappels, pointage, verrouillage des notes. */
@@ -197,6 +198,7 @@ export async function saveOrganizationSettings(_: ActionResult | null, formData:
     duplicate_window_seconds: formData.get("duplicate_window_seconds"),
     track_departure: bool("track_departure"),
     lock_after_validation: bool("lock_after_validation"),
+    credit_threshold: formData.get("credit_threshold") ?? 10,
   });
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Valeurs invalides." };
   const v = parsed.data;
@@ -218,7 +220,7 @@ export async function saveOrganizationSettings(_: ActionResult | null, formData:
       duplicate_window_seconds: v.duplicate_window_seconds,
       track_departure: v.track_departure,
     },
-    grading: { ...settings.grading, lock_after_validation: v.lock_after_validation },
+    grading: { ...settings.grading, lock_after_validation: v.lock_after_validation, credit_threshold: v.credit_threshold },
   };
   const supabase = await createClient();
   const { error } = await supabase.from("organizations").update({ settings: next }).eq("id", auth.context.organization.id);

@@ -39,6 +39,7 @@ export default async function SettingsPage() {
           duplicate_window_seconds: num(staff.duplicate_window_seconds, 60),
           track_departure: bool(staff.track_departure, true),
           lock_after_validation: bool(grading.lock_after_validation, true),
+          credit_threshold: num(grading.credit_threshold, 10),
         }}
       />
     </div>

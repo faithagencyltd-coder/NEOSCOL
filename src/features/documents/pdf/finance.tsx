@@ -1,6 +1,7 @@
 import { Page, Text, View } from "@react-pdf/renderer";
 
 import { PAYMENT_METHOD } from "@/lib/labels";
+import { vocabularyFor } from "@/lib/vocabulary";
 import { pdfDate, pdfDateTime, pdfMoney, pdfNumber, pdfText } from "@/lib/pdf/format";
 
 import type { DocImages, InvoiceSnapshot, ReceiptSnapshot, Verification } from "../types";
@@ -26,9 +27,9 @@ export function ReceiptPage({ snapshot, images, verification, issuedAt }: { snap
       <DocTitle color={org.primary_color}>REÇU DE PAIEMENT</DocTitle>
       <InfoGrid
         rows={[
-          ["Élève", `${student.last_name} ${student.first_name}`],
+          [vocabularyFor(org.type).student, `${student.last_name} ${student.first_name}`],
           ["Matricule", student.matricule],
-          ["Classe", snapshot.class_name],
+          [vocabularyFor(snapshot.organization.type).klass, snapshot.class_name],
           ["Facture", snapshot.invoice.number],
           ["Versé par", payment.payer_name],
           ["Mode de paiement", `${PAYMENT_METHOD[payment.method] ?? payment.method}${payment.reference ? ` — réf. ${payment.reference}` : ""}`],
@@ -73,9 +74,9 @@ export function InvoicePage({ snapshot, images, verification, issuedAt }: { snap
       <DocTitle color={org.primary_color}>FACTURE</DocTitle>
       <InfoGrid
         rows={[
-          ["Élève", `${student.last_name} ${student.first_name}`],
+          [vocabularyFor(org.type).student, `${student.last_name} ${student.first_name}`],
           ["Matricule", student.matricule],
-          ["Classe", snapshot.class_name],
+          [vocabularyFor(snapshot.organization.type).klass, snapshot.class_name],
           ["Responsable", snapshot.guardian],
         ]}
       />
