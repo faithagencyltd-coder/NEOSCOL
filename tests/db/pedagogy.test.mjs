@@ -2,14 +2,9 @@
 import { after, describe, test } from "node:test";
 import assert from "node:assert/strict";
 
-import { as, pool, rejects, USERS } from "./helpers.mjs";
+import { as, badgeToken, lessonNow, ORG_DEMO, pool, rejects, switchTo, USERS } from "./helpers.mjs";
 
 after(() => pool.end());
-
-const switchTo = async (q, user) => {
-  await q("set local role authenticated");
-  await q("select set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: user, role: "authenticated" })]);
-};
 
 async function classInfo(q, name) {
   const [klass] = await q("select id from classes where name = $1", [name]);
@@ -21,39 +16,106 @@ async function classInfo(q, name) {
 }
 
 describe("Appel", () => {
-  test("l'enseignant fait l'appel de sa classe ; la famille est notifiée de l'absence", async () => {
+  test("chaîne complète : cours verrouillé → scan du badge → appel → validation → famille notifiée", async () => {
     await as(null, async (q) => {
+      const lesson = await lessonNow(q, { teacherUser: USERS.teacher, className: "6e A", subjectCode: "MATH" });
+      const token = await badgeToken(q, USERS.teacher);
       const cls = await classInfo(q, "6e A");
       const [kofi] = await q("select id from students where first_name = 'Kofi' and last_name = 'BAMBA'");
-      await switchTo(q, USERS.teacher);
       const records = cls.students.map((id) => ({ student_id: id, status: id === kofi.id ? "absent" : "present" }));
-      const [{ record_attendance: session }] = await q(
-        "select record_attendance($1, current_date, '14:00', '16:00', null, $2)",
-        [cls.id, JSON.stringify(records)],
-      );
-      const rows = await q("select status from attendance_records where session_id = $1", [session]);
-      assert.equal(rows.length, cls.students.length);
-      await switchTo(q, USERS.parent);
-      const notes = await q("select title from notifications where type = 'attendance.absent'");
-      assert.ok(notes.length >= 1);
-    });
-  });
 
-  test("impossible de faire l'appel d'une classe non affectée", async () => {
-    await as(USERS.teacher, async (q) => {
-      const [klass] = await q("select id from classes where name = '5e A'");
+      await switchTo(q, USERS.teacher);
+      const [before] = await q("select status from my_lessons($1, $1) where slot_id = $2", [lesson.today, lesson.slotId]);
+      assert.equal(before.status, "pending", "En attente tant que le badge n'est pas scanné");
       assert.match(
-        await rejects(q("select record_attendance($1, current_date, '14:00', '16:00', null, '[]')", [klass.id])),
-        /row-level security/,
+        await rejects(q("select take_lesson_attendance($1, $2, $3)", [lesson.slotId, lesson.today, JSON.stringify(records)])),
+        /Cours verrouillé/,
+      );
+      // Le professeur ne peut pas pointer lui-même (pas d'appel depuis chez lui).
+      assert.match(await rejects(q("select scan_staff_badge($1, $2)", [ORG_DEMO, token])), /pas autorisée/);
+
+      await switchTo(q, USERS.kiosk);
+      const [{ scan_staff_badge: scan }] = await q("select scan_staff_badge($1, $2, 'test')", [ORG_DEMO, `NEOSCOL-BADGE:${token}`]);
+      assert.equal(scan.result, "accepted");
+      assert.equal(scan.kind, "arrival");
+      assert.ok(scan.lesson, "le cours en cours est débloqué");
+      assert.equal(scan.lesson.class, "6e A");
+
+      await switchTo(q, USERS.teacher);
+      const [unlocked] = await q("select status from my_lessons($1, $1) where slot_id = $2", [lesson.today, lesson.slotId]);
+      assert.equal(unlocked.status, "unlocked", "Appel disponible");
+      const [{ take_lesson_attendance: session }] = await q("select take_lesson_attendance($1, $2, $3)", [
+        lesson.slotId, lesson.today, JSON.stringify(records),
+      ]);
+      await switchTo(q, USERS.parent);
+      assert.equal((await q("select id from attendance_records where session_id = $1", [session])).length, 0, "brouillon invisible des familles");
+
+      await switchTo(q, USERS.teacher);
+      // Correction avant validation puis validation.
+      await q("select take_lesson_attendance($1, $2, $3, true)", [
+        lesson.slotId, lesson.today,
+        JSON.stringify([{ student_id: kofi.id, status: "absent", comment: "Aucune nouvelle" }]),
+      ]);
+      const [validated] = await q("select status, validated_by from attendance_sessions where id = $1", [session]);
+      assert.deepEqual(validated, { status: "validated", validated_by: USERS.teacher });
+      assert.match(
+        await rejects(q("select take_lesson_attendance($1, $2, $3)", [lesson.slotId, lesson.today, JSON.stringify(records)])),
+        /validé/,
+      );
+      assert.match(
+        await rejects(q("update attendance_records set status = 'present' where session_id = $1", [session])),
+        /validé/,
+      );
+
+      await switchTo(q, USERS.parent);
+      const visible = await q("select status from attendance_records where session_id = $1", [session]);
+      assert.deepEqual(visible.map((r) => r.status), ["absent"]);
+      const notes = await q("select body from notifications where type = 'attendance.absent' and data->>'attendance_record_id' is not null order by created_at desc limit 1");
+      assert.match(notes[0].body, /Mathématiques/);
+
+      // L'administration peut corriger un appel validé (audité).
+      await switchTo(q, USERS.admin);
+      await q("update attendance_records set status = 'late', minutes_late = 5 where session_id = $1 and student_id = $2", [session, kofi.id]);
+      const audit = await q("select actor_role from audit_logs where entity_type = 'attendance_records' and action = 'attendance_records.update' order by id desc limit 1");
+      assert.match(audit[0].actor_role, /Administrateur/);
+    });
+  });
+
+  test("le déverrouillage ne vaut que pour le cours et l'enseignant concernés", async () => {
+    await as(null, async (q) => {
+      const lesson = await lessonNow(q, { teacherUser: USERS.teacher, className: "6e A", subjectCode: "MATH" });
+      await switchTo(q, USERS.kiosk);
+      await q("select scan_staff_badge($1, $2)", [ORG_DEMO, await (async () => {
+        await switchTo(q, null);
+        const token = await badgeToken(q, USERS.teacher);
+        await switchTo(q, USERS.kiosk);
+        return token;
+      })()]);
+      // Une autre enseignante ne peut pas faire l'appel de ce cours.
+      await switchTo(q, USERS.teacher2);
+      assert.match(
+        await rejects(q("select take_lesson_attendance($1, $2, '[]')", [lesson.slotId, lesson.today])),
+        /row-level security|pas affecté/,
+      );
+      // Pas d'appel pour une autre date que celle du cours.
+      await switchTo(q, USERS.teacher);
+      assert.match(
+        await rejects(q("select take_lesson_attendance($1, $2::date - 7, '[]')", [lesson.slotId, lesson.today])),
+        /jour du cours/,
+      );
+      // L'appel libre (hors emploi du temps) est refusé à l'enseignant.
+      assert.match(
+        await rejects(q("select record_attendance($1, $2, '07:00', '07:30', null, '[]')", [lesson.classId, lesson.today])),
+        /emploi du temps/,
       );
     });
   });
 
-  test("refaire l'appel ne supprime pas une justification", async () => {
+  test("appel libre par l'administration : la justification est conservée", async () => {
     await as(null, async (q) => {
       const cls = await classInfo(q, "6e A");
       const target = cls.students[0];
-      await switchTo(q, USERS.teacher);
+      await switchTo(q, USERS.admin);
       const [{ record_attendance: session }] = await q(
         "select record_attendance($1, current_date, '16:00', '17:00', null, $2)",
         [cls.id, JSON.stringify([{ student_id: target, status: "absent" }])],
@@ -63,13 +125,16 @@ describe("Appel", () => {
         "update attendance_records set is_justified = true, justification = 'Certificat médical' where session_id = $1",
         [session],
       );
-      await switchTo(q, USERS.teacher);
+      await switchTo(q, USERS.admin);
       await q("select record_attendance($1, current_date, '16:00', '17:00', null, $2)", [
         cls.id,
         JSON.stringify([{ student_id: target, status: "late", minutes_late: 10 }]),
       ]);
       const [row] = await q("select status, minutes_late, is_justified, justification from attendance_records where session_id = $1", [session]);
       assert.deepEqual(row, { status: "late", minutes_late: 10, is_justified: true, justification: "Certificat médical" });
+      await q("select validate_attendance_session($1)", [session]);
+      const [s] = await q("select status from attendance_sessions where id = $1", [session]);
+      assert.equal(s.status, "validated");
     });
   });
 
@@ -80,6 +145,56 @@ describe("Appel", () => {
         await rejects(q("update attendance_records set is_justified = true where id = $1", [record.id])),
         /attendance\.justify/,
       );
+    });
+  });
+
+  test("justification : dépôt par le parent → correction demandée → acceptation par l'administration", async () => {
+    await as(null, async (q) => {
+      const cls = await classInfo(q, "6e A");
+      const [kofi] = await q("select id from students where first_name = 'Kofi' and last_name = 'BAMBA'");
+      await switchTo(q, USERS.admin);
+      const [{ record_attendance: session }] = await q(
+        "select record_attendance($1, current_date, '13:00', '14:00', null, $2)",
+        [cls.id, JSON.stringify(cls.students.map((id) => ({ student_id: id, status: id === kofi.id ? "absent" : "present" })))],
+      );
+      await q("select validate_attendance_session($1)", [session]);
+      const record = { student_id: kofi.id, session_date: (await q("select current_date as d"))[0].d };
+      const submitter = USERS.parent;
+      await switchTo(q, submitter);
+      const [{ submit_absence_justification: id }] = await q(
+        "select submit_absence_justification($1, $2, $2, 'Rendez-vous médical')",
+        [record.student_id, record.session_date],
+      );
+      // Un parent ne peut pas justifier pour un élève qui n'est pas son enfant.
+      const stranger = cls.students.find((id) => id !== kofi.id);
+      assert.match(
+        await rejects(q("select submit_absence_justification($1, current_date, current_date, 'Tentative')", [stranger])),
+        /ne pouvez pas justifier/,
+      );
+      await switchTo(q, USERS.secretary);
+      const [pending] = await q("select status, submitted_via from absence_justifications where id = $1", [id]);
+      assert.deepEqual(pending, { status: "pending", submitted_via: "portal" });
+      await switchTo(q, USERS.teacher);
+      assert.match(await rejects(q("select review_absence_justification($1, 'accepted')", [id])), /attendance\.justify/);
+      await switchTo(q, USERS.secretary);
+      assert.match(await rejects(q("select review_absence_justification($1, 'rejected')", [id])), /commentaire est obligatoire/);
+      await q("select review_absence_justification($1, 'correction_requested', 'Merci de joindre le certificat')", [id]);
+      await switchTo(q, submitter);
+      await q("select submit_absence_justification($1, $2, $2, 'Rendez-vous médical (certificat joint)', null, $3)", [
+        record.student_id, record.session_date, id,
+      ]);
+      await switchTo(q, USERS.secretary);
+      const [{ review_absence_justification: justified }] = await q("select review_absence_justification($1, 'accepted')", [id]);
+      assert.ok(justified >= 1);
+      const [row] = await q(
+        `select r.status, r.is_justified from attendance_records r join attendance_sessions s on s.id = r.session_id
+         where r.student_id = $1 and s.session_date = $2 limit 1`,
+        [record.student_id, record.session_date],
+      );
+      assert.deepEqual(row, { status: "excused", is_justified: true });
+      await switchTo(q, USERS.teacher);
+      const seen = await q("select status from absence_justifications where id = $1", [id]);
+      assert.deepEqual(seen, [{ status: "accepted" }], "l'enseignant voit le statut sans pouvoir le modifier");
     });
   });
 });
@@ -184,6 +299,8 @@ describe("Bulletins", () => {
       const published = await q("update report_cards set status = 'published' where class_id = $1 returning published_by", [klass.id]);
       assert.equal(published.length, 6);
       assert.equal(published[0].published_by, USERS.director);
+      await switchTo(q, null);
+      await q("update organizations set settings = jsonb_set(settings, '{portal_restrictions,enabled}', 'false') where id = $1", [ORG_DEMO]);
       await switchTo(q, USERS.parent);
       const visible = await q("select id from report_cards");
       assert.equal(visible.length, 1, "le parent voit le bulletin publié de Kofi (Aya est en 5e A)");

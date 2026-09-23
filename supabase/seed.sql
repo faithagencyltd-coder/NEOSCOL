@@ -60,6 +60,7 @@ select pg_temp.demo_user('00000000-0000-4000-a000-000000000007', 'enseignante@de
 select pg_temp.demo_user('00000000-0000-4000-a000-000000000008', 'parent@demo.neoscol.app', 'Adjoua', 'BAMBA', '+2250700000001');
 select pg_temp.demo_user('00000000-0000-4000-a000-000000000009', 'eleve@demo.neoscol.app', 'Kofi', 'BAMBA');
 select pg_temp.demo_user('00000000-0000-4000-a000-000000000010', 'formation@demo.neoscol.app', 'Moussa', 'DIALLO');
+select pg_temp.demo_user('00000000-0000-4000-a000-000000000011', 'pointage@demo.neoscol.app', 'Tablette', 'ACCUEIL');
 
 insert into public.platform_admins (user_id) values ('00000000-0000-4000-a000-000000000001');
 
@@ -86,6 +87,7 @@ select pg_temp.grant_role('10000000-0000-4000-a000-000000000001', '00000000-0000
 select pg_temp.grant_role('10000000-0000-4000-a000-000000000001', '00000000-0000-4000-a000-000000000008', 'parent');
 select pg_temp.grant_role('10000000-0000-4000-a000-000000000001', '00000000-0000-4000-a000-000000000009', 'student');
 select pg_temp.grant_role('10000000-0000-4000-a000-000000000002', '00000000-0000-4000-a000-000000000010', 'org_admin');
+select pg_temp.grant_role('10000000-0000-4000-a000-000000000001', '00000000-0000-4000-a000-000000000011', 'kiosk');
 
 -- Données scolaires de l'établissement DEMO -------------------------------------------
 do $$
@@ -269,6 +271,7 @@ begin
     -- Paiements variés : soldé, partiel, rien
     v_amount := case when i % 4 = 0 then 205000 when i % 4 = 1 then 97000 when i % 4 = 2 then 50000 else 0 end;
     if i = 3 then v_amount := 89800; end if;
+    if i = 1 then v_amount := 0; end if; -- Kofi : 1re tranche impayée (démonstration des restrictions)
     if v_amount > 0 then
       insert into public.payments (organization_id, invoice_id, amount, method, reference, payer_name, paid_at)
       values (v_org, v_invoice, v_amount,
@@ -304,8 +307,8 @@ begin
 
   -- Présences (6e A, deux séances)
   for i in 1..2 loop
-    insert into public.attendance_sessions (organization_id, class_id, session_date, starts_at, ends_at)
-    values (v_org, v_classes[1], current_date - i, time '08:00', time '10:00')
+    insert into public.attendance_sessions (organization_id, class_id, session_date, starts_at, ends_at, status)
+    values (v_org, v_classes[1], current_date - i, time '08:00', time '10:00', 'validated')
     returning id into v_session;
     insert into public.attendance_records (organization_id, session_id, student_id, status, minutes_late)
     select v_org, v_session, e.student_id,
@@ -315,6 +318,19 @@ begin
            case when row_number() over (order by e.student_id) = 4 then 15 end
     from public.enrollments e where e.class_id = v_classes[1] and e.status = 'validated';
   end loop;
+
+  -- Badges du personnel (QR) et dépenses
+  insert into public.staff_badges (organization_id, staff_id)
+  select v_org, id from public.staff_members where organization_id = v_org;
+
+  insert into public.expenses (organization_id, category_id, label, amount, spent_on, supplier, payment_method, reference)
+  select v_org, c.id, x.label, x.amount, x.spent_on, x.supplier, x.method::public.payment_method, x.reference
+  from (values
+    ('Fournitures et matériel', 'Craies, marqueurs et registres', 85000, date '2026-09-08', 'Librairie de la Démo', 'cash', null),
+    ('Électricité et eau', 'Facture d''électricité — août', 142500, date '2026-09-12', 'Compagnie d''électricité', 'bank_transfer', 'VIR-2026-0912'),
+    ('Maintenance et réparations', 'Réparation des climatiseurs (salle 101)', 60000, date '2026-09-18', 'Froid Services', 'mobile_money', 'MM-44120087')
+  ) as x(category, label, amount, spent_on, supplier, method, reference)
+  join public.expense_categories c on c.organization_id = v_org and c.name = x.category;
 
   insert into public.announcements (organization_id, title, body, is_pinned, published_at, author_name)
   values (v_org, 'Bienvenue sur NéoScol (démonstration)',
@@ -348,3 +364,10 @@ begin
   values (v_org, v_student, v_year, v_class, v_program, 'new', 'validated');
 end;
 $$;
+
+-- Restrictions du portail en cas d'impayé activées pour la démonstration, une fois
+-- l'historique des paiements chargé
+-- (notes, bulletins et documents ; les présences restent toujours visibles).
+update public.organizations
+   set settings = jsonb_set(settings, '{portal_restrictions,enabled}', 'true')
+ where id = '10000000-0000-4000-a000-000000000001';

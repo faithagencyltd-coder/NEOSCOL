@@ -52,6 +52,7 @@ Mot de passe commun : `NeoScol-Demo-2026!`
 | `eleve@demo.neoscol.app` | Élève |
 | `formation@demo.neoscol.app` | Administrateur d'un 2ᵉ établissement (tests d'isolation) |
 | `superadmin@demo.neoscol.app` | Super administrateur plateforme |
+| `pointage@demo.neoscol.app` | Tablette de pointage (scan des badges) |
 
 ## Commandes
 

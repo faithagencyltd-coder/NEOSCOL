@@ -6,6 +6,11 @@ import { as, ORG_DEMO, ORG_DEMOF, pool, rejects, USERS } from "./helpers.mjs";
 
 after(() => pool.end());
 
+// Les restrictions d'impayé (actives dans la démo pour Kofi) sont testées dans
+// portal.test.mjs ; ici on vérifie les portées « normales ».
+const liftRestrictions = (q) =>
+  q("update organizations set settings = jsonb_set(settings, '{portal_restrictions,enabled}', 'false') where id = $1", [ORG_DEMO]);
+
 const count = (rows) => Number(rows[0].count);
 
 describe("Isolation multi-établissements", () => {
@@ -75,7 +80,12 @@ describe("Portées par rôle", () => {
   });
 
   test("l'élève ne voit que son propre dossier", async () => {
-    await as(USERS.student, async (q) => {
+    await as(null, async (q) => {
+      await liftRestrictions(q);
+      await q("set local role authenticated");
+      await q("select set_config('request.jwt.claims', $1, true)", [
+        JSON.stringify({ sub: USERS.student, role: "authenticated" }),
+      ]);
       const students = await q("select first_name, last_name from students");
       assert.deepEqual(students, [{ first_name: "Kofi", last_name: "BAMBA" }]);
       const grades = await q("select distinct student_id from grades");
@@ -85,6 +95,7 @@ describe("Portées par rôle", () => {
 
   test("les notes non publiées sont invisibles pour les familles", async () => {
     await as(null, async (q) => {
+      await liftRestrictions(q);
       const hidden = await q(
         "update assessments set is_published = false where title = 'Interrogation écrite' returning id",
       );
@@ -358,7 +369,7 @@ describe("Vérification publique et recherche", () => {
       const rows = await q("select payment_status, invoices from invoice_status_summary($1) order by 1", [ORG_DEMO]);
       assert.deepEqual(
         rows.map((r) => [r.payment_status, Number(r.invoices)]),
-        [["paid", 6], ["partial", 13], ["unpaid", 5]],
+        [["paid", 6], ["partial", 12], ["unpaid", 6]],
       );
     });
     await as(USERS.teacher, async (q) => {
