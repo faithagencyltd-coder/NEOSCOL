@@ -471,3 +471,25 @@ describe("Communication", () => {
     });
   });
 });
+
+describe("Frais et tarifs", () => {
+  test("échéancier contrôlé en base ; seuls les gestionnaires des frais modifient les tarifs", async () => {
+    await as(null, async (q) => {
+      await switchTo(q, USERS.accountant);
+      const [{ id: year }] = await q("select id from academic_years where organization_id = $1 and is_current", [ORG_DEMO]);
+      const [{ id: fee }] = await q("select id from fee_types where organization_id = $1 and code = 'CANT'", [ORG_DEMO]);
+      const insert = (plan) =>
+        q("insert into fee_rates (organization_id, academic_year_id, fee_type_id, amount, installment_plan) values ($1, $2, $3, 30000, $4) returning id", [ORG_DEMO, year, fee, JSON.stringify(plan)]);
+      assert.match(await rejects(insert([{ label: "T1", due_on: "2026-10-01", percent: 50 }, { label: "T2", due_on: "2027-01-01", percent: 40 }])), /100 %/);
+      assert.match(await rejects(insert([{ label: "T1", due_on: "2027-01-01", percent: 50 }, { label: "T2", due_on: "2026-10-01", percent: 50 }])), /chronologique/);
+      const [{ id }] = await insert([{ label: "T1", due_on: "2026-10-01", percent: 50 }, { label: "T2", due_on: "2027-01-01", percent: 50 }]);
+      assert.ok(id);
+      // Secrétariat : lecture seule sur les tarifs.
+      await switchTo(q, USERS.secretary);
+      assert.equal((await q("update fee_rates set amount = 1 where id = $1 returning id", [id])).length, 0);
+      // Autre établissement : invisible.
+      await switchTo(q, USERS.otherOrgAdmin);
+      assert.equal((await q("select id from fee_rates where id = $1", [id])).length, 0);
+    });
+  });
+});

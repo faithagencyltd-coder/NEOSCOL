@@ -23,17 +23,24 @@ import {
   createExpenseCategory,
   createInvoice,
   deleteExpense,
+  deleteFeeRate,
+  saveFeeType,
+  sendReminder,
   sendReminders,
   setExpenseArchived,
+  setFeeTypeActive,
 } from "@/features/finance/actions";
 import { ExpenseDialog } from "@/features/finance/components/expense-dialog";
+import { FeeRateDialog } from "@/features/finance/components/fee-rate-dialog";
 import {
   FINANCE_PAGE_SIZE,
+  getFeeSetup,
   getFinanceSummary,
   listExpenseCategories,
   listExpenses,
   listFeeTypes,
   listInvoices,
+  listOutstandingBalances,
   listPayments,
   listReminders,
   listStudentsForInvoice,
@@ -49,6 +56,18 @@ export const metadata: Metadata = { title: "Finances" };
 
 type Params = Record<string, string | string[] | undefined>;
 
+const FEE_CATEGORY: Record<string, string> = {
+  registration: "Inscription",
+  tuition: "Scolarité",
+  training: "Formation",
+  exam: "Examen",
+  uniform: "Tenue",
+  transport: "Transport",
+  canteen: "Cantine",
+  supplies: "Fournitures",
+  other: "Autre",
+};
+
 const REMINDER_KIND: Record<string, string> = { issued: "Facture émise", upcoming: "Échéance proche", overdue: "Impayé", manual: "Rappel manuel" };
 
 export default async function FinancePage({ searchParams }: PageProps<"/finances">) {
@@ -62,7 +81,9 @@ export default async function FinancePage({ searchParams }: PageProps<"/finances
     ...(canRead ? [{ key: "factures", label: "Factures", href: "/finances?onglet=factures" }] : []),
     ...(canRead ? [{ key: "paiements", label: "Paiements", href: "/finances?onglet=paiements" }] : []),
     ...(canExpenses ? [{ key: "depenses", label: "Dépenses", href: "/finances?onglet=depenses" }] : []),
+    ...(canRead ? [{ key: "impayes", label: "Impayés et reliquats", href: "/finances?onglet=impayes" }] : []),
     ...(canRead ? [{ key: "rappels", label: "Rappels d'impayés", href: "/finances?onglet=rappels" }] : []),
+    ...(canRead ? [{ key: "tarifs", label: "Frais et tarifs", href: "/finances?onglet=tarifs" }] : []),
   ];
   const requested = param(params, "onglet");
   const tab = tabs.some((t) => t.key === requested) ? requested! : tabs[0]!.key;
@@ -81,7 +102,9 @@ export default async function FinancePage({ searchParams }: PageProps<"/finances
       {tab === "factures" ? <InvoicesSection params={params} /> : null}
       {tab === "paiements" ? <PaymentsSection params={params} /> : null}
       {tab === "depenses" ? <ExpensesSection params={params} /> : null}
+      {tab === "impayes" ? <OutstandingSection params={params} /> : null}
       {tab === "rappels" ? <RemindersSection /> : null}
+      {tab === "tarifs" ? <FeesSection /> : null}
     </div>
   );
 }
@@ -570,6 +593,278 @@ async function RemindersSection() {
             </tbody>
           </Table>
         )}
+      </Card>
+    </div>
+  );
+}
+
+async function OutstandingSection({ params }: { params: Params }) {
+  const context = await requireOrganization();
+  const overdueOnly = param(params, "retard") === "1";
+  const rows = await listOutstandingBalances(context.organization.id, { q: param(params, "q"), overdueOnly });
+  const money = (n: number) => formatMoney(n, context.organization.currency);
+  const canRemind = can(context, "finance.invoices.manage");
+  const totals = rows.reduce((t, r) => ({ balance: t.balance + r.balance, overdue: t.overdue + (r.overdue ? 1 : 0) }), { balance: 0, overdue: 0 });
+  return (
+    <div className="grid gap-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+        <Card className="grid gap-1 p-4">
+          <span className="text-sm text-muted-foreground">Reliquat total</span>
+          <strong className="font-display text-xl tabular-nums text-warning">{money(totals.balance)}</strong>
+        </Card>
+        <Card className="grid gap-1 p-4">
+          <span className="text-sm text-muted-foreground">Élèves avec un reste dû</span>
+          <strong className="font-display text-xl tabular-nums">{rows.length}</strong>
+        </Card>
+        <Card className="grid gap-1 p-4">
+          <span className="text-sm text-muted-foreground">Dont en retard</span>
+          <strong className="font-display text-xl tabular-nums text-danger">{totals.overdue}</strong>
+        </Card>
+      </div>
+      <Card className="overflow-hidden">
+        <Suspense>
+          <FilterBar
+            placeholder="Élève, matricule ou classe…"
+            filters={[{ name: "retard", label: "Situation", options: [{ value: "", label: "Tous les restes dus" }, { value: "1", label: "En retard uniquement" }] }]}
+          />
+        </Suspense>
+        {rows.length === 0 ? (
+          <div className="border-t border-border">
+            <EmptyState icon={Wallet} title="Aucun impayé" description="Toutes les factures émises sont soldées." />
+          </div>
+        ) : (
+          <Table>
+            <THead>
+              <tr className="border-t border-border">
+                <TH>Élève</TH>
+                <TH>Classe</TH>
+                <TH className="text-right">Facturé</TH>
+                <TH className="text-right">Payé</TH>
+                <TH className="text-right">Reliquat</TH>
+                <TH>Prochaine échéance</TH>
+                <TH>Factures</TH>
+              </tr>
+            </THead>
+            <tbody>
+              {rows.map((r) => (
+                <TR key={r.student.id}>
+                  <TD>
+                    <Link href={`/eleves/${r.student.id}?onglet=finance`} className="grid hover:text-primary">
+                      <span className="font-medium">
+                        {r.student.last_name} {r.student.first_name}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{r.student.matricule}</span>
+                    </Link>
+                  </TD>
+                  <TD>{r.className ?? "—"}</TD>
+                  <TD className="text-right tabular-nums">{money(r.total)}</TD>
+                  <TD className="text-right tabular-nums">{money(r.paid)}</TD>
+                  <TD className="text-right font-semibold tabular-nums">{money(r.balance)}</TD>
+                  <TD>
+                    <span className="flex flex-wrap items-center gap-1.5">
+                      {r.nextDue ? formatDate(r.nextDue) : "—"}
+                      {r.overdue ? <Badge tone="danger">En retard</Badge> : null}
+                    </span>
+                  </TD>
+                  <TD>
+                    <ul className="grid gap-1">
+                      {r.invoices.map((i) => (
+                        <li key={i.invoice_id} className="flex items-center gap-2 text-sm">
+                          <Link href={`/finances/factures/${i.invoice_id}`} className="hover:text-primary">
+                            {i.number}
+                          </Link>
+                          <span className="text-xs tabular-nums text-muted-foreground">{money(Number(i.balance))}</span>
+                          {canRemind && i.is_overdue ? (
+                            <ConfirmAction
+                              trigger={
+                                <Button variant="ghost" size="sm" aria-label={`Envoyer un rappel pour ${i.number}`}>
+                                  <BellRing aria-hidden />
+                                </Button>
+                              }
+                              title={`Rappel pour ${i.number} ?`}
+                              description="La famille est notifiée dans son portail du montant restant dû."
+                              confirmLabel="Envoyer"
+                              action={sendReminder}
+                              fields={{ invoice_id: i.invoice_id! }}
+                            />
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </TD>
+                </TR>
+              ))}
+            </tbody>
+          </Table>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+async function FeesSection() {
+  const context = await requireOrganization();
+  const manage = can(context, "finance.fees.manage");
+  const setup = await getFeeSetup(context.organization.id);
+  const currency = context.organization.currency;
+  const activeTypes = setup.types.filter((t) => t.is_active);
+  const target = (r: (typeof setup.rates)[number]) =>
+    r.class ? `Classe ${r.class.name}` : r.level ? `Niveau ${r.level.name}` : r.program ? `Filière ${r.program.name}` : "Tout l'établissement";
+  const typeFields = (t?: (typeof setup.types)[number]) => [
+    { name: "name", label: "Nom", required: true, defaultValue: t?.name, placeholder: "Frais de scolarité" },
+    { name: "code", label: "Code", required: true, defaultValue: t?.code, placeholder: "SCOL" },
+    { name: "category", label: "Catégorie", type: "select" as const, required: true, defaultValue: t?.category ?? "tuition", options: Object.entries(FEE_CATEGORY).map(([value, label]) => ({ value, label })) },
+  ];
+  return (
+    <div className="grid gap-4">
+      <Card>
+        <CardHeader className="flex-row flex-wrap items-center justify-between gap-2">
+          <div className="grid gap-1">
+            <CardTitle>Tarifs {setup.year ? `— ${setup.year.name}` : ""}</CardTitle>
+            <p className="text-sm text-muted-foreground">Facturés automatiquement à la validation des inscriptions, avec leur échéancier.</p>
+          </div>
+          {manage && setup.year && activeTypes.length ? (
+            <FeeRateDialog feeTypes={activeTypes} levels={setup.levels} programs={setup.programs} classes={setup.classes} currency={currency} />
+          ) : null}
+        </CardHeader>
+        {!setup.year ? (
+          <EmptyState icon={Receipt} title="Aucune année scolaire en cours" description="Définissez l'année en cours pour saisir ses tarifs." />
+        ) : setup.rates.length === 0 ? (
+          <EmptyState icon={Receipt} title="Aucun tarif" description="Ajoutez les frais d'inscription et de scolarité de l'année." />
+        ) : (
+          <Table>
+            <THead>
+              <tr className="border-t border-border">
+                <TH>Frais</TH>
+                <TH>Cible</TH>
+                <TH className="text-right">Montant</TH>
+                <TH>Échéancier</TH>
+                {manage ? <TH className="text-right">Actions</TH> : null}
+              </tr>
+            </THead>
+            <tbody>
+              {setup.rates.map((r) => {
+                const plan = Array.isArray(r.installment_plan) ? (r.installment_plan as { label: string; due_on: string; percent: number }[]) : [];
+                return (
+                  <TR key={r.id}>
+                    <TD>
+                      <span className="grid">
+                        <span className="font-medium">{r.fee_type?.name ?? "—"}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {FEE_CATEGORY[r.fee_type?.category ?? ""] ?? ""} · {r.is_mandatory ? "obligatoire" : "facultatif"}
+                        </span>
+                      </span>
+                    </TD>
+                    <TD>{target(r)}</TD>
+                    <TD className="text-right font-semibold tabular-nums">{formatMoney(Number(r.amount), currency)}</TD>
+                    <TD>
+                      {plan.length === 0 ? (
+                        <span className="text-muted-foreground">En une fois</span>
+                      ) : (
+                        <ul className="grid gap-0.5 text-xs">
+                          {plan.map((p, i) => (
+                            <li key={i} className="tabular-nums">
+                              {p.label} · {formatDate(p.due_on)} · {p.percent} % ({formatMoney((Number(r.amount) * p.percent) / 100, currency)})
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </TD>
+                    {manage ? (
+                      <TD>
+                        <span className="flex justify-end gap-1.5">
+                          <FeeRateDialog
+                            feeTypes={setup.types.filter((t) => t.is_active || t.id === r.fee_type_id)}
+                            levels={setup.levels}
+                            programs={setup.programs}
+                            classes={setup.classes}
+                            currency={currency}
+                            rate={{ ...r, amount: Number(r.amount) }}
+                            trigger={
+                              <Button variant="secondary" size="sm" aria-label={`Modifier le tarif ${r.fee_type?.name ?? ""} — ${target(r)}`}>
+                                <Pencil aria-hidden />
+                              </Button>
+                            }
+                          />
+                          <ConfirmAction
+                            trigger={
+                              <Button variant="ghost" size="sm" className="text-danger" aria-label={`Supprimer le tarif ${r.fee_type?.name ?? ""} — ${target(r)}`}>
+                                <Trash2 aria-hidden />
+                              </Button>
+                            }
+                            title="Supprimer ce tarif ?"
+                            description="Les factures déjà émises ne sont pas modifiées ; les prochaines inscriptions ne seront plus facturées de ce montant."
+                            confirmLabel="Supprimer"
+                            tone="danger"
+                            action={deleteFeeRate}
+                            fields={{ fee_rate_id: r.id }}
+                          />
+                        </span>
+                      </TD>
+                    ) : null}
+                  </TR>
+                );
+              })}
+            </tbody>
+          </Table>
+        )}
+      </Card>
+
+      <Card>
+        <CardHeader className="flex-row flex-wrap items-center justify-between gap-2">
+          <CardTitle>Types de frais</CardTitle>
+          {manage ? <QuickFormDialog title="Nouveau type de frais" triggerLabel="Nouveau type de frais" action={saveFeeType} fields={typeFields()} /> : null}
+        </CardHeader>
+        <Table>
+          <THead>
+            <tr className="border-t border-border">
+              <TH>Nom</TH>
+              <TH>Code</TH>
+              <TH>Catégorie</TH>
+              <TH>Statut</TH>
+              {manage ? <TH className="text-right">Actions</TH> : null}
+            </tr>
+          </THead>
+          <tbody>
+            {setup.types.map((t) => (
+              <TR key={t.id}>
+                <TD className="font-medium">{t.name}</TD>
+                <TD className="font-mono text-xs">{t.code}</TD>
+                <TD>{FEE_CATEGORY[t.category] ?? t.category}</TD>
+                <TD>{t.is_active ? <Badge tone="success">Actif</Badge> : <Badge>Désactivé</Badge>}</TD>
+                {manage ? (
+                  <TD>
+                    <span className="flex justify-end gap-1.5">
+                      <QuickFormDialog
+                        title={`Modifier « ${t.name} »`}
+                        trigger={
+                          <Button variant="secondary" size="sm" aria-label={`Modifier ${t.name}`}>
+                            <Pencil aria-hidden />
+                          </Button>
+                        }
+                        action={saveFeeType}
+                        hidden={{ fee_type_id: t.id }}
+                        fields={typeFields(t)}
+                      />
+                      <ConfirmAction
+                        trigger={
+                          <Button variant="ghost" size="sm" aria-label={`${t.is_active ? "Désactiver" : "Réactiver"} ${t.name}`}>
+                            {t.is_active ? <Archive aria-hidden /> : <ArchiveRestore aria-hidden />}
+                          </Button>
+                        }
+                        title={t.is_active ? `Désactiver « ${t.name} » ?` : `Réactiver « ${t.name} » ?`}
+                        description={t.is_active ? "Il ne sera plus facturé aux nouvelles inscriptions ; l'historique est conservé." : undefined}
+                        confirmLabel={t.is_active ? "Désactiver" : "Réactiver"}
+                        action={setFeeTypeActive}
+                        fields={{ fee_type_id: t.id, active: t.is_active ? "false" : "true" }}
+                      />
+                    </span>
+                  </TD>
+                ) : null}
+              </TR>
+            ))}
+          </tbody>
+        </Table>
       </Card>
     </div>
   );

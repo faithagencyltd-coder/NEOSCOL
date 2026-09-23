@@ -148,3 +148,74 @@ export async function listFeeTypes(organizationId: string) {
   const { data } = await supabase.from("fee_types").select("id, name, code").eq("organization_id", organizationId).eq("is_active", true).order("name");
   return data ?? [];
 }
+
+/** Paramétrage des frais : types, tarifs de l'année en cours et cibles possibles. */
+export async function getFeeSetup(organizationId: string) {
+  const supabase = await createClient();
+  const { data: year } = await supabase.from("academic_years").select("id, name").eq("organization_id", organizationId).eq("is_current", true).maybeSingle();
+  const [types, rates, levels, programs, classes] = await Promise.all([
+    supabase.from("fee_types").select("id, name, code, category, is_active").eq("organization_id", organizationId).order("name"),
+    year
+      ? supabase
+          .from("fee_rates")
+          .select("id, fee_type_id, level_id, program_id, class_id, amount, is_mandatory, installment_plan, notes, fee_type:fee_types(name, category), level:levels(name), program:programs(name), class:classes(name)")
+          .eq("organization_id", organizationId)
+          .eq("academic_year_id", year.id)
+      : Promise.resolve({ data: [] }),
+    supabase.from("levels").select("id, name").eq("organization_id", organizationId).order("sequence"),
+    supabase.from("programs").select("id, name").eq("organization_id", organizationId).order("name"),
+    year ? supabase.from("classes").select("id, name").eq("organization_id", organizationId).eq("academic_year_id", year.id).order("name") : Promise.resolve({ data: [] }),
+  ]);
+  const rows = (rates.data ?? []).slice().sort((a, b) => (a.fee_type?.name ?? "").localeCompare(b.fee_type?.name ?? "", "fr") || Number(b.amount) - Number(a.amount));
+  return {
+    year,
+    types: types.data ?? [],
+    rates: rows,
+    levels: levels.data ?? [],
+    programs: programs.data ?? [],
+    classes: classes.data ?? [],
+  };
+}
+
+/** Reliquats par élève (factures émises non soldées), du plus endetté au moins endetté. */
+export async function listOutstandingBalances(organizationId: string, filters: { q?: string; overdueOnly?: boolean }) {
+  const supabase = await createClient();
+  const { data: balances } = await supabase
+    .from("invoice_balances")
+    .select("invoice_id, student_id, number, total, paid, balance, due_on, next_due_on, is_overdue")
+    .eq("organization_id", organizationId)
+    .eq("status", "issued")
+    .gt("balance", 0)
+    .order("due_on")
+    .limit(2000);
+  const rows = balances ?? [];
+  const ids = [...new Set(rows.map((r) => r.student_id).filter((id): id is string => Boolean(id)))];
+  const { data: students } = ids.length
+    ? await supabase
+        .from("students")
+        .select("id, first_name, last_name, matricule, enrollments(status, class:classes(name))")
+        .eq("organization_id", organizationId)
+        .in("id", ids)
+    : { data: [] };
+  const byId = new Map((students ?? []).map((s) => [s.id, s]));
+  const grouped = new Map<string, { student: NonNullable<ReturnType<typeof byId.get>>; invoices: typeof rows; total: number; paid: number; balance: number; overdue: boolean; nextDue: string | null }>();
+  for (const r of rows) {
+    const student = r.student_id ? byId.get(r.student_id) : undefined;
+    if (!student) continue;
+    const g = grouped.get(student.id) ?? { student, invoices: [], total: 0, paid: 0, balance: 0, overdue: false, nextDue: null };
+    g.invoices.push(r);
+    g.total += Number(r.total ?? 0);
+    g.paid += Number(r.paid ?? 0);
+    g.balance += Number(r.balance ?? 0);
+    g.overdue ||= Boolean(r.is_overdue);
+    const due = r.next_due_on ?? r.due_on;
+    if (due && (!g.nextDue || due < g.nextDue)) g.nextDue = due;
+    grouped.set(student.id, g);
+  }
+  const q = filters.q ? normalizeSearch(filters.q) : "";
+  return [...grouped.values()]
+    .map((g) => ({ ...g, className: g.student.enrollments.find((e) => e.status === "validated")?.class?.name ?? null }))
+    .filter((g) => !filters.overdueOnly || g.overdue)
+    .filter((g) => !q || normalizeSearch(`${g.student.last_name} ${g.student.first_name} ${g.student.matricule} ${g.className ?? ""}`).includes(q))
+    .sort((a, b) => Number(b.overdue) - Number(a.overdue) || b.balance - a.balance);
+}

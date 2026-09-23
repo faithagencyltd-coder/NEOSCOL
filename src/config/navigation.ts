@@ -101,8 +101,10 @@ export const NAVIGATION: NavSection[] = [
       { href: "/finances", label: "Synthèse financière", icon: "finance", anyOf: ["finance.read"], keywords: "revenus solde" },
       { href: "/finances?onglet=paiements", label: "Paiements", icon: "payments", anyOf: ["finance.read"], keywords: "encaissements reçus" },
       { href: "/finances?onglet=factures", label: "Factures", icon: "invoices", anyOf: ["finance.read"], keywords: "factures échéances" },
-      { href: "/finances?onglet=rappels", label: "Impayés et rappels", icon: "overdue", anyOf: ["finance.read"], keywords: "impayés retard rappels relances" },
+      { href: "/finances?onglet=impayes", label: "Impayés et reliquats", icon: "overdue", anyOf: ["finance.read"], keywords: "impayés retard reliquats reste dû" },
+      { href: "/finances?onglet=rappels", label: "Rappels d'impayés", icon: "notifications", anyOf: ["finance.read"], keywords: "rappels relances notifications familles" },
       { href: "/finances?onglet=depenses", label: "Dépenses", icon: "expenses", anyOf: ["finance.expenses.read", "finance.expenses.manage"], keywords: "dépenses fournisseurs justificatifs" },
+      { href: "/finances?onglet=tarifs", label: "Frais et tarifs", icon: "templates", anyOf: ["finance.read"], keywords: "tarifs frais scolarité échéancier tranches" },
     ],
   },
   {

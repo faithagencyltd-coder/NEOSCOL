@@ -556,3 +556,45 @@ end;
 $$;
 revoke execute on function public.thread_messages(uuid) from public, anon;
 grant execute on function public.thread_messages(uuid) to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- 5. Tarifs : un échéancier est valide (libellé, date, pourcentage > 0) et
+--    totalise exactement 100 % ; une seule cible (niveau, filière OU classe).
+-- -----------------------------------------------------------------------------
+create or replace function app.check_fee_rate()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+  v_step jsonb;
+  v_sum numeric := 0;
+  v_prev date;
+begin
+  if num_nonnulls(new.level_id, new.program_id, new.class_id) > 1 then
+    raise exception 'Un tarif cible tout l''établissement, un niveau, une filière OU une classe.' using errcode = 'check_violation';
+  end if;
+  if jsonb_array_length(new.installment_plan) > 12 then
+    raise exception 'Un échéancier comporte au plus 12 tranches.' using errcode = 'check_violation';
+  end if;
+  for v_step in select * from jsonb_array_elements(new.installment_plan) loop
+    if coalesce(btrim(v_step ->> 'label'), '') = '' or (v_step ->> 'due_on') !~ '^\d{4}-\d{2}-\d{2}$'
+       or coalesce((v_step ->> 'percent')::numeric, 0) <= 0 then
+      raise exception 'Chaque tranche de l''échéancier a un libellé, une date et un pourcentage positif.' using errcode = 'check_violation';
+    end if;
+    if v_prev is not null and (v_step ->> 'due_on')::date < v_prev then
+      raise exception 'Les tranches de l''échéancier doivent être dans l''ordre chronologique.' using errcode = 'check_violation';
+    end if;
+    v_prev := (v_step ->> 'due_on')::date;
+    v_sum := v_sum + (v_step ->> 'percent')::numeric;
+  end loop;
+  if jsonb_array_length(new.installment_plan) > 0 and v_sum <> 100 then
+    raise exception 'Les tranches de l''échéancier doivent totaliser 100 %% (actuellement % %%).', v_sum using errcode = 'check_violation';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists fee_rates_check on public.fee_rates;
+create trigger fee_rates_check before insert or update on public.fee_rates
+  for each row execute function app.check_fee_rate();

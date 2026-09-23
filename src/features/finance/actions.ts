@@ -9,7 +9,7 @@ import { authorize } from "@/lib/auth/authorize";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/utils/action-result";
 import { dbErrorMessage } from "@/lib/utils/db-error";
-import { readFields } from "@/lib/utils/form-data";
+import { readBoolean, readFields } from "@/lib/utils/form-data";
 import { isUuid } from "@/lib/utils/search-params";
 
 const METHODS = ["cash", "mobile_money", "bank_transfer", "card", "cheque", "other"] as const;
@@ -273,4 +273,115 @@ export async function createExpenseCategory(_: ActionResult | null, formData: Fo
   if (error) return { ok: false, message: dbErrorMessage(error) };
   refresh();
   return { ok: true, message: "Catégorie ajoutée." };
+}
+
+const FEE_CATEGORIES = ["registration", "tuition", "training", "exam", "uniform", "transport", "canteen", "supplies", "other"] as const;
+
+const feeTypeSchema = z.object({
+  name: z.string({ error: "Nom requis." }).trim().min(2, { error: "Nom requis." }).max(120),
+  code: z.string({ error: "Code requis." }).trim().regex(/^[A-Za-z0-9_-]{1,20}$/, { error: "Code : lettres, chiffres, - ou _ (20 max)." }),
+  category: z.enum(FEE_CATEGORIES, { error: "Catégorie invalide." }),
+});
+
+/** Type de frais (inscription, scolarité, cantine…) : création ou modification. */
+export async function saveFeeType(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await authorize("finance.fees.manage");
+  if (!auth.ok) return auth;
+  const parsed = feeTypeSchema.safeParse(readFields(formData, ["name", "code", "category"]));
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Champs invalides.", fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  const organizationId = auth.context.organization.id;
+  const id = String(formData.get("fee_type_id") ?? "");
+  const row = { ...parsed.data, code: parsed.data.code.toUpperCase() };
+  const supabase = await createClient();
+  const { error } = isUuid(id)
+    ? await supabase.from("fee_types").update(row).eq("organization_id", organizationId).eq("id", id)
+    : await supabase.from("fee_types").insert({ ...row, organization_id: organizationId });
+  if (error) return { ok: false, message: dbErrorMessage(error, "Ce code est déjà utilisé.") };
+  refresh();
+  return { ok: true, message: isUuid(id) ? "Type de frais modifié." : "Type de frais créé." };
+}
+
+/** Active / désactive un type de frais (conservé pour l'historique des factures). */
+export async function setFeeTypeActive(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await authorize("finance.fees.manage");
+  if (!auth.ok) return auth;
+  const id = String(formData.get("fee_type_id") ?? "");
+  if (!isUuid(id)) return { ok: false, message: "Type de frais introuvable." };
+  const active = formData.get("active") === "true";
+  const supabase = await createClient();
+  const { error } = await supabase.from("fee_types").update({ is_active: active }).eq("organization_id", auth.context.organization.id).eq("id", id);
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  refresh();
+  return { ok: true, message: active ? "Type de frais réactivé." : "Type de frais désactivé : il n'est plus facturé aux nouvelles inscriptions." };
+}
+
+const planStepSchema = z.object({
+  label: z.string().trim().min(1, { error: "Libellé de tranche requis." }).max(60),
+  due_on: isoDate,
+  percent: z.coerce.number({ error: "Pourcentage invalide." }).positive({ error: "Pourcentage positif requis." }).max(100),
+});
+
+const feeRateSchema = z.object({
+  fee_type_id: z.uuid({ error: "Choisissez le type de frais." }),
+  target: z.string().regex(/^(all|(level|program|class):[0-9a-f-]{36})$/i, { error: "Cible invalide." }),
+  amount: z.coerce.number({ error: "Montant invalide." }).min(0, { error: "Montant invalide." }).max(1_000_000_000),
+  is_mandatory: z.boolean(),
+  notes: z.string().trim().max(500).optional(),
+  plan: z.array(planStepSchema).max(12, { error: "12 tranches au maximum." }),
+});
+
+/**
+ * Tarif de l'année en cours pour une cible (tout l'établissement, niveau,
+ * filière ou classe) avec son échéancier. La cohérence (100 %, ordre des
+ * dates, cible unique) est aussi vérifiée en base.
+ */
+export async function saveFeeRate(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await authorize("finance.fees.manage");
+  if (!auth.ok) return auth;
+  const labels = formData.getAll("plan_label").map(String);
+  const dues = formData.getAll("plan_due_on").map(String);
+  const percents = formData.getAll("plan_percent").map(String);
+  const parsed = feeRateSchema.safeParse({
+    ...readFields(formData, ["fee_type_id", "target", "amount", "notes"]),
+    is_mandatory: readBoolean(formData, "is_mandatory"),
+    plan: labels.map((label, i) => ({ label, due_on: dues[i], percent: percents[i] })),
+  });
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Champs invalides." };
+  const v = parsed.data;
+  const sum = v.plan.reduce((s, p) => s + p.percent, 0);
+  if (v.plan.length && Math.abs(sum - 100) > 0.001) return { ok: false, message: `Les tranches doivent totaliser 100 % (actuellement ${sum} %).` };
+  const organizationId = auth.context.organization.id;
+  const supabase = await createClient();
+  const { data: year } = await supabase.from("academic_years").select("id").eq("organization_id", organizationId).eq("is_current", true).maybeSingle();
+  if (!year) return { ok: false, message: "Aucune année scolaire en cours : créez-la d'abord." };
+  const [kind, targetId] = v.target.split(":") as [string, string | undefined];
+  const row = {
+    fee_type_id: v.fee_type_id,
+    level_id: kind === "level" ? targetId! : null,
+    program_id: kind === "program" ? targetId! : null,
+    class_id: kind === "class" ? targetId! : null,
+    amount: v.amount,
+    is_mandatory: v.is_mandatory,
+    notes: v.notes ?? null,
+    installment_plan: v.plan,
+  };
+  const id = String(formData.get("fee_rate_id") ?? "");
+  const { error } = isUuid(id)
+    ? await supabase.from("fee_rates").update(row).eq("organization_id", organizationId).eq("id", id)
+    : await supabase.from("fee_rates").insert({ ...row, organization_id: organizationId, academic_year_id: year.id });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  refresh();
+  return { ok: true, message: "Tarif enregistré : il s'applique aux prochaines inscriptions validées." };
+}
+
+export async function deleteFeeRate(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await authorize("finance.fees.manage");
+  if (!auth.ok) return auth;
+  const id = String(formData.get("fee_rate_id") ?? "");
+  if (!isUuid(id)) return { ok: false, message: "Tarif introuvable." };
+  const supabase = await createClient();
+  const { error } = await supabase.from("fee_rates").delete().eq("organization_id", auth.context.organization.id).eq("id", id);
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  refresh();
+  return { ok: true, message: "Tarif supprimé (les factures déjà émises ne changent pas)." };
 }
