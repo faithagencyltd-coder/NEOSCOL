@@ -102,8 +102,9 @@ export default async function AssessmentPage({ params }: PageProps<"/notes/evalu
             ) : null}
           </div>
         ) : null}
-        {canEdit ? (
+        {isTeacherOfSubject && !locked ? (
           <div className="flex flex-wrap gap-2">
+            {/* Publier ne modifie pas les notes : possible aussi après validation. */}
             <ConfirmAction
               trigger={
                 <Button variant={assessment.is_published ? "secondary" : "primary"}>
@@ -121,19 +122,21 @@ export default async function AssessmentPage({ params }: PageProps<"/notes/evalu
               action={setAssessmentPublished}
               fields={{ assessment_id: assessment.id, publish: assessment.is_published ? "false" : "true" }}
             />
-            <ConfirmAction
-              trigger={
-                <Button variant="ghost" className="text-danger">
-                  <Trash2 aria-hidden /> Supprimer
-                </Button>
-              }
-              title="Supprimer cette évaluation ?"
-              description="L'évaluation et toutes ses notes seront supprimées (l'opération reste tracée dans le journal d'audit)."
-              confirmLabel="Supprimer"
-              tone="danger"
-              action={deleteAssessment}
-              fields={{ assessment_id: assessment.id, class_subject_id: assessment.class_subject_id }}
-            />
+            {canEdit ? (
+              <ConfirmAction
+                trigger={
+                  <Button variant="ghost" className="text-danger">
+                    <Trash2 aria-hidden /> Supprimer
+                  </Button>
+                }
+                title="Supprimer cette évaluation ?"
+                description="L'évaluation et toutes ses notes seront supprimées (l'opération reste tracée dans le journal d'audit)."
+                confirmLabel="Supprimer"
+                tone="danger"
+                action={deleteAssessment}
+                fields={{ assessment_id: assessment.id, class_subject_id: assessment.class_subject_id }}
+              />
+            ) : null}
           </div>
         ) : null}
       </div>

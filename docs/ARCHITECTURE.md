@@ -303,10 +303,19 @@ document_templates 1─n issued_documents n─1 students
 - **Supabase Auth** ; sessions en cookies HTTP-only gérées par `@supabase/ssr`,
   rafraîchies par `src/proxy.ts`.
 - **Méthodes** :
-  - personnel : email + mot de passe ;
-  - parents / élèves : **téléphone + code OTP (SMS)** ou email + mot de passe.
-    L'OTP nécessite un fournisseur SMS configuré dans Supabase (Twilio,
+  - personnel : e-mail **ou matricule** (`staff_members.employee_number`,
+    résolu côté serveur) + mot de passe ;
+  - parents : **téléphone + nom + prénom + code OTP (SMS)**. Le code n'est
+    envoyé que si le triplet correspond à un parent disposant d'un compte ;
+    la réponse est identique dans tous les cas (pas d'énumération) ;
+  - élèves : **matricule + date de naissance + mot de passe** (le couple
+    matricule / date est vérifié côté serveur avant l'appel à Supabase Auth).
+  - L'OTP nécessite un fournisseur SMS configuré dans Supabase (Twilio,
     MessageBird, Vonage… ou hook SMS personnalisé pour un agrégateur local).
+- **Comptes portail** : créés par l'établissement (`portal_access.manage`) via
+  la clé de service **après** contrôle de permission, puis rattachés par la RPC
+  `grant_portal_access` (adhésion + rôle). Suspension réversible :
+  `set_portal_account_status`.
 - **Pas d'inscription publique** (D-08) : les comptes sont créés par
   l'établissement (invitation). Un parent ou un élève reçoit une invitation
   lorsque son dossier est validé. `shouldCreateUser: false` sur l'OTP.
@@ -508,7 +517,16 @@ authentification ; imports `server-only` sur les modules serveur.
 
 ## 13. Stockage des fichiers
 
-**Décision D-10** — Supabase Storage, **buckets privés uniquement** :
+**Décision D-15 (remplace D-10 pour la v1)** — les fichiers (photos, logos,
+cachets, signatures, justificatifs d'absence et de dépense) sont stockés **en
+base** (`file_objects.content bytea`, 5 Mo maximum, empreinte SHA-256, type
+MIME détecté par signature binaire) et servis par `/api/fichiers/[id]` sous RLS
+(`app.can_read_file` : les droits suivent ceux de l'entité propriétaire). Une
+seule sauvegarde PostgreSQL couvre ainsi données et pièces. Les PDF officiels ne
+sont pas stockés : `issued_documents.data` conserve l'**instantané** des données
+et `/api/documents/emis/[id]` les rend à l'identique à chaque téléchargement.
+La décision D-10 ci-dessous reste la cible si le volume l'exige (buckets
+Storage privés) :
 
 | Bucket | Contenu | Chemin |
 |---|---|---|
@@ -524,6 +542,33 @@ authentification ; imports `server-only` sur les modules serveur.
   signée de 60 s (indispensable pour les parents/élèves).
 - Upload : liste blanche MIME, taille maximale (5 Mo photos, 10 Mo documents),
   vérification de la signature binaire côté serveur, nom de fichier régénéré.
+
+---
+
+## 13 bis. Portails, restrictions d'impayé, pointage
+
+- **Restrictions** calculées à la volée (`app.student_portal_restricted`,
+  `app.portal_restricted(élève, fonctionnalité)`) depuis factures, échéances et
+  paiements, et appliquées **dans la RLS** des notes, évaluations, bulletins,
+  documents émis et emploi du temps. Les présences et la situation financière
+  ne sont **jamais** restreintes ; aucune donnée n'est supprimée. Un paiement
+  enregistré lève la restriction immédiatement (et notifie « accès rétabli »).
+  Paramètres : `organizations.settings.portal_restrictions` ; dérogations :
+  `portal_access_overrides`.
+- **Lectures du portail** (`portal_students`, `portal_class_subjects`,
+  `portal_timetable`) : fonctions `security definer` bornées à
+  `app.my_portal_student_ids()`, qui n'exposent que le nom des enseignants.
+- **Badges et pointage** : `staff_badges` (jeton aléatoire, régénération =
+  désactivation), `scan_staff_badge` (tablette `staff_attendance.scan`) crée
+  l'arrivée et `lesson_unlocks` ; l'appel d'un cours n'est possible qu'après
+  déverrouillage (garde SQL), puis validation → verrouillage + notification des
+  familles.
+- **Audit** : chaque ligne porte l'utilisateur, son rôle, l'action, la date et
+  le résultat (`success`, `denied`, `failure`) ; consultation `/audit`
+  (`audit.read`), journal en lecture seule.
+- **Tâches planifiées** : `GET /api/cron/rappels` (en-tête
+  `Authorization: Bearer CRON_SECRET`) → `send_invoice_reminders` par
+  établissement.
 
 ---
 
