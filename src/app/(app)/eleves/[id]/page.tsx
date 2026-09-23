@@ -11,7 +11,11 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { StudentDocumentsTab } from "@/features/documents/components/student-documents";
+import { dossierOrder } from "@/features/documents/dossier";
+import { listStudentDocuments } from "@/features/documents/queries";
 import { setStudentArchived } from "@/features/students/actions";
+import { StudentLifecycleActions } from "@/features/students/components/lifecycle-actions";
 import {
   AttendanceTab,
   FinanceTab,
@@ -53,6 +57,7 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
   const canGrades = can(context, "grades.read") || can(context, "grades.manage");
   const canAttendance = can(context, "attendance.read") || can(context, "attendance.manage");
   const showMedical = featureEnabled(organization, "medical_records") && can(context, "students.medical.read");
+  const canDocuments = can(context, "documents.read") || can(context, "documents.generate") || can(context, "documents.dossier");
 
   const tabs: TabLink[] = [
     { key: "informations", label: "Informations", href: "?onglet=informations" },
@@ -61,6 +66,7 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
     ...(canGrades ? [{ key: "notes", label: "Notes", href: "?onglet=notes" }] : []),
     ...(canAttendance ? [{ key: "presences", label: "Présences", href: "?onglet=presences" }] : []),
     ...(canFinance ? [{ key: "finance", label: "Finance", href: "?onglet=finance" }] : []),
+    ...(canDocuments ? [{ key: "documents", label: "Documents", href: "?onglet=documents" }] : []),
     ...(canAudit ? [{ key: "historique", label: "Historique", href: "?onglet=historique" }] : []),
   ];
   const requested = param(query, "onglet");
@@ -90,7 +96,7 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
       ) : null}
 
       <Card className="flex flex-col gap-5 p-5 sm:p-6 lg:flex-row lg:items-center">
-        <Avatar name={fullName} className="size-20 text-2xl ring-4 ring-primary-soft" />
+        <Avatar name={fullName} photoId={student.photo_path} className="size-20 text-2xl ring-4 ring-primary-soft" />
         <div className="grid flex-1 gap-2">
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl font-semibold sm:text-[26px]">{fullName}</h1>
@@ -132,6 +138,10 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
               </Link>
             </Button>
           ) : null}
+          <StudentLifecycleActions
+            student={{ id: student.id, status: student.status, matricule: student.matricule, archived }}
+            can={{ update: can(context, "students.update"), archive: can(context, "students.archive"), delete: can(context, "students.delete") }}
+          />
           {can(context, "students.archive") ? (
             <ConfirmAction
               trigger={
@@ -171,6 +181,21 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
       {active === "notes" ? <GradesTab grades={await getStudentGrades(student.id)} /> : null}
       {active === "presences" ? <AttendanceTab attendance={await getStudentAttendance(student.id)} /> : null}
       {active === "finance" ? <FinanceTab finance={await getStudentFinance(student.id)} currency={organization.currency} /> : null}
+      {active === "documents" ? (
+        <StudentDocumentsTab
+          studentId={student.id}
+          documents={can(context, "documents.read") ? await listStudentDocuments(organization.id, student.id) : []}
+          enrollments={student.enrollments.filter((e) => e.status !== "cancelled" && e.status !== "draft")}
+          can={{
+            generate: can(context, "documents.generate") && !archived,
+            dossier: can(context, "documents.dossier") && can(context, "documents.generate"),
+            revoke: can(context, "documents.revoke"),
+            saveDefault: can(context, "settings.manage"),
+          }}
+          dossierOrder={dossierOrder(null, (organization.settings as { documents?: { dossier_sections?: unknown } } | null)?.documents?.dossier_sections)}
+          timezone={organization.timezone}
+        />
+      ) : null}
       {active === "historique" ? (
         <HistoryTab
           history={await getStudentHistory(organization.id, [student.id, ...student.enrollments.map((e) => e.id)])}

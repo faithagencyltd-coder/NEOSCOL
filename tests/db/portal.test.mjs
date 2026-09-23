@@ -223,3 +223,24 @@ describe("Audit applicatif", () => {
     });
   });
 });
+
+describe("Documents émis", () => {
+  test("révocation motivée par documents.revoke ; le document reste figé", async () => {
+    await as(null, async (q) => {
+      const kofi = await kofiId(q);
+      await switchTo(q, USERS.secretary);
+      const [doc] = await q(
+        "insert into issued_documents (organization_id, kind, title, student_id, subject_type, subject_id, data) values ($1, 'school_certificate', 'Certificat', $2, 'student', $2, '{}') returning id, number",
+        [ORG_DEMO, kofi],
+      );
+      assert.match(doc.number, /^DOC-DEMO-\d{2}-\d{6}$/);
+      assert.match(await rejects(q("update issued_documents set title = 'Autre' where id = $1", [doc.id])), /ne peut pas être modifié/);
+      await switchTo(q, USERS.teacher);
+      assert.equal((await q("update issued_documents set status = 'revoked', revoked_reason = 'x' where id = $1 returning id", [doc.id])).length, 0);
+      await switchTo(q, USERS.director);
+      await q("update issued_documents set status = 'revoked', revoked_reason = 'Erreur de saisie' where id = $1", [doc.id]);
+      const [{ verify_document: status }] = await q("select (verify_document(verification_code)).status as verify_document from issued_documents where id = $1", [doc.id]);
+      assert.equal(status, "revoked");
+    });
+  });
+});

@@ -1,6 +1,5 @@
-import { Calculator, FileText, Printer, Send } from "lucide-react";
+import { Calculator, FileDown, FileText, Send } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ConfirmAction } from "@/components/shared/confirm-action";
@@ -41,6 +40,7 @@ export default async function ReportCardsPage({ searchParams }: PageProps<"/bull
   const cards = classId && period ? await listReportCards(organizationId, classId, period.id) : [];
   const ranking = featureEnabled(context.organization, "ranking");
   const canManage = can(context, "report_cards.manage");
+  const canPdf = can(context, "documents.generate") && (canManage || can(context, "report_cards.publish"));
   const drafts = cards.filter((c) => c.status === "draft").length;
   const classAverage = cards[0] ? reportClassAverage(cards[0].data) : null;
   const query = (c?: string, p?: string) => `/bulletins?classe=${c ?? classId ?? ""}&periode=${p ?? period?.id ?? ""}`;
@@ -70,6 +70,13 @@ export default async function ReportCardsPage({ searchParams }: PageProps<"/bull
                 action={computeReportCards}
                 fields={{ class_id: classId, period_id: period.id }}
               />
+            ) : null}
+            {canPdf && cards.length - drafts > 0 ? (
+              <Button asChild variant="secondary">
+                <a href={`/api/documents/bulletins?classe=${classId}&periode=${period.id}`} target="_blank" rel="noopener">
+                  <FileDown aria-hidden /> Générer les bulletins de la classe
+                </a>
+              </Button>
             ) : null}
             {can(context, "report_cards.publish") && drafts > 0 ? (
               <ConfirmAction
@@ -177,11 +184,18 @@ export default async function ReportCardsPage({ searchParams }: PageProps<"/bull
                             values={{ appreciation: card.appreciation, head_teacher_comment: card.head_teacher_comment, decision: card.decision }}
                           />
                         ) : null}
-                        <Button asChild variant="ghost" size="sm" aria-label={`Imprimer le bulletin — ${name}`}>
-                          <Link href={`/impression/bulletins/${card.id}`} target="_blank">
-                            <Printer aria-hidden />
-                          </Link>
-                        </Button>
+                        {canPdf ? (
+                          <Button
+                            asChild
+                            variant="ghost"
+                            size="sm"
+                            aria-label={`${card.status === "published" ? "Générer le bulletin PDF" : "Aperçu PDF provisoire"} — ${name}`}
+                          >
+                            <a href={`/api/documents/bulletins/${card.id}`} target="_blank" rel="noopener">
+                              <FileDown aria-hidden />
+                            </a>
+                          </Button>
+                        ) : null}
                       </span>
                     </TD>
                   </TR>

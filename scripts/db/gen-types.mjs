@@ -99,13 +99,26 @@ const relationships = (table) =>
     )
     .join(",\n");
 
+// Colonnes NOT NULL remplies par un trigger BEFORE INSERT (numérotation,
+// dérivation) : optionnelles à l'insertion côté TypeScript.
+const TRIGGER_FILLED = {
+  assessments: ["class_id", "subject_id"],
+  enrollments: ["reference"],
+  expenses: ["number"],
+  invoices: ["number"],
+  issued_documents: ["number"],
+  payments: ["number", "student_id"],
+  staff_badges: ["number"],
+  students: ["matricule"],
+};
+
 const tableBlock = (name, cols) => {
   const row = cols.map((c) => `${c.name}: ${tsType(c.udt)}${c.nullable ? " | null" : ""}`).join("\n");
   const insert = cols
     .map((c) =>
       c.generated
         ? `${c.name}?: never`
-        : `${c.name}${c.nullable || c.has_default || c.identity ? "?" : ""}: ${tsType(c.udt)}${c.nullable ? " | null" : ""}`,
+        : `${c.name}${c.nullable || c.has_default || c.identity || TRIGGER_FILLED[name]?.includes(c.name) ? "?" : ""}: ${tsType(c.udt)}${c.nullable ? " | null" : ""}`,
     )
     .join("\n");
   const update = cols

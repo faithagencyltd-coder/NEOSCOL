@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { parseCustomValues } from "@/features/forms/fields";
+import { storeUpload } from "@/features/files/server";
 import { getStudentFormFields } from "@/features/students/queries";
 import {
   GUARDIAN_FIELDS,
@@ -232,4 +233,74 @@ export async function removeGuardianLink(_: ActionResult | null, formData: FormD
   if (error || count === 0) return { ok: false, message: dbErrorMessage(error) };
   revalidatePath(`/eleves/${studentId}`);
   return { ok: true, message: "Lien retiré." };
+}
+
+/** Photo d'identité (JPEG/PNG) : utilisée sur la carte scolaire, la fiche d'inscription et le dossier. */
+export async function uploadStudentPhoto(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await authorize("students.update");
+  if (!auth.ok) return auth;
+  const studentId = String(formData.get("student_id") ?? "");
+  if (!isUuid(studentId)) return { ok: false, message: "Élève introuvable." };
+  const supabase = await createClient();
+  const stored = await storeUpload(supabase, {
+    organizationId: auth.context.organization.id,
+    file: formData.get("file") as File,
+    owner: "student",
+    ownerId: studentId,
+    category: "photo",
+    accept: ["image"],
+  });
+  if (!stored.ok) return stored;
+  const { error, count } = await supabase
+    .from("students")
+    .update({ photo_path: stored.id }, { count: "exact" })
+    .eq("organization_id", auth.context.organization.id)
+    .eq("id", studentId);
+  if (error || count === 0) return { ok: false, message: dbErrorMessage(error) };
+  revalidatePath(`/eleves/${studentId}`);
+  return { ok: true, message: "Photo enregistrée." };
+}
+
+const statusChangeSchema = z.object({
+  student_id: z.uuid(),
+  status: z.enum(["active", "inactive", "withdrawn", "transferred", "graduated"]),
+  reason: z.string().trim().min(3, { error: "Le motif est obligatoire." }).max(500),
+});
+
+/** Désactiver, réactiver, retirer, transférer, diplômer : historique et audit en base. */
+export async function changeStudentStatus(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await authorize("students.archive");
+  if (!auth.ok) return auth;
+  const parsed = statusChangeSchema.safeParse({
+    student_id: formData.get("student_id"),
+    status: formData.get("status"),
+    reason: formData.get("reason"),
+  });
+  if (!parsed.success) return { ok: false, message: z.flattenError(parsed.error).fieldErrors.reason?.[0] ?? "Données invalides." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("change_student_status", {
+    p_student_id: parsed.data.student_id,
+    p_status: parsed.data.status,
+    p_reason: parsed.data.reason,
+  });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  revalidatePath(`/eleves/${parsed.data.student_id}`);
+  revalidatePath("/eleves");
+  return { ok: true, message: "Statut mis à jour." };
+}
+
+/** Suppression définitive contrôlée (dossier archivé, confirmation par le matricule). */
+export async function deleteStudent(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await authorize("students.delete");
+  if (!auth.ok) return auth;
+  const studentId = String(formData.get("student_id") ?? "");
+  if (!isUuid(studentId)) return { ok: false, message: "Élève introuvable." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("delete_student", {
+    p_student_id: studentId,
+    p_confirmation: String(formData.get("confirmation") ?? ""),
+  });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  revalidatePath("/eleves");
+  redirect("/eleves?supprime=1");
 }

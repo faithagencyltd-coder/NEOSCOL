@@ -59,3 +59,12 @@ export const ASSESSMENT_KINDS = {
 export function options(record: Record<string, string>) {
   return Object.entries(record).map(([value, label]) => ({ value, label }));
 }
+
+export const PAYMENT_METHOD: Record<string, string> = {
+  cash: "Espèces",
+  mobile_money: "Mobile Money",
+  bank_transfer: "Virement bancaire",
+  card: "Carte bancaire",
+  cheque: "Chèque",
+  other: "Autre",
+};

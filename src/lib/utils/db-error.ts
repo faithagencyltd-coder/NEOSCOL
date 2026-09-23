@@ -8,7 +8,7 @@ export function dbErrorMessage(error: { code?: string; message?: string } | null
       ? message
       : "Vous n'avez pas les droits nécessaires pour cette opération.";
   }
-  if (error.code === "23505") return "Cet élément existe déjà.";
+  if (error.code === "23505") return /^[A-ZÉÈÀÇ]/.test(message) && !message.startsWith("duplicate") ? message : "Cet élément existe déjà.";
   if (error.code === "23503") return "Un élément lié est introuvable ou encore utilisé.";
   if (error.code === "22P02" || error.code === "22007") return "Une valeur saisie n'a pas le bon format.";
   if (["23514", "P0001", "P0002", "22023"].includes(error.code ?? "") && /^[A-ZÉÈÀÇÀ«]/.test(message)) {

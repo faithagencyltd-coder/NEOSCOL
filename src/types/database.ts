@@ -292,7 +292,7 @@ export type Database = {
         Insert: {
           academic_period_id: string
           assessed_on?: string
-          class_id: string
+          class_id?: string
           class_subject_id: string
           coefficient?: number
           column_key?: string | null
@@ -308,7 +308,7 @@ export type Database = {
           max_score?: number
           organization_id: string
           published_at?: string | null
-          subject_id: string
+          subject_id?: string
           title: string
           updated_at?: string
         }
@@ -974,7 +974,7 @@ export type Database = {
           notes?: string | null
           organization_id: string
           program_id?: string | null
-          reference: string
+          reference?: string
           search_text?: never
           status?: Database["public"]["Enums"]["enrollment_status"]
           student_id: string
@@ -1134,7 +1134,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           label: string
-          number: string
+          number?: string
           organization_id: string
           payment_method?: Database["public"]["Enums"]["payment_method"]
           receipt_file_id?: string | null
@@ -1800,7 +1800,7 @@ export type Database = {
           id?: string
           issued_on?: string
           notes?: string | null
-          number: string
+          number?: string
           organization_id: string
           search_text?: never
           status?: Database["public"]["Enums"]["invoice_status"]
@@ -1905,7 +1905,7 @@ export type Database = {
           issued_at?: string
           issued_by?: string | null
           kind: string
-          number: string
+          number?: string
           organization_id: string
           revoked_at?: string | null
           revoked_by?: string | null
@@ -2607,7 +2607,7 @@ export type Database = {
           invoice_id: string
           method: Database["public"]["Enums"]["payment_method"]
           notes?: string | null
-          number: string
+          number?: string
           organization_id: string
           paid_at?: string
           payer_name?: string | null
@@ -2616,7 +2616,7 @@ export type Database = {
           reference?: string | null
           search_text?: never
           status?: Database["public"]["Enums"]["payment_status"]
-          student_id: string
+          student_id?: string
         }
         Update: {
           amount?: number
@@ -3182,7 +3182,7 @@ export type Database = {
           issued_at?: string
           issued_by?: string | null
           last_printed_at?: string | null
-          number: string
+          number?: string
           organization_id: string
           printed_count?: number
           revoked_at?: string | null
@@ -3551,7 +3551,7 @@ export type Database = {
           first_name: string
           id?: string
           last_name: string
-          matricule: string
+          matricule?: string
           national_id?: string | null
           nationality?: string | null
           notes?: string | null
