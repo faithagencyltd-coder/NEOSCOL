@@ -15,7 +15,8 @@ export type NavIcon =
   | "reportCards"
   | "staff"
   | "staffAttendance"
-  | "kiosk";
+  | "kiosk"
+  | "lessons";
 
 export type NavItem = {
   href: string;
@@ -52,7 +53,8 @@ export const NAVIGATION: NavSection[] = [
     label: "Pédagogie",
     items: [
       { href: "/emploi-du-temps", label: "Emploi du temps", icon: "timetable", anyOf: ["timetable.read", "timetable.manage"], keywords: "cours horaires salles" },
-      { href: "/presences", label: "Présences", icon: "attendance", anyOf: ["attendance.take", "attendance.read", "attendance.manage"], keywords: "appel absences retards" },
+      { href: "/mes-cours", label: "Mes cours", icon: "lessons", anyOf: ["attendance.take"], keywords: "appel cours emploi du temps badge" },
+      { href: "/presences", label: "Présences", icon: "attendance", anyOf: ["attendance.read", "attendance.manage", "attendance.justify"], keywords: "appel absences retards justificatifs" },
       { href: "/notes", label: "Notes", icon: "grades", anyOf: ["grades.read", "grades.enter", "grades.manage"], keywords: "évaluations devoirs saisie" },
       { href: "/bulletins", label: "Bulletins", icon: "reportCards", anyOf: ["report_cards.manage", "grades.read"], keywords: "moyennes rangs appréciations" },
     ],

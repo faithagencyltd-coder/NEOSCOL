@@ -74,3 +74,18 @@ export async function getOrganizationCard(organizationId: string) {
     .maybeSingle();
   return data;
 }
+
+/** Configuration du bulletin de l'établissement (lecture : tout membre). */
+export async function getReportCardConfig(organizationId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase.from("report_card_settings").select("config, updated_at").eq("organization_id", organizationId).maybeSingle();
+  return (data?.config ?? {}) as Record<string, unknown>;
+}
+
+/** Colonnes d'évaluation du bulletin (INTERRO 1, DEVOIR, EXAMEN…). */
+export async function getReportColumns(organizationId: string): Promise<{ key: string; label: string }[]> {
+  const config = await getReportCardConfig(organizationId);
+  return Array.isArray(config.columns)
+    ? (config.columns as Record<string, unknown>[]).flatMap((c) => (typeof c.key === "string" && typeof c.label === "string" ? [{ key: c.key, label: c.label }] : []))
+    : [];
+}

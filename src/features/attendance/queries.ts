@@ -44,7 +44,7 @@ export async function getRollCall(organizationId: string, classId: string, date:
       .eq("status", "validated"),
     supabase
       .from("attendance_sessions")
-      .select("id, ends_at, attendance_records(student_id, status, minutes_late, is_justified)")
+      .select("id, ends_at, status, attendance_records(student_id, status, minutes_late, is_justified)")
       .eq("class_id", classId)
       .eq("session_date", date)
       .eq("starts_at", startsAt)

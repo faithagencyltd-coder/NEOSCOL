@@ -55,6 +55,7 @@ export async function getAssessmentSheet(organizationId: string, assessmentId: s
     .from("assessments")
     .select(
       `id, title, kind, assessed_on, coefficient, max_score, is_published, class_subject_id, class_id,
+       grades_status, grades_validated_at, column_key,
        class:classes(id, name), subject:subjects(name),
        period:academic_periods(id, name, is_locked),
        class_subject:class_subjects(teacher_id),

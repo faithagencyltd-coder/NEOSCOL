@@ -21,16 +21,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { activityLabel } from "@/features/dashboard/components/activity-label";
 import { HorizontalBars } from "@/features/dashboard/components/bar-chart";
 import { DonutChart } from "@/features/dashboard/components/donut-chart";
+import { getMyLessons, LESSON_STATUS } from "@/features/attendance/lessons";
 import { StatCard } from "@/features/dashboard/components/stat-card";
+import { StatusBadge } from "@/components/shared/status-badge";
 import {
   getDashboardOverview,
   getInvoiceSummary,
   getMyTeaching,
   getRecentPayments,
-  getTodayLessons,
   getVisibleAnnouncements,
 } from "@/features/dashboard/queries";
-import { isoWeekday, todayIn } from "@/lib/dates";
+import { todayIn } from "@/lib/dates";
 import { requireOrganization } from "@/lib/auth/guards";
 import { can, displayName } from "@/lib/auth/session";
 import { cn } from "@/lib/utils/cn";
@@ -64,7 +65,7 @@ export default async function DashboardPage() {
     isTeacher ? getMyTeaching(organization.id, context.user.id) : Promise.resolve([]),
     canFinance ? getInvoiceSummary(organization.id) : Promise.resolve(null),
     canFinance ? getRecentPayments(organization.id) : Promise.resolve([]),
-    isTeacher ? getTodayLessons(organization.id, context.user.id, isoWeekday(today)) : Promise.resolve([]),
+    isTeacher ? getMyLessons(today, today) : Promise.resolve([]),
   ]);
 
   const currency = overview.currency ?? organization.currency;
@@ -332,7 +333,7 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Mes cours aujourd&apos;hui</CardTitle>
-            <CardDescription>D&apos;après l&apos;emploi du temps · appel en un clic</CardDescription>
+            <CardDescription>L&apos;appel s&apos;ouvre après le scan de votre badge à l&apos;administration</CardDescription>
           </CardHeader>
           <CardContent>
             {lessons.length === 0 ? (
@@ -340,21 +341,21 @@ export default async function DashboardPage() {
             ) : (
               <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                 {lessons.map((lesson) => (
-                  <li key={lesson.id} className="flex items-center justify-between gap-3 rounded-xl border border-border p-3">
-                    <span className="grid">
-                      <span className="text-xs font-semibold text-primary">
-                        {lesson.startsAt}–{lesson.endsAt}
-                      </span>
-                      <span className="font-semibold">
-                        {lesson.className} · {lesson.subject}
-                      </span>
-                      {lesson.room ? <span className="text-xs text-muted-foreground">{lesson.room}</span> : null}
-                    </span>
+                  <li key={lesson.slot_id}>
                     <Link
-                      href={`/presences?onglet=appel&classe=${lesson.classId}&date=${today}&debut=${lesson.startsAt}&fin=${lesson.endsAt}`}
-                      className="shrink-0 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
+                      href={`/mes-cours/${lesson.slot_id}?date=${today}`}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-border p-3 transition-colors hover:border-primary"
                     >
-                      Faire l&apos;appel
+                      <span className="grid">
+                        <span className="text-xs font-semibold text-primary">
+                          {lesson.starts_at}–{lesson.ends_at}
+                        </span>
+                        <span className="font-semibold">
+                          {lesson.class_name} · {lesson.subject_name}
+                        </span>
+                        {lesson.room_name ? <span className="text-xs text-muted-foreground">{lesson.room_name}</span> : null}
+                      </span>
+                      <StatusBadge value={lesson.status} map={LESSON_STATUS} />
                     </Link>
                   </li>
                 ))}

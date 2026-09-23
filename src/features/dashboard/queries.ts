@@ -96,29 +96,3 @@ export async function getRecentPayments(organizationId: string) {
 }
 
 /** Cours du jour de l'enseignant connecté (emploi du temps). */
-export async function getTodayLessons(organizationId: string, userId: string, weekday: number) {
-  const supabase = await createClient();
-  const { data: staff } = await supabase
-    .from("staff_members")
-    .select("id")
-    .eq("organization_id", organizationId)
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (!staff) return [];
-  const { data } = await supabase
-    .from("timetable_slots")
-    .select("id, starts_at, ends_at, class_id, class:classes(name), class_subject:class_subjects(subject:subjects(name)), room:rooms(name)")
-    .eq("organization_id", organizationId)
-    .eq("teacher_id", staff.id)
-    .eq("weekday", weekday)
-    .order("starts_at");
-  return (data ?? []).map((s) => ({
-    id: s.id,
-    classId: s.class_id,
-    className: s.class?.name ?? "—",
-    subject: s.class_subject?.subject?.name ?? "Cours",
-    room: s.room?.name ?? null,
-    startsAt: s.starts_at.slice(0, 5),
-    endsAt: s.ends_at.slice(0, 5),
-  }));
-}

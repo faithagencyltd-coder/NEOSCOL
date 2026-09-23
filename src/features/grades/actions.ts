@@ -20,13 +20,14 @@ const assessmentSchema = z.object({
   assessed_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { error: "Date invalide." }),
   coefficient: z.coerce.number().positive({ error: "Coefficient positif." }).max(100),
   max_score: z.coerce.number().positive({ error: "Barème positif." }).max(1000),
+  column_key: z.string().regex(/^[a-z0-9_]{1,30}$/).optional(),
 });
 
 export async function createAssessment(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const auth = await authorize("grades.enter", "grades.manage");
   if (!auth.ok) return auth;
   const parsed = assessmentSchema.safeParse(
-    readFields(formData, ["class_subject_id", "academic_period_id", "title", "kind", "assessed_on", "coefficient", "max_score"]),
+    readFields(formData, ["class_subject_id", "academic_period_id", "title", "kind", "assessed_on", "coefficient", "max_score", "column_key"]),
   );
   if (!parsed.success) {
     return { ok: false, message: parsed.error.issues[0]?.message ?? "Champs invalides.", fieldErrors: z.flattenError(parsed.error).fieldErrors };
@@ -111,4 +112,25 @@ export async function deleteAssessment(_: ActionResult | null, formData: FormDat
   if (error || count === 0) return { ok: false, message: dbErrorMessage(error, "Suppression impossible.") };
   revalidatePath(`/notes/${classSubjectId}`);
   redirect(`/notes/${classSubjectId}`);
+}
+
+/**
+ * Validation des notes d'une évaluation (enseignant) ou réouverture
+ * (administration, grades.manage). Le verrouillage est appliqué en base.
+ */
+export async function setGradesValidated(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const validate = formData.get("validate") === "true";
+  const auth = validate ? await authorize("grades.enter", "grades.manage") : await authorize("grades.manage");
+  if (!auth.ok) return auth;
+  const assessmentId = String(formData.get("assessment_id") ?? "");
+  if (!isUuid(assessmentId)) return { ok: false, message: "Évaluation introuvable." };
+  const supabase = await createClient();
+  const { error, count } = await supabase
+    .from("assessments")
+    .update({ grades_status: validate ? "validated" : "draft" }, { count: "exact" })
+    .eq("organization_id", auth.context.organization.id)
+    .eq("id", assessmentId);
+  if (error || count === 0) return { ok: false, message: dbErrorMessage(error, "Opération impossible.") };
+  revalidatePath(`/notes/evaluations/${assessmentId}`);
+  return { ok: true, message: validate ? "Notes validées : elles sont désormais verrouillées." : "Notes rouvertes pour correction." };
 }

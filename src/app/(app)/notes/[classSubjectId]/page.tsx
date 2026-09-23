@@ -17,6 +17,7 @@ import { todayIn } from "@/lib/dates";
 import { requireOrganization } from "@/lib/auth/guards";
 import { canAny } from "@/lib/auth/session";
 import { ASSESSMENT_KINDS, options } from "@/lib/labels";
+import { getReportColumns } from "@/features/report-cards/queries";
 import { formatDate } from "@/lib/utils/format";
 import { isUuid, param } from "@/lib/utils/search-params";
 
@@ -33,7 +34,7 @@ export default async function GradeBookPage({ params, searchParams }: PageProps<
   const book = await getGradeBook(organizationId, classSubjectId);
   if (!book || !book.class) notFound();
 
-  const periods = await getPeriods(organizationId, book.class.academic_year_id);
+  const [periods, columns] = await Promise.all([getPeriods(organizationId, book.class.academic_year_id), getReportColumns(organizationId)]);
   const today = todayIn(context.organization.timezone);
   const requested = param(await searchParams, "periode");
   const current =
@@ -75,6 +76,13 @@ export default async function GradeBookPage({ params, searchParams }: PageProps<
               { name: "assessed_on", label: "Date", type: "date", required: true, defaultValue: today },
               { name: "coefficient", label: "Coefficient", type: "number", required: true, min: 0.5, step: "0.5", defaultValue: "1" },
               { name: "max_score", label: "Noté sur", type: "number", required: true, min: 1, defaultValue: "20" },
+              {
+                name: "column_key",
+                label: "Colonne du bulletin",
+                type: "select",
+                options: columns.map((c) => ({ value: c.key, label: c.label })),
+                hint: "Vide : placée automatiquement selon le type (1re interrogation → INTERRO 1…).",
+              },
             ]}
           />
         ) : null}

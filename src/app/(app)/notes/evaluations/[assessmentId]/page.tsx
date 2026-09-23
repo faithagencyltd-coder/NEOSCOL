@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Lock, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Lock, LockOpen, ShieldCheck, Trash2 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -8,11 +8,11 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { canEditGradeBook } from "@/features/grades/access";
-import { deleteAssessment, setAssessmentPublished } from "@/features/grades/actions";
+import { deleteAssessment, setAssessmentPublished, setGradesValidated } from "@/features/grades/actions";
 import { GradeSheet } from "@/features/grades/components/grade-sheet";
 import { getAssessmentSheet } from "@/features/grades/queries";
 import { requireOrganization } from "@/lib/auth/guards";
-import { canAny } from "@/lib/auth/session";
+import { can, canAny } from "@/lib/auth/session";
 import { ASSESSMENT_KINDS } from "@/lib/labels";
 import { formatDate } from "@/lib/utils/format";
 import { isUuid } from "@/lib/utils/search-params";
@@ -28,7 +28,12 @@ export default async function AssessmentPage({ params }: PageProps<"/notes/evalu
   if (!sheet) notFound();
   const { assessment, students } = sheet;
   const locked = assessment.period?.is_locked ?? false;
-  const canEdit = !locked && (await canEditGradeBook(context, assessment.class_subject?.teacher_id ?? null));
+  const manage = can(context, "grades.manage");
+  const lockAfterValidation =
+    ((context.organization.settings as { grading?: { lock_after_validation?: boolean } } | null)?.grading?.lock_after_validation ?? true) !== false;
+  const validated = assessment.grades_status === "validated";
+  const isTeacherOfSubject = await canEditGradeBook(context, assessment.class_subject?.teacher_id ?? null);
+  const canEdit = !locked && isTeacherOfSubject && (!validated || !lockAfterValidation || manage);
 
   return (
     <div className="grid gap-5">
@@ -47,7 +52,14 @@ export default async function AssessmentPage({ params }: PageProps<"/notes/evalu
         <div className="grid gap-1">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-semibold sm:text-[26px]">{assessment.title}</h1>
-            {assessment.is_published ? <Badge tone="success">Publiée</Badge> : <Badge>Brouillon</Badge>}
+            {assessment.is_published ? <Badge tone="success">Publiée</Badge> : <Badge>Non publiée</Badge>}
+            {validated ? (
+              <Badge tone="info">
+                <ShieldCheck className="size-3.5" aria-hidden /> Notes validées
+              </Badge>
+            ) : (
+              <Badge tone="warning">Brouillon</Badge>
+            )}
           </div>
           <p className="text-sm text-muted-foreground">
             {ASSESSMENT_KINDS[assessment.kind as keyof typeof ASSESSMENT_KINDS] ?? assessment.kind} ·{" "}
@@ -55,6 +67,41 @@ export default async function AssessmentPage({ params }: PageProps<"/notes/evalu
             {assessment.max_score} · {assessment.period?.name}
           </p>
         </div>
+        {isTeacherOfSubject && !locked ? (
+          <div className="flex flex-wrap gap-2">
+            {!validated ? (
+              <ConfirmAction
+                trigger={
+                  <Button variant="secondary">
+                    <ShieldCheck aria-hidden /> Valider les notes
+                  </Button>
+                }
+                title="Valider les notes ?"
+                description={
+                  lockAfterValidation
+                    ? "Les notes seront verrouillées : seule l'administration pourra les rouvrir. Les moyennes des bulletins sont recalculées automatiquement."
+                    : "Les notes sont marquées comme validées. Les moyennes des bulletins sont recalculées automatiquement."
+                }
+                confirmLabel="Valider"
+                action={setGradesValidated}
+                fields={{ assessment_id: assessment.id, validate: "true" }}
+              />
+            ) : manage ? (
+              <ConfirmAction
+                trigger={
+                  <Button variant="secondary">
+                    <LockOpen aria-hidden /> Rouvrir les notes
+                  </Button>
+                }
+                title="Rouvrir les notes ?"
+                description="L'enseignant pourra de nouveau les modifier ; la réouverture est tracée dans le journal d'audit."
+                confirmLabel="Rouvrir"
+                action={setGradesValidated}
+                fields={{ assessment_id: assessment.id, validate: "false" }}
+              />
+            ) : null}
+          </div>
+        ) : null}
         {canEdit ? (
           <div className="flex flex-wrap gap-2">
             <ConfirmAction
@@ -98,7 +145,12 @@ export default async function AssessmentPage({ params }: PageProps<"/notes/evalu
           </span>
         </Alert>
       ) : null}
-      {!canEdit && !locked ? <Alert tone="info">Consultation seule : vous n&apos;enseignez pas cette matière.</Alert> : null}
+      {validated && lockAfterValidation && !manage && isTeacherOfSubject ? (
+        <Alert tone="info" title="Notes validées et verrouillées">
+          Toute correction doit être demandée à l&apos;administration.
+        </Alert>
+      ) : null}
+      {!isTeacherOfSubject && !locked ? <Alert tone="info">Consultation seule : vous n&apos;enseignez pas cette matière.</Alert> : null}
 
       <GradeSheet
         assessmentId={assessment.id}

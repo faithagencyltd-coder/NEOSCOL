@@ -1,5 +1,6 @@
 import {
   BadgeCheck,
+  BookOpenCheck,
   CalendarClock,
   ClipboardCheck,
   ClipboardList,
@@ -35,6 +36,7 @@ const ICONS: Record<NavIconName, LucideIcon> = {
   staff: UserRoundCog,
   staffAttendance: BadgeCheck,
   kiosk: ScanLine,
+  lessons: BookOpenCheck,
 };
 
 export function NavIcon({ name, className }: { name: NavIconName; className?: string }) {
