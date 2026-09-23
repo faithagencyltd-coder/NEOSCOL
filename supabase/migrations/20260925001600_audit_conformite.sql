@@ -623,3 +623,69 @@ grant execute on function public.my_class_ids(uuid) to authenticated;
 -- -----------------------------------------------------------------------------
 alter table public.guardians
   add column if not exists custom_fields jsonb not null default '{}'::jsonb check (jsonb_typeof(custom_fields) = 'object');
+
+
+-- -----------------------------------------------------------------------------
+-- 8. Recherche globale : même périmètre « mes classes » pour l'enseignant.
+-- -----------------------------------------------------------------------------
+create or replace function public.global_search(p_organization_id uuid, p_query text, p_limit integer default 20)
+returns table (entity_type text, entity_id uuid, title text, subtitle text, score real)
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  with q as (
+    select app.search_normalize(btrim(p_query)) as term,
+           '%' || replace(replace(replace(app.search_normalize(btrim(p_query)), '\', '\\'), '%', '\%'), '_', '\_') || '%' as pattern
+  ),
+  results as (
+    select 'student'::text, s.id, s.last_name || ' ' || s.first_name, s.matricule,
+           extensions.similarity(s.search_text, q.term)
+    from public.students s, q
+    where s.organization_id = p_organization_id and s.search_text like q.pattern
+    union all
+    select 'guardian', g.id, g.last_name || ' ' || g.first_name, coalesce(g.phone, g.email),
+           extensions.similarity(g.search_text, q.term)
+    from public.guardians g, q
+    where g.organization_id = p_organization_id and g.search_text like q.pattern
+    union all
+    select 'staff', st.id, st.last_name || ' ' || st.first_name, coalesce(st.job_title, ''),
+           extensions.similarity(st.search_text, q.term)
+    from public.staff_members st, q
+    where st.organization_id = p_organization_id and st.search_text like q.pattern
+    union all
+    select 'class', c.id, c.name, coalesce(c.code, ''), extensions.similarity(c.search_text, q.term)
+    from public.classes c, q
+    where c.organization_id = p_organization_id and c.search_text like q.pattern and c.archived_at is null
+      -- Enseignant sans vue d'ensemble : ses classes uniquement (comme /classes).
+      and (app.has_permission(p_organization_id, 'students.read') or app.has_permission(p_organization_id, 'academic.manage')
+           or c.id = any (app.my_taught_class_ids()))
+    union all
+    select 'program', p.id, p.name, p.code, extensions.similarity(p.search_text, q.term)
+    from public.programs p, q
+    where p.organization_id = p_organization_id and p.search_text like q.pattern
+    union all
+    select 'enrollment', e.id, e.reference, e.status::text, extensions.similarity(e.search_text, q.term)
+    from public.enrollments e, q
+    where e.organization_id = p_organization_id and e.search_text like q.pattern
+    union all
+    select 'invoice', i.id, i.number, to_char(i.total, 'FM999G999G999G990'), extensions.similarity(i.search_text, q.term)
+    from public.invoices i, q
+    where i.organization_id = p_organization_id and i.search_text like q.pattern
+    union all
+    select 'payment', pa.id, pa.number, to_char(pa.amount, 'FM999G999G999G990'), extensions.similarity(pa.search_text, q.term)
+    from public.payments pa, q
+    where pa.organization_id = p_organization_id and pa.search_text like q.pattern
+    union all
+    select 'document', d.id, d.number, d.title, extensions.similarity(d.search_text, q.term)
+    from public.issued_documents d, q
+    where d.organization_id = p_organization_id and d.search_text like q.pattern
+  )
+  select * from results
+  where length((select term from q)) >= 2
+  order by 5 desc, 3
+  limit least(greatest(coalesce(p_limit, 20), 1), 50);
+$$;
+revoke execute on function public.global_search(uuid, text, integer) from public, anon;
+grant execute on function public.global_search(uuid, text, integer) to authenticated;

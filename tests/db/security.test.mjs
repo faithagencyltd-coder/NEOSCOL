@@ -591,3 +591,17 @@ describe("Dossier 360° et périmètre enseignant", () => {
     });
   });
 });
+
+describe("Recherche globale", () => {
+  test("enseignant : seules ses classes apparaissent dans la recherche", async () => {
+    await as(USERS.teacher, async (q) => {
+      const classes = (await q("select title from global_search($1, 'e A', 50) where entity_type = 'class'", [ORG_DEMO])).map((r) => r.title);
+      assert.ok(classes.includes("6e A"), "classe enseignée trouvée");
+      assert.ok(!classes.includes("5e A"), "classe non enseignée masquée");
+    });
+    await as(USERS.director, async (q) => {
+      const classes = (await q("select title from global_search($1, 'e A', 50) where entity_type = 'class'", [ORG_DEMO])).map((r) => r.title);
+      assert.ok(classes.includes("5e A"), "direction : toutes les classes");
+    });
+  });
+});
