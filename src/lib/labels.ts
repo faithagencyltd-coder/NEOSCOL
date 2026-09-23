@@ -68,3 +68,10 @@ export const PAYMENT_METHOD: Record<string, string> = {
   cheque: "Chèque",
   other: "Autre",
 };
+
+export const INVOICE_PAYMENT_STATUS: Record<string, { label: string; tone: Tone }> = {
+  paid: { label: "Soldée", tone: "success" },
+  partial: { label: "Partielle", tone: "warning" },
+  unpaid: { label: "Impayée", tone: "danger" },
+  cancelled: { label: "Annulée", tone: "neutral" },
+};

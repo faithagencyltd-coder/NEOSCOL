@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils/cn";
 
 /** Champ de formulaire accessible : libellé, aide et erreurs reliés au contrôle. */
 export function FormField({
@@ -8,16 +9,18 @@ export function FormField({
   label,
   hint,
   errors,
+  className,
   children,
 }: {
   id: string;
   label: string;
   hint?: string;
   errors?: string[];
+  className?: string;
   children: ReactNode;
 }) {
   return (
-    <div className="grid gap-1.5">
+    <div className={cn("grid gap-1.5", className)}>
       <Label htmlFor={id}>{label}</Label>
       {children}
       {hint && !errors?.length ? (

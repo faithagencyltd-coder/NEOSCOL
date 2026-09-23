@@ -16,7 +16,8 @@ export type NavIcon =
   | "staff"
   | "staffAttendance"
   | "kiosk"
-  | "lessons";
+  | "lessons"
+  | "finance";
 
 export type NavItem = {
   href: string;
@@ -62,6 +63,7 @@ export const NAVIGATION: NavSection[] = [
   {
     label: "Administration",
     items: [
+      { href: "/finances", label: "Finances", icon: "finance", anyOf: ["finance.read", "finance.expenses.read", "finance.expenses.manage"], keywords: "factures paiements reçus dépenses impayés rappels" },
       { href: "/personnel", label: "Personnel", icon: "staff", anyOf: ["staff.read"], keywords: "enseignants badges comptes matricule" },
       { href: "/personnel/pointage", label: "Pointage du personnel", icon: "staffAttendance", anyOf: ["staff_attendance.read"], keywords: "arrivées retards badges scans" },
       { href: "/pointage", label: "Tablette de pointage", icon: "kiosk", anyOf: ["staff_attendance.scan"], keywords: "scanner badge QR" },

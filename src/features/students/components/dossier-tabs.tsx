@@ -22,7 +22,7 @@ import type {
   getStudentHistory,
   getStudentMedical,
 } from "@/features/students/queries";
-import { ENROLLMENT_STATUS, ENROLLMENT_TYPE, RELATIONSHIP, SEX } from "@/lib/labels";
+import { ENROLLMENT_STATUS, ENROLLMENT_TYPE, INVOICE_PAYMENT_STATUS, PAYMENT_METHOD, RELATIONSHIP, SEX } from "@/lib/labels";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/utils/format";
 
 type Student = NonNullable<Awaited<ReturnType<typeof getStudent>>>;
@@ -370,22 +370,6 @@ export function AttendanceTab({ attendance }: { attendance: Awaited<ReturnType<t
   );
 }
 
-const PAYMENT_STATUS = {
-  paid: { label: "Soldée", tone: "success" },
-  partial: { label: "Partielle", tone: "warning" },
-  unpaid: { label: "Impayée", tone: "danger" },
-  cancelled: { label: "Annulée", tone: "neutral" },
-} as const;
-
-const METHODS: Record<string, string> = {
-  cash: "Espèces",
-  mobile_money: "Mobile Money",
-  bank_transfer: "Virement",
-  card: "Carte",
-  cheque: "Chèque",
-  other: "Autre",
-};
-
 export function FinanceTab({ finance, currency }: { finance: Awaited<ReturnType<typeof getStudentFinance>>; currency: string }) {
   const money = (n: number | null) => formatMoney(n ?? 0, currency);
   const open = finance.invoices.filter((i) => i.status === "issued");
@@ -436,7 +420,11 @@ export function FinanceTab({ finance, currency }: { finance: Awaited<ReturnType<
           <tbody>
             {finance.invoices.map((invoice) => (
               <TR key={invoice.invoice_id}>
-                <TD className="font-semibold">{invoice.number}</TD>
+                <TD className="font-semibold">
+                  <Link href={`/finances/factures/${invoice.invoice_id}`} className="hover:text-primary">
+                    {invoice.number}
+                  </Link>
+                </TD>
                 <TD className="text-muted-foreground">{invoice.issued_on ? formatDate(invoice.issued_on, "fr-FR", { dateStyle: "short" }) : "—"}</TD>
                 <TD className="text-right tabular-nums">{money(invoice.total)}</TD>
                 <TD className="text-right font-semibold tabular-nums">{money(invoice.balance)}</TD>
@@ -444,7 +432,7 @@ export function FinanceTab({ finance, currency }: { finance: Awaited<ReturnType<
                   {invoice.next_due_on ? formatDate(invoice.next_due_on, "fr-FR", { dateStyle: "short" }) : "—"}
                   {invoice.is_overdue ? <Badge tone="danger" className="ml-2">En retard</Badge> : null}
                 </TD>
-                <TD>{invoice.payment_status ? <StatusBadge value={invoice.payment_status} map={PAYMENT_STATUS} /> : null}</TD>
+                <TD>{invoice.payment_status ? <StatusBadge value={invoice.payment_status} map={INVOICE_PAYMENT_STATUS} /> : null}</TD>
               </TR>
             ))}
           </tbody>
@@ -474,7 +462,7 @@ export function FinanceTab({ finance, currency }: { finance: Awaited<ReturnType<
                 <TR key={payment.id} className={payment.status === "cancelled" ? "text-muted-foreground line-through" : undefined}>
                   <TD className="font-semibold">{payment.number}</TD>
                   <TD>{formatDate(payment.paid_at, "fr-FR", { dateStyle: "short" })}</TD>
-                  <TD>{METHODS[payment.method] ?? payment.method}</TD>
+                  <TD>{PAYMENT_METHOD[payment.method] ?? payment.method}</TD>
                   <TD className="text-right tabular-nums">{money(payment.amount)}</TD>
                   <TD className="text-right tabular-nums">{money(payment.balance_after)}</TD>
                 </TR>

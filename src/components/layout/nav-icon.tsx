@@ -15,6 +15,7 @@ import {
   UserRound,
   UserRoundCog,
   Users,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 
@@ -37,6 +38,7 @@ const ICONS: Record<NavIconName, LucideIcon> = {
   staffAttendance: BadgeCheck,
   kiosk: ScanLine,
   lessons: BookOpenCheck,
+  finance: Wallet,
 };
 
 export function NavIcon({ name, className }: { name: NavIconName; className?: string }) {
