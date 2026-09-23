@@ -31,7 +31,14 @@ Plateforme SaaS multi-établissements de gestion scolaire et de formation :
 
 ## Démarrage
 
-Prérequis : Node.js ≥ 20.9 et un projet Supabase (ou `supabase start` avec le CLI Supabase et Docker).
+**Essayer en une commande** (Node.js ≥ 20.9 + Docker Desktop) : `npm run demo`
+(Windows : `npm run demo:windows`) puis http://localhost:3000 — guide pas à pas :
+[docs/DEMARRER-EN-LOCAL.md](docs/DEMARRER-EN-LOCAL.md).
+
+Le script démarre Supabase en local (`supabase/config.toml` : migrations, données de
+démonstration, code SMS de test), écrit `.env.local` et lance l'application.
+
+Avec un projet Supabase hébergé :
 
 ```bash
 npm install
@@ -57,7 +64,8 @@ Mot de passe commun : `NeoScol-Demo-2026!`
 | `enseignant@demo.neoscol.app` / `enseignante@…` | Enseignants (connexion aussi par matricule `EMP-DEMO-…`) |
 | Parent : profil « Parent / Tuteur », tél. `+2250700000001`, nom `BAMBA`, prénom `Adjoua`, code SMS | Parent de 2 élèves (Kofi, en impayé ; Aya) |
 | Élève : profil « Élève », matricule `DEMO-26-00001`, né le `12/03/2014`, mot de passe commun | Élève (Kofi) |
-| `formation@demo.neoscol.app` | Administrateur d'un 2ᵉ établissement (tests d'isolation) |
+| `formation@demo.neoscol.app` | Administrateur du centre de formation (apprenants, sessions) |
+| `universite@demo.neoscol.app` | Administratrice de l'université (étudiants, promotions, crédits ECTS) |
 | `superadmin@demo.neoscol.app` | Super administrateur plateforme |
 | `pointage@demo.neoscol.app` | Tablette de pointage (scan des badges) |
 

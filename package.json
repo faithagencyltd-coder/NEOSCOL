@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "demo": "bash scripts/demo-local.sh",
+    "demo:windows": "powershell -ExecutionPolicy Bypass -File scripts/demo-local.ps1",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
