@@ -5,13 +5,19 @@ import { Logo } from "@/components/shared/logo";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { signOut } from "@/features/auth/actions";
+import { redirect } from "next/navigation";
+
 import { requireSession } from "@/lib/auth/guards";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Accès indisponible" };
 
 /** Compte valide mais sans établissement actif (adhésion suspendue, compte désactivé…). */
 export default async function AccessUnavailablePage() {
   await requireSession();
+  // Super administrateur sans établissement : console de la plateforme.
+  const { data: platformAdmin } = await (await createClient()).rpc("is_platform_admin");
+  if (platformAdmin) redirect("/plateforme");
   return (
     <main className="mx-auto grid min-h-dvh max-w-md content-center gap-6 px-4 py-10">
       <Logo />

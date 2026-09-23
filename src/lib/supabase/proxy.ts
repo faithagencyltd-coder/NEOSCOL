@@ -6,7 +6,7 @@ import type { Database } from "@/types/database";
 
 /** Routes accessibles sans session. */
 // /api/cron : protégé par CRON_SECRET (pas de session utilisateur).
-const PUBLIC_PATHS = ["/connexion", "/mot-de-passe-oublie", "/auth", "/verifier", "/configuration", "/api/cron", "/demo"];
+const PUBLIC_PATHS = ["/connexion", "/mot-de-passe-oublie", "/auth", "/verifier", "/configuration", "/api/cron", "/demo", "/hors-ligne"];
 
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));

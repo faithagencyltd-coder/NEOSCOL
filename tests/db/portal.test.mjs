@@ -291,3 +291,35 @@ describe("Lectures du portail", () => {
     });
   });
 });
+
+describe("Élève archivé", () => {
+  test("portail désactivé (élève et parents), historique conservé, accès rendu à la restauration", async () => {
+    await as(null, async (q) => {
+      const kofi = await kofiId(q);
+      await switchTo(q, USERS.secretary);
+      await q("update students set archived_at = now() where id = $1", [kofi]);
+
+      await switchTo(q, USERS.student);
+      assert.equal((await q("select id from students")).length, 0, "l'élève archivé ne voit plus son dossier");
+      assert.equal((await q("select id from attendance_records")).length, 0);
+      await switchTo(q, USERS.parent);
+      const kids = await q("select first_name from students");
+      assert.deepEqual(kids.map((k) => k.first_name), ["Aya"], "le parent ne voit plus l'enfant archivé");
+
+      await switchTo(q, null);
+      const [membership] = await q("select status from memberships where user_id = $1", [USERS.student]);
+      assert.equal(membership.status, "suspended", "compte élève suspendu");
+      await switchTo(q, USERS.director);
+      assert.ok((await q("select id from attendance_records where student_id = $1", [kofi])).length > 0, "historique conservé");
+      assert.ok((await q("select id from payments where student_id = $1", [kofi])).length >= 0);
+      assert.ok((await q("select id from invoices where student_id = $1", [kofi])).length > 0);
+
+      await switchTo(q, USERS.secretary);
+      await q("update students set archived_at = null where id = $1", [kofi]);
+      await switchTo(q, null);
+      assert.equal((await q("select status from memberships where user_id = $1", [USERS.student]))[0].status, "active");
+      await switchTo(q, USERS.student);
+      assert.equal((await q("select id from students")).length, 1, "accès rétabli après restauration");
+    });
+  });
+});

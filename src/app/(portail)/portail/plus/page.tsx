@@ -2,6 +2,7 @@ import { BookOpen, CalendarClock, ChevronRight, FileCheck2, LogOut, Megaphone, U
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { InstallAppButton } from "@/components/shared/pwa";
 import { SubmitButton } from "@/components/shared/submit-button";
 import { Avatar } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -119,6 +120,10 @@ export default async function PortalMorePage() {
               <ResetPasswordForm redirectTo="/portail" />
             </div>
           )}
+          <div className="grid gap-2">
+            <h3 className="font-semibold">Application mobile</h3>
+            <InstallAppButton />
+          </div>
           <form action={signOut}>
             <SubmitButton variant="secondary" className="w-full sm:w-auto" pendingLabel="Déconnexion…">
               <LogOut aria-hidden /> Se déconnecter

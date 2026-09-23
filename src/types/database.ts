@@ -3965,6 +3965,10 @@ export type Database = {
           balance: number
         }[]
       }
+      is_platform_admin: {
+        Args: never
+        Returns: boolean
+      }
       issue_staff_badge: {
         Args: {
           p_staff_id: string
@@ -4010,6 +4014,30 @@ export type Database = {
           p_org: string
         }
         Returns: string[]
+      }
+      platform_add_org_admin: {
+        Args: {
+          p_organization_id: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      platform_overview: {
+        Args: never
+        Returns: {
+          id: string
+          name: string
+          code: string
+          type: string
+          city: string
+          status: string
+          is_demo: boolean
+          created_at: string
+          students: number
+          staff: number
+          members: number
+          admins: number
+        }[]
       }
       portal_account: {
         Args: {

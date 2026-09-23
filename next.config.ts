@@ -20,6 +20,14 @@ const nextConfig: NextConfig = {
       // Les PDF et fichiers peuvent être affichés en aperçu dans l'application elle-même (même origine uniquement).
       { source: "/api/documents/:path*", headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }] },
       { source: "/api/fichiers/:path*", headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }] },
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self'" },
+        ],
+      },
     ];
   },
 };

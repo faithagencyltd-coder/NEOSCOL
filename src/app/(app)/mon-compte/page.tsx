@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { PageHeader } from "@/components/shared/page-header";
+import { InstallAppButton } from "@/components/shared/pwa";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResetPasswordForm } from "@/features/auth/components/reset-password-form";
@@ -63,6 +64,15 @@ export default async function AccountPage() {
           </CardHeader>
           <CardContent>
             <ResetPasswordForm redirectTo="/mon-compte" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Application NéoScol</CardTitle>
+            <CardDescription>Installez NéoScol sur cet ordinateur, cette tablette ou ce téléphone (sans magasin d&apos;applications).</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <InstallAppButton />
           </CardContent>
         </Card>
       </div>

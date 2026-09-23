@@ -2,7 +2,7 @@
 // Pré-requis : `npm run db:reset` (émulation Supabase + migrations + seed).
 import { after, describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { as, ORG_DEMO, ORG_DEMOF, pool, rejects, USERS } from "./helpers.mjs";
+import { as, ORG_DEMO, ORG_DEMOF, pool, rejects, switchTo, USERS } from "./helpers.mjs";
 
 after(() => pool.end());
 
@@ -376,6 +376,35 @@ describe("Vérification publique et recherche", () => {
     });
     await as(USERS.teacher, async (q) => {
       assert.equal((await q("select * from invoice_status_summary($1)", [ORG_DEMO])).length, 0);
+    });
+  });
+});
+
+describe("Plateforme (Super administrateur)", () => {
+  test("création d'un établissement et de son administrateur réservée à la plateforme", async () => {
+    await as(null, async (q) => {
+      await switchTo(q, USERS.admin);
+      assert.match(await rejects(q("select * from platform_overview()")), /plateforme/);
+      assert.match(await rejects(q("select create_organization('Pirate', 'PIR', 'pirate', 'high_school')")), /plateforme/);
+      assert.equal((await q("select is_platform_admin() as a"))[0].a, false);
+
+      await switchTo(q, USERS.superadmin);
+      const [{ create_organization: orgId }] = await q("select create_organization('Lycée Test Audit', 'LTA', 'lycee-test-audit', 'high_school', 'Yamoussoukro')");
+      const overview = await q("select name, status from platform_overview() where id = $1", [orgId]);
+      assert.deepEqual(overview, [{ name: "Lycée Test Audit", status: "active" }]);
+      await q("select platform_add_org_admin($1, $2)", [orgId, USERS.teacher2]);
+
+      // Le nouvel administrateur ne voit que son établissement.
+      await switchTo(q, USERS.teacher2);
+      assert.ok((await q("select my_permissions($1) as p", [orgId]))[0].p.includes("settings.manage"));
+      // Rôles provisionnés automatiquement
+      assert.ok((await q("select count(*)::int n from roles where organization_id = $1", [orgId]))[0].n >= 9);
+      assert.equal((await q("select count(*)::int n from students where organization_id = $1", [orgId]))[0].n, 0);
+      // Et l'administrateur de A ne voit rien de B.
+      await switchTo(q, USERS.admin);
+      assert.equal((await q("select id from organizations where id = $1", [orgId])).length, 0);
+      await switchTo(q, USERS.teacher2);
+      assert.match(await rejects(q("select platform_add_org_admin($1, $2)", [orgId, USERS.parent])), /plateforme/);
     });
   });
 });

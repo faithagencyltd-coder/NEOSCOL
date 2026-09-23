@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { DM_Sans, Poppins } from "next/font/google";
 import { Toaster } from "sonner";
 
+import { ServiceWorkerRegistration } from "@/components/shared/pwa";
+
 import "./globals.css";
 
 const body = DM_Sans({ subsets: ["latin"], variable: "--font-body", display: "swap" });
@@ -11,6 +13,8 @@ export const metadata: Metadata = {
   title: { default: "NéoScol", template: "%s · NéoScol" },
   description: "Plus qu'un logiciel, une vision pour l'éducation. Gestion scolaire et de formation.",
   applicationName: "NéoScol",
+  appleWebApp: { capable: true, title: "NéoScol", statusBarStyle: "black-translucent" },
+  icons: { apple: "/icons/apple-touch-icon.png" },
 };
 
 export const viewport: Viewport = {
@@ -26,6 +30,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="min-h-dvh">
         {children}
         <Toaster position="top-right" richColors closeButton />
+        <ServiceWorkerRegistration />
       </body>
     </html>
   );
