@@ -50,6 +50,60 @@ describe("Isolation multi-établissements", () => {
     assert.match(message, /foreign key/);
   });
 
+  test("aucune table ne fuit vers l'autre établissement (lecture, dans les deux sens)", async () => {
+    const tables = await as(null, (q) =>
+      q(`select c.table_name from information_schema.columns c
+           join information_schema.tables t on t.table_schema = c.table_schema and t.table_name = c.table_name and t.table_type = 'BASE TABLE'
+          where c.table_schema = 'public' and c.column_name = 'organization_id' order by 1`),
+    );
+    assert.ok(tables.length > 40, `tables multi-établissements trouvées : ${tables.length}`);
+    for (const [user, foreign] of [[USERS.otherOrgAdmin, ORG_DEMO], [USERS.admin, ORG_DEMOF]]) {
+      await as(user, async (q) => {
+        for (const { table_name } of tables) {
+          try {
+            const [{ count: n }] = await q(`select count(*) from public."${table_name}" where organization_id = $1`, [foreign]);
+            assert.equal(Number(n), 0, `${table_name} : ${n} ligne(s) de l'autre établissement visibles`);
+          } catch (error) {
+            if (!/permission denied/.test(String(error.message))) throw error;
+          }
+        }
+      });
+    }
+  });
+
+  test("écritures inter-établissements refusées : dépenses, personnel, fichiers, notifications, documents, annonces", async () => {
+    await as(USERS.otherOrgAdmin, async (q) => {
+      const attempts = [
+        ["expenses", "insert into expenses (organization_id, label, amount, spent_on, category_id) select $1, 'x', 1, current_date, id from expense_categories where organization_id = $1 limit 1"],
+        ["staff_members", "insert into staff_members (organization_id, first_name, last_name) values ($1, 'X', 'Y')"],
+        ["file_objects", "insert into file_objects (organization_id, bucket, path, owner_type, file_name, mime_type, size_bytes, content) values ($1, 'database', '10000000-0000-4000-a000-000000000001/organization/x', 'organization', 'x.png', 'image/png', 4, decode('89504e47', 'hex'))"],
+        ["notifications", "insert into notifications (organization_id, user_id, type, title) values ($1, auth.uid(), 'x', 'x')"],
+        ["announcements", "insert into announcements (organization_id, title, body, published_at) values ($1, 'x', 'y', now())"],
+        ["document_templates", "insert into document_templates (organization_id, kind, name) values ($1, 'custom', 'x')"],
+        ["fee_types", "insert into fee_types (organization_id, name, code) values ($1, 'x', 'X')"],
+      ];
+      for (const [table, sql] of attempts) {
+        let refused = false;
+        try {
+          const rows = await q(sql, [ORG_DEMO]);
+          refused = rows.length === 0 && table === "expenses"; // aucune catégorie visible : rien à insérer
+        } catch (error) {
+          refused = /row-level security|permission denied|violates/.test(String(error.message));
+        }
+        assert.ok(refused, `${table} : écriture inter-établissements acceptée`);
+      }
+      // Mises à jour / suppressions : aucune ligne atteinte.
+      for (const table of ["expenses", "staff_members", "issued_documents", "notifications", "audit_logs", "invoices", "payments"]) {
+        try {
+          const rows = await q(`delete from public."${table}" where organization_id = $1 returning 1`, [ORG_DEMO]);
+          assert.equal(rows.length, 0, `${table} : suppression inter-établissements`);
+        } catch (error) {
+          assert.match(String(error.message), /permission denied|row-level security|interdit|immuable|ne peut/i, `${table} : ${error.message}`);
+        }
+      }
+    });
+  });
+
   test("le visiteur anonyme n'accède à aucune table", async () => {
     await as("anon", async (q) => {
       assert.match(await rejects(q("select count(*) from students")), /permission denied/);
