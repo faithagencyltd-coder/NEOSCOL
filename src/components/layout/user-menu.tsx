@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, Check, ChevronDown, LogOut, UserRound } from "lucide-react";
+import { Building2, Check, ChevronDown, LogOut, PlayCircle, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useTransition } from "react";
 
@@ -23,6 +23,7 @@ export function UserMenu({
   organizations,
   activeOrganizationId,
   accountHref = "/mon-compte",
+  demo = false,
 }: {
   name: string;
   email: string | null;
@@ -30,6 +31,7 @@ export function UserMenu({
   organizations: OrganizationSummary[];
   activeOrganizationId: string;
   accountHref?: string;
+  demo?: boolean;
 }) {
   const [pending, startTransition] = useTransition();
   // Les actions sont appelées directement : un <form> dans un item de menu serait
@@ -77,6 +79,13 @@ export function UserMenu({
             <UserRound aria-hidden /> Mon compte
           </Link>
         </DropdownMenuItem>
+        {demo ? (
+          <DropdownMenuItem asChild>
+            <Link href="/demo">
+              <PlayCircle aria-hidden /> Changer de rôle (démo)
+            </Link>
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem className="text-danger" disabled={pending} onSelect={() => startTransition(() => signOut())}>
           <LogOut aria-hidden /> Se déconnecter
         </DropdownMenuItem>

@@ -180,3 +180,82 @@ h2,
     transform: none;
   }
 }
+
+/* Orbes de fond (connexion, kiosque) : dérive lente. */
+@keyframes float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(24px, -18px, 0) scale(1.06);
+  }
+}
+
+/* Ligne de lecture du scanner de badge. */
+@keyframes scan-line {
+  0% {
+    top: 6%;
+  }
+  50% {
+    top: 90%;
+  }
+  100% {
+    top: 6%;
+  }
+}
+
+/* Onde de validation (badge accepté, notification). */
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 45%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 18px transparent;
+  }
+}
+
+/* Barres de graphique : croissance depuis la base. */
+@keyframes bar-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes bar-grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Cloche : léger balancement à l'arrivée de notifications non lues. */
+@keyframes ring {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  15% {
+    transform: rotate(14deg);
+  }
+  30% {
+    transform: rotate(-12deg);
+  }
+  45% {
+    transform: rotate(8deg);
+  }
+  60% {
+    transform: rotate(-4deg);
+  }
+}
+
+/* Apparition en cascade des cartes (délai via --delay). */
+.rise {
+  animation: fade-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: var(--delay, 0ms);
+}

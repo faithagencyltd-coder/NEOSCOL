@@ -8,6 +8,7 @@ import { ChildSwitcher } from "@/features/portal/components/child-switcher";
 import { PortalNav } from "@/features/portal/components/portal-nav";
 import { requirePortal } from "@/features/portal/context";
 import { displayName } from "@/lib/auth/session";
+import { isDemoMode } from "@/lib/demo";
 
 /** Portail parent / élève : interface mobile (bleu nuit, blanc, cyan), navigation en bas d'écran. */
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
@@ -30,7 +31,7 @@ export default async function PortalLayout({ children }: { children: React.React
               <Logo inverted />
             </div>
             <div className="rounded-xl bg-white text-foreground">
-              <NotificationsMenu items={notifications.items} unread={notifications.unread} timezone={organization.timezone} />
+              <NotificationsMenu items={notifications.items} unread={notifications.unread} timezone={organization.timezone} allHref="/portail/annonces" />
             </div>
             <div className="rounded-xl bg-white text-foreground">
               <UserMenu
@@ -40,6 +41,7 @@ export default async function PortalLayout({ children }: { children: React.React
                 organizations={context.organizations}
                 activeOrganizationId={organization.id}
                 accountHref="/portail/plus"
+                demo={isDemoMode() && organization.is_demo}
               />
             </div>
           </div>

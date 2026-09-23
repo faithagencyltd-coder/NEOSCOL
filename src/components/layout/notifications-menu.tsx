@@ -1,4 +1,5 @@
 import { Bell, BellOff } from "lucide-react";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,16 +13,26 @@ import { markAllNotificationsRead } from "@/features/notifications/actions";
 import { formatDateTime } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
 
-type NotificationItem = { id: string; title: string; body: string | null; created_at: string; read_at: string | null };
+type NotificationItem = { id: string; title: string; body: string | null; created_at: string; read_at: string | null; link?: string | null };
 
-export function NotificationsMenu({ items, unread, timezone }: { items: NotificationItem[]; unread: number; timezone: string }) {
+export function NotificationsMenu({
+  items,
+  unread,
+  timezone,
+  allHref = "/notifications",
+}: {
+  items: NotificationItem[];
+  unread: number;
+  timezone: string;
+  allHref?: string;
+}) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative rounded-xl bg-surface-muted hover:bg-border" aria-label={`Notifications (${unread} non lues)`}>
-          <Bell />
+          <Bell className={cn(unread > 0 && "origin-top [animation:ring_1.2s_ease-in-out_2]")} />
           {unread > 0 ? (
-            <span className="absolute right-1.5 top-1.5 flex min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold leading-4 text-white">
+            <span className="absolute right-1.5 top-1.5 animate-[fade-in_0.3s_ease-out] flex min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold leading-4 text-white">
               {unread > 99 ? "99+" : unread}
             </span>
           ) : null}
@@ -48,13 +59,27 @@ export function NotificationsMenu({ items, unread, timezone }: { items: Notifica
           <ul className="grid max-h-96 gap-1 overflow-y-auto">
             {items.map((item) => (
               <li key={item.id} className={cn("rounded-md px-2.5 py-2", !item.read_at && "bg-primary-soft/60")}>
-                <p className="text-sm font-medium">{item.title}</p>
-                {item.body ? <p className="text-xs text-muted-foreground">{item.body}</p> : null}
-                <p className="mt-1 text-[11px] text-muted-foreground">{formatDateTime(item.created_at, "fr-FR", timezone)}</p>
+                {item.link ? (
+                  <Link href={item.link} className="grid hover:text-primary">
+                    <span className="text-sm font-medium">{item.title}</span>
+                    {item.body ? <span className="text-xs text-muted-foreground">{item.body}</span> : null}
+                    <span className="mt-1 text-[11px] text-muted-foreground">{formatDateTime(item.created_at, "fr-FR", timezone)}</span>
+                  </Link>
+                ) : (
+                  <>
+                    <p className="text-sm font-medium">{item.title}</p>
+                    {item.body ? <p className="text-xs text-muted-foreground">{item.body}</p> : null}
+                    <p className="mt-1 text-[11px] text-muted-foreground">{formatDateTime(item.created_at, "fr-FR", timezone)}</p>
+                  </>
+                )}
               </li>
             ))}
           </ul>
         )}
+        <DropdownMenuSeparator />
+        <Link href={allHref} className="block rounded-md px-2.5 py-2 text-center text-sm font-semibold text-primary hover:bg-primary-soft">
+          Voir toutes les notifications
+        </Link>
       </DropdownMenuContent>
     </DropdownMenu>
   );

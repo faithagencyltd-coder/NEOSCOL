@@ -87,7 +87,7 @@ describe("Tablette de pointage", () => {
         [USERS.secretary],
       );
       assert.deepEqual(att, { arrived: true, departed: true });
-      const scans = await q("select result, reason from badge_scans order by scanned_at, result");
+      const scans = await q("select result, reason from badge_scans where scanned_at >= now() - interval '1 hour' order by scanned_at, result");
       assert.equal(scans.length, 4);
       const audit = await q("select result from audit_logs where action = 'staff_attendance.scan' order by id");
       assert.deepEqual(audit.map((a) => a.result).sort(), ["denied", "denied", "success", "success"]);

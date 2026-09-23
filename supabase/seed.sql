@@ -365,6 +365,223 @@ begin
 end;
 $$;
 
+-- Enrichissement de la démonstration ------------------------------------------------
+-- Équipe pédagogique complète, emplois du temps des 4 classes (sans conflit),
+-- 3 semaines d'appels validés, évaluations (interrogations, devoir, composition)
+-- et notes, pointages du personnel, dépenses, notifications du personnel.
+-- Les séances de mathématiques et de français de la 6e A restent celles
+-- ci-dessus (utilisées par les tests du calcul des bulletins).
+do $$
+declare
+  v_org constant uuid := '10000000-0000-4000-a000-000000000001';
+  v_year uuid;
+  v_t1 uuid;
+  v_classes uuid[];
+  v_rooms uuid[] := '{}';
+  v_room uuid;
+  v_staff uuid;
+  v_cs record;
+  v_slot record;
+  v_session uuid;
+  v_assessment uuid;
+  v_day date;
+  v_days date[] := '{}';
+  v_block integer;
+  v_c integer;
+  v_pos integer;
+  v_code text;
+  v_arrival timestamptz;
+  i integer;
+  -- Semaine type : 14 créneaux de 2 h ; chaque classe décale la séquence de 3 créneaux,
+  -- ce qui garantit l'absence de conflit pour les enseignants partagés.
+  v_sequence text[] := array['MATH','FR','ANG','SVT','MATH','HG','FR','PC','MATH','ANG','FR','EPS'];
+  v_block_day integer[] := array[1,1,1,2,2,2,3,3,4,4,4,5,5,5];
+  v_block_start time[] := array['08:00','10:15','15:00','08:00','10:15','15:00','08:00','10:15','08:00','10:15','15:00','08:00','10:15','15:00']::time[];
+  v_assess_titles text[] := array['Interrogation n°1', 'Devoir de maison', 'Interrogation n°2', 'Composition du 1er trimestre'];
+  v_assess_kinds text[] := array['test', 'homework', 'test', 'exam'];
+  v_assess_cols text[] := array['interro1', 'devoir', 'interro2', 'examen'];
+  v_assess_coefs numeric[] := array[1, 1, 1, 2];
+begin
+  perform set_config('app.skip_audit', 'on', true);
+  select id into v_year from public.academic_years where organization_id = v_org and is_current;
+  select id into v_t1 from public.academic_periods where academic_year_id = v_year and sequence = 1;
+  select array_agg(id order by name) into v_classes from public.classes where organization_id = v_org; -- 3e A, 5e A, 6e A, 6e B
+  v_classes := array[v_classes[3], v_classes[4], v_classes[2], v_classes[1]];                         -- 6e A, 6e B, 5e A, 3e A
+
+  -- Salles : une par classe
+  insert into public.rooms (organization_id, name, building, capacity)
+  values (v_org, 'Salle 103', 'Bâtiment A', 45), (v_org, 'Salle 104', 'Bâtiment C', 40);
+  select array_agg(id order by name) into v_rooms from public.rooms where organization_id = v_org and name like 'Salle 10%';
+  for i in 1..4 loop
+    update public.classes set room_id = v_rooms[i] where id = v_classes[i];
+  end loop;
+
+  -- Équipe pédagogique et administrative
+  insert into public.staff_members (organization_id, first_name, last_name, sex, email, phone, job_title, is_teacher, hired_on)
+  values
+    (v_org, 'Salif', 'COULIBALY', 'M', 'salif.coulibaly@demo.neoscol.app', '+2250700000012', 'Professeur de mathématiques', true, date '2018-09-01'),
+    (v_org, 'Grâce', 'KOUADIO', 'F', 'grace.kouadio@demo.neoscol.app', '+2250700000013', 'Professeure de français', true, date '2020-09-01'),
+    (v_org, 'Nadia', 'TOURÉ', 'F', 'nadia.toure@demo.neoscol.app', '+2250700000014', 'Professeure d''anglais', true, date '2017-09-01'),
+    (v_org, 'Paul', 'AKA', 'M', 'paul.aka@demo.neoscol.app', '+2250700000015', 'Professeur de SVT', true, date '2016-09-01'),
+    (v_org, 'Rokia', 'SANOGO', 'F', 'rokia.sanogo@demo.neoscol.app', '+2250700000016', 'Professeure d''histoire-géographie', true, date '2022-09-01'),
+    (v_org, 'Didier', 'KOFFI', 'M', 'didier.koffi@demo.neoscol.app', '+2250700000017', 'Professeur de physique-chimie', true, date '2015-09-01'),
+    (v_org, 'Hamed', 'DOSSO', 'M', 'hamed.dosso@demo.neoscol.app', '+2250700000018', 'Professeur d''EPS', true, date '2021-09-01'),
+    (v_org, 'Christelle', 'ASSI', 'F', 'christelle.assi@demo.neoscol.app', '+2250700000019', 'Surveillante générale', false, date '2019-09-01'),
+    (v_org, 'Emmanuel', 'DIABATÉ', 'M', 'emmanuel.diabate@demo.neoscol.app', '+2250700000020', 'Bibliothécaire', false, date '2023-01-09');
+  insert into public.staff_badges (organization_id, staff_id)
+  select v_org, st.id from public.staff_members st
+  where st.organization_id = v_org and not exists (select 1 from public.staff_badges b where b.staff_id = st.id and b.status = 'active');
+
+  -- Affectations (les mathématiques et le français de la 6e A / 6e B / 5e A restent inchangés)
+  update public.class_subjects cs set teacher_id = st.id
+    from public.subjects sub, public.staff_members st
+   where cs.subject_id = sub.id and cs.teacher_id is null and st.organization_id = v_org
+     and st.last_name = case sub.code
+       when 'MATH' then 'COULIBALY' when 'FR' then 'KOUADIO' when 'ANG' then 'TOURÉ' when 'SVT' then 'AKA'
+       when 'HG' then 'SANOGO' when 'PC' then 'KOFFI' when 'EPS' then 'DOSSO' end
+     and cs.class_id = any (v_classes);
+  update public.classes set head_teacher_id = (select id from public.staff_members where last_name = 'TOURÉ' and organization_id = v_org) where id = v_classes[2];
+  update public.classes set head_teacher_id = (select id from public.staff_members where last_name = 'KOFFI' and organization_id = v_org) where id = v_classes[4];
+
+  -- Emplois du temps : semaine type complète pour les 4 classes
+  delete from public.timetable_slots where organization_id = v_org;
+  for v_c in 1..4 loop
+    for v_block in 1..14 loop
+      v_pos := ((v_block - 1 + 3 * (v_c - 1)) % 14) + 1;
+      continue when v_pos > array_length(v_sequence, 1);
+      v_code := v_sequence[v_pos];
+      insert into public.timetable_slots (organization_id, academic_year_id, class_id, class_subject_id, teacher_id, room_id, weekday, starts_at, ends_at)
+      select v_org, v_year, v_classes[v_c], cs.id, cs.teacher_id,
+             case when v_code = 'EPS' then null else v_rooms[v_c] end,
+             v_block_day[v_block], v_block_start[v_block], v_block_start[v_block] + interval '2 hours'
+      from public.class_subjects cs join public.subjects sub on sub.id = cs.subject_id
+      where cs.class_id = v_classes[v_c] and sub.code = v_code;
+    end loop;
+  end loop;
+
+  -- Jours de classe des 3 dernières semaines (depuis la rentrée)
+  select array_agg(d::date order by d) into v_days
+  from generate_series(greatest(date '2026-09-08', current_date - 21), current_date - 1, interval '1 day') d
+  where extract(isodow from d) between 1 and 5;
+  v_days := coalesce(v_days, '{}');
+
+  -- Appels validés (sauf les 2 séances historiques de la 6e A)
+  foreach v_day in array v_days loop
+    for v_slot in
+      select ts.* from public.timetable_slots ts
+      join public.class_subjects cs on cs.id = ts.class_subject_id
+      join public.subjects sub on sub.id = cs.subject_id
+      where ts.organization_id = v_org and ts.weekday = extract(isodow from v_day)
+        and not (ts.class_id = v_classes[1] and sub.code in ('MATH', 'FR'))
+        and not exists (select 1 from public.attendance_sessions x
+                        where x.class_id = ts.class_id and x.session_date = v_day and x.starts_at = ts.starts_at)
+    loop
+      insert into public.attendance_sessions (organization_id, class_id, class_subject_id, timetable_slot_id, session_date, starts_at, ends_at, taken_by, status, validated_at)
+      values (v_org, v_slot.class_id, v_slot.class_subject_id, v_slot.id, v_day, v_slot.starts_at, v_slot.ends_at,
+              (select user_id from public.staff_members where id = v_slot.teacher_id), 'validated', v_day + v_slot.starts_at + interval '20 minutes')
+      returning id into v_session;
+      insert into public.attendance_records (organization_id, session_id, student_id, status, minutes_late, arrived_at, comment)
+      select v_org, v_session, e.student_id, x.status::public.attendance_status,
+             case when x.status = 'late' then 5 + x.h % 20 end,
+             case when x.status = 'late' then v_slot.starts_at + ((5 + x.h % 20) || ' minutes')::interval end,
+             case when x.status = 'late' and x.h % 3 = 0 then 'Transport en retard' end
+      from public.enrollments e
+      cross join lateral (select abs(hashtext(e.student_id::text || v_session::text)) % 100 as h) hh
+      cross join lateral (select hh.h, case when hh.h < 5 then 'absent' when hh.h < 10 then 'late' else 'present' end as status) x
+      where e.class_id = v_slot.class_id and e.status = 'validated';
+    end loop;
+  end loop;
+
+  -- Absences justifiées par l'administration (une sur trois)
+  update public.attendance_records r set status = 'excused', is_justified = true, justification = 'Certificat médical', justified_at = now()
+   where r.organization_id = v_org and r.status = 'absent' and abs(hashtext(r.id::text)) % 3 = 0;
+
+  -- Justificatifs déposés par les familles, à examiner
+  insert into public.absence_justifications (organization_id, student_id, starts_on, ends_on, reason, status, submitted_via)
+  select distinct on (r.student_id) v_org, r.student_id, s.session_date, s.session_date,
+         'Rendez-vous médical (certificat à déposer)', 'pending', 'portal'
+  from public.attendance_records r join public.attendance_sessions s on s.id = r.session_id
+  where r.organization_id = v_org and r.status = 'absent'
+  order by r.student_id, s.session_date desc
+  limit 3;
+
+  -- Évaluations du 1er trimestre : interrogations, devoir, composition, pour chaque matière
+  for v_cs in
+    select cs.id, cs.class_id, sub.code, array_position(v_classes, cs.class_id) as c
+    from public.class_subjects cs join public.subjects sub on sub.id = cs.subject_id
+    where cs.organization_id = v_org and cs.class_id = any (v_classes)
+      and not (cs.class_id = v_classes[1] and sub.code in ('MATH', 'FR'))
+  loop
+    for i in 1..4 loop
+      insert into public.assessments (organization_id, class_subject_id, academic_period_id, title, kind, column_key,
+                                      assessed_on, coefficient, max_score, is_published)
+      values (v_org, v_cs.id, v_t1, v_assess_titles[i], v_assess_kinds[i], v_assess_cols[i],
+              greatest(date '2026-09-10', current_date - (4 - i) * 4 - 1), v_assess_coefs[i], 20,
+              -- La composition de la 3e A n'est pas encore publiée (démonstration de la publication)
+              not (i = 4 and v_cs.c = 4))
+      returning id into v_assessment;
+      insert into public.grades (organization_id, assessment_id, student_id, score, is_absent)
+      select v_org, v_assessment, e.student_id,
+             case when abs(hashtext(e.student_id::text || v_assessment::text)) % 50 = 0 then null
+                  else least(20, greatest(2, round((6 + abs(hashtext(e.student_id::text)) % 9
+                        + (abs(hashtext(e.student_id::text || v_assessment::text)) % 70) / 10.0)::numeric * 2) / 2)) end,
+             abs(hashtext(e.student_id::text || v_assessment::text)) % 50 = 0
+      from public.enrollments e where e.class_id = v_cs.class_id and e.status = 'validated';
+      update public.assessments set grades_status = 'validated', grades_validated_at = now()
+       where id = v_assessment and i < 4;
+    end loop;
+  end loop;
+
+  -- Pointage du personnel (enseignants et surveillance) sur la même période
+  foreach v_day in array v_days loop
+    for v_staff in select id from public.staff_members where organization_id = v_org and (is_teacher or job_title = 'Surveillante générale') loop
+      i := abs(hashtext(v_staff::text || v_day::text)) % 40;
+      continue when i = 0; -- absence ponctuelle
+      v_arrival := (v_day + time '07:35' + (i || ' minutes')::interval) at time zone 'Africa/Abidjan';
+      insert into public.staff_attendance (organization_id, staff_id, work_date, arrived_at, departed_at, expected_start, minutes_late)
+      values (v_org, v_staff, v_day, v_arrival, v_arrival + interval '9 hours', time '08:00', greatest(0, i - 30));
+      insert into public.badge_scans (organization_id, staff_id, badge_id, scanned_at, result, kind, reason, message, device)
+      select v_org, v_staff, b.id, v_arrival, 'accepted', 'arrival', 'ok',
+             case when i > 30 then 'Arrivée enregistrée — retard de ' || (i - 30) || ' min' else 'Arrivée enregistrée' end, 'Tablette accueil'
+      from public.staff_badges b where b.staff_id = v_staff and b.status = 'active';
+    end loop;
+  end loop;
+
+  -- Dépenses des derniers mois
+  insert into public.expenses (organization_id, category_id, label, amount, spent_on, supplier, payment_method, reference, comment)
+  select v_org, c.id, x.label, x.amount, x.spent_on, x.supplier, x.method::public.payment_method, x.reference, x.comment
+  from (values
+    ('Salaires et honoraires', 'Vacations — préparation de la rentrée', 350000, date '2026-08-28', 'Enseignants vacataires', 'bank_transfer', 'VIR-2026-0828', 'Journées pédagogiques'),
+    ('Fournitures et matériel', 'Manuels scolaires (dotation bibliothèque)', 275000, date '2026-08-20', 'Librairie de France Démo', 'bank_transfer', 'VIR-2026-0820', null),
+    ('Transport', 'Carburant du car scolaire — septembre', 95000, date '2026-09-05', 'Station Démo', 'cash', null, null),
+    ('Communication', 'Forfait internet — septembre', 45000, date '2026-09-02', 'Opérateur Démo', 'mobile_money', 'MM-55012011', null),
+    ('Maintenance et réparations', 'Peinture des salles 103 et 104', 180000, date '2026-08-12', 'Bâtiment Services', 'cash', null, 'Avant la rentrée'),
+    ('Électricité et eau', 'Facture d''eau — août', 38500, date '2026-09-15', 'Société des eaux', 'bank_transfer', 'VIR-2026-0915', null),
+    ('Autres dépenses', 'Cérémonie de rentrée', 65000, date '2026-09-07', 'Traiteur Démo', 'cash', null, null),
+    ('Fournitures et matériel', 'Ramettes de papier et toner', 52000, date '2026-09-19', 'Bureau Plus Démo', 'mobile_money', 'MM-55012987', null)
+  ) as x(category, label, amount, spent_on, supplier, method, reference, comment)
+  join public.expense_categories c on c.organization_id = v_org and c.name = x.category;
+
+  -- Notifications du personnel (centre de notifications)
+  perform app.notify(v_org, '00000000-0000-4000-a000-000000000005', 'payment.recorded', 'Nouveau paiement enregistré',
+                     '50 000 FCFA reçus par Mobile Money.', '/finances?onglet=paiements');
+  perform app.notify(v_org, '00000000-0000-4000-a000-000000000002', 'payment.recorded', 'Nouveau paiement enregistré',
+                     '97 000 FCFA reçus (1re tranche).', '/finances?onglet=paiements');
+  perform app.notify(v_org, '00000000-0000-4000-a000-000000000002', 'justification.submitted', 'Justificatif reçu',
+                     '3 justificatifs d''absence sont à examiner.', '/presences?onglet=justificatifs');
+  perform app.notify(v_org, '00000000-0000-4000-a000-000000000004', 'justification.submitted', 'Justificatif reçu',
+                     '3 justificatifs d''absence sont à examiner.', '/presences?onglet=justificatifs');
+  perform app.notify(v_org, '00000000-0000-4000-a000-000000000002', 'invoice.overdue', 'Paiements en retard',
+                     'Plusieurs familles ont une échéance dépassée : envoyez les rappels.', '/finances?onglet=rappels');
+  perform app.notify(v_org, '00000000-0000-4000-a000-000000000003', 'grades.validated', 'Notes validées',
+                     'Les interrogations du 1er trimestre sont validées dans toutes les classes.', '/notes');
+  perform app.notify(v_org, '00000000-0000-4000-a000-000000000006', 'lesson.unlocked', 'Cours déverrouillé',
+                     'Votre badge a été scanné : l''appel de 6e A est disponible.', '/mes-cours');
+  perform app.notify(v_org, '00000000-0000-4000-a000-000000000007', 'report_card.available', 'Bulletins en préparation',
+                     'Consultez l''aperçu des bulletins de vos classes.', '/bulletins/apercu');
+end;
+$$;
+
 -- Restrictions du portail en cas d'impayé activées pour la démonstration, une fois
 -- l'historique des paiements chargé
 -- (notes, bulletins et documents ; les présences restent toujours visibles).

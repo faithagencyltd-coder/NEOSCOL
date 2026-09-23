@@ -60,6 +60,7 @@ export async function updateStaffMember(_: ActionResult | null, formData: FormDa
     .eq("id", id);
   if (error || count === 0) return { ok: false, message: dbErrorMessage(error) };
   revalidatePath(`/personnel/${id}`);
+  revalidatePath("/personnel/badges");
   return { ok: true, message: "Fiche mise à jour." };
 }
 
@@ -101,6 +102,7 @@ export async function setStaffArchived(_: ActionResult | null, formData: FormDat
     .eq("id", id);
   if (error || count === 0) return { ok: false, message: dbErrorMessage(error) };
   revalidatePath(`/personnel/${id}`);
+  revalidatePath("/personnel/badges");
   revalidatePath("/personnel");
   return { ok: true, message: archive ? "Fiche archivée (badge désactivé)." : "Fiche restaurée." };
 }
@@ -139,6 +141,7 @@ export async function uploadStaffPhoto(_: ActionResult | null, formData: FormDat
     .eq("id", id);
   if (error || count === 0) return { ok: false, message: dbErrorMessage(error) };
   revalidatePath(`/personnel/${id}`);
+  revalidatePath("/personnel/badges");
   return { ok: true, message: "Photo enregistrée : elle figurera sur le badge." };
 }
 
@@ -155,6 +158,7 @@ export async function issueBadge(_: ActionResult | null, formData: FormData): Pr
   });
   if (error) return { ok: false, message: dbErrorMessage(error, "Génération du badge impossible.") };
   revalidatePath(`/personnel/${id}`);
+  revalidatePath("/personnel/badges");
   return { ok: true, message: "Nouveau badge généré ; l'ancien QR Code est désactivé." };
 }
 

@@ -275,6 +275,8 @@ describe("Invariants métier", () => {
         "select * from timetable_slots where teacher_id is not null order by weekday, starts_at limit 1",
       );
       const [otherClass] = await q("select id from classes where name = '6e B'");
+      // La 6e B est libérée ce jour-là : seul le conflit ENSEIGNANT peut être levé.
+      await q("delete from timetable_slots where class_id = $1 and weekday = $2", [otherClass.id, slot.weekday]);
       const message = await rejects(
         q(
           `insert into timetable_slots (organization_id, academic_year_id, class_id, teacher_id, weekday, starts_at, ends_at)

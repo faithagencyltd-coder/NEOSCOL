@@ -10,10 +10,12 @@ import { visibleNavigation } from "@/config/navigation";
 import { getRecentNotifications } from "@/features/notifications/queries";
 import { requireOrganization } from "@/lib/auth/guards";
 import { displayName } from "@/lib/auth/session";
+import { isDemoMode } from "@/lib/demo";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const context = await requireOrganization();
-  const sections = visibleNavigation(context.permissions);
+  const demo = isDemoMode() && context.organization.is_demo;
+  const sections = visibleNavigation(context.permissions, { demo });
   const notifications = await getRecentNotifications(context.organization.id);
   const name = displayName(context);
   const roleLabel = context.roleNames.join(" · ") || "Membre";
@@ -59,6 +61,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             roleLabel={roleLabel}
             organizations={context.organizations}
             activeOrganizationId={context.organization.id}
+            demo={demo}
           />
         </header>
         <main className="mx-auto w-full max-w-[90rem] flex-1 px-4 py-6 sm:px-7 lg:py-7">{children}</main>
