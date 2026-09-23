@@ -1,6 +1,21 @@
 import type { Permission } from "@/config/permissions";
 
-export type NavIcon = "dashboard" | "account" | "students" | "enrollments" | "guardians" | "classes" | "structure" | "forms" | "timetable" | "attendance" | "grades" | "reportCards";
+export type NavIcon =
+  | "dashboard"
+  | "account"
+  | "students"
+  | "enrollments"
+  | "guardians"
+  | "classes"
+  | "structure"
+  | "forms"
+  | "timetable"
+  | "attendance"
+  | "grades"
+  | "reportCards"
+  | "staff"
+  | "staffAttendance"
+  | "kiosk";
 
 export type NavItem = {
   href: string;
@@ -40,6 +55,14 @@ export const NAVIGATION: NavSection[] = [
       { href: "/presences", label: "Présences", icon: "attendance", anyOf: ["attendance.take", "attendance.read", "attendance.manage"], keywords: "appel absences retards" },
       { href: "/notes", label: "Notes", icon: "grades", anyOf: ["grades.read", "grades.enter", "grades.manage"], keywords: "évaluations devoirs saisie" },
       { href: "/bulletins", label: "Bulletins", icon: "reportCards", anyOf: ["report_cards.manage", "grades.read"], keywords: "moyennes rangs appréciations" },
+    ],
+  },
+  {
+    label: "Administration",
+    items: [
+      { href: "/personnel", label: "Personnel", icon: "staff", anyOf: ["staff.read"], keywords: "enseignants badges comptes matricule" },
+      { href: "/personnel/pointage", label: "Pointage du personnel", icon: "staffAttendance", anyOf: ["staff_attendance.read"], keywords: "arrivées retards badges scans" },
+      { href: "/pointage", label: "Tablette de pointage", icon: "kiosk", anyOf: ["staff_attendance.scan"], keywords: "scanner badge QR" },
     ],
   },
   {

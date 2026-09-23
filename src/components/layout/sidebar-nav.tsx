@@ -9,6 +9,11 @@ import { cn } from "@/lib/utils/cn";
 
 export function SidebarNav({ sections, onNavigate }: { sections: NavSection[]; onNavigate?: () => void }) {
   const pathname = usePathname();
+  // L'entrée active est celle dont l'adresse correspond le plus précisément (/personnel/pointage ≠ /personnel).
+  const activeHref = sections
+    .flatMap((section) => section.items.map((item) => item.href))
+    .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
+    .sort((a, b) => b.length - a.length)[0];
   return (
     <nav aria-label="Navigation principale" className="grid gap-5">
       {sections.map((section) => (
@@ -17,7 +22,7 @@ export function SidebarNav({ sections, onNavigate }: { sections: NavSection[]; o
             {section.label}
           </p>
           {section.items.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const active = item.href === activeHref;
             return (
               <Link
                 key={item.href}

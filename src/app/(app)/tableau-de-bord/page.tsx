@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Badge } from "@/components/ui/badge";
@@ -50,6 +51,8 @@ const STATUS_COLORS = { paid: "#16a34a", partial: "#f59e0b", unpaid: "#dc2626" }
 
 export default async function DashboardPage() {
   const context = await requireOrganization();
+  // Compte « tablette de pointage » : directement l'écran de scan.
+  if (context.permissions.size === 1 && can(context, "staff_attendance.scan")) redirect("/pointage");
   const organization = context.organization;
   const isTeacher = context.personas.has("teacher");
   const canFinance = can(context, "finance.read");

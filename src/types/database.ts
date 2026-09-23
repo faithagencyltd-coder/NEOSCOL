@@ -2029,6 +2029,13 @@ export type Database = {
             referencedColumns: ["organization_id", "id"]
           },
           {
+            foreignKeyName: "lesson_unlocks_organization_id_class_subject_id_fkey"
+            columns: ["organization_id", "class_subject_id"]
+            isOneToOne: false
+            referencedRelation: "class_subjects"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
             foreignKeyName: "lesson_unlocks_organization_id_teacher_id_fkey"
             columns: ["organization_id", "teacher_id"]
             isOneToOne: false

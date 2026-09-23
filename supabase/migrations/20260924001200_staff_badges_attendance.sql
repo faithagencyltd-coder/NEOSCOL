@@ -221,6 +221,7 @@ create table public.lesson_unlocks (
   unique (organization_id, id),
   foreign key (organization_id, timetable_slot_id) references public.timetable_slots (organization_id, id) on delete cascade,
   foreign key (organization_id, class_id) references public.classes (organization_id, id) on delete cascade,
+  foreign key (organization_id, class_subject_id) references public.class_subjects (organization_id, id) on delete set null (class_subject_id),
   foreign key (organization_id, teacher_id) references public.staff_members (organization_id, id) on delete cascade,
   check (method <> 'manual' or reason is not null)
 );
@@ -321,6 +322,7 @@ begin
   elsif v_badge.status <> 'active' then
     v_reason := 'revoked_badge';
     v_message := 'Ce badge a été désactivé. Adressez-vous à l''administration.';
+    select * into v_staff from public.staff_members where id = v_badge.staff_id;
   else
     select * into v_staff from public.staff_members where id = v_badge.staff_id;
     if v_staff.status <> 'active' or v_staff.archived_at is not null then

@@ -1,4 +1,5 @@
 import {
+  BadgeCheck,
   CalendarClock,
   ClipboardCheck,
   ClipboardList,
@@ -9,7 +10,9 @@ import {
   LayoutDashboard,
   ListChecks,
   School,
+  ScanLine,
   UserRound,
+  UserRoundCog,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -29,6 +32,9 @@ const ICONS: Record<NavIconName, LucideIcon> = {
   attendance: ClipboardCheck,
   grades: NotebookPen,
   reportCards: FileText,
+  staff: UserRoundCog,
+  staffAttendance: BadgeCheck,
+  kiosk: ScanLine,
 };
 
 export function NavIcon({ name, className }: { name: NavIconName; className?: string }) {
