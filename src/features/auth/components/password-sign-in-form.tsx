@@ -18,13 +18,13 @@ export function PasswordSignInForm({ next }: { next?: string }) {
     <ActionForm dispatch={action} pending={pending} className="grid gap-4" noValidate>
       {state && !state.ok ? <Alert tone="danger">{state.message}</Alert> : null}
       <input type="hidden" name="suite" value={next ?? ""} />
-      <FormField id="email" label="Adresse e-mail" errors={errors?.email}>
+      <FormField id="email" label="Adresse e-mail ou matricule" hint="ex. prenom.nom@ecole.ci ou EMP-DEMO-0001" errors={errors?.email}>
         <Input
           id="email"
           name="email"
-          type="email"
-          autoComplete="email"
-          inputMode="email"
+          type="text"
+          autoComplete="username"
+          autoCapitalize="none"
           required
           aria-invalid={Boolean(errors?.email)}
           aria-describedby={errors?.email ? "email-error" : undefined}

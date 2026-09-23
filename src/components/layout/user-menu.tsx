@@ -22,12 +22,14 @@ export function UserMenu({
   roleLabel,
   organizations,
   activeOrganizationId,
+  accountHref = "/mon-compte",
 }: {
   name: string;
   email: string | null;
   roleLabel: string;
   organizations: OrganizationSummary[];
   activeOrganizationId: string;
+  accountHref?: string;
 }) {
   const [pending, startTransition] = useTransition();
   // Les actions sont appelées directement : un <form> dans un item de menu serait
@@ -71,7 +73,7 @@ export function UserMenu({
           </>
         ) : null}
         <DropdownMenuItem asChild>
-          <Link href="/mon-compte">
+          <Link href={accountHref}>
             <UserRound aria-hidden /> Mon compte
           </Link>
         </DropdownMenuItem>

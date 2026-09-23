@@ -16,6 +16,8 @@ import { dossierOrder } from "@/features/documents/dossier";
 import { listStudentDocuments } from "@/features/documents/queries";
 import { setStudentArchived } from "@/features/students/actions";
 import { StudentLifecycleActions } from "@/features/students/components/lifecycle-actions";
+import { StudentPortalAccess } from "@/features/portal/components/portal-access";
+import { getPortalAccount, getPortalStatus } from "@/features/portal/queries";
 import {
   AttendanceTab,
   FinanceTab,
@@ -38,7 +40,7 @@ import { featureEnabled } from "@/lib/features";
 import { requirePermission } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
 import { STUDENT_STATUS } from "@/lib/labels";
-import { formatDate } from "@/lib/utils/format";
+import { formatDate, formatDateTime, formatMoney } from "@/lib/utils/format";
 import { isUuid, param } from "@/lib/utils/search-params";
 
 export const metadata: Metadata = { title: "Dossier élève" };
@@ -67,6 +69,7 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
     ...(canAttendance ? [{ key: "presences", label: "Présences", href: "?onglet=presences" }] : []),
     ...(canFinance ? [{ key: "finance", label: "Finance", href: "?onglet=finance" }] : []),
     ...(canDocuments ? [{ key: "documents", label: "Documents", href: "?onglet=documents" }] : []),
+    { key: "portail", label: "Portail", href: "?onglet=portail" },
     ...(canAudit ? [{ key: "historique", label: "Historique", href: "?onglet=historique" }] : []),
   ];
   const requested = param(query, "onglet");
@@ -196,6 +199,7 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
           timezone={organization.timezone}
         />
       ) : null}
+      {active === "portail" ? <PortalTab studentId={student.id} hasBirthDate={Boolean(student.birth_date)} canManage={can(context, "portal_access.manage")} organization={organization} /> : null}
       {active === "historique" ? (
         <HistoryTab
           history={await getStudentHistory(organization.id, [student.id, ...student.enrollments.map((e) => e.id)])}
@@ -203,5 +207,43 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
         />
       ) : null}
     </div>
+  );
+}
+
+const FEATURE_LABELS: Record<string, string> = { grades: "notes", report_cards: "bulletins", documents: "documents", timetable: "emploi du temps" };
+
+async function PortalTab({
+  studentId,
+  hasBirthDate,
+  canManage,
+  organization,
+}: {
+  studentId: string;
+  hasBirthDate: boolean;
+  canManage: boolean;
+  organization: { currency: string; timezone: string };
+}) {
+  const [account, status] = await Promise.all([getPortalAccount("student", studentId), getPortalStatus(studentId)]);
+  return (
+    <StudentPortalAccess
+      studentId={studentId}
+      hasBirthDate={hasBirthDate}
+      account={account}
+      lastSignIn={account?.last_sign_in_at ? formatDateTime(account.last_sign_in_at, "fr-FR", organization.timezone) : null}
+      canManage={canManage}
+      status={
+        status
+          ? {
+              restricted: status.restricted,
+              rules_enabled: status.rules_enabled,
+              overdue: formatMoney(status.overdue_amount, organization.currency),
+              features: Object.entries(status.features)
+                .filter(([, on]) => on)
+                .map(([key]) => FEATURE_LABELS[key] ?? key),
+              override: status.override,
+            }
+          : null
+      }
+    />
   );
 }

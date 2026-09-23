@@ -33,7 +33,7 @@ import {
 } from "@/features/dashboard/queries";
 import { todayIn } from "@/lib/dates";
 import { requireOrganization } from "@/lib/auth/guards";
-import { can, displayName } from "@/lib/auth/session";
+import { can, displayName, isPortalOnly } from "@/lib/auth/session";
 import { cn } from "@/lib/utils/cn";
 import { formatDate, formatDateTime, formatMoney, formatNumber } from "@/lib/utils/format";
 
@@ -54,6 +54,8 @@ export default async function DashboardPage() {
   const context = await requireOrganization();
   // Compte « tablette de pointage » : directement l'écran de scan.
   if (context.permissions.size === 1 && can(context, "staff_attendance.scan")) redirect("/pointage");
+  // Parents et élèves : portail mobile dédié.
+  if (isPortalOnly(context)) redirect("/portail");
   const organization = context.organization;
   const isTeacher = context.personas.has("teacher");
   const canFinance = can(context, "finance.read");

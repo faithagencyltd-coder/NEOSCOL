@@ -4011,11 +4011,63 @@ export type Database = {
         }
         Returns: string[]
       }
+      portal_account: {
+        Args: {
+          p_kind: string
+          p_record_id: string
+        }
+        Returns: Json
+      }
+      portal_class_subjects: {
+        Args: {
+          p_student_id: string
+        }
+        Returns: {
+          subject: string
+          color: string
+          coefficient: number
+          teacher: string
+          is_head_teacher: boolean
+        }[]
+      }
       portal_status: {
         Args: {
           p_student_id: string
         }
         Returns: Json
+      }
+      portal_students: {
+        Args: {
+          p_organization_id: string
+        }
+        Returns: {
+          id: string
+          first_name: string
+          last_name: string
+          matricule: string
+          birth_date: string
+          photo_path: string
+          status: string
+          class_id: string
+          class_name: string
+          academic_year_id: string
+          is_self: boolean
+        }[]
+      }
+      portal_timetable: {
+        Args: {
+          p_student_id: string
+        }
+        Returns: {
+          id: string
+          weekday: number
+          starts_at: string
+          ends_at: string
+          subject: string
+          color: string
+          teacher: string
+          room: string
+        }[]
       }
       preview_report_cards: {
         Args: {

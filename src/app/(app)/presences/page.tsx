@@ -21,6 +21,7 @@ import { JustificationForm } from "@/features/attendance/components/justificatio
 import { getDayLessons, LESSON_STATUS, listJustifications, listStudentsForJustification } from "@/features/attendance/lessons";
 import { getDaySlots, getRollCall, getRollCallClasses, listAbsences } from "@/features/attendance/queries";
 import { isIsoDate, isoWeekday, isTime, todayIn, WEEKDAYS } from "@/lib/dates";
+import { JUSTIFICATION_STATUS } from "@/lib/labels";
 import { requireOrganization } from "@/lib/auth/guards";
 import { can, canAny } from "@/lib/auth/session";
 import { cn } from "@/lib/utils/cn";
@@ -490,13 +491,6 @@ function Justification({
     />
   );
 }
-
-const JUSTIFICATION_STATUS = {
-  pending: { label: "À examiner", tone: "warning" },
-  accepted: { label: "Acceptée", tone: "success" },
-  rejected: { label: "Refusée", tone: "danger" },
-  correction_requested: { label: "Correction demandée", tone: "info" },
-} as const;
 
 /** Justificatifs : dépôt, examen (accepter / refuser / demander une correction). */
 async function JustificationsSection({ params }: { params: Record<string, string | string[] | undefined> }) {

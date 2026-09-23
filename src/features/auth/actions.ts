@@ -6,7 +6,7 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { emailSchema, newPasswordSchema, otpSchema, phoneSchema, signInSchema } from "@/features/auth/schemas";
+import { emailSchema, newPasswordSchema, otpSchema, parentOtpSchema, phoneSchema, signInSchema, studentSignInSchema } from "@/features/auth/schemas";
 import { ACTIVE_ORG_COOKIE, getSessionContext } from "@/lib/auth/session";
 import { publicEnv } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -54,33 +54,103 @@ async function completeSignIn(next: unknown): Promise<ActionResult> {
   redirect(safeRedirectPath(next));
 }
 
+/** Normalise un nom pour la comparaison (casse, accents, espaces). */
+function sameName(a: string | null | undefined, b: string) {
+  const n = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z]/gi, "").toLowerCase();
+  return Boolean(a) && n(a!) === n(b);
+}
+
+/** Adresse de connexion d'un compte à partir de son identifiant technique (service role, lecture seule). */
+async function accountEmail(userId: string | null | undefined): Promise<string | null> {
+  const admin = createAdminClient();
+  if (!admin || !userId) return null;
+  const { data } = await admin.auth.admin.getUserById(userId);
+  return data.user?.email ?? null;
+}
+
+/**
+ * Personnel : identifiant = adresse e-mail OU matricule. Le matricule est
+ * résolu côté serveur (jamais exposé au navigateur) ; message d'erreur unique.
+ */
 export async function signInWithPassword(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const parsed = signInSchema.safeParse({ email: formData.get("email"), password: formData.get("password") });
   if (!parsed.success) {
     return { ok: false, message: "Vérifiez les champs du formulaire.", fieldErrors: z.flattenError(parsed.error).fieldErrors };
   }
+  let email = parsed.data.email.toLowerCase();
+  if (!email.includes("@")) {
+    const admin = createAdminClient();
+    const { data: staff } = admin
+      ? await admin.from("staff_members").select("user_id").ilike("employee_number", parsed.data.email).not("user_id", "is", null).limit(2)
+      : { data: [] };
+    email = (staff?.length === 1 ? await accountEmail(staff[0]!.user_id) : null) ?? "";
+  }
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  const { error } = email ? await supabase.auth.signInWithPassword({ email, password: parsed.data.password }) : { error: true };
   if (error) {
     await logFailedSignIn(parsed.data.email, "password");
-    return { ok: false, message: "Adresse e-mail ou mot de passe incorrect." };
+    return { ok: false, message: "Identifiant ou mot de passe incorrect." };
   }
   return completeSignIn(formData.get("suite"));
 }
 
-export async function requestPhoneOtp(_: ActionResult<{ phone: string }> | null, formData: FormData): Promise<ActionResult<{ phone: string }>> {
-  const parsed = phoneSchema.safeParse(formData.get("phone"));
+/**
+ * Élève / apprenant : matricule + date de naissance + mot de passe
+ * (sécurité complémentaire). Les trois doivent correspondre.
+ */
+export async function signInStudent(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const parsed = studentSignInSchema.safeParse({
+    matricule: formData.get("matricule"),
+    birth_date: formData.get("birth_date"),
+    password: formData.get("password"),
+  });
   if (!parsed.success) {
-    return { ok: false, message: parsed.error.issues[0]?.message ?? "Numéro invalide.", fieldErrors: { phone: parsed.error.issues.map((i) => i.message) } };
+    return { ok: false, message: "Vérifiez les champs du formulaire.", fieldErrors: z.flattenError(parsed.error).fieldErrors };
   }
+  const admin = createAdminClient();
+  const { data: student } = admin
+    ? await admin.from("students").select("user_id, birth_date").eq("matricule", parsed.data.matricule).maybeSingle()
+    : { data: null };
+  const email = student && student.birth_date === parsed.data.birth_date ? await accountEmail(student.user_id) : null;
   const supabase = await createClient();
-  // shouldCreateUser: false — seuls les comptes créés par l'établissement peuvent se connecter.
-  const { error } = await supabase.auth.signInWithOtp({ phone: parsed.data, options: { shouldCreateUser: false } });
-  if (error && error.status !== 422 && error.status !== 400) {
-    return { ok: false, message: "L'envoi du code a échoué. Réessayez dans quelques instants." };
+  const { error } = email ? await supabase.auth.signInWithPassword({ email, password: parsed.data.password }) : { error: true };
+  if (error) {
+    await logFailedSignIn(parsed.data.matricule, "password");
+    return { ok: false, message: "Matricule, date de naissance ou mot de passe incorrect." };
   }
-  // Même réponse que le numéro existe ou non (pas d'énumération des comptes).
-  return { ok: true, message: "Si ce numéro est enregistré, un code vous a été envoyé par SMS.", data: { phone: parsed.data } };
+  return completeSignIn(formData.get("suite"));
+}
+
+/**
+ * Parent : téléphone + nom + prénom. Le code n'est envoyé que si ces trois
+ * informations correspondent à un parent disposant d'un accès portail ; la
+ * réponse est identique dans tous les cas (aucune énumération possible).
+ */
+export async function requestParentOtp(_: ActionResult<{ phone: string }> | null, formData: FormData): Promise<ActionResult<{ phone: string }>> {
+  const parsed = parentOtpSchema.safeParse({ phone: formData.get("phone"), last_name: formData.get("last_name"), first_name: formData.get("first_name") });
+  const phone = phoneSchema.safeParse(formData.get("phone"));
+  if (!parsed.success || !phone.success) {
+    const errors = parsed.success ? {} : z.flattenError(parsed.error).fieldErrors;
+    return {
+      ok: false,
+      message: "Vérifiez les champs du formulaire.",
+      fieldErrors: { ...errors, phone: phone.success ? undefined : phone.error.issues.map((i) => i.message) },
+    };
+  }
+  const admin = createAdminClient();
+  const digits = phone.data.replace(/\D/g, "");
+  const { data: guardians } = admin
+    ? await admin.from("guardians").select("first_name, last_name, phone, phone_secondary, user_id").not("user_id", "is", null).is("archived_at", null)
+        .or(`phone.eq.${phone.data},phone_secondary.eq.${phone.data},phone.eq.${digits},phone_secondary.eq.${digits}`)
+    : { data: [] };
+  const match = (guardians ?? []).find((g) => sameName(g.last_name, parsed.data.last_name) && sameName(g.first_name, parsed.data.first_name));
+  if (match) {
+    const supabase = await createClient();
+    await supabase.auth.signInWithOtp({ phone: phone.data, options: { shouldCreateUser: false } });
+  } else {
+    await logFailedSignIn(phone.data, "otp");
+  }
+  return { ok: true, message: "Si ces informations correspondent à un compte parent, un code vous a été envoyé par SMS.", data: { phone: phone.data } };
 }
 
 export async function verifyPhoneOtp(_: ActionResult | null, formData: FormData): Promise<ActionResult> {

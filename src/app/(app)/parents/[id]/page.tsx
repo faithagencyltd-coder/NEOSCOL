@@ -9,9 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GuardianEditDialog } from "@/features/guardians/components/guardian-edit-dialog";
 import { getGuardian } from "@/features/guardians/queries";
+import { GuardianPortalAccess } from "@/features/portal/components/portal-access";
+import { getPortalAccount } from "@/features/portal/queries";
 import { requirePermission } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
 import { RELATIONSHIP, SEX, STUDENT_STATUS } from "@/lib/labels";
+import { formatDateTime } from "@/lib/utils/format";
 import { isUuid } from "@/lib/utils/search-params";
 
 export const metadata: Metadata = { title: "Parent / tuteur" };
@@ -23,6 +26,7 @@ export default async function GuardianPage({ params }: PageProps<"/parents/[id]"
   const guardian = await getGuardian(context.organization.id, id);
   if (!guardian) notFound();
   const fullName = `${guardian.first_name} ${guardian.last_name}`;
+  const account = await getPortalAccount("guardian", guardian.id);
 
   return (
     <div className="grid gap-5">
@@ -42,7 +46,11 @@ export default async function GuardianPage({ params }: PageProps<"/parents/[id]"
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {guardian.user_id ? <Badge tone="info">Portail parent actif</Badge> : <Badge>Portail non activé</Badge>}
+          {account?.has_account ? (
+            <Badge tone={account.status === "active" ? "info" : "danger"}>{account.status === "active" ? "Portail parent actif" : "Portail suspendu"}</Badge>
+          ) : (
+            <Badge>Portail non activé</Badge>
+          )}
           {can(context, "guardians.manage") ? <GuardianEditDialog guardian={guardian} /> : null}
         </div>
       </Card>
@@ -96,6 +104,15 @@ export default async function GuardianPage({ params }: PageProps<"/parents/[id]"
             </ul>
           </CardContent>
         </Card>
+        <div className="lg:col-span-3">
+          <GuardianPortalAccess
+            guardianId={guardian.id}
+            phone={guardian.phone}
+            account={account}
+            lastSignIn={account?.last_sign_in_at ? formatDateTime(account.last_sign_in_at, "fr-FR", context.organization.timezone) : null}
+            canManage={can(context, "portal_access.manage")}
+          />
+        </div>
       </div>
     </div>
   );

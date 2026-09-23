@@ -17,7 +17,10 @@ export type NavIcon =
   | "staffAttendance"
   | "kiosk"
   | "lessons"
-  | "finance";
+  | "finance"
+  | "portal"
+  | "audit"
+  | "settings";
 
 export type NavItem = {
   href: string;
@@ -68,11 +71,15 @@ export const NAVIGATION: NavSection[] = [
       { href: "/personnel", label: "Personnel", icon: "staff", anyOf: ["staff.read"], keywords: "enseignants badges comptes matricule" },
       { href: "/personnel/pointage", label: "Pointage du personnel", icon: "staffAttendance", anyOf: ["staff_attendance.read"], keywords: "arrivées retards badges scans" },
       { href: "/pointage", label: "Tablette de pointage", icon: "kiosk", anyOf: ["staff_attendance.scan"], keywords: "scanner badge QR" },
+      { href: "/parametres", label: "Paramètres", icon: "settings", anyOf: ["settings.manage"], keywords: "impayés restrictions rappels pointage notes verrouillage" },
     ],
   },
   {
     label: "Compte",
-    items: [{ href: "/mon-compte", label: "Mon compte", icon: "account", anyOf: [], keywords: "profil mot de passe" }],
+    items: [
+      { href: "/portail", label: "Espace famille", icon: "portal", anyOf: ["portal.parent", "portal.student"], keywords: "portail parent élève enfants" },
+      { href: "/mon-compte", label: "Mon compte", icon: "account", anyOf: [], keywords: "profil mot de passe" },
+    ],
   },
 ];
 

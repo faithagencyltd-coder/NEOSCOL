@@ -96,6 +96,11 @@ export function canAny(context: SessionContext, permissions: readonly Permission
   return permissions.some((permission) => context.permissions.has(permission));
 }
 
+/** Compte uniquement « portail » (parent / élève) : aucune permission de gestion. */
+export function isPortalOnly(context: SessionContext): boolean {
+  return context.permissions.size > 0 && [...context.permissions].every((p) => p === "portal.parent" || p === "portal.student");
+}
+
 export function displayName(context: SessionContext): string {
   const first = context.profile?.first_name?.trim();
   const last = context.profile?.last_name?.trim();

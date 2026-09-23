@@ -244,3 +244,50 @@ describe("Documents émis", () => {
     });
   });
 });
+
+describe("Lectures du portail", () => {
+  test("enfants, matières et enseignants, emploi du temps soumis à la restriction ; aucun accès hors famille", async () => {
+    await as(null, async (q) => {
+      const kofi = await kofiId(q);
+      await switchTo(q, USERS.parent);
+      const children = await q("select first_name, class_name, is_self from portal_students($1)", [ORG_DEMO]);
+      assert.deepEqual(children.map((c) => c.first_name).sort(), ["Aya", "Kofi"]);
+      assert.ok(children.every((c) => c.class_name && !c.is_self));
+      const subjects = await q("select subject, teacher from portal_class_subjects($1)", [kofi]);
+      assert.ok(subjects.length > 0 && subjects.some((s) => s.teacher), "matières avec enseignant");
+      assert.equal((await q("select count(*)::int as n from staff_members"))[0].n, 0, "le personnel reste illisible");
+      // Kofi est en impayé : emploi du temps restreint si l'établissement le décide.
+      await switchTo(q, USERS.admin);
+      await q("update organizations set settings = jsonb_set(settings, '{portal_restrictions,features,timetable}', 'true') where id = $1", [ORG_DEMO]);
+      await switchTo(q, USERS.parent);
+      assert.equal((await q("select id from portal_timetable($1)", [kofi])).length, 0);
+      await switchTo(q, USERS.admin);
+      await q("update organizations set settings = jsonb_set(settings, '{portal_restrictions,features,timetable}', 'false') where id = $1", [ORG_DEMO]);
+      await switchTo(q, USERS.parent);
+      assert.ok((await q("select id from portal_timetable($1)", [kofi])).length > 0);
+
+      await switchTo(q, USERS.student);
+      const self = await q("select first_name, is_self from portal_students($1)", [ORG_DEMO]);
+      assert.deepEqual(self, [{ first_name: "Kofi", is_self: true }]);
+      const [aya] = await q("select id from students where first_name = 'Aya'");
+      assert.equal(aya, undefined);
+      await switchTo(q, USERS.director);
+      const [ayaId] = await q("select id from students where first_name = 'Aya'");
+      await switchTo(q, USERS.student);
+      assert.match(await rejects(q("select * from portal_class_subjects($1)", [ayaId.id])), /non autorisé/);
+      assert.match(await rejects(q("select * from portal_timetable($1)", [ayaId.id])), /non autorisé/);
+    });
+  });
+
+  test("état du compte portail visible de l'administration, pas des familles", async () => {
+    await as(null, async (q) => {
+      const kofi = await kofiId(q);
+      await switchTo(q, USERS.secretary);
+      const [{ portal_account: account }] = await q("select portal_account('student', $1)", [kofi]);
+      assert.equal(account.has_account, true);
+      assert.equal(account.status, "active");
+      await switchTo(q, USERS.parent);
+      assert.match(await rejects(q("select portal_account('student', $1)", [kofi])), /non autorisé/);
+    });
+  });
+});

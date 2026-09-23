@@ -20,7 +20,7 @@ begin
     email_change, created_at, updated_at
   ) values (
     '00000000-0000-0000-0000-000000000000', p_id, 'authenticated', 'authenticated', p_email,
-    extensions.crypt('NeoScol-Demo-2026!', extensions.gen_salt('bf')), now(), p_phone,
+    extensions.crypt('NeoScol-Demo-2026!', extensions.gen_salt('bf')), now(), ltrim(p_phone, '+'), -- GoTrue stocke le téléphone sans « + »
     case when p_phone is not null then now() end,
     '{"provider":"email","providers":["email"]}'::jsonb,
     jsonb_build_object('first_name', p_first, 'last_name', p_last),

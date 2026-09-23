@@ -5,6 +5,9 @@ import {
   ClipboardCheck,
   ClipboardList,
   FileText,
+  HeartHandshake,
+  History,
+  Settings,
   NotebookPen,
   GraduationCap,
   Layers,
@@ -39,6 +42,9 @@ const ICONS: Record<NavIconName, LucideIcon> = {
   kiosk: ScanLine,
   lessons: BookOpenCheck,
   finance: Wallet,
+  portal: HeartHandshake,
+  audit: History,
+  settings: Settings,
 };
 
 export function NavIcon({ name, className }: { name: NavIconName; className?: string }) {

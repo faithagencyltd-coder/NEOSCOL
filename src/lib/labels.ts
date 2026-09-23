@@ -75,3 +75,17 @@ export const INVOICE_PAYMENT_STATUS: Record<string, { label: string; tone: Tone 
   unpaid: { label: "Impayée", tone: "danger" },
   cancelled: { label: "Annulée", tone: "neutral" },
 };
+
+export const ATTENDANCE_STATUS: Record<string, { label: string; tone: Tone }> = {
+  present: { label: "Présent", tone: "success" },
+  late: { label: "Retard", tone: "warning" },
+  absent: { label: "Absent", tone: "danger" },
+  excused: { label: "Absence justifiée", tone: "info" },
+};
+
+export const JUSTIFICATION_STATUS: Record<string, { label: string; tone: Tone }> = {
+  pending: { label: "À examiner", tone: "warning" },
+  accepted: { label: "Acceptée", tone: "success" },
+  rejected: { label: "Refusée", tone: "danger" },
+  correction_requested: { label: "Correction demandée", tone: "info" },
+};

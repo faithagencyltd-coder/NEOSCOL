@@ -5,27 +5,26 @@ import { useState } from "react";
 
 import { PasswordSignInForm } from "@/features/auth/components/password-sign-in-form";
 import { PhoneSignInForm } from "@/features/auth/components/phone-sign-in-form";
+import { StudentSignInForm } from "@/features/auth/components/student-sign-in-form";
 import { cn } from "@/lib/utils/cn";
 
 type Profile = "parent" | "student" | "teacher" | "staff";
-type Method = "email" | "phone";
 
-const PROFILES: { id: Profile; label: string; icon: LucideIcon; method: Method }[] = [
-  { id: "parent", label: "Parent / Tuteur", icon: Users, method: "phone" },
-  { id: "student", label: "Élève / Apprenant", icon: GraduationCap, method: "email" },
-  { id: "teacher", label: "Enseignant", icon: Presentation, method: "email" },
-  { id: "staff", label: "Administration", icon: Building2, method: "email" },
+const PROFILES: { id: Profile; label: string; icon: LucideIcon }[] = [
+  { id: "parent", label: "Parent / Tuteur", icon: Users },
+  { id: "student", label: "Élève / Apprenant", icon: GraduationCap },
+  { id: "teacher", label: "Enseignant", icon: Presentation },
+  { id: "staff", label: "Administration", icon: Building2 },
 ];
 
 /**
  * Le profil ne donne aucun droit : il choisit seulement la méthode de connexion
- * par défaut (téléphone + SMS pour les parents, e-mail pour les autres).
+ * (parent : téléphone + nom + prénom + code SMS ; élève : matricule + date de
+ * naissance + mot de passe ; personnel : e-mail ou matricule + mot de passe).
  * Les droits viennent des rôles attribués par l'établissement.
  */
 export function SignInTabs({ next }: { next?: string }) {
   const [profile, setProfile] = useState<Profile>("staff");
-  const [override, setOverride] = useState<Method | null>(null);
-  const method = override ?? PROFILES.find((p) => p.id === profile)?.method ?? "email";
 
   return (
     <div className="grid gap-6">
@@ -39,10 +38,7 @@ export function SignInTabs({ next }: { next?: string }) {
                 key={id}
                 type="button"
                 aria-pressed={selected}
-                onClick={() => {
-                  setProfile(id);
-                  setOverride(null);
-                }}
+                onClick={() => setProfile(id)}
                 className={cn(
                   "flex min-h-12 items-center gap-2.5 rounded-xl px-3 text-left text-sm font-semibold transition-colors",
                   selected
@@ -58,15 +54,15 @@ export function SignInTabs({ next }: { next?: string }) {
         </div>
       </fieldset>
 
-      {method === "phone" ? <PhoneSignInForm next={next} /> : <PasswordSignInForm next={next} />}
-
-      <button
-        type="button"
-        onClick={() => setOverride(method === "phone" ? "email" : "phone")}
-        className="justify-self-center text-sm font-medium text-primary hover:underline"
-      >
-        {method === "phone" ? "Se connecter avec une adresse e-mail" : "Se connecter avec un numéro de téléphone"}
-      </button>
+      <div key={profile} className="animate-[fade-in_0.25s_ease-out]">
+        {profile === "parent" ? (
+          <PhoneSignInForm next={next} />
+        ) : profile === "student" ? (
+          <StudentSignInForm next={next} />
+        ) : (
+          <PasswordSignInForm next={next} />
+        )}
+      </div>
     </div>
   );
 }

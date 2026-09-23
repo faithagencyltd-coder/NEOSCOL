@@ -8,11 +8,11 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
-import { requestPhoneOtp, verifyPhoneOtp } from "@/features/auth/actions";
+import { requestParentOtp, verifyPhoneOtp } from "@/features/auth/actions";
 
-/** Connexion parents / élèves : téléphone puis code à usage unique (SMS). */
+/** Connexion parents : téléphone + nom + prénom, puis code à usage unique (SMS). */
 export function PhoneSignInForm({ next }: { next?: string }) {
-  const [requestState, requestAction, requestPending] = useActionState(requestPhoneOtp, null);
+  const [requestState, requestAction, requestPending] = useActionState(requestParentOtp, null);
   const [verifyState, verifyAction, verifyPending] = useActionState(verifyPhoneOtp, null);
   const [editing, setEditing] = useState(false);
 
@@ -44,6 +44,14 @@ export function PhoneSignInForm({ next }: { next?: string }) {
             aria-describedby={errors?.phone ? "phone-error" : "phone-hint"}
           />
         </FormField>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FormField id="last_name" label="Nom" errors={errors?.last_name}>
+            <Input id="last_name" name="last_name" autoComplete="family-name" required aria-invalid={Boolean(errors?.last_name)} />
+          </FormField>
+          <FormField id="first_name" label="Prénom" errors={errors?.first_name}>
+            <Input id="first_name" name="first_name" autoComplete="given-name" required aria-invalid={Boolean(errors?.first_name)} />
+          </FormField>
+        </div>
         <SubmitButton className="w-full" size="lg" pendingLabel="Envoi du code…">
           Recevoir un code par SMS
         </SubmitButton>
