@@ -69,7 +69,7 @@ export default async function StudentsPage({ searchParams }: PageProps<"/eleves"
           <FilterBar
             placeholder="Nom, prénom ou matricule…"
             filters={[
-              { name: "classe", label: "Toutes les classes", options: classes.map((c) => ({ value: c.id, label: c.name })) },
+              { name: "classe", label: `Toutes les ${v.classes.toLowerCase()}`, options: classes.map((c) => ({ value: c.id, label: c.name })) },
               {
                 name: "statut",
                 label: "Tous les statuts",
@@ -78,7 +78,9 @@ export default async function StudentsPage({ searchParams }: PageProps<"/eleves"
                   { value: "archive", label: "Archivés" },
                 ],
               },
-              { name: "sexe", label: "Filles et garçons", options: [{ value: "F", label: "Filles" }, { value: "M", label: "Garçons" }] },
+              v.family === "school"
+                ? { name: "sexe", label: "Filles et garçons", options: [{ value: "F", label: "Filles" }, { value: "M", label: "Garçons" }] }
+                : { name: "sexe", label: "Femmes et hommes", options: [{ value: "F", label: "Femmes" }, { value: "M", label: "Hommes" }] },
             ]}
           />
         </Suspense>
@@ -98,9 +100,9 @@ export default async function StudentsPage({ searchParams }: PageProps<"/eleves"
                 <THead>
                   <tr className="border-t border-border">
                     <TH>{v.student}</TH>
-                    <TH>Classe</TH>
+                    <TH>{v.klass}</TH>
                     <TH>Naissance</TH>
-                    <TH>Parent principal</TH>
+                    <TH>{v.family === "school" ? "Parent principal" : "Contact / responsable"}</TH>
                     <TH>Statut</TH>
                   </tr>
                 </THead>

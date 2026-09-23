@@ -11,6 +11,7 @@ import { getRecentNotifications } from "@/features/notifications/queries";
 import { requireOrganization } from "@/lib/auth/guards";
 import { displayName } from "@/lib/auth/session";
 import { isDemoMode } from "@/lib/demo";
+import { vocabularyFor } from "@/lib/vocabulary";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const context = await requireOrganization();
@@ -19,6 +20,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const notifications = await getRecentNotifications(context.organization.id);
   const name = displayName(context);
   const roleLabel = context.roleNames.join(" · ") || "Membre";
+  const vocab = vocabularyFor(context.organization.type);
+  const searchPlaceholder = `Rechercher un ${vocab.student.toLowerCase()}, un parent, une ${vocab.klass.toLowerCase()}…`;
 
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[17rem_1fr]">
@@ -48,7 +51,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <header className="sticky top-0 z-30 flex h-[72px] items-center gap-2 border-b border-border bg-surface/95 px-3 backdrop-blur sm:gap-3 sm:px-7">
           <MobileNav sections={sections} organizationName={context.organization.name} />
           <div className="min-w-0 flex-1">
-            <CommandPalette sections={sections} />
+            <CommandPalette sections={sections} placeholder={searchPlaceholder} />
           </div>
           <NotificationsMenu
             items={notifications.items}

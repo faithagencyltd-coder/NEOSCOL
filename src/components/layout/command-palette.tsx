@@ -12,7 +12,7 @@ import { globalSearch, type SearchResult } from "@/features/search/actions";
 import { normalizeSearch } from "@/lib/utils/search-params";
 
 /** Centre de commande (Ctrl/⌘ + K) : modules autorisés + recherche globale (RLS appliquée). */
-export function CommandPalette({ sections }: { sections: NavSection[] }) {
+export function CommandPalette({ sections, placeholder = "Rechercher un élève, un parent, une classe…" }: { sections: NavSection[]; placeholder?: string }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -66,7 +66,7 @@ export function CommandPalette({ sections }: { sections: NavSection[] }) {
         <Search className="size-4" aria-hidden />
         <span className="flex-1 truncate text-left">
           <span className="sm:hidden">Rechercher…</span>
-          <span className="hidden sm:inline">Rechercher un élève, un parent, une classe…</span>
+          <span className="hidden sm:inline">{placeholder}</span>
         </span>
         <kbd className="hidden rounded-md border border-border bg-surface px-1.5 py-0.5 text-[11px] font-semibold sm:inline">Ctrl K</kbd>
       </button>
