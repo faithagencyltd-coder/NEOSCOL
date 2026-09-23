@@ -59,7 +59,7 @@ export async function getBranding(organizationId: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("organization_branding")
-    .select("header_text, footer_text, signatory_name, signatory_title, primary_color, logo_path, stamp_path, signature_path")
+    .select("header_text, footer_text, signatory_name, signatory_title, primary_color, secondary_color, logo_path, stamp_path, signature_path")
     .eq("organization_id", organizationId)
     .maybeSingle();
   return data;

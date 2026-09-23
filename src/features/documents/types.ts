@@ -152,16 +152,35 @@ export type InvoiceSnapshot = {
   };
 };
 
+/** Documents rédigés à partir d'un modèle de texte (Document Studio). */
+export const TEXT_DOCUMENT_KINDS = ["school_certificate", "attestation", "training_certificate", "convocation", "contract", "custom"] as const;
+export type TextDocumentKind = (typeof TEXT_DOCUMENT_KINDS)[number];
+
 export type CertificateSnapshot = {
-  kind: "school_certificate" | "attestation";
+  kind: TextDocumentKind;
   organization: DocOrganization;
   student: DocStudent;
   class_name: string | null;
   year: string | null;
+  program?: string | null;
   title: string;
   body: string;
   closing: string;
   purpose: string | null;
+  template_id?: string | null;
+};
+
+export type TranscriptSnapshot = {
+  kind: "transcript";
+  organization: DocOrganization;
+  student: DocStudent;
+  class_name: string | null;
+  year: string | null;
+  periods: string[];
+  subjects: { subject: string; coefficient: number; averages: (number | null)[] }[];
+  averages: (number | null)[];
+  ranks: (number | null)[];
+  annual_average: number | null;
 };
 
 export type EnrollmentFormSnapshot = {
@@ -213,6 +232,7 @@ export type DocumentSnapshot =
   | ReceiptSnapshot
   | InvoiceSnapshot
   | CertificateSnapshot
+  | TranscriptSnapshot
   | EnrollmentFormSnapshot
   | CommitmentSnapshot
   | StudentCardSnapshot
@@ -232,6 +252,11 @@ export const DOCUMENT_KIND_LABELS: Record<string, string> = {
   invoice: "Facture",
   school_certificate: "Certificat de scolarité",
   attestation: "Attestation",
+  training_certificate: "Certificat de formation",
+  convocation: "Convocation",
+  contract: "Contrat",
+  custom: "Document personnalisé",
+  transcript: "Relevé de notes",
   enrollment_form: "Fiche d'inscription",
   commitment_form: "Engagement",
   student_card: "Carte scolaire",

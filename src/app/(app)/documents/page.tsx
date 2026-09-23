@@ -1,6 +1,8 @@
 import {
   CreditCard,
   FileBadge,
+  FileCog,
+  FileSpreadsheet,
   FileCheck2,
   FileSignature,
   FileStack,
@@ -24,9 +26,10 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AttestationDialog, DossierDialog } from "@/features/documents/components/document-dialogs";
+import { DossierDialog, WrittenDocumentDialog } from "@/features/documents/components/document-dialogs";
 import { PdfPreviewDialog } from "@/features/documents/components/pdf-preview-dialog";
 import { DOSSIER_SECTIONS, dossierOrder } from "@/features/documents/dossier";
+import { listCustomTemplates } from "@/features/documents/queries";
 import { DOCUMENT_KIND_LABELS } from "@/features/documents/types";
 import { requireOrganization } from "@/lib/auth/guards";
 import { can, canAny } from "@/lib/auth/session";
@@ -81,6 +84,7 @@ export default async function DocumentsPage({ searchParams }: PageProps<"/docume
         supabase.from("issued_documents").select("id, kind, number, issued_at, status").eq("organization_id", org.id).eq("student_id", student.id).order("issued_at", { ascending: false }).limit(8),
       ])
     : [{ data: [] }, { data: [] }, { data: [] }, { data: [] }];
+  const customTemplates = generate ? await listCustomTemplates(org.id) : [];
   const firstPayment = payments?.[0];
   const lastPayment = payments?.at(-1);
   const card = reportCards?.[0];
@@ -94,6 +98,7 @@ export default async function DocumentsPage({ searchParams }: PageProps<"/docume
         { key: "facture", title: "Facture", description: "Lignes de frais, remises, échéancier.", icon: ScrollText, href: invoices?.[0] ? `/api/documents/factures/${invoices[0].id}` : null, allowed: finance, missing: "Aucune facture émise" },
         { key: "certificat", title: "Certificat de scolarité", description: "Modèle officiel, cachet et signature.", icon: FileBadge, href: `/api/documents/certificats/${student.id}`, allowed: generate },
         { key: "bulletin", title: "Bulletin", description: "Notes, moyennes, rang, appréciations.", icon: FileCheck2, href: card ? `/api/documents/bulletins/${card.id}` : null, allowed: reports, missing: "Bulletin non calculé" },
+        { key: "releve", title: "Relevé de notes", description: "Moyennes de l'année par matière et par période.", icon: FileSpreadsheet, href: card ? `/api/documents/releves/${student.id}` : null, allowed: reports, missing: "Aucun bulletin" },
         { key: "carte", title: "Carte scolaire", description: "Format carte CR80 avec photo et QR.", icon: CreditCard, href: `/api/documents/cartes/${student.id}`, allowed: generate },
       ]
     : [];
@@ -104,13 +109,20 @@ export default async function DocumentsPage({ searchParams }: PageProps<"/docume
         title="Documents officiels"
         description="Aperçu et génération des documents PDF (QR de vérification, cachet, signature). Chaque émission est numérotée et tracée."
         actions={
-          can(context, "staff.read") ? (
+          <>
             <Button asChild variant="secondary">
-              <Link href="/personnel/badges">
-                <IdCard aria-hidden /> Badges du personnel
+              <Link href="/documents/modeles">
+                <FileCog aria-hidden /> Document Studio
               </Link>
             </Button>
-          ) : null
+            {can(context, "staff.read") ? (
+              <Button asChild variant="secondary">
+                <Link href="/personnel/badges">
+                  <IdCard aria-hidden /> Badges du personnel
+                </Link>
+              </Button>
+            ) : null}
+          </>
         }
       />
       {!generate ? (
@@ -184,12 +196,20 @@ export default async function DocumentsPage({ searchParams }: PageProps<"/docume
                   <ScrollText className="size-5" aria-hidden />
                 </span>
                 <div className="grid gap-0.5">
-                  <h2 className="font-semibold leading-tight">Attestation</h2>
-                  <p className="text-xs text-muted-foreground">Texte libre sur le modèle officiel.</p>
+                  <h2 className="font-semibold leading-tight">Autres documents</h2>
+                  <p className="text-xs text-muted-foreground">Attestation, certificat de formation, convocation, contrat, modèles personnalisés.</p>
                 </div>
               </div>
               {generate ? (
-                <AttestationDialog studentId={student!.id} />
+                <WrittenDocumentDialog
+                  studentId={student!.id}
+                  customTemplates={customTemplates}
+                  trigger={
+                    <Button size="sm">
+                      <ScrollText aria-hidden /> Choisir et générer
+                    </Button>
+                  }
+                />
               ) : (
                 <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                   <Lock className="size-3.5" aria-hidden /> Non autorisé pour votre rôle

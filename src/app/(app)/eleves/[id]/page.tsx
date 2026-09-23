@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StudentDocumentsTab } from "@/features/documents/components/student-documents";
 import { dossierOrder } from "@/features/documents/dossier";
-import { listStudentDocuments } from "@/features/documents/queries";
+import { listCustomTemplates, listStudentDocuments } from "@/features/documents/queries";
 import { setStudentArchived } from "@/features/students/actions";
 import { StudentLifecycleActions } from "@/features/students/components/lifecycle-actions";
 import { StudentPortalAccess } from "@/features/portal/components/portal-access";
@@ -194,9 +194,11 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
             dossier: can(context, "documents.dossier") && can(context, "documents.generate"),
             revoke: can(context, "documents.revoke"),
             saveDefault: can(context, "settings.manage"),
+            transcript: can(context, "documents.generate") && (can(context, "report_cards.manage") || can(context, "report_cards.publish")),
           }}
           dossierOrder={dossierOrder(null, (organization.settings as { documents?: { dossier_sections?: unknown } } | null)?.documents?.dossier_sections)}
           timezone={organization.timezone}
+          customTemplates={await listCustomTemplates(organization.id)}
         />
       ) : null}
       {active === "portail" ? <PortalTab studentId={student.id} hasBirthDate={Boolean(student.birth_date)} canManage={can(context, "portal_access.manage")} organization={organization} /> : null}

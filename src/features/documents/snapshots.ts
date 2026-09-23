@@ -16,7 +16,10 @@ import type {
   ReportColumn,
   ReportSubjectRow,
   StudentCardSnapshot,
+  TextDocumentKind,
+  TranscriptSnapshot,
 } from "./types";
+import { TEMPLATE_DEFAULTS } from "./templates";
 
 const STUDENT_FIELDS =
   "id, first_name, last_name, other_names, matricule, sex, birth_date, birth_place, nationality, address, city, phone, email, photo_path";
@@ -49,14 +52,14 @@ const num = (value: unknown): number | null => (typeof value === "number" ? valu
 async function currentClass(supabase: Client, organizationId: string, studentId: string) {
   const { data } = await supabase
     .from("enrollments")
-    .select("class:classes(name), academic_year:academic_years!inner(name, is_current)")
+    .select("class:classes(name, program:programs(name)), program:programs(name), academic_year:academic_years!inner(name, is_current)")
     .eq("organization_id", organizationId)
     .eq("student_id", studentId)
     .eq("status", "validated")
     .eq("academic_year.is_current", true)
     .limit(1)
     .maybeSingle();
-  return { className: data?.class?.name ?? null, year: data?.academic_year?.name ?? null };
+  return { className: data?.class?.name ?? null, year: data?.academic_year?.name ?? null, program: data?.program?.name ?? data?.class?.program?.name ?? null };
 }
 
 export function reportConfig(raw: unknown, organization: DocOrganization): ReportCardConfig {
@@ -262,45 +265,76 @@ async function loadStudent(supabase: Client, organizationId: string, studentId: 
   return data as StudentRow | null;
 }
 
+/**
+ * Document rédigé (certificat, attestation, certificat de formation,
+ * convocation, contrat, document personnalisé) à partir du modèle de
+ * l'établissement — ou du texte par défaut du Document Studio.
+ */
 export async function buildCertificateSnapshot(
   supabase: Client,
   organization: DocOrganization,
   studentId: string,
-  kind: "school_certificate" | "attestation",
+  kind: TextDocumentKind,
   purpose: string | null,
+  templateId: string | null = null,
 ): Promise<CertificateSnapshot | null> {
-  const [student, { data: template }] = await Promise.all([
-    loadStudent(supabase, organization.id, studentId),
-    supabase
-      .from("document_templates")
-      .select("layout")
-      .eq("organization_id", organization.id)
-      .eq("kind", kind)
-      .eq("is_default", true)
-      .maybeSingle(),
-  ]);
+  let templateQuery = supabase.from("document_templates").select("id, layout").eq("organization_id", organization.id).eq("kind", kind).eq("is_active", true);
+  templateQuery = templateId ? templateQuery.eq("id", templateId) : templateQuery.eq("is_default", true);
+  const [student, { data: template }] = await Promise.all([loadStudent(supabase, organization.id, studentId), templateQuery.limit(1).maybeSingle()]);
   if (!student) return null;
-  const { className, year } = await currentClass(supabase, organization.id, studentId);
+  if (kind === "custom" && !template) return null;
+  const { className, year, program } = await currentClass(supabase, organization.id, studentId);
   const layout = (template?.layout ?? {}) as Record<string, unknown>;
-  const text = (key: string, fallback: string) => (typeof layout[key] === "string" && (layout[key] as string).trim() ? (layout[key] as string) : fallback);
-  const certificate = kind === "school_certificate";
+  const defaults = TEMPLATE_DEFAULTS[kind];
+  const text = (key: "title" | "body" | "closing") => (typeof layout[key] === "string" && (layout[key] as string).trim() ? (layout[key] as string) : defaults[key]);
   return {
     kind,
     organization,
     student: docStudent(student),
     class_name: className,
     year,
-    title: text("title", certificate ? "CERTIFICAT DE SCOLARITÉ" : "ATTESTATION"),
-    body: certificate
-      ? text(
-          "body",
-          "Je soussigné(e), {{signataire.nom}}, {{signataire.fonction}} de {{etablissement.nom}}, certifie que l'élève {{eleve.prenom}} {{eleve.nom}}, matricule {{eleve.matricule}}, né(e) le {{eleve.date_naissance}} à {{eleve.lieu_naissance}}, est régulièrement inscrit(e) en classe de {{classe.nom}} pour l'année scolaire {{annee.nom}}.",
-        )
-      : text("body", "{{contenu}}").trim() === "{{contenu}}"
-        ? "Je soussigné(e), {{signataire.nom}}, {{signataire.fonction}} de {{etablissement.nom}}, atteste que l'élève {{eleve.prenom}} {{eleve.nom}}, matricule {{eleve.matricule}}, inscrit(e) en classe de {{classe.nom}} : {{contenu}}"
-        : text("body", "{{contenu}}"),
-    closing: text("closing", "En foi de quoi, le présent document lui est délivré pour servir et valoir ce que de droit."),
+    program,
+    title: text("title"),
+    body: text("body"),
+    closing: typeof layout.closing === "string" ? layout.closing : defaults.closing,
     purpose,
+    template_id: template?.id ?? null,
+  };
+}
+
+/** Relevé de notes de l'année en cours : bulletins PUBLIÉS de l'élève, période par période. */
+export async function buildTranscriptSnapshot(supabase: Client, organization: DocOrganization, studentId: string, rankingEnabled: boolean): Promise<TranscriptSnapshot | null> {
+  const student = await loadStudent(supabase, organization.id, studentId);
+  if (!student) return null;
+  const { data: cards } = await supabase
+    .from("report_cards")
+    .select("average, rank, data, period:academic_periods!inner(name, sequence, academic_year:academic_years!inner(name, is_current)), class:classes(name)")
+    .eq("organization_id", organization.id)
+    .eq("student_id", studentId)
+    .eq("status", "published")
+    .eq("period.academic_year.is_current", true);
+  const sorted = (cards ?? []).slice().sort((a, b) => (a.period?.sequence ?? 0) - (b.period?.sequence ?? 0));
+  const subjects = new Map<string, { subject: string; coefficient: number; averages: (number | null)[] }>();
+  sorted.forEach((card, index) => {
+    for (const row of reportCardData(card.data).subjects) {
+      const entry = subjects.get(row.subject) ?? { subject: row.subject, coefficient: row.coefficient, averages: sorted.map(() => null) };
+      entry.averages[index] = row.average;
+      subjects.set(row.subject, entry);
+    }
+  });
+  const averages = sorted.map((c) => num(c.average));
+  const values = averages.filter((v): v is number => v !== null);
+  return {
+    kind: "transcript",
+    organization,
+    student: docStudent(student),
+    class_name: sorted.at(-1)?.class?.name ?? null,
+    year: sorted[0]?.period?.academic_year?.name ?? null,
+    periods: sorted.map((c) => c.period?.name ?? ""),
+    subjects: [...subjects.values()],
+    averages,
+    ranks: sorted.map((c) => (rankingEnabled ? c.rank : null)),
+    annual_average: values.length ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 100) / 100 : null,
   };
 }
 

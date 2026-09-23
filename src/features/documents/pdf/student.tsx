@@ -10,27 +10,31 @@ import type {
   DossierSnapshot,
   EnrollmentFormSnapshot,
   StudentCardSnapshot,
+  TranscriptSnapshot,
   Verification,
 } from "../types";
+import { fillText } from "../templates";
 import { COLORS, DataTable, DemoMark, DocFooter, DocHeader, DocTitle, InfoGrid, OrgMark, Signatures, styles } from "./common";
 
-/** Remplace les variables {{eleve.nom}}… d'un modèle de certificat. */
-export function fillTemplate(text: string, snapshot: CertificateSnapshot): string {
+/** Remplace les variables {{eleve.nom}}… d'un document rédigé (Document Studio). */
+export function fillTemplate(text: string, snapshot: CertificateSnapshot, issuedAt?: string): string {
   const s = snapshot.student;
-  const values: Record<string, string> = {
+  const tz = snapshot.organization.timezone;
+  return fillText(text, {
     "eleve.nom": s.last_name,
     "eleve.prenom": s.first_name,
     "eleve.matricule": s.matricule,
-    "eleve.date_naissance": pdfDate(s.birth_date, snapshot.organization.timezone, true),
+    "eleve.date_naissance": pdfDate(s.birth_date, tz, true),
     "eleve.lieu_naissance": s.birth_place ?? "—",
     "classe.nom": snapshot.class_name ?? "—",
+    "formation.nom": snapshot.program ?? snapshot.class_name ?? "—",
     "annee.nom": snapshot.year ?? "—",
     "etablissement.nom": snapshot.organization.name,
     "signataire.nom": snapshot.organization.signatory_name ?? "le chef d'établissement",
     "signataire.fonction": snapshot.organization.signatory_title ?? "chef d'établissement",
+    date: pdfDate(issuedAt ?? new Date().toISOString(), tz, true),
     contenu: snapshot.purpose ?? "",
-  };
-  return text.replace(/\{\{\s*([a-z_.]+)\s*\}\}/g, (match, key: string) => values[key] ?? match);
+  });
 }
 
 export function CertificatePage({ snapshot, images, verification, issuedAt }: { snapshot: CertificateSnapshot; images: DocImages; verification: Verification | null; issuedAt: string }) {
@@ -42,11 +46,11 @@ export function CertificatePage({ snapshot, images, verification, issuedAt }: { 
       <View style={{ marginTop: 40, marginBottom: 26 }}>
         <DocTitle color={org.primary_color}>{snapshot.title}</DocTitle>
       </View>
-      <Text style={{ lineHeight: 1.45, textAlign: "justify" }}>{pdfText(fillTemplate(snapshot.body, snapshot))}</Text>
+      <Text style={{ lineHeight: 1.45, textAlign: "justify" }}>{pdfText(fillTemplate(snapshot.body, snapshot, issuedAt))}</Text>
       {snapshot.purpose && snapshot.kind === "school_certificate" ? (
         <Text style={{ lineHeight: 1.45, marginTop: 10 }}>{pdfText(`Motif de la demande : ${snapshot.purpose}`)}</Text>
       ) : null}
-      <Text style={{ lineHeight: 1.45, marginTop: 14 }}>{pdfText(fillTemplate(snapshot.closing, snapshot))}</Text>
+      {snapshot.closing.trim() ? <Text style={{ lineHeight: 1.45, marginTop: 14 }}>{pdfText(fillTemplate(snapshot.closing, snapshot, issuedAt))}</Text> : null}
       <View style={{ marginTop: 30 }}>
         <Signatures labels={[org.signatory_title ?? "Le chef d'établissement"]} organization={org} images={images} date={issuedAt} signatory={org.signatory_name} />
       </View>
@@ -258,6 +262,55 @@ export function DossierCoverPage({ snapshot, images, verification, issuedAt }: {
         ]}
         rows={snapshot.sections.map((s, i) => [String(i + 1), s.label, String(s.count)])}
       />
+      <DocFooter organization={org} verification={verification} />
+    </Page>
+  );
+}
+
+/** Relevé de notes de l'année : moyennes par matière et par période (bulletins publiés). */
+export function TranscriptPage({ snapshot, images, verification, issuedAt }: { snapshot: TranscriptSnapshot; images: DocImages; verification: Verification | null; issuedAt: string }) {
+  const org = snapshot.organization;
+  const n = snapshot.periods.length;
+  const fmt = (v: number | null) => (v === null ? "—" : v.toFixed(2).replace(".", ","));
+  const width = `${Math.floor(46 / Math.max(n + 1, 1))}%`;
+  return (
+    <Page size="A4" style={styles.page}>
+      <DemoMark organization={org} />
+      <DocHeader organization={org} images={images} />
+      <DocTitle color={org.primary_color}>{`RELEVÉ DE NOTES${snapshot.year ? ` — ${snapshot.year}` : ""}`}</DocTitle>
+      <InfoGrid
+        rows={[
+          ["Élève", `${snapshot.student.last_name} ${snapshot.student.first_name}`],
+          ["Matricule", snapshot.student.matricule],
+          ["Classe", snapshot.class_name],
+          ["Né(e) le", pdfDate(snapshot.student.birth_date, org.timezone, true)],
+        ]}
+      />
+      <View style={{ marginTop: 12 }}>
+        <DataTable
+          color={org.primary_color}
+          columns={[
+            { label: "Matière", width: "42%" },
+            { label: "Coef.", width: "12%", align: "center" },
+            ...snapshot.periods.map((p) => ({ label: p, width, align: "center" as const })),
+            ...(n > 1 ? [{ label: "Année", width, align: "center" as const }] : []),
+          ]}
+          rows={snapshot.subjects.map((s) => {
+            const values = s.averages.filter((v): v is number => v !== null);
+            const annual = values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
+            return [s.subject, String(s.coefficient).replace(".", ","), ...s.averages.map(fmt), ...(n > 1 ? [fmt(annual)] : [])];
+          })}
+          footer={["Moyenne générale", "", ...snapshot.averages.map(fmt), ...(n > 1 ? [fmt(snapshot.annual_average)] : [])]}
+        />
+      </View>
+      {snapshot.ranks.some((r) => r !== null) ? (
+        <Text style={{ marginTop: 8, color: COLORS.muted }}>
+          {pdfText(`Rang : ${snapshot.periods.map((p, i) => `${p} ${snapshot.ranks[i] ?? "—"}`).join(" · ")}`)}
+        </Text>
+      ) : null}
+      <View style={{ marginTop: 26 }}>
+        <Signatures labels={[org.signatory_title ?? "Le chef d'établissement"]} organization={org} images={images} date={issuedAt} signatory={org.signatory_name} />
+      </View>
       <DocFooter organization={org} verification={verification} />
     </Page>
   );

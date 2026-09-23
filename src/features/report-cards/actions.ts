@@ -139,6 +139,8 @@ export async function saveBranding(_: ActionResult | null, formData: FormData): 
     .eq("organization_id", auth.context.organization.id);
   if (error) return { ok: false, message: dbErrorMessage(error) };
   revalidatePath("/bulletins", "layout");
+  revalidatePath("/parametres", "layout");
+  revalidatePath("/documents", "layout");
   return { ok: true, message: "Identité des documents enregistrée." };
 }
 
@@ -166,5 +168,7 @@ export async function uploadBrandingImage(_: ActionResult | null, formData: Form
     .eq("organization_id", auth.context.organization.id);
   if (error) return { ok: false, message: dbErrorMessage(error) };
   revalidatePath("/bulletins", "layout");
+  revalidatePath("/parametres", "layout");
+  revalidatePath("/documents", "layout");
   return { ok: true, message: "Image enregistrée : elle figure désormais sur les documents." };
 }

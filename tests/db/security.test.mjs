@@ -493,3 +493,23 @@ describe("Frais et tarifs", () => {
     });
   });
 });
+
+describe("Document Studio", () => {
+  test("modèles : écriture réservée à documents.templates.manage, isolés par établissement", async () => {
+    await as(null, async (q) => {
+      await switchTo(q, USERS.director);
+      const [{ id }] = await q(
+        "insert into document_templates (organization_id, kind, name, layout) values ($1, 'custom', 'Autorisation de sortie', $2) returning id",
+        [ORG_DEMO, JSON.stringify({ title: "AUTORISATION DE SORTIE", body: "{{eleve.prenom}} est autorisé(e) à sortir.", closing: "" })],
+      );
+      await switchTo(q, USERS.teacher);
+      assert.equal((await q("select id from document_templates where id = $1", [id])).length, 1, "lecture par les membres");
+      assert.equal((await q("update document_templates set name = 'x' where id = $1 returning id", [id])).length, 0);
+      assert.match(await rejects(q("insert into document_templates (organization_id, kind, name) values ($1, 'custom', 'x')", [ORG_DEMO])), /row-level security/);
+      await switchTo(q, USERS.otherOrgAdmin);
+      assert.equal((await q("select id from document_templates where id = $1", [id])).length, 0);
+      // Identité : un autre établissement ne modifie pas la charte graphique.
+      assert.equal((await q("update organization_branding set primary_color = '#000000' where organization_id = $1 returning organization_id", [ORG_DEMO])).length, 0);
+    });
+  });
+});

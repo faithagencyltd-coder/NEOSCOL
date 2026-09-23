@@ -14,7 +14,7 @@ import type { Database, Json } from "@/types/database";
 
 import { InvoicePage, ReceiptPage } from "./pdf/finance";
 import { ReportCardPage } from "./pdf/report-card";
-import { CertificatePage, CommitmentPage, DossierCoverPage, EnrollmentFormPage, StudentCardPage } from "./pdf/student";
+import { CertificatePage, CommitmentPage, DossierCoverPage, EnrollmentFormPage, StudentCardPage, TranscriptPage } from "./pdf/student";
 import type { DocImages, DocOrganization, DocumentSnapshot, Verification } from "./types";
 
 export type Client = SupabaseClient<Database>;
@@ -167,7 +167,13 @@ export function snapshotPages(snapshot: DocumentSnapshot, images: DocImages, ver
       return <InvoicePage snapshot={snapshot} images={images} verification={verification} issuedAt={issuedAt} />;
     case "school_certificate":
     case "attestation":
+    case "training_certificate":
+    case "convocation":
+    case "contract":
+    case "custom":
       return <CertificatePage snapshot={snapshot} images={images} verification={verification} issuedAt={issuedAt} />;
+    case "transcript":
+      return <TranscriptPage snapshot={snapshot} images={images} verification={verification} issuedAt={issuedAt} />;
     case "enrollment_form":
       return <EnrollmentFormPage snapshot={snapshot} images={images} verification={verification} issuedAt={issuedAt} />;
     case "commitment_form":

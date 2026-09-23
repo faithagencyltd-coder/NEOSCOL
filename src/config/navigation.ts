@@ -86,6 +86,7 @@ export const NAVIGATION: NavSection[] = [
       { href: "/bulletins", label: "Bulletins", icon: "reportCards", anyOf: ["report_cards.manage", "grades.read"], keywords: "moyennes rangs appréciations" },
       { href: "/bulletins/apercu", label: "Aperçu des bulletins", icon: "reportCards", anyOf: ["grades.enter"], keywords: "aperçu moyennes classe" },
       { href: "/documents", label: "Documents", icon: "documents", anyOf: ["documents.read", "documents.generate", "documents.dossier"], keywords: "certificats attestations reçus cartes dossier complet PDF" },
+      { href: "/documents/modeles", label: "Document Studio", icon: "templates", anyOf: ["documents.templates.manage"], keywords: "modèles certificats convocation contrat personnalisation" },
     ],
   },
   {
@@ -133,6 +134,7 @@ export const NAVIGATION: NavSection[] = [
     label: "Paramètres",
     items: [
       { href: "/structure", label: "Année scolaire", icon: "year", anyOf: ["academic.manage"], keywords: "années périodes niveaux filières salles" },
+      { href: "/parametres/etablissement", label: "Établissement", icon: "school", anyOf: ["settings.manage"], keywords: "identité logo couleurs cachet signature coordonnées en-tête" },
       { href: "/parametres", label: "Configuration", icon: "settings", anyOf: ["settings.manage"], keywords: "impayés restrictions rappels pointage notes verrouillage" },
       { href: "/bulletins/configuration", label: "Modèle de bulletin", icon: "templates", anyOf: ["report_cards.manage"], keywords: "bulletin colonnes coefficients modèle" },
       { href: "/formulaires", label: "Formulaires", icon: "forms", anyOf: ["forms.manage"], keywords: "champs personnalisés pièces" },

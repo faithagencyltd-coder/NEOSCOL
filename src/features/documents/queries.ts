@@ -14,3 +14,27 @@ export async function listStudentDocuments(organizationId: string, studentId: st
     .limit(100);
   return data ?? [];
 }
+
+/** Modèles personnalisés actifs (proposés à l'émission). */
+export async function listCustomTemplates(organizationId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("document_templates")
+    .select("id, name")
+    .eq("organization_id", organizationId)
+    .eq("kind", "custom")
+    .eq("is_active", true)
+    .order("name");
+  return data ?? [];
+}
+
+/** Tous les modèles de l'établissement (Document Studio). */
+export async function listTemplates(organizationId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("document_templates")
+    .select("id, kind, name, description, layout, is_default, is_active, updated_at")
+    .eq("organization_id", organizationId)
+    .order("name");
+  return data ?? [];
+}

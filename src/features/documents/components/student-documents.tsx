@@ -1,4 +1,4 @@
-import { Ban, CreditCard, Download, FileBadge, FileSignature, FileText } from "lucide-react";
+import { Ban, CreditCard, Download, FileBadge, FileSignature, FileSpreadsheet, FileText } from "lucide-react";
 
 import { ConfirmAction } from "@/components/shared/confirm-action";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { revokeDocument } from "@/features/documents/actions";
-import { AttestationDialog, DossierDialog } from "@/features/documents/components/document-dialogs";
+import { DossierDialog, WrittenDocumentDialog } from "@/features/documents/components/document-dialogs";
 import type { DossierSectionKey } from "@/features/documents/dossier";
 import type { listStudentDocuments } from "@/features/documents/queries";
 import { DOCUMENT_KIND_LABELS } from "@/features/documents/types";
@@ -24,13 +24,15 @@ export function StudentDocumentsTab({
   can,
   dossierOrder,
   timezone,
+  customTemplates = [],
 }: {
   studentId: string;
   documents: Awaited<ReturnType<typeof listStudentDocuments>>;
   enrollments: Enrollment[];
-  can: { generate: boolean; dossier: boolean; revoke: boolean; saveDefault: boolean };
+  can: { generate: boolean; dossier: boolean; revoke: boolean; saveDefault: boolean; transcript?: boolean };
   dossierOrder: DossierSectionKey[];
   timezone: string;
+  customTemplates?: { id: string; name: string }[];
 }) {
   const pdf = (href: string, label: string, Icon: typeof FileText) => (
     <Button asChild variant="secondary" size="sm">
@@ -51,8 +53,9 @@ export function StudentDocumentsTab({
               {can.generate ? (
                 <>
                   {pdf(`/api/documents/certificats/${studentId}`, "Certificat de scolarité", FileBadge)}
-                  <AttestationDialog studentId={studentId} />
+                  <WrittenDocumentDialog studentId={studentId} customTemplates={customTemplates} />
                   {pdf(`/api/documents/cartes/${studentId}`, "Carte scolaire", CreditCard)}
+                  {can.transcript ? pdf(`/api/documents/releves/${studentId}`, "Relevé de notes", FileSpreadsheet) : null}
                 </>
               ) : null}
               {can.dossier ? <DossierDialog studentId={studentId} initialOrder={dossierOrder} canSaveDefault={can.saveDefault} /> : null}
