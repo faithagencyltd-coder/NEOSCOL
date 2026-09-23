@@ -3988,6 +3988,23 @@ export type Database = {
         }
         Returns: undefined
       }
+      mark_thread_read: {
+        Args: {
+          p_thread_id: string
+        }
+        Returns: undefined
+      }
+      message_contacts: {
+        Args: {
+          p_organization_id: string
+        }
+        Returns: {
+          user_id: string
+          name: string
+          kind: string
+          detail: string
+        }[]
+      }
       my_lessons: {
         Args: {
           p_from: string
@@ -4014,6 +4031,19 @@ export type Database = {
           p_org: string
         }
         Returns: string[]
+      }
+      my_threads: {
+        Args: {
+          p_organization_id: string
+        }
+        Returns: {
+          id: string
+          subject: string
+          last_message_at: string
+          participants: string
+          last_message: string
+          unread: boolean
+        }[]
       }
       platform_add_org_admin: {
         Args: {
@@ -4128,6 +4158,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      report_section: {
+        Args: {
+          p_organization_id: string
+          p_section: string
+        }
+        Returns: Json
+      }
       review_absence_justification: {
         Args: {
           p_id: string
@@ -4171,6 +4208,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      start_thread: {
+        Args: {
+          p_organization_id: string
+          p_subject: string
+          p_body: string
+          p_recipients: string[]
+        }
+        Returns: string
+      }
       submit_absence_justification: {
         Args: {
           p_student_id: string
@@ -4190,6 +4236,18 @@ export type Database = {
           p_validate?: boolean
         }
         Returns: string
+      }
+      thread_messages: {
+        Args: {
+          p_thread_id: string
+        }
+        Returns: {
+          id: string
+          body: string
+          created_at: string
+          sender: string
+          mine: boolean
+        }[]
       }
       unlock_lesson_manually: {
         Args: {

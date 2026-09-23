@@ -408,3 +408,66 @@ describe("Plateforme (Super administrateur)", () => {
     });
   });
 });
+
+describe("Rapports", () => {
+  test("agrégats réservés à reports.read (finances : reports.finance), jamais inter-établissements", async () => {
+    await as(null, async (q) => {
+      await switchTo(q, USERS.admin);
+      const [{ report_section: effectifs }] = await q("select report_section($1, 'effectifs')", [ORG_DEMO]);
+      assert.ok(effectifs.total > 0 && effectifs.rows.length >= 4);
+      const [{ report_section: finances }] = await q("select report_section($1, 'finances')", [ORG_DEMO]);
+      assert.ok(finances.rows.length > 0 && Array.isArray(finances.par_mois));
+      await switchTo(q, USERS.teacher);
+      assert.match(await rejects(q("select report_section($1, 'effectifs')", [ORG_DEMO])), /reports\.read/);
+      await switchTo(q, USERS.otherOrgAdmin);
+      assert.match(await rejects(q("select report_section($1, 'resultats')", [ORG_DEMO])), /reports\.read/);
+      await switchTo(q, USERS.parent);
+      assert.match(await rejects(q("select report_section($1, 'finances')", [ORG_DEMO])), /reports/);
+    });
+  });
+});
+
+describe("Communication", () => {
+  test("messagerie : contacts limités par rôle, réponses des familles, notifications", async () => {
+    await as(null, async (q) => {
+      // L'enseignant (maths 6e A / 6e B) peut écrire aux familles de SES élèves (Kofi, 6e A) mais pas d'Aya (5e A).
+      await switchTo(q, USERS.teacher);
+      const contacts = await q("select user_id, kind from message_contacts($1)", [ORG_DEMO]);
+      assert.ok(contacts.some((c) => c.user_id === USERS.parent), "parent de Kofi joignable");
+      assert.ok(contacts.some((c) => c.user_id === USERS.director), "personnel joignable");
+      const [{ start_thread: thread }] = await q("select start_thread($1, 'Devoir de maths', 'Bonjour, Kofi doit rendre son devoir.', $2)", [ORG_DEMO, [USERS.parent]]);
+      // Aucun destinataire hors de ses contacts (élève d'une autre organisation).
+      assert.match(await rejects(q("select start_thread($1, 'x', 'y', $2)", [ORG_DEMO, [USERS.otherOrgAdmin]])), /contacts autorisés/);
+
+      await switchTo(q, USERS.parent);
+      const [notif] = await q("select link from notifications where type = 'message.received' and data->>'thread_id' = $1", [thread]);
+      assert.equal(notif.link, `/portail/messages?fil=${thread}`);
+      await q("insert into messages (organization_id, thread_id, body) values ($1, $2, 'Merci, c''est noté.')", [ORG_DEMO, thread]);
+      assert.equal((await q("select id from messages where thread_id = $1", [thread])).length, 2);
+      assert.match(await rejects(q("select start_thread($1, 'x', 'y', $2)", [ORG_DEMO, [USERS.teacher]])), /communication\.message/);
+
+      // Personne d'autre ne lit la conversation.
+      await switchTo(q, USERS.accountant);
+      assert.equal((await q("select id from messages where thread_id = $1", [thread])).length, 0);
+      await switchTo(q, USERS.otherOrgAdmin);
+      assert.equal((await q("select id from message_threads where id = $1", [thread])).length, 0);
+    });
+  });
+
+  test("annonce publiée : notification des seuls destinataires ciblés", async () => {
+    await as(null, async (q) => {
+      await switchTo(q, USERS.director);
+      const [c5a] = await q("select id from classes where name = '5e A'");
+      await q(
+        "insert into announcements (organization_id, title, body, audience, published_at) values ($1, 'Sortie 5e A', 'Sortie au musée jeudi.', $2, now())",
+        [ORG_DEMO, JSON.stringify({ personas: ["parent"], class_ids: [c5a.id] })],
+      );
+      await switchTo(q, null);
+      const recipients = (await q("select user_id from notifications where type = 'announcement.published' and title like '%Sortie 5e A%'")).map((r) => r.user_id);
+      assert.ok(recipients.includes(USERS.parent), "mère d'Aya (5e A) notifiée");
+      assert.ok(!recipients.includes(USERS.teacher) && !recipients.includes(USERS.student), "enseignant et élève non ciblés");
+      await switchTo(q, USERS.teacher);
+      assert.match(await rejects(q("insert into announcements (organization_id, title, body, published_at) values ($1, 'x', 'y', now())", [ORG_DEMO])), /row-level security/);
+    });
+  });
+});

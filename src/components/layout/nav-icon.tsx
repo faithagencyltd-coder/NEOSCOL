@@ -1,5 +1,8 @@
 import {
   BadgeCheck,
+  BarChart3,
+  Bot,
+  MessagesSquare,
   Banknote,
   Bell,
   BookOpen,
@@ -74,6 +77,9 @@ const ICONS: Record<NavIconName, LucideIcon> = {
   school: School,
   year: CalendarRange,
   templates: LayoutTemplate,
+  reports: BarChart3,
+  assistant: Bot,
+  communication: MessagesSquare,
 };
 
 export function NavIcon({ name, className }: { name: NavIconName; className?: string }) {

@@ -12,7 +12,7 @@ export function HorizontalBars({ data, caption, className }: { data: BarDatum[];
           <li key={d.label} className="grid grid-cols-[5.5rem_1fr_auto] items-center gap-3 text-sm">
             <span className="truncate text-muted-foreground">{d.label}</span>
             <span className="h-2.5 overflow-hidden rounded-full bg-surface-muted">
-              <span className="block h-full rounded-full bg-chart-1" style={{ width: `${(d.value / max) * 100}%` }} />
+              <span className="block h-full origin-left animate-[bar-grow-x_0.7s_ease-out_both] rounded-full bg-chart-1" style={{ width: `${(d.value / max) * 100}%` }} />
             </span>
             <span className="text-right font-medium tabular-nums">{d.display}</span>
           </li>

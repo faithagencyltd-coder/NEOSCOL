@@ -35,7 +35,10 @@ export type NavIcon =
   | "demo"
   | "school"
   | "year"
-  | "templates";
+  | "templates"
+  | "reports"
+  | "assistant"
+  | "communication";
 
 export type NavItem = {
   href: string;
@@ -58,6 +61,8 @@ export const NAVIGATION: NavSection[] = [
     items: [
       { href: "/tableau-de-bord", label: "Tableau de bord", icon: "dashboard", anyOf: [], keywords: "accueil statistiques" },
       { href: "/notifications", label: "Notifications", icon: "notifications", anyOf: [], keywords: "alertes messages" },
+      { href: "/assistant", label: "Assistant", icon: "assistant", anyOf: ["assistant.use"], keywords: "intelligence artificielle questions anomalies" },
+      { href: "/rapports", label: "Rapports", icon: "reports", anyOf: ["reports.read"], keywords: "statistiques exports effectifs résultats finances absences" },
     ],
   },
   {
@@ -81,6 +86,13 @@ export const NAVIGATION: NavSection[] = [
       { href: "/bulletins", label: "Bulletins", icon: "reportCards", anyOf: ["report_cards.manage", "grades.read"], keywords: "moyennes rangs appréciations" },
       { href: "/bulletins/apercu", label: "Aperçu des bulletins", icon: "reportCards", anyOf: ["grades.enter"], keywords: "aperçu moyennes classe" },
       { href: "/documents", label: "Documents", icon: "documents", anyOf: ["documents.read", "documents.generate", "documents.dossier"], keywords: "certificats attestations reçus cartes dossier complet PDF" },
+    ],
+  },
+  {
+    label: "Communication",
+    items: [
+      { href: "/communication", label: "Annonces", icon: "communication", anyOf: [], keywords: "annonces information publication familles" },
+      { href: "/messages", label: "Messagerie", icon: "communication", anyOf: [], keywords: "messages conversation parents enseignants" },
     ],
   },
   {
