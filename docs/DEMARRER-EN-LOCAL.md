@@ -16,7 +16,7 @@ Ordinateur conseillé : 8 Go de mémoire, 10 Go d'espace disque libre.
 ## 2. Récupérer le code
 
 ```bash
-git clone https://github.com/faithagencyltd-coder/neoscol.git
+git clone https://github.com/faithagencyltd-coder/NEOSCOL.git neoscol
 cd neoscol
 git checkout claude/neoscol-architecture-design-81m58e
 ```
