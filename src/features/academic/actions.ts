@@ -326,3 +326,29 @@ export async function toggleArchivedClass(_: ActionResult | null, formData: Form
   if (error || count === 0) return { ok: false, message: dbErrorMessage(error) };
   return done(["/classes", `/classes/${classId}`], archive ? "Classe archivée." : "Classe restaurée.");
 }
+
+/** Ordre des matières (bulletin, carnets) : échange avec la voisine puis renumérotation. */
+export async function moveClassSubject(formData: FormData): Promise<void> {
+  const auth = await authorize("academic.manage");
+  if (!auth.ok) return;
+  const id = String(formData.get("class_subject_id") ?? "");
+  const classId = String(formData.get("class_id") ?? "");
+  const direction = formData.get("direction") === "up" ? -1 : 1;
+  if (!isUuid(id) || !isUuid(classId)) return;
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("class_subjects")
+    .select("id, sort_order, subject:subjects(name)")
+    .eq("organization_id", auth.context.organization.id)
+    .eq("class_id", classId);
+  const ordered = (data ?? []).sort((a, b) => a.sort_order - b.sort_order || (a.subject?.name ?? "").localeCompare(b.subject?.name ?? "", "fr"));
+  const index = ordered.findIndex((cs) => cs.id === id);
+  const target = index + direction;
+  if (index < 0 || target < 0 || target >= ordered.length) return;
+  [ordered[index], ordered[target]] = [ordered[target]!, ordered[index]!];
+  for (const [position, cs] of ordered.entries()) {
+    if (cs.sort_order !== position + 1) await supabase.from("class_subjects").update({ sort_order: position + 1 }).eq("id", cs.id);
+  }
+  revalidatePath(`/classes/${classId}`);
+  revalidatePath("/bulletins", "layout");
+}

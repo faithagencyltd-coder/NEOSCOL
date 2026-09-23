@@ -1,4 +1,4 @@
-import { BookOpen, Pencil, Trash2, Users } from "lucide-react";
+import { ArrowDown, ArrowUp, BookOpen, Pencil, Trash2, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
-import { removeClassSubject, saveClassSubject, updateClass } from "@/features/academic/actions";
+import { moveClassSubject, removeClassSubject, saveClassSubject, updateClass } from "@/features/academic/actions";
 import { classFields } from "@/features/academic/components/class-fields";
 import {
   getClassDetail,
@@ -48,7 +48,9 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
     manage && can(context, "staff.read") ? getTeachers(organizationId) : Promise.resolve([]),
     manage ? getSubjects(organizationId) : Promise.resolve([]),
   ]);
-  const classSubjects = [...klass.class_subjects].sort((a, b) => (a.subject?.name ?? "").localeCompare(b.subject?.name ?? "", "fr"));
+  const classSubjects = [...klass.class_subjects].sort(
+    (a, b) => a.sort_order - b.sort_order || (a.subject?.name ?? "").localeCompare(b.subject?.name ?? "", "fr"),
+  );
   const totalCoefficient = classSubjects.reduce((sum, cs) => sum + cs.coefficient, 0);
   const girls = students.filter((s) => s.sex === "F").length;
   const teacherOptions = teachers.map((t) => ({ value: t.id, label: `${t.last_name} ${t.first_name}` }));
@@ -157,7 +159,7 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
                 </tr>
               </THead>
               <tbody>
-                {classSubjects.map((cs) => (
+                {classSubjects.map((cs, index) => (
                   <TR key={cs.id}>
                     <TD className="font-semibold">{cs.subject?.name}</TD>
                     <TD className={cs.teacher ? undefined : "text-muted-foreground"}>
@@ -168,6 +170,22 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
                     {manage ? (
                       <TD className="text-right">
                         <span className="inline-flex gap-1">
+                          {(["up", "down"] as const).map((direction) => (
+                            <form key={direction} action={moveClassSubject}>
+                              <input type="hidden" name="class_subject_id" value={cs.id} />
+                              <input type="hidden" name="class_id" value={klass.id} />
+                              <input type="hidden" name="direction" value={direction} />
+                              <Button
+                                type="submit"
+                                variant="ghost"
+                                size="sm"
+                                disabled={direction === "up" ? index === 0 : index === classSubjects.length - 1}
+                                aria-label={`${direction === "up" ? "Monter" : "Descendre"} ${cs.subject?.name} (ordre du bulletin)`}
+                              >
+                                {direction === "up" ? <ArrowUp aria-hidden /> : <ArrowDown aria-hidden />}
+                              </Button>
+                            </form>
+                          ))}
                           <QuickFormDialog
                             title={`${cs.subject?.name} — ${klass.name}`}
                             trigger={

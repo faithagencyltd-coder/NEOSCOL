@@ -125,7 +125,7 @@ export async function getClassDetail(organizationId: string, classId: string) {
       `id, name, code, kind, capacity, starts_on, ends_on, archived_at, academic_year_id, level_id, program_id, room_id, head_teacher_id,
        academic_year:academic_years(id, name, is_current), level:levels(id, name), program:programs(id, name),
        room:rooms(id, name), head_teacher:staff_members(id, first_name, last_name),
-       class_subjects(id, coefficient, weekly_hours, subject:subjects(id, name, code), teacher:staff_members(id, first_name, last_name))`,
+       class_subjects(id, coefficient, weekly_hours, sort_order, subject:subjects(id, name, code), teacher:staff_members(id, first_name, last_name))`,
     )
     .eq("organization_id", organizationId)
     .eq("id", classId)

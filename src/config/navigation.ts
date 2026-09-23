@@ -57,7 +57,8 @@ export const NAVIGATION: NavSection[] = [
       { href: "/mes-cours", label: "Mes cours", icon: "lessons", anyOf: ["attendance.take"], keywords: "appel cours emploi du temps badge" },
       { href: "/presences", label: "Présences", icon: "attendance", anyOf: ["attendance.read", "attendance.manage", "attendance.justify"], keywords: "appel absences retards justificatifs" },
       { href: "/notes", label: "Notes", icon: "grades", anyOf: ["grades.read", "grades.enter", "grades.manage"], keywords: "évaluations devoirs saisie" },
-      { href: "/bulletins", label: "Bulletins", icon: "reportCards", anyOf: ["report_cards.manage", "grades.read"], keywords: "moyennes rangs appréciations" },
+      { href: "/bulletins", label: "Bulletins", icon: "reportCards", anyOf: ["report_cards.manage", "grades.read"], keywords: "moyennes rangs appréciations configuration colonnes" },
+      { href: "/bulletins/apercu", label: "Aperçu des bulletins", icon: "reportCards", anyOf: ["grades.enter"], keywords: "aperçu moyennes classe" },
     ],
   },
   {

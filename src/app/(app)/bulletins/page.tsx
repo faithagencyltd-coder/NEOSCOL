@@ -1,4 +1,5 @@
-import { Calculator, FileDown, FileText, Send } from "lucide-react";
+import { Calculator, FileDown, FileText, Send, Settings2 } from "lucide-react";
+import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -57,6 +58,13 @@ export default async function ReportCardsPage({ searchParams }: PageProps<"/bull
         </div>
         {classId && period ? (
           <div className="flex flex-wrap gap-2">
+            {canManage ? (
+              <Button asChild variant="ghost">
+                <Link href="/bulletins/configuration">
+                  <Settings2 aria-hidden /> Configurer le bulletin
+                </Link>
+              </Button>
+            ) : null}
             {canManage ? (
               <ConfirmAction
                 trigger={
