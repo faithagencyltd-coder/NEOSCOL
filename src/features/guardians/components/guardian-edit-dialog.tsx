@@ -11,6 +11,8 @@ import { Dialog, DialogClose, DialogContent, DialogTrigger } from "@/components/
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { CustomFields } from "@/features/forms/components/custom-fields";
+import type { CustomValues, FieldDefinition } from "@/features/forms/fields";
 import { updateGuardian } from "@/features/guardians/actions";
 import type { ActionResult } from "@/lib/utils/action-result";
 
@@ -20,7 +22,7 @@ type Guardian = Record<
 > &
   Partial<Record<"sex" | "phone" | "phone_secondary" | "email" | "profession" | "employer" | "address" | "city" | "national_id", string | null>>;
 
-export function GuardianEditDialog({ guardian }: { guardian: Guardian }) {
+export function GuardianEditDialog({ guardian, customFields = [], customValues = {} }: { guardian: Guardian; customFields?: FieldDefinition[]; customValues?: CustomValues }) {
   const [open, setOpen] = useState(false);
   const [state, action, pending] = useActionState(async (prev: ActionResult | null, formData: FormData) => {
     const result = await updateGuardian(prev, formData);
@@ -62,6 +64,7 @@ export function GuardianEditDialog({ guardian }: { guardian: Guardian }) {
             {input("address", "Adresse")}
             {input("city", "Ville")}
             {input("national_id", "N° de pièce d'identité")}
+            {customFields.length ? <CustomFields fields={customFields} values={customValues} errors={errors} /> : null}
           </div>
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <DialogClose asChild>

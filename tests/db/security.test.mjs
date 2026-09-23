@@ -513,3 +513,27 @@ describe("Document Studio", () => {
     });
   });
 });
+
+describe("Dossier 360° et périmètre enseignant", () => {
+  test("enseignant : ses classes uniquement ; discipline gérée par l'administration, visible de la famille", async () => {
+    await as(null, async (q) => {
+      await switchTo(q, USERS.teacher);
+      const [{ my_class_ids: mine }] = await q("select my_class_ids($1)", [ORG_DEMO]);
+      const names = (await q("select name from classes where id = any($1::uuid[]) order by name", [mine])).map((r) => r.name);
+      assert.ok(names.includes("6e A"), "classe enseignée présente");
+      assert.ok(!names.includes("5e A"), "classe non enseignée absente");
+      const [kofi] = await q("select id from students where first_name = 'Kofi'");
+      assert.match(await rejects(q("insert into conduct_records (organization_id, student_id, kind, title) values ($1, $2, 'reward', 'Bravo')", [ORG_DEMO, kofi.id])), /row-level security/);
+
+      await switchTo(q, USERS.director);
+      await q("insert into conduct_records (organization_id, student_id, kind, title) values ($1, $2, 'reward', 'Tableau d''honneur')", [ORG_DEMO, kofi.id]);
+      await q("insert into student_previous_schools (organization_id, student_id, school_name, to_year) values ($1, $2, 'EPP Cocody', 2025)", [ORG_DEMO, kofi.id]);
+
+      await switchTo(q, USERS.otherOrgAdmin);
+      assert.equal((await q("select id from conduct_records where student_id = $1", [kofi.id])).length, 0);
+      assert.equal((await q("select id from student_previous_schools where student_id = $1", [kofi.id])).length, 0);
+      const [{ my_class_ids: other }] = await q("select my_class_ids($1)", [ORG_DEMO]);
+      assert.equal(other.length, 0);
+    });
+  });
+});

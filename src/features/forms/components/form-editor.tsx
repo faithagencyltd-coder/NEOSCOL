@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 
 import { ActionForm } from "@/components/shared/action-form";
 import { SubmitButton } from "@/components/shared/submit-button";
@@ -14,10 +14,10 @@ import { FIELD_TYPES, slugifyKey, type FieldDefinition, type FieldType } from "@
 
 type EditableField = FieldDefinition & { uid: string; optionsText: string; isNew?: boolean };
 
-let counter = 0;
-const toEditable = (field: FieldDefinition): EditableField => ({
+// Identifiants stables entre rendu serveur et client (pas de compteur global).
+const toEditable = (field: FieldDefinition, uid: string): EditableField => ({
   ...field,
-  uid: `f${++counter}`,
+  uid,
   optionsText: (field.options ?? []).join(", "),
 });
 
@@ -34,7 +34,8 @@ function uniqueKey(label: string, taken: Set<string>): string {
  * jamais, pour que les réponses déjà enregistrées restent rattachées.
  */
 export function FormEditor({ kind, fields: initial, canEdit }: { kind: string; fields: FieldDefinition[]; canEdit: boolean }) {
-  const [fields, setFields] = useState<EditableField[]>(() => initial.map(toEditable));
+  const [fields, setFields] = useState<EditableField[]>(() => initial.map((f, i) => toEditable(f, `${kind}-${i}`)));
+  const created = useRef(0);
   const [state, action, pending] = useActionState(saveFormDefinition, null);
 
   const update = (uid: string, patch: Partial<EditableField>) =>
@@ -60,7 +61,7 @@ export function FormEditor({ kind, fields: initial, canEdit }: { kind: string; f
     setFields((list) => [
       ...list,
       {
-        ...toEditable({ key: uniqueKey("champ", new Set(list.map((f) => f.key))), label: "", type: "text", required: false }),
+        ...toEditable({ key: uniqueKey("champ", new Set(list.map((f) => f.key))), label: "", type: "text", required: false }, `${kind}-new-${++created.current}`),
         isNew: true,
       },
     ]);

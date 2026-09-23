@@ -7,6 +7,8 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { displayValue, type CustomValues } from "@/features/forms/fields";
+import { getActiveFormFields } from "@/features/forms/queries";
 import { GuardianEditDialog } from "@/features/guardians/components/guardian-edit-dialog";
 import { getGuardian } from "@/features/guardians/queries";
 import { GuardianPortalAccess } from "@/features/portal/components/portal-access";
@@ -26,7 +28,8 @@ export default async function GuardianPage({ params }: PageProps<"/parents/[id]"
   const guardian = await getGuardian(context.organization.id, id);
   if (!guardian) notFound();
   const fullName = `${guardian.first_name} ${guardian.last_name}`;
-  const account = await getPortalAccount("guardian", guardian.id);
+  const [account, customFields] = await Promise.all([getPortalAccount("guardian", guardian.id), getActiveFormFields(context.organization.id, "guardian")]);
+  const customValues = (guardian.custom_fields ?? {}) as CustomValues;
 
   return (
     <div className="grid gap-5">
@@ -51,7 +54,7 @@ export default async function GuardianPage({ params }: PageProps<"/parents/[id]"
           ) : (
             <Badge>Portail non activé</Badge>
           )}
-          {can(context, "guardians.manage") ? <GuardianEditDialog guardian={guardian} /> : null}
+          {can(context, "guardians.manage") ? <GuardianEditDialog guardian={guardian} customFields={customFields} customValues={customValues} /> : null}
         </div>
       </Card>
       <div className="grid gap-4 lg:grid-cols-3">
@@ -70,6 +73,7 @@ export default async function GuardianPage({ params }: PageProps<"/parents/[id]"
                 { label: "Employeur", value: guardian.employer },
                 { label: "Adresse", value: [guardian.address, guardian.city].filter(Boolean).join(", ") },
                 { label: "Pièce d'identité", value: guardian.national_id },
+                ...customFields.map((f) => ({ label: f.label, value: displayValue(f, customValues[f.key]) })),
               ]}
             />
           </CardContent>

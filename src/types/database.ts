@@ -1516,6 +1516,7 @@ export type Database = {
           city: string | null
           created_at: string
           created_by: string | null
+          custom_fields: Json
           email: string | null
           employer: string | null
           first_name: string
@@ -1537,6 +1538,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           created_by?: string | null
+          custom_fields?: Json
           email?: string | null
           employer?: string | null
           first_name: string
@@ -1558,6 +1560,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           created_by?: string | null
+          custom_fields?: Json
           email?: string | null
           employer?: string | null
           first_name?: string
@@ -4004,6 +4007,12 @@ export type Database = {
           kind: string
           detail: string
         }[]
+      }
+      my_class_ids: {
+        Args: {
+          p_organization_id: string
+        }
+        Returns: string[]
       }
       my_lessons: {
         Args: {

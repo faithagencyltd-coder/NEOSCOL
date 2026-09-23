@@ -15,6 +15,7 @@ import { StudentDocumentsTab } from "@/features/documents/components/student-doc
 import { dossierOrder } from "@/features/documents/dossier";
 import { listCustomTemplates, listStudentDocuments } from "@/features/documents/queries";
 import { setStudentArchived } from "@/features/students/actions";
+import { ConductTab, PreviousSchoolsCard, ReportCardsTab } from "@/features/students/components/dossier-extra";
 import { StudentLifecycleActions } from "@/features/students/components/lifecycle-actions";
 import { StudentPortalAccess } from "@/features/portal/components/portal-access";
 import { getPortalAccount, getPortalStatus } from "@/features/portal/queries";
@@ -30,6 +31,9 @@ import {
 import {
   getStudent,
   getStudentAttendance,
+  getStudentConduct,
+  getStudentPreviousSchools,
+  getStudentReportCards,
   getStudentFinance,
   getStudentFormFields,
   getStudentGrades,
@@ -38,6 +42,7 @@ import {
 } from "@/features/students/queries";
 import { featureEnabled } from "@/lib/features";
 import { requirePermission } from "@/lib/auth/guards";
+import { todayIn } from "@/lib/dates";
 import { can } from "@/lib/auth/session";
 import { STUDENT_STATUS } from "@/lib/labels";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/utils/format";
@@ -59,6 +64,8 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
   const canGrades = can(context, "grades.read") || can(context, "grades.manage");
   const canAttendance = can(context, "attendance.read") || can(context, "attendance.manage");
   const showMedical = featureEnabled(organization, "medical_records") && can(context, "students.medical.read");
+  const canReportCards = can(context, "report_cards.manage") || can(context, "grades.read");
+  const canConduct = can(context, "conduct.read") || can(context, "conduct.manage");
   const canDocuments = can(context, "documents.read") || can(context, "documents.generate") || can(context, "documents.dossier");
 
   const tabs: TabLink[] = [
@@ -66,7 +73,9 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
     { key: "parents", label: "Parents", href: "?onglet=parents", count: student.student_guardians.length },
     { key: "scolarite", label: "Scolarité", href: "?onglet=scolarite", count: student.enrollments.length },
     ...(canGrades ? [{ key: "notes", label: "Notes", href: "?onglet=notes" }] : []),
+    ...(canReportCards ? [{ key: "bulletins", label: "Bulletins", href: "?onglet=bulletins" }] : []),
     ...(canAttendance ? [{ key: "presences", label: "Présences", href: "?onglet=presences" }] : []),
+    ...(canConduct ? [{ key: "discipline", label: "Discipline", href: "?onglet=discipline" }] : []),
     ...(canFinance ? [{ key: "finance", label: "Finance", href: "?onglet=finance" }] : []),
     ...(canDocuments ? [{ key: "documents", label: "Documents", href: "?onglet=documents" }] : []),
     { key: "portail", label: "Portail", href: "?onglet=portail" },
@@ -180,7 +189,21 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
         />
       ) : null}
       {active === "parents" ? <GuardiansTab student={student} canManage={can(context, "guardians.manage")} /> : null}
-      {active === "scolarite" ? <SchoolingTab student={student} canEnroll={can(context, "enrollments.manage") && !archived} /> : null}
+      {active === "scolarite" ? (
+        <>
+          <SchoolingTab student={student} canEnroll={can(context, "enrollments.manage") && !archived} />
+          <PreviousSchoolsCard studentId={student.id} schools={await getStudentPreviousSchools(student.id)} canManage={can(context, "students.update") && !archived} />
+        </>
+      ) : null}
+      {active === "bulletins" ? (
+        <ReportCardsTab
+          cards={await getStudentReportCards(student.id)}
+          canPdf={can(context, "documents.generate") && (can(context, "report_cards.manage") || can(context, "report_cards.publish"))}
+        />
+      ) : null}
+      {active === "discipline" ? (
+        <ConductTab studentId={student.id} records={await getStudentConduct(student.id)} canManage={can(context, "conduct.manage") && !archived} today={todayIn(organization.timezone)} />
+      ) : null}
       {active === "notes" ? <GradesTab grades={await getStudentGrades(student.id)} /> : null}
       {active === "presences" ? <AttendanceTab attendance={await getStudentAttendance(student.id)} /> : null}
       {active === "finance" ? <FinanceTab finance={await getStudentFinance(student.id)} currency={organization.currency} /> : null}

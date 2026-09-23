@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
 import { NavIcon } from "@/components/layout/nav-icon";
@@ -47,7 +47,8 @@ export function SidebarNav({ sections, onNavigate }: { sections: NavSection[]; o
                 )}
               >
                 <NavIcon name={item.icon} className="size-[18px]" />
-                {item.label}
+                <span className="flex-1">{item.label}</span>
+                <PendingDot />
               </Link>
             );
           })}
@@ -55,4 +56,14 @@ export function SidebarNav({ sections, onNavigate }: { sections: NavSection[]; o
       ))}
     </nav>
   );
+}
+
+/** Indicateur de chargement du lien cliqué, pendant la navigation (sans casser les codes HTTP 403/404). */
+function PendingDot() {
+  const { pending } = useLinkStatus();
+  return pending ? (
+    <span role="status" className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent opacity-80">
+      <span className="sr-only">Chargement…</span>
+    </span>
+  ) : null;
 }

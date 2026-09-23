@@ -304,3 +304,85 @@ export async function deleteStudent(_: ActionResult | null, formData: FormData):
   revalidatePath("/eleves");
   redirect("/eleves?supprime=1");
 }
+
+const conductSchema = z.object({
+  student_id: z.uuid(),
+  kind: z.enum(["sanction", "reward"], { error: "Type invalide." }),
+  title: z.string({ error: "Intitulé requis." }).trim().min(2, { error: "Intitulé requis." }).max(160),
+  description: z.string().trim().max(2000).optional(),
+  occurred_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { error: "Date invalide." }),
+});
+
+/** Sanction ou récompense (conduct.manage) — journalisée. */
+export async function addConductRecord(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await authorize("conduct.manage");
+  if (!auth.ok) return auth;
+  const parsed = conductSchema.safeParse(readFields(formData, ["student_id", "kind", "title", "description", "occurred_on"]));
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Champs invalides." };
+  const supabase = await createClient();
+  const { error } = await supabase.from("conduct_records").insert({ ...parsed.data, description: parsed.data.description ?? null, organization_id: auth.context.organization.id });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  revalidatePath(`/eleves/${parsed.data.student_id}`);
+  return { ok: true, message: parsed.data.kind === "reward" ? "Récompense enregistrée." : "Sanction enregistrée." };
+}
+
+export async function deleteConductRecord(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await authorize("conduct.manage");
+  if (!auth.ok) return auth;
+  const id = String(formData.get("record_id") ?? "");
+  if (!isUuid(id)) return { ok: false, message: "Enregistrement introuvable." };
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("conduct_records").delete().eq("organization_id", auth.context.organization.id).eq("id", id).select("student_id").maybeSingle();
+  if (error || !data) return { ok: false, message: dbErrorMessage(error, "Suppression impossible.") };
+  revalidatePath(`/eleves/${data.student_id}`);
+  return { ok: true, message: "Enregistrement supprimé (tracé dans le journal d'audit)." };
+}
+
+const year = z.coerce.number().int().min(1950).max(2100).optional();
+const previousSchoolSchema = z.object({
+  student_id: z.uuid(),
+  school_name: z.string({ error: "Nom de l'établissement requis." }).trim().min(2, { error: "Nom de l'établissement requis." }).max(200),
+  city: z.string().trim().max(120).optional(),
+  country: z.string().trim().max(120).optional(),
+  from_year: year,
+  to_year: year,
+  last_level: z.string().trim().max(80).optional(),
+  notes: z.string().trim().max(1000).optional(),
+});
+
+/** Ancien établissement fréquenté (students.update). */
+export async function addPreviousSchool(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await authorize("students.update");
+  if (!auth.ok) return auth;
+  const parsed = previousSchoolSchema.safeParse(readFields(formData, ["student_id", "school_name", "city", "country", "from_year", "to_year", "last_level", "notes"]));
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Champs invalides." };
+  const v = parsed.data;
+  if (v.from_year && v.to_year && v.from_year > v.to_year) return { ok: false, message: "L'année de début doit précéder l'année de fin." };
+  const supabase = await createClient();
+  const { error } = await supabase.from("student_previous_schools").insert({
+    organization_id: auth.context.organization.id,
+    student_id: v.student_id,
+    school_name: v.school_name,
+    city: v.city ?? null,
+    country: v.country ?? null,
+    from_year: v.from_year ?? null,
+    to_year: v.to_year ?? null,
+    last_level: v.last_level ?? null,
+    notes: v.notes ?? null,
+  });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  revalidatePath(`/eleves/${v.student_id}`);
+  return { ok: true, message: "Établissement précédent ajouté." };
+}
+
+export async function deletePreviousSchool(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await authorize("students.update");
+  if (!auth.ok) return auth;
+  const id = String(formData.get("school_id") ?? "");
+  if (!isUuid(id)) return { ok: false, message: "Enregistrement introuvable." };
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("student_previous_schools").delete().eq("organization_id", auth.context.organization.id).eq("id", id).select("student_id").maybeSingle();
+  if (error || !data) return { ok: false, message: dbErrorMessage(error, "Suppression impossible.") };
+  revalidatePath(`/eleves/${data.student_id}`);
+  return { ok: true, message: "Établissement retiré." };
+}

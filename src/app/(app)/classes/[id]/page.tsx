@@ -23,6 +23,7 @@ import {
   getTeachers,
 } from "@/features/academic/queries";
 import { requirePermission } from "@/lib/auth/guards";
+import { ownClassScope } from "@/lib/auth/scope";
 import { can } from "@/lib/auth/session";
 import { CLASS_KIND } from "@/lib/labels";
 import { formatDate } from "@/lib/utils/format";
@@ -35,6 +36,8 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
   const { id } = await params;
   if (!isUuid(id)) notFound();
   const organizationId = context.organization.id;
+  const scope = await ownClassScope(context);
+  if (scope && !scope.has(id)) notFound();
   const klass = await getClassDetail(organizationId, id);
   if (!klass) notFound();
 

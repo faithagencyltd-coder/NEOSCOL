@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { parseCustomValues } from "@/features/forms/fields";
+import { getActiveFormFields } from "@/features/forms/queries";
 import { authorize } from "@/lib/auth/authorize";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/utils/action-result";
@@ -42,8 +44,13 @@ export async function updateGuardian(_: ActionResult | null, formData: FormData)
   const guardianId = String(formData.get("guardian_id") ?? "");
   if (!isUuid(guardianId)) return { ok: false, message: "Parent introuvable." };
   const parsed = guardianUpdateSchema.safeParse(readFields(formData, FIELDS));
-  if (!parsed.success) {
-    return { ok: false, message: "Certains champs sont à corriger.", fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  const custom = parseCustomValues(await getActiveFormFields(auth.context.organization.id, "guardian"), formData);
+  if (!parsed.success || !custom.ok) {
+    return {
+      ok: false,
+      message: "Certains champs sont à corriger.",
+      fieldErrors: { ...(parsed.success ? {} : z.flattenError(parsed.error).fieldErrors), ...(custom.ok ? {} : custom.errors) },
+    };
   }
   const d = parsed.data;
   const supabase = await createClient();
@@ -62,6 +69,7 @@ export async function updateGuardian(_: ActionResult | null, formData: FormData)
         address: d.address ?? null,
         city: d.city ?? null,
         national_id: d.national_id ?? null,
+        custom_fields: custom.values,
       },
       { count: "exact" },
     )

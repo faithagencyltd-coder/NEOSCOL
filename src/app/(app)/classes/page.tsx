@@ -19,6 +19,7 @@ import {
   getTeachers,
 } from "@/features/academic/queries";
 import { requirePermission } from "@/lib/auth/guards";
+import { ownClassScope } from "@/lib/auth/scope";
 import { can } from "@/lib/auth/session";
 import { CLASS_KIND } from "@/lib/labels";
 import { cn } from "@/lib/utils/cn";
@@ -35,13 +36,15 @@ export default async function ClassesPage({ searchParams }: PageProps<"/classes"
   const year = (isUuid(requestedYear) ? years.find((y) => y.id === requestedYear) : null) ?? (await getCurrentYear(organizationId));
 
   const manage = can(context, "academic.manage");
-  const [classes, levels, programs, rooms, teachers] = await Promise.all([
+  const scope = await ownClassScope(context);
+  const [allClasses, levels, programs, rooms, teachers] = await Promise.all([
     year ? getClasses(organizationId, year.id) : Promise.resolve([]),
     manage ? getLevels(organizationId) : Promise.resolve([]),
     manage ? getPrograms(organizationId) : Promise.resolve([]),
     manage ? getRooms(organizationId) : Promise.resolve([]),
     manage && can(context, "staff.read") ? getTeachers(organizationId) : Promise.resolve([]),
   ]);
+  const classes = scope ? allClasses.filter((c) => scope.has(c.id)) : allClasses;
   const counts = await getClassHeadcounts(organizationId, classes.map((c) => c.id));
 
   return (

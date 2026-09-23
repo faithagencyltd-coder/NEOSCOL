@@ -190,3 +190,37 @@ export async function getStudentHistory(organizationId: string, entityIds: strin
     .limit(50);
   return data ?? [];
 }
+
+/** Sanctions et récompenses (RLS : conduct.read). */
+export async function getStudentConduct(studentId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("conduct_records")
+    .select("id, kind, title, description, occurred_on, created_at, author:profiles!conduct_records_recorded_by_fkey(first_name, last_name)")
+    .eq("student_id", studentId)
+    .order("occurred_on", { ascending: false });
+  return data ?? [];
+}
+
+export async function getStudentPreviousSchools(studentId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("student_previous_schools")
+    .select("id, school_name, city, country, from_year, to_year, last_level, notes")
+    .eq("student_id", studentId)
+    .order("to_year", { ascending: false, nullsFirst: false });
+  return data ?? [];
+}
+
+/** Bulletins de l'élève, toutes années (RLS des bulletins). */
+export async function getStudentReportCards(studentId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("report_cards")
+    .select("id, status, average, rank, class_size, published_at, period:academic_periods(name, sequence, academic_year:academic_years(name, starts_on)), class:classes(name)")
+    .eq("student_id", studentId);
+  return (data ?? []).sort(
+    (a, b) =>
+      (b.period?.academic_year?.starts_on ?? "").localeCompare(a.period?.academic_year?.starts_on ?? "") || (a.period?.sequence ?? 0) - (b.period?.sequence ?? 0),
+  );
+}

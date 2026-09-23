@@ -598,3 +598,28 @@ $$;
 drop trigger if exists fee_rates_check on public.fee_rates;
 create trigger fee_rates_check before insert or update on public.fee_rates
   for each row execute function app.check_fee_rate();
+
+-- -----------------------------------------------------------------------------
+-- 6. Enseignant : ses classes uniquement (liste et fiche des classes).
+--    Les élèves restent de toute façon filtrés par la RLS (my_taught_student_ids).
+-- -----------------------------------------------------------------------------
+create or replace function public.my_class_ids(p_organization_id uuid)
+returns uuid[]
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce(array_agg(c.id), '{}')
+  from public.classes c
+  where c.organization_id = p_organization_id
+    and c.id = any (app.my_taught_class_ids());
+$$;
+revoke execute on function public.my_class_ids(uuid) from public, anon;
+grant execute on function public.my_class_ids(uuid) to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- 7. Fiche parent / tuteur personnalisable (form_definitions kind 'guardian').
+-- -----------------------------------------------------------------------------
+alter table public.guardians
+  add column if not exists custom_fields jsonb not null default '{}'::jsonb check (jsonb_typeof(custom_fields) = 'object');
