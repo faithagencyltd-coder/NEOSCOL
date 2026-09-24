@@ -7,6 +7,7 @@
 # PG_DIR           : binaires PostgreSQL embarqués (bin/, lib/, share/), ex. paquet npm @embedded-postgres/windows-x64
 # AUTH_BIN         : GoTrue (supabase/auth) compilé pour la cible, AUTH_MIGRATIONS son dossier migrations/
 # POSTGREST_BIN    : PostgREST pour la cible
+# MSVC_DIR         : (Windows) dossier contenant vcruntime140.dll, vcruntime140_1.dll, msvcp140.dll
 # Les clés JWT sont générées ici : propres à ce paquet, valables uniquement en local.
 set -euo pipefail
 TARGET="${1:?cible : windows ou linux}"
@@ -47,6 +48,23 @@ cp -r "$PG_DIR"/{bin,lib,share} "$OUT/runtime/postgres/"
 EXT=""; [[ "$TARGET" == "windows" ]] && EXT=".exe"
 cp "$AUTH_BIN" "$OUT/runtime/auth/auth$EXT" && cp -r "$AUTH_MIGRATIONS" "$OUT/runtime/auth/migrations"
 cp "$POSTGREST_BIN" "$OUT/runtime/postgrest/postgrest$EXT"
+if [[ "$TARGET" == "windows" ]]; then
+  # Runtime Microsoft Visual C++ (déploiement local à l'application) pour PostgreSQL et PostgREST,
+  # et libpq (+ dépendances) à côté de PostgREST, qui ne les fournit pas.
+  if [[ -n "${MSVC_DIR:-}" ]]; then
+    for d in vcruntime140.dll vcruntime140_1.dll msvcp140.dll; do
+      cp "$MSVC_DIR/$d" "$OUT/runtime/postgres/bin/" && cp "$MSVC_DIR/$d" "$OUT/runtime/postgrest/"
+    done
+  fi
+  for d in libpq.dll libssl-3-x64.dll libcrypto-3-x64.dll libintl-9.dll libiconv-2.dll libwinpthread-1.dll; do
+    [[ -f "$OUT/runtime/postgres/bin/$d" ]] && cp "$OUT/runtime/postgres/bin/$d" "$OUT/runtime/postgrest/"
+  done
+fi
+# L'extracteur zip de Windows ne recrée pas les liens symboliques : on les remplace par des copies.
+while IFS= read -r link; do
+  target="$(readlink -f "$link")"
+  rm "$link" && cp -r "$target" "$link"
+done < <(find "$OUT" -type l)
 cp "$ROOT/scripts/db/supabase-stub.sql" "$ROOT/supabase/seed.sql" "$OUT/base/"
 cp -r "$ROOT/supabase/migrations" "$OUT/base/migrations"
 cp "$ROOT"/scripts/portable/{demarrer.mjs,DEMARRER.cmd,REINITIALISER.cmd,LISEZ-MOI.txt} "$OUT/"

@@ -12,7 +12,7 @@
 // remet les données de démonstration à zéro.
 
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync, createWriteStream } from "node:fs";
+import { closeSync, createWriteStream, existsSync, mkdirSync, openSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import http from "node:http";
 import net from "node:net";
 import { dirname, join } from "node:path";
@@ -109,8 +109,15 @@ async function startPostgres() {
   }
   if (!pgRunning()) {
     if (!(await portFree(PORTS.db))) fail(`le port ${PORTS.db} est déjà utilisé par un autre programme.`);
-    const res = pgCtl(["start", "-D", PGDATA, "-w", "-t", "120", "-l", join(LOGS, "postgres.log"), "-o", `-p ${PORTS.db} -h 127.0.0.1`]);
-    if (res.status !== 0) fail(`PostgreSQL n'a pas démarré :\n${res.stderr || res.stdout}`);
+    // Sorties vers un fichier (pas de tube) : sous Windows, le serveur hériterait du tube
+    // et bloquerait le lanceur jusqu'à son arrêt.
+    const logFile = join(LOGS, "pg_ctl.log");
+    const fd = openSync(logFile, "a");
+    const res = run(join(PG_BIN, `pg_ctl${EXE}`), ["start", "-D", PGDATA, "-w", "-t", "120", "-l", join(LOGS, "postgres.log"), "-o", `-p ${PORTS.db} -h 127.0.0.1`], {
+      stdio: ["ignore", fd, fd],
+    });
+    closeSync(fd);
+    if (res.status !== 0) fail(`PostgreSQL n'a pas démarré :\n${readFileSync(logFile, "utf8").slice(-2000)}`);
   }
   return fresh;
 }
