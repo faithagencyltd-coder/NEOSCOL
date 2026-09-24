@@ -263,7 +263,7 @@ export async function uploadStudentPhoto(_: ActionResult | null, formData: FormD
 
 const statusChangeSchema = z.object({
   student_id: z.uuid(),
-  status: z.enum(["active", "inactive", "withdrawn", "transferred", "graduated"]),
+  status: z.enum(["active", "inactive", "alumni", "withdrawn", "transferred", "graduated"]),
   reason: z.string().trim().min(3, { error: "Le motif est obligatoire." }).max(500),
 });
 

@@ -2277,6 +2277,157 @@ export type Database = {
           }
         ]
       }
+      migration_batches: {
+        Row: {
+          analyzed_at: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          file_name: string
+          file_sha256: string | null
+          file_size: number
+          headers: string[]
+          id: string
+          kind: string
+          mapping: Json
+          options: Json
+          organization_id: string
+          row_count: number
+          started_at: string | null
+          stats: Json
+          status: string
+        }
+        Insert: {
+          analyzed_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          file_name: string
+          file_sha256?: string | null
+          file_size: number
+          headers?: string[]
+          id?: string
+          kind: string
+          mapping?: Json
+          options?: Json
+          organization_id: string
+          row_count?: number
+          started_at?: string | null
+          stats?: Json
+          status?: string
+        }
+        Update: {
+          analyzed_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          file_name?: string
+          file_sha256?: string | null
+          file_size?: number
+          headers?: string[]
+          id?: string
+          kind?: string
+          mapping?: Json
+          options?: Json
+          organization_id?: string
+          row_count?: number
+          started_at?: string | null
+          stats?: Json
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "migration_batches_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "migration_batches_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      migration_rows: {
+        Row: {
+          batch_id: string
+          data: Json
+          duplicate_reasons: string[] | null
+          duplicate_score: number | null
+          duplicate_student_id: string | null
+          group_key: string | null
+          id: string
+          issues: Json
+          normalized: Json
+          organization_id: string
+          processed_at: string | null
+          resolution: string | null
+          row_number: number
+          status: string
+          student_id: string | null
+        }
+        Insert: {
+          batch_id: string
+          data: Json
+          duplicate_reasons?: string[] | null
+          duplicate_score?: number | null
+          duplicate_student_id?: string | null
+          group_key?: string | null
+          id?: string
+          issues?: Json
+          normalized?: Json
+          organization_id: string
+          processed_at?: string | null
+          resolution?: string | null
+          row_number: number
+          status?: string
+          student_id?: string | null
+        }
+        Update: {
+          batch_id?: string
+          data?: Json
+          duplicate_reasons?: string[] | null
+          duplicate_score?: number | null
+          duplicate_student_id?: string | null
+          group_key?: string | null
+          id?: string
+          issues?: Json
+          normalized?: Json
+          organization_id?: string
+          processed_at?: string | null
+          resolution?: string | null
+          row_number?: number
+          status?: string
+          student_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "migration_rows_organization_id_batch_id_fkey"
+            columns: ["organization_id", "batch_id"]
+            isOneToOne: false
+            referencedRelation: "migration_batches"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "migration_rows_organization_id_duplicate_student_id_fkey"
+            columns: ["organization_id", "duplicate_student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "migration_rows_organization_id_student_id_fkey"
+            columns: ["organization_id", "student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["organization_id", "id"]
+          }
+        ]
+      }
       notification_deliveries: {
         Row: {
           attempts: number
@@ -3356,6 +3507,92 @@ export type Database = {
           }
         ]
       }
+      student_diplomas: {
+        Row: {
+          batch_id: string | null
+          created_at: string
+          created_by: string | null
+          file_id: string | null
+          id: string
+          issued_on: string | null
+          issuer: string | null
+          kind: string
+          mention: string | null
+          notes: string | null
+          number: string | null
+          organization_id: string
+          source: string
+          student_id: string
+          title: string
+          year_label: string | null
+        }
+        Insert: {
+          batch_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          file_id?: string | null
+          id?: string
+          issued_on?: string | null
+          issuer?: string | null
+          kind?: string
+          mention?: string | null
+          notes?: string | null
+          number?: string | null
+          organization_id: string
+          source?: string
+          student_id: string
+          title: string
+          year_label?: string | null
+        }
+        Update: {
+          batch_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          file_id?: string | null
+          id?: string
+          issued_on?: string | null
+          issuer?: string | null
+          kind?: string
+          mention?: string | null
+          notes?: string | null
+          number?: string | null
+          organization_id?: string
+          source?: string
+          student_id?: string
+          title?: string
+          year_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_diplomas_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_diplomas_organization_id_batch_id_fkey"
+            columns: ["organization_id", "batch_id"]
+            isOneToOne: false
+            referencedRelation: "migration_batches"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "student_diplomas_organization_id_file_id_fkey"
+            columns: ["organization_id", "file_id"]
+            isOneToOne: false
+            referencedRelation: "file_objects"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "student_diplomas_organization_id_student_id_fkey"
+            columns: ["organization_id", "student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["organization_id", "id"]
+          }
+        ]
+      }
       student_guardians: {
         Row: {
           created_at: string
@@ -3406,6 +3643,241 @@ export type Database = {
           },
           {
             foreignKeyName: "student_guardians_organization_id_student_id_fkey"
+            columns: ["organization_id", "student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["organization_id", "id"]
+          }
+        ]
+      }
+      student_history: {
+        Row: {
+          absences: number | null
+          absences_justified: number | null
+          academic_year_id: string | null
+          average: number | null
+          batch_id: string | null
+          class_name: string | null
+          created_at: string
+          created_by: string | null
+          decision: string | null
+          id: string
+          level_name: string | null
+          notes: string | null
+          organization_id: string
+          program_name: string | null
+          rank: number | null
+          source: string
+          student_id: string
+          year_label: string
+        }
+        Insert: {
+          absences?: number | null
+          absences_justified?: number | null
+          academic_year_id?: string | null
+          average?: number | null
+          batch_id?: string | null
+          class_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          decision?: string | null
+          id?: string
+          level_name?: string | null
+          notes?: string | null
+          organization_id: string
+          program_name?: string | null
+          rank?: number | null
+          source?: string
+          student_id: string
+          year_label: string
+        }
+        Update: {
+          absences?: number | null
+          absences_justified?: number | null
+          academic_year_id?: string | null
+          average?: number | null
+          batch_id?: string | null
+          class_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          decision?: string | null
+          id?: string
+          level_name?: string | null
+          notes?: string | null
+          organization_id?: string
+          program_name?: string | null
+          rank?: number | null
+          source?: string
+          student_id?: string
+          year_label?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_history_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_history_organization_id_academic_year_id_fkey"
+            columns: ["organization_id", "academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "student_history_organization_id_batch_id_fkey"
+            columns: ["organization_id", "batch_id"]
+            isOneToOne: false
+            referencedRelation: "migration_batches"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "student_history_organization_id_student_id_fkey"
+            columns: ["organization_id", "student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["organization_id", "id"]
+          }
+        ]
+      }
+      student_history_grades: {
+        Row: {
+          academic_year_id: string | null
+          appreciation: string | null
+          batch_id: string | null
+          coefficient: number
+          created_at: string
+          id: string
+          max_score: number
+          organization_id: string
+          period_label: string | null
+          score: number
+          source: string
+          student_id: string
+          subject: string
+          year_label: string
+        }
+        Insert: {
+          academic_year_id?: string | null
+          appreciation?: string | null
+          batch_id?: string | null
+          coefficient?: number
+          created_at?: string
+          id?: string
+          max_score?: number
+          organization_id: string
+          period_label?: string | null
+          score: number
+          source?: string
+          student_id: string
+          subject: string
+          year_label: string
+        }
+        Update: {
+          academic_year_id?: string | null
+          appreciation?: string | null
+          batch_id?: string | null
+          coefficient?: number
+          created_at?: string
+          id?: string
+          max_score?: number
+          organization_id?: string
+          period_label?: string | null
+          score?: number
+          source?: string
+          student_id?: string
+          subject?: string
+          year_label?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_history_grades_organization_id_academic_year_id_fkey"
+            columns: ["organization_id", "academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "student_history_grades_organization_id_batch_id_fkey"
+            columns: ["organization_id", "batch_id"]
+            isOneToOne: false
+            referencedRelation: "migration_batches"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "student_history_grades_organization_id_student_id_fkey"
+            columns: ["organization_id", "student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["organization_id", "id"]
+          }
+        ]
+      }
+      student_history_payments: {
+        Row: {
+          academic_year_id: string | null
+          amount: number
+          batch_id: string | null
+          created_at: string
+          id: string
+          label: string
+          method: string | null
+          organization_id: string
+          paid_on: string | null
+          reference: string | null
+          source: string
+          student_id: string
+          year_label: string | null
+        }
+        Insert: {
+          academic_year_id?: string | null
+          amount: number
+          batch_id?: string | null
+          created_at?: string
+          id?: string
+          label: string
+          method?: string | null
+          organization_id: string
+          paid_on?: string | null
+          reference?: string | null
+          source?: string
+          student_id: string
+          year_label?: string | null
+        }
+        Update: {
+          academic_year_id?: string | null
+          amount?: number
+          batch_id?: string | null
+          created_at?: string
+          id?: string
+          label?: string
+          method?: string | null
+          organization_id?: string
+          paid_on?: string | null
+          reference?: string | null
+          source?: string
+          student_id?: string
+          year_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_history_payments_organization_id_academic_year_id_fkey"
+            columns: ["organization_id", "academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "student_history_payments_organization_id_batch_id_fkey"
+            columns: ["organization_id", "batch_id"]
+            isOneToOne: false
+            referencedRelation: "migration_batches"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "student_history_payments_organization_id_student_id_fkey"
             columns: ["organization_id", "student_id"]
             isOneToOne: false
             referencedRelation: "students"
@@ -3528,14 +4000,20 @@ export type Database = {
           created_by: string | null
           custom_fields: Json
           email: string | null
+          entry_year: number | null
+          exit_year: number | null
           first_name: string
           id: string
+          import_batch_id: string | null
           last_name: string
+          legacy_matricule: string | null
+          legacy_program: string | null
           matricule: string
           national_id: string | null
           nationality: string | null
           notes: string | null
           organization_id: string
+          origin: string
           other_names: string | null
           phone: string | null
           photo_path: string | null
@@ -3558,14 +4036,20 @@ export type Database = {
           created_by?: string | null
           custom_fields?: Json
           email?: string | null
+          entry_year?: number | null
+          exit_year?: number | null
           first_name: string
           id?: string
+          import_batch_id?: string | null
           last_name: string
+          legacy_matricule?: string | null
+          legacy_program?: string | null
           matricule?: string
           national_id?: string | null
           nationality?: string | null
           notes?: string | null
           organization_id: string
+          origin?: string
           other_names?: string | null
           phone?: string | null
           photo_path?: string | null
@@ -3588,14 +4072,20 @@ export type Database = {
           created_by?: string | null
           custom_fields?: Json
           email?: string | null
+          entry_year?: number | null
+          exit_year?: number | null
           first_name?: string
           id?: string
+          import_batch_id?: string | null
           last_name?: string
+          legacy_matricule?: string | null
+          legacy_program?: string | null
           matricule?: string
           national_id?: string | null
           nationality?: string | null
           notes?: string | null
           organization_id?: string
+          origin?: string
           other_names?: string | null
           phone?: string | null
           photo_path?: string | null
@@ -3621,6 +4111,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_import_batch_fk"
+            columns: ["organization_id", "import_batch_id"]
+            isOneToOne: false
+            referencedRelation: "migration_batches"
+            referencedColumns: ["organization_id", "id"]
           },
           {
             foreignKeyName: "students_organization_id_fkey"
@@ -3883,6 +4380,15 @@ export type Database = {
         }
         Returns: string
       }
+      create_legacy_student: {
+        Args: {
+          p_organization_id: string
+          p_student: Json
+          p_history?: Json
+          p_diploma?: Json
+        }
+        Returns: string
+      }
       create_organization: {
         Args: {
           p_name: string
@@ -3895,6 +4401,14 @@ export type Database = {
           p_timezone?: string
         }
         Returns: string
+      }
+      create_past_academic_years: {
+        Args: {
+          p_organization_id: string
+          p_from: number
+          p_to: number
+        }
+        Returns: number
       }
       create_student_record: {
         Args: {
@@ -3936,6 +4450,27 @@ export type Database = {
           installment_plan: Json
         }[]
       }
+      find_student_duplicates: {
+        Args: {
+          p_organization_id: string
+          p_last_name: string
+          p_first_name: string
+          p_birth_date: string
+          p_matricule?: string
+          p_limit?: number
+        }
+        Returns: {
+          student_id: string
+          full_name: string
+          matricule: string
+          legacy_matricule: string
+          birth_date: string
+          status: string
+          archived: boolean
+          score: number
+          reasons: string[]
+        }[]
+      }
       global_search: {
         Args: {
           p_organization_id: string
@@ -3957,6 +4492,12 @@ export type Database = {
           p_user_id: string
         }
         Returns: undefined
+      }
+      historical_overview: {
+        Args: {
+          p_organization_id: string
+        }
+        Returns: Json
       }
       invoice_status_summary: {
         Args: {
@@ -4007,6 +4548,53 @@ export type Database = {
           kind: string
           detail: string
         }[]
+      }
+      migration_analyze: {
+        Args: {
+          p_batch_id: string
+          p_mapping: Json
+          p_options: Json
+        }
+        Returns: Json
+      }
+      migration_append_rows: {
+        Args: {
+          p_batch_id: string
+          p_rows: Json
+        }
+        Returns: number
+      }
+      migration_cancel: {
+        Args: {
+          p_batch_id: string
+        }
+        Returns: undefined
+      }
+      migration_create_batch: {
+        Args: {
+          p_organization_id: string
+          p_kind: string
+          p_file_name: string
+          p_file_size: number
+          p_file_sha256: string
+          p_headers: string[]
+        }
+        Returns: string
+      }
+      migration_import_chunk: {
+        Args: {
+          p_batch_id: string
+          p_limit?: number
+        }
+        Returns: Json
+      }
+      migration_resolve: {
+        Args: {
+          p_batch_id: string
+          p_row_ids: string[]
+          p_resolution: string
+        }
+        Returns: number
       }
       my_class_ids: {
         Args: {
@@ -4225,6 +4813,12 @@ export type Database = {
           p_recipients: string[]
         }
         Returns: string
+      }
+      student_status_counts: {
+        Args: {
+          p_organization_id: string
+        }
+        Returns: Json
       }
       submit_absence_justification: {
         Args: {

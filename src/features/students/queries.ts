@@ -10,6 +10,8 @@ export type StudentListFilters = {
   q?: string;
   classId?: string;
   status?: string;
+  /** Onglet : restreint aux statuts listés (ex. anciens élèves). */
+  statuses?: string[];
   sex?: string;
   archived?: boolean;
   page: number;
@@ -21,7 +23,7 @@ export async function listStudents(organizationId: string, yearId: string | null
   let query = supabase
     .from("students")
     .select(
-      `id, matricule, first_name, last_name, sex, birth_date, status, archived_at,
+      `id, matricule, legacy_matricule, first_name, last_name, sex, birth_date, status, archived_at, entry_year, exit_year, origin,
        ${enrollmentJoin}(status, academic_year_id, class_id, class:classes(id, name)),
        student_guardians(is_primary, guardian:guardians(first_name, last_name, phone))`,
       { count: "exact" },
@@ -29,7 +31,16 @@ export async function listStudents(organizationId: string, yearId: string | null
     .eq("organization_id", organizationId);
 
   query = filters.archived ? query.not("archived_at", "is", null) : query.is("archived_at", null);
-  if (filters.q) query = query.ilike("search_text", likePattern(normalizeSearch(filters.q)));
+  if (filters.q) {
+    // Recherche aussi sur l'ancien matricule (données historiques importées).
+    // Valeurs entre guillemets : « . , : ( ) » sont réservés dans les filtres PostgREST combinés.
+    const legacy = filters.q.trim().replace(/["\\,()%*]/g, "");
+    const pattern = likePattern(normalizeSearch(filters.q)).replace(/"/g, "");
+    query = legacy
+      ? query.or(`search_text.ilike."${pattern}",legacy_matricule.ilike."%${legacy}%"`)
+      : query.ilike("search_text", likePattern(normalizeSearch(filters.q)));
+  }
+  if (filters.statuses?.length) query = query.in("status", filters.statuses);
   if (filters.status) query = query.eq("status", filters.status);
   if (filters.sex === "M" || filters.sex === "F") query = query.eq("sex", filters.sex);
   if (filters.classId) query = query.eq("enrollments.class_id", filters.classId).eq("enrollments.status", "validated");
@@ -49,6 +60,10 @@ export async function listStudents(organizationId: string, yearId: string | null
     return {
       id: student.id,
       matricule: student.matricule,
+      legacyMatricule: student.legacy_matricule,
+      entryYear: student.entry_year,
+      exitYear: student.exit_year,
+      origin: student.origin,
       firstName: student.first_name,
       lastName: student.last_name,
       sex: student.sex,

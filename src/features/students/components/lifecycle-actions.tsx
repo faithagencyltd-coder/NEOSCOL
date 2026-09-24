@@ -9,7 +9,7 @@ import { Select } from "@/components/ui/select";
 import { changeStudentStatus, deleteStudent, uploadStudentPhoto } from "@/features/students/actions";
 import { STUDENT_STATUS } from "@/lib/labels";
 
-const TARGETS = ["active", "inactive", "withdrawn", "transferred", "graduated"] as const;
+const TARGETS = ["active", "inactive", "alumni", "withdrawn", "transferred", "graduated"] as const;
 
 /** Photo, changement de statut (désactiver, retirer…) et suppression définitive contrôlée. */
 export function StudentLifecycleActions({

@@ -48,6 +48,8 @@ import { STUDENT_STATUS } from "@/lib/labels";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/utils/format";
 import { isUuid, param } from "@/lib/utils/search-params";
 import { vocabularyFor } from "@/lib/vocabulary";
+import { PastRecordsTab } from "@/features/migration/components/past-records";
+import { getStudentPastRecords } from "@/features/migration/queries";
 
 export const metadata: Metadata = { title: "Dossier élève" };
 
@@ -74,6 +76,7 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
     { key: "informations", label: "Informations", href: "?onglet=informations" },
     { key: "parents", label: "Parents", href: "?onglet=parents", count: student.student_guardians.length },
     { key: "scolarite", label: "Scolarité", href: "?onglet=scolarite", count: student.enrollments.length },
+    { key: "parcours", label: "Parcours antérieur", href: "?onglet=parcours" },
     ...(canGrades ? [{ key: "notes", label: "Notes", href: "?onglet=notes" }] : []),
     ...(canReportCards ? [{ key: "bulletins", label: "Bulletins", href: "?onglet=bulletins" }] : []),
     ...(canAttendance ? [{ key: "presences", label: "Présences", href: "?onglet=presences" }] : []),
@@ -192,6 +195,15 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
           />
         ) : null}
         {active === "parents" ? <GuardiansTab student={student} canManage={can(context, "guardians.manage")} /> : null}
+        {active === "parcours" ? (
+          <PastRecordsTab
+            student={student}
+            records={await getStudentPastRecords(organization.id, student.id, canFinance)}
+            canManage={can(context, "students.update") && !archived}
+            currency={organization.currency}
+            v={v}
+          />
+        ) : null}
         {active === "scolarite" ? (
           <>
             <SchoolingTab student={student} canEnroll={can(context, "enrollments.manage") && !archived} />

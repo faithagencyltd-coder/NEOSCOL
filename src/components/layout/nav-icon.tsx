@@ -1,4 +1,5 @@
 import {
+  Archive,
   BadgeCheck,
   BarChart3,
   Bot,
@@ -80,6 +81,7 @@ const ICONS: Record<NavIconName, LucideIcon> = {
   reports: BarChart3,
   assistant: Bot,
   communication: MessagesSquare,
+  history: Archive,
 };
 
 export function NavIcon({ name, className }: { name: NavIconName; className?: string }) {

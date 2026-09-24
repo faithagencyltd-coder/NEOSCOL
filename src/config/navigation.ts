@@ -5,6 +5,7 @@ export type NavIcon =
   | "dashboard"
   | "account"
   | "students"
+  | "history"
   | "enrollments"
   | "guardians"
   | "classes"
@@ -70,6 +71,7 @@ export const NAVIGATION: NavSection[] = [
     label: "Établissement",
     items: [
       { href: "/eleves", label: "Élèves", icon: "students", anyOf: ["students.read"], keywords: "dossier matricule étudiants apprenants" },
+      { href: "/donnees-historiques", label: "Données historiques", icon: "history", anyOf: ["students.import"], keywords: "migration import anciens élèves diplômés transférés excel csv archives années" },
       { href: "/inscriptions", label: "Inscriptions", icon: "enrollments", anyOf: ["enrollments.read"], keywords: "réinscription validation" },
       { href: "/parents", label: "Parents et tuteurs", icon: "guardians", anyOf: ["guardians.read"], keywords: "famille tuteur" },
       { href: "/personnel", label: "Personnel", icon: "staff", anyOf: ["staff.read"], keywords: "enseignants formateurs administratif badges comptes matricule" },

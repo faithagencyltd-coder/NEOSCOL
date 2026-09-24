@@ -19,6 +19,7 @@ export const STUDENT_STATUS: Record<string, { label: string; tone: Tone }> = {
   prospect: { label: "Candidat", tone: "warning" },
   active: { label: "Actif", tone: "success" },
   inactive: { label: "Inactif", tone: "neutral" },
+  alumni: { label: "Ancien élève", tone: "primary" },
   graduated: { label: "Diplômé", tone: "info" },
   transferred: { label: "Transféré", tone: "neutral" },
   withdrawn: { label: "Retiré", tone: "danger" },

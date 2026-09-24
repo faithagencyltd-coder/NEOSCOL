@@ -27,6 +27,7 @@ Plateforme SaaS multi-établissements de gestion scolaire et de formation :
 | 11 — Notifications in-app (absences, factures, rappels, accès rétabli), annonces | ✅ |
 | 15 — Journal d'audit (utilisateur, rôle, action, date, résultat), paramètres | ✅ |
 | 16 — Tests E2E navigateur du critère final (administration, professeur, parent, élève) | ✅ |
+| 17 — Migration des données historiques : anciens élèves, années anciennes, parcours, notes, paiements, diplômes (import Excel/CSV en 9 étapes, doublons, rapport) | ✅ |
 | 12 → 14 — Rapports/exports, assistant, PWA installable | à venir |
 
 ## Démarrage
@@ -112,3 +113,18 @@ src/components/        Design system (ui), mise en page (layout), composants par
 src/features/          Modules métier : actions, requêtes, schémas, composants
 src/lib/               Supabase, session, permissions, utilitaires
 ```
+
+## Migration des données historiques
+
+Menu **Établissement › Données historiques** (permission `students.import`) :
+
+- **Importer** un fichier Excel (.xlsx) ou CSV : anciens élèves et parcours, notes historiques, paiements historiques.
+  Assistant en 9 étapes : fichier, analyse automatique des colonnes, correspondance, aperçu, doublons
+  (matricule, nom, prénom, date de naissance → utiliser l'existant, fusionner, créer, ignorer), données manquantes,
+  validation, importation par tranches, rapport (données rejetées téléchargeables en CSV).
+- **Anciennes années scolaires** (2015-2016…) créées clôturées, automatiquement ou par période.
+- **Ajouter manuellement un ancien élève** (même détection des doublons).
+- Liste des élèves : onglets Actifs, Anciens, Diplômés, Transférés, Archivés ; dossier : onglet « Parcours antérieur ».
+- Historique des migrations (date, administrateur, fichier, lignes, importées, doublons, rejets) et journal d'audit.
+- Toutes les données sont rattachées à l'établissement et protégées par RLS (tests : `tests/db/migration.test.mjs`).
+- Fichiers d'exemple : [`docs/exemples/`](docs/exemples) ; modèles CSV téléchargeables depuis l'écran.
