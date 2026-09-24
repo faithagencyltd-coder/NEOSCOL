@@ -1,92 +1,143 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { MessageSquareText, PencilLine, RotateCw, Smartphone, UserRound } from "lucide-react";
+import { useActionState, useEffect, useRef, useState } from "react";
 
+import { AnimatedOTP } from "@/components/motion/animated-otp";
 import { ActionForm } from "@/components/shared/action-form";
-import { SubmitButton } from "@/components/shared/submit-button";
 import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { FormField } from "@/components/ui/form-field";
-import { Input } from "@/components/ui/input";
 import { requestParentOtp, verifyPhoneOtp } from "@/features/auth/actions";
+import { AuthInput, AuthSubmit } from "@/features/auth/components/auth-input";
+import { cn } from "@/lib/utils/cn";
 
-/** Connexion parents : téléphone + nom + prénom, puis code à usage unique (SMS). */
+const RESEND_SECONDS = 30;
+
+/**
+ * Connexion parents : téléphone + nom + prénom, puis code à usage unique (SMS).
+ * Étape 2 : saisie case par case, validation automatique au 6e chiffre,
+ * compte à rebours avant renvoi, secousse en cas de code erroné.
+ */
 export function PhoneSignInForm({ next }: { next?: string }) {
   const [requestState, requestAction, requestPending] = useActionState(requestParentOtp, null);
   const [verifyState, verifyAction, verifyPending] = useActionState(verifyPhoneOtp, null);
   const [editing, setEditing] = useState(false);
+  const [code, setCode] = useState("");
+  const [sentAt, setSentAt] = useState(0);
+  const [now, setNow] = useState(0);
+  const [lastRequest, setLastRequest] = useState<FormData | null>(null);
+  const verifyForm = useRef<HTMLFormElement>(null);
 
   const phone = requestState?.ok && !editing ? requestState.data?.phone : undefined;
+  const remaining = Math.max(0, RESEND_SECONDS - Math.floor((now - sentAt) / 1000));
+
+  useEffect(() => {
+    if (!phone) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [phone]);
+
+  const sendCode = (formData: FormData) => {
+    setLastRequest(formData);
+    setEditing(false);
+    setCode("");
+    const t = Date.now();
+    setSentAt(t);
+    setNow(t);
+    requestAction(formData);
+  };
 
   if (!phone) {
     const errors = requestState && !requestState.ok ? requestState.fieldErrors : undefined;
     return (
-      <ActionForm
-        dispatch={(formData) => {
-          setEditing(false);
-          requestAction(formData);
-        }}
-        pending={requestPending}
-        className="grid gap-4"
-        noValidate
-      >
-        {requestState && !requestState.ok ? <Alert tone="danger">{requestState.message}</Alert> : null}
-        <FormField id="phone" label="Numéro de téléphone" hint="Format international, ex. +225 07 00 00 00 01" errors={errors?.phone}>
-          <Input
-            id="phone"
-            name="phone"
-            type="tel"
-            autoComplete="tel"
-            inputMode="tel"
-            placeholder="+225 07 00 00 00 01"
-            required
-            aria-invalid={Boolean(errors?.phone)}
-            aria-describedby={errors?.phone ? "phone-error" : "phone-hint"}
-          />
-        </FormField>
+      <ActionForm dispatch={sendCode} pending={requestPending} className="stagger grid gap-4" noValidate>
+        {requestState && !requestState.ok && !errors ? (
+          <div className="anim-shake">
+            <Alert tone="danger">{requestState.message}</Alert>
+          </div>
+        ) : null}
+        <AuthInput
+          id="phone"
+          name="phone"
+          type="tel"
+          icon={Smartphone}
+          label="Numéro de téléphone"
+          placeholder="Téléphone (+225 07 00 00 00 01)"
+          autoComplete="tel"
+          inputMode="tel"
+          required
+          error={errors?.phone?.[0]}
+        />
         <div className="grid gap-4 sm:grid-cols-2">
-          <FormField id="last_name" label="Nom" errors={errors?.last_name}>
-            <Input id="last_name" name="last_name" autoComplete="family-name" required aria-invalid={Boolean(errors?.last_name)} />
-          </FormField>
-          <FormField id="first_name" label="Prénom" errors={errors?.first_name}>
-            <Input id="first_name" name="first_name" autoComplete="given-name" required aria-invalid={Boolean(errors?.first_name)} />
-          </FormField>
+          <AuthInput id="last_name" name="last_name" icon={UserRound} label="Nom" autoComplete="family-name" required error={errors?.last_name?.[0]} />
+          <AuthInput id="first_name" name="first_name" icon={UserRound} label="Prénom" autoComplete="given-name" required error={errors?.first_name?.[0]} />
         </div>
-        <SubmitButton className="w-full" size="lg" pendingLabel="Envoi du code…">
+        <AuthSubmit pending={requestPending} pendingLabel="Envoi du code…">
           Recevoir un code par SMS
-        </SubmitButton>
+        </AuthSubmit>
       </ActionForm>
     );
   }
 
-  const errors = verifyState && !verifyState.ok ? verifyState.fieldErrors : undefined;
+  const failed = verifyState && !verifyState.ok;
+  const status = verifyPending ? "verifying" : failed && code.length === 6 ? "error" : "idle";
   return (
-    <ActionForm dispatch={verifyAction} pending={verifyPending} className="grid gap-4" noValidate>
-      <Alert tone="info">{requestState?.message}</Alert>
-      {verifyState && !verifyState.ok ? <Alert tone="danger">{verifyState.message}</Alert> : null}
+    <ActionForm ref={verifyForm} dispatch={verifyAction} pending={verifyPending} className="anim-fade-up grid gap-5" noValidate>
+      <div className="flex items-start gap-3 rounded-2xl bg-primary-soft/70 p-3.5 text-sm">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+          <MessageSquareText className="anim-pop size-5" aria-hidden />
+        </span>
+        <p className="grid gap-0.5">
+          <span className="font-semibold">Code envoyé</span>
+          <span className="text-muted-foreground">
+            {requestState?.message} ({phone})
+          </span>
+        </p>
+      </div>
       <input type="hidden" name="phone" value={phone} />
       <input type="hidden" name="suite" value={next ?? ""} />
-      <FormField id="token" label="Code reçu par SMS" errors={errors?.token}>
-        <Input
-          id="token"
-          name="token"
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          pattern="\d{6}"
-          maxLength={6}
-          placeholder="••••••"
-          className="text-center text-lg tracking-[0.5em]"
-          required
-          aria-invalid={Boolean(errors?.token)}
-          aria-describedby={errors?.token ? "token-error" : undefined}
-        />
-      </FormField>
-      <SubmitButton className="w-full" size="lg" pendingLabel="Vérification…">
+      <AnimatedOTP
+        name="token"
+        value={code}
+        status={status}
+        autoFocus
+        onChange={(value) => {
+          setCode(value);
+          // Validation automatique dès le 6e chiffre.
+          if (value.length === 6 && !verifyPending) window.setTimeout(() => verifyForm.current?.requestSubmit(), 120);
+        }}
+      />
+      {failed ? (
+        <p role="alert" className="anim-fade-up -mt-2 text-center text-sm font-medium text-danger">
+          {verifyState.message}
+        </p>
+      ) : null}
+      <AuthSubmit pending={verifyPending} pendingLabel="Vérification du code…">
         Valider le code
-      </SubmitButton>
-      <Button type="button" variant="link" onClick={() => setEditing(true)}>
-        Modifier le numéro
-      </Button>
+      </AuthSubmit>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+        <button type="button" onClick={() => setEditing(true)} className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline">
+          <PencilLine className="size-4" aria-hidden /> Modifier le numéro
+        </button>
+        <button
+          type="button"
+          disabled={remaining > 0 || requestPending || !lastRequest}
+          onClick={() => lastRequest && sendCode(lastRequest)}
+          className={cn("inline-flex items-center gap-1.5 font-medium", remaining > 0 ? "text-muted-foreground" : "text-primary hover:underline")}
+          aria-live="polite"
+        >
+          <RotateCw className={cn("size-4", requestPending && "[animation:spin-slow_0.8s_linear_infinite]")} aria-hidden />
+          {remaining > 0 ? (
+            <span>
+              Renvoyer dans <span className="tabular-nums">0:{String(remaining).padStart(2, "0")}</span>
+            </span>
+          ) : (
+            "Renvoyer le code"
+          )}
+        </button>
+      </div>
+      <div className="h-1 overflow-hidden rounded-full bg-surface-muted" aria-hidden>
+        <div className="h-full rounded-full bg-primary transition-[width] duration-1000 ease-linear" style={{ width: `${(remaining / RESEND_SECONDS) * 100}%` }} />
+      </div>
     </ActionForm>
   );
 }

@@ -1,54 +1,50 @@
 "use client";
 
+import { Lock, Mail } from "lucide-react";
 import Link from "next/link";
 import { useActionState } from "react";
 
 import { ActionForm } from "@/components/shared/action-form";
-import { SubmitButton } from "@/components/shared/submit-button";
 import { Alert } from "@/components/ui/alert";
-import { FormField } from "@/components/ui/form-field";
-import { Input } from "@/components/ui/input";
 import { signInWithPassword } from "@/features/auth/actions";
+import { AuthInput, AuthSubmit } from "@/features/auth/components/auth-input";
 
+/** Personnel et enseignants : e-mail ou matricule + mot de passe. */
 export function PasswordSignInForm({ next }: { next?: string }) {
   const [state, action, pending] = useActionState(signInWithPassword, null);
   const errors = state && !state.ok ? state.fieldErrors : undefined;
 
   return (
-    <ActionForm dispatch={action} pending={pending} className="grid gap-4" noValidate>
-      {state && !state.ok ? <Alert tone="danger">{state.message}</Alert> : null}
+    <ActionForm dispatch={action} pending={pending} className="stagger grid gap-4" noValidate>
+      {state && !state.ok && !errors ? (
+        <div className="anim-shake">
+          <Alert tone="danger">{state.message}</Alert>
+        </div>
+      ) : null}
       <input type="hidden" name="suite" value={next ?? ""} />
-      <FormField id="email" label="Adresse e-mail ou matricule" hint="ex. prenom.nom@ecole.ci ou EMP-DEMO-0001" errors={errors?.email}>
-        <Input
-          id="email"
-          name="email"
-          type="text"
-          autoComplete="username"
-          autoCapitalize="none"
-          required
-          aria-invalid={Boolean(errors?.email)}
-          aria-describedby={errors?.email ? "email-error" : undefined}
-        />
-      </FormField>
-      <FormField id="password" label="Mot de passe" errors={errors?.password}>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          aria-invalid={Boolean(errors?.password)}
-          aria-describedby={errors?.password ? "password-error" : undefined}
-        />
-      </FormField>
-      <div className="flex justify-end">
-        <Link href="/mot-de-passe-oublie" className="text-sm font-medium text-primary hover:underline">
-          Mot de passe oublié ?
+      <AuthInput
+        id="email"
+        name="email"
+        icon={Mail}
+        label="Adresse e-mail ou matricule"
+        placeholder="E-mail ou matricule (EMP-…)"
+        autoComplete="username"
+        autoCapitalize="none"
+        required
+        error={errors?.email?.[0]}
+      />
+      <AuthInput id="password" name="password" type="password" icon={Lock} label="Mot de passe" autoComplete="current-password" required error={errors?.password?.[0]} />
+      <AuthSubmit pending={pending} pendingLabel="Connexion en cours…">
+        Se connecter
+      </AuthSubmit>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+        <Link href="/mot-de-passe-oublie" className="group inline-flex items-center gap-1.5 font-medium text-primary">
+          <Lock className="size-4 transition-transform group-hover:-rotate-12" aria-hidden />
+          <span className="bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat transition-[background-size] duration-300 group-hover:bg-[length:100%_1px]">
+            Mot de passe oublié ?
+          </span>
         </Link>
       </div>
-      <SubmitButton className="w-full" size="lg" pendingLabel="Connexion…">
-        Se connecter
-      </SubmitButton>
     </ActionForm>
   );
 }

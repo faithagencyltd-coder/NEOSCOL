@@ -240,8 +240,9 @@ await parent.getByLabel("Numéro de téléphone").fill("+2250700000001");
 await parent.getByLabel("Nom", { exact: true }).fill("BAMBA");
 await parent.getByLabel("Prénom").fill("Adjoua");
 await parent.getByRole("button", { name: "Recevoir un code par SMS" }).click();
-await parent.getByLabel("Code reçu par SMS").fill("123456");
-await parent.getByRole("button", { name: "Valider le code" }).click();
+// Saisie case par case : validation automatique au 6e chiffre.
+await parent.getByLabel("Chiffre 1 sur 6").click();
+await parent.keyboard.type("123456");
 await parent.waitForURL(/\/portail$/);
 ok("parent connecté (téléphone + nom + prénom + OTP)");
 check((await parent.getByRole("radio").count()) === 2, "parent : ses 2 enfants");
