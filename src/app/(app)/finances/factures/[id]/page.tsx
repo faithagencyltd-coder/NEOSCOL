@@ -64,7 +64,7 @@ export default async function InvoicePage({ params, searchParams }: PageProps<"/
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {issued && remaining > 0 && can(context, "finance.payments.create") ? (
+          {issued && can(context, "finance.payments.create") ? (
             <PaymentDialog invoiceId={invoice.id} balance={remaining} currency={context.organization.currency} />
           ) : null}
           {can(context, "documents.generate") ? (

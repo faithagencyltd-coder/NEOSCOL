@@ -26,6 +26,8 @@ export function PaymentDialog({ invoiceId, balance, currency }: { invoiceId: str
   const typed = Math.max(0, Number(amount) || 0);
   const after = Math.max(0, balance - typed);
   const tooMuch = typed > balance;
+  // Facture soldée : plus de bouton, mais la fenêtre ouverte reste affichée (succès, reçu à imprimer).
+  if (balance <= 0 && !open) return null;
   const done = state?.ok ? state.data : undefined;
   const errors = state && !state.ok ? (state.fieldErrors ?? {}) : {};
   return (
