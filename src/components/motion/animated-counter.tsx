@@ -19,36 +19,42 @@ export function AnimatedCounter({
   className?: string;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const from = useRef(0);
-  const [display, setDisplay] = useState(0);
+  const shown = useRef<number | null>(null);
+  // Valeur réelle dès le rendu serveur : jamais de « 0 » affiché à tort (impression, capture, sans JS).
+  const [display, setDisplay] = useState(value);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let frame = 0;
-    const run = () => {
-      if (reduce) {
+    const run = (origin: number) => {
+      if (reduce || origin === value) {
         setDisplay(value);
-        from.current = value;
+        shown.current = value;
         return;
       }
       const start = performance.now();
-      const origin = from.current;
       const tick = (now: number) => {
         const t = Math.min(1, (now - start) / duration);
         const eased = 1 - Math.pow(1 - t, 3);
         setDisplay(origin + (value - origin) * eased);
         if (t < 1) frame = requestAnimationFrame(tick);
-        else from.current = value;
+        else shown.current = value;
       };
       frame = requestAnimationFrame(tick);
     };
+    // Mise à jour d'une valeur déjà affichée (après un paiement…) : de l'ancienne à la nouvelle.
+    if (shown.current !== null) {
+      run(shown.current);
+      return () => cancelAnimationFrame(frame);
+    }
+    // Première apparition : comptage depuis 0 quand le compteur entre dans l'écran.
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
           observer.disconnect();
-          run();
+          run(0);
         }
       },
       { threshold: 0.2 },
@@ -72,6 +78,7 @@ export function AnimatedCounter({
 
 /** Montant animé (FCFA par défaut). */
 export function AnimatedMoney({ value, currency = "XOF", className }: { value: number; currency?: string; className?: string }) {
-  const nf = new Intl.NumberFormat("fr-FR", { style: "currency", currency, maximumFractionDigits: 0 });
-  return <AnimatedCounter value={value} format={(n) => nf.format(Math.round(n))} className={className} />;
+  const whole = currency === "XOF" || currency === "XAF";
+  const nf = new Intl.NumberFormat("fr-FR", { style: "currency", currency, maximumFractionDigits: whole ? 0 : 2 });
+  return <AnimatedCounter value={value} format={(n) => nf.format(whole ? Math.round(n) : n)} className={className} />;
 }

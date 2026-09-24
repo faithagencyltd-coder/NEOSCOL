@@ -25,7 +25,8 @@ export default async function KioskPage() {
         id: s.id,
         at: s.scanned_at,
         result: s.result as "accepted" | "rejected",
-        name: s.staff ? `${s.staff.first_name} ${s.staff.last_name}` : "Badge refusé",
+        // Le nom n'est lisible que si la RLS l'autorise : sinon, libellé selon le résultat réel du scan.
+        name: s.staff ? `${s.staff.first_name} ${s.staff.last_name}` : s.result === "accepted" ? "Badge accepté" : "Badge refusé",
         message: s.message,
       }))}
     />

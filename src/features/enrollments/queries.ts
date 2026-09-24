@@ -114,3 +114,38 @@ export async function getStudentSummary(organizationId: string, studentId: strin
     .maybeSingle();
   return data;
 }
+
+/**
+ * Tarifs obligatoires des années ouvertes, pour l'aperçu « Tarification » de
+ * l'assistant d'inscription (même règle que enrollment_fee_preview : le tarif
+ * le plus précis l'emporte). Lecture sous RLS (enrollments.manage ou finance.read).
+ */
+export async function getEnrollmentFeeRates(organizationId: string, yearIds: string[]) {
+  if (yearIds.length === 0) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("fee_rates")
+    .select("id, academic_year_id, fee_type_id, level_id, program_id, class_id, amount, installment_plan, fee_type:fee_types(name, category, is_active)")
+    .eq("organization_id", organizationId)
+    .eq("is_mandatory", true)
+    .in("academic_year_id", yearIds);
+  return (data ?? [])
+    .filter((r) => r.fee_type?.is_active)
+    .map((r) => ({
+      id: r.id,
+      yearId: r.academic_year_id,
+      feeTypeId: r.fee_type_id,
+      name: r.fee_type?.name ?? "Frais",
+      category: r.fee_type?.category ?? "other",
+      levelId: r.level_id,
+      programId: r.program_id,
+      classId: r.class_id,
+      amount: Number(r.amount),
+      plan: (Array.isArray(r.installment_plan) ? r.installment_plan : []).map((s) => {
+        const step = (s ?? {}) as { label?: string; due_on?: string; percent?: number };
+        return { label: step.label ?? "", dueOn: step.due_on ?? "", percent: Number(step.percent ?? 0) };
+      }),
+    }));
+}
+
+export type EnrollmentFeeRate = Awaited<ReturnType<typeof getEnrollmentFeeRates>>[number];

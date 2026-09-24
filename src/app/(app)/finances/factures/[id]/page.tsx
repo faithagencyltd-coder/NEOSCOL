@@ -18,6 +18,7 @@ import { can } from "@/lib/auth/session";
 import { INVOICE_PAYMENT_STATUS, PAYMENT_METHOD } from "@/lib/labels";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/utils/format";
 import { isUuid } from "@/lib/utils/search-params";
+import { AnimatedMoney } from "@/components/motion/animated-counter";
 
 export const metadata: Metadata = { title: "Facture" };
 
@@ -104,18 +105,35 @@ export default async function InvoicePage({ params, searchParams }: PageProps<"/
         </div>
       </Card>
 
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          ["Total", money(invoice.total), ""],
-          ["Payé", money(balance?.paid), "text-success"],
-          ["Reste dû", money(remaining), remaining > 0 ? "text-danger" : "text-success"],
-        ].map(([label, value, tone]) => (
+      <div className="stagger grid grid-cols-3 gap-3">
+        {(
+          [
+            ["Total", Number(invoice.total), ""],
+            ["Payé", Number(balance?.paid ?? 0), "text-success"],
+            ["Reste dû", remaining, remaining > 0 ? "text-danger" : "text-success"],
+          ] as const
+        ).map(([label, value, tone]) => (
           <Card key={label} className="grid gap-1 p-4">
             <span className="text-sm text-muted-foreground">{label}</span>
-            <strong className={`font-display text-xl tabular-nums ${tone}`}>{value}</strong>
+            <strong className={`font-display text-xl tabular-nums ${tone}`}>
+              <AnimatedMoney value={value} currency={context.organization.currency} />
+            </strong>
           </Card>
         ))}
       </div>
+      {Number(invoice.total) > 0 ? (
+        <div className="grid gap-1.5" aria-hidden>
+          <div className="h-2 overflow-hidden rounded-full bg-surface-muted">
+            <div
+              className="h-full origin-left animate-[bar-grow-x_0.9s_var(--ease-out)_both] rounded-full bg-success"
+              style={{ width: `${Math.min(100, (Number(balance?.paid ?? 0) / Number(invoice.total)) * 100)}%` }}
+            />
+          </div>
+          <p className="text-right text-xs tabular-nums text-muted-foreground">
+            {Math.round(Math.min(100, (Number(balance?.paid ?? 0) / Number(invoice.total)) * 100))} % réglé
+          </p>
+        </div>
+      ) : null}
 
       <div className="grid gap-5 lg:grid-cols-2">
         <Card className="overflow-hidden">

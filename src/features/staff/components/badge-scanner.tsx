@@ -1,10 +1,11 @@
 "use client";
 
 import jsQR from "jsqr";
-import { Camera, CameraOff, CheckCircle2, Keyboard, LogOut, Maximize, ScanLine, XCircle } from "lucide-react";
+import { Camera, CameraOff, Check, CheckCircle2, Keyboard, LogOut, Maximize, ScanLine, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
+import { AnimatedError, AnimatedSuccess } from "@/components/motion/animated-feedback";
 import { scanBadge } from "@/features/staff/actions";
 import type { ScanResult } from "@/features/staff/schemas";
 import { cn } from "@/lib/utils/cn";
@@ -19,6 +20,53 @@ declare global {
 }
 
 const RESET_AFTER_MS = 6000;
+
+/** Titre court affiché pour chaque motif de refus renvoyé par scan_staff_badge. */
+const REJECTION_TITLES: Record<string, string> = {
+  unknown_badge: "QR invalide",
+  revoked_badge: "Badge désactivé",
+  other_organization: "Utilisateur non autorisé",
+  inactive_staff: "Utilisateur non autorisé",
+  duplicate: "Scan déjà enregistré",
+  already_checked_in: "Déjà pointé",
+};
+
+/** Étapes réelles d'un scan : lecture du code, analyse locale, vérification serveur, résultat. */
+type Phase = "idle" | "verify" | "done";
+const PHASES = ["Scan", "Analyse", "Vérification", "Résultat"] as const;
+
+function PhaseTrack({ phase, success }: { phase: Phase; success: boolean | null }) {
+  // Scan et analyse sont faits dès que le code est lu ; la vérification dure le temps de l'appel serveur.
+  const reached = phase === "idle" ? -1 : phase === "verify" ? 2 : 3;
+  return (
+    <ol className="relative flex items-center justify-center gap-1.5 text-xs font-medium sm:gap-2" aria-label="Étapes du scan">
+      {PHASES.map((label, i) => {
+        const done = i < reached || (i === 3 && phase === "done");
+        const active = i === reached && phase !== "done";
+        const failed = i === 3 && phase === "done" && success === false;
+        return (
+          <li key={label} className="flex items-center gap-1.5 sm:gap-2">
+            <span
+              className={cn(
+                "flex items-center gap-1.5 rounded-full px-2.5 py-1 transition-all duration-300",
+                done && !failed && "bg-emerald-400/20 text-emerald-200",
+                failed && "bg-rose-400/20 text-rose-200",
+                active && "bg-[#22d3ee]/20 text-[#a5f3fc]",
+                !done && !active && !failed && "bg-white/5 text-[#6f86b8]",
+              )}
+            >
+              {done && !failed ? <Check className="anim-pop size-3.5" aria-hidden /> : null}
+              {failed ? <XCircle className="anim-pop size-3.5" aria-hidden /> : null}
+              {active ? <span className="size-3 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden /> : null}
+              {label}
+            </span>
+            {i < PHASES.length - 1 ? <span aria-hidden className={cn("h-px w-3 transition-colors sm:w-6", i < reached ? "bg-emerald-300/60" : "bg-white/15")} /> : null}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
 
 /**
  * Tablette « SCANNER LE BADGE » : caméra (BarcodeDetector ou jsQR), douchette
@@ -48,6 +96,8 @@ export function BadgeScanner({
   const [manual, setManual] = useState("");
   const [now, setNow] = useState(() => new Date());
   const [pending, startTransition] = useTransition();
+  const [phase, setPhase] = useState<Phase>("idle");
+  const [scanCount, setScanCount] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wedgeRef = useRef<HTMLInputElement>(null);
@@ -70,9 +120,16 @@ export function BadgeScanner({
     if (lastCode.current && lastCode.current.code === code && Date.now() - lastCode.current.at < 4000) return;
     lastCode.current = { code, at: Date.now() };
     busy.current = true;
+    if (resetTimer.current) clearTimeout(resetTimer.current);
+    setResult(null);
+    setError(null);
+    // Code lu et analysé localement (anti-rebond) : la vérification serveur commence.
+    setPhase("verify");
     startTransition(async () => {
       const response = await scanBadge(code);
       busy.current = false;
+      setPhase("done");
+      setScanCount((n) => n + 1);
       if (resetTimer.current) clearTimeout(resetTimer.current);
       if (!response.ok) {
         setResult(null);
@@ -96,6 +153,7 @@ export function BadgeScanner({
       resetTimer.current = setTimeout(() => {
         setResult(null);
         setError(null);
+        setPhase("idle");
       }, RESET_AFTER_MS);
       wedgeRef.current?.focus();
     });
@@ -185,7 +243,7 @@ export function BadgeScanner({
         <section className="grid content-start gap-5">
           <div
             className={cn(
-              "relative grid min-h-[22rem] place-items-center overflow-hidden rounded-3xl border p-6 text-center shadow-2xl backdrop-blur-xl transition-colors duration-300",
+              "relative grid min-h-[22rem] place-items-center overflow-hidden rounded-3xl border p-6 pb-16 text-center shadow-2xl backdrop-blur-xl transition-colors duration-300",
               result ? (accepted ? "border-emerald-400/60 bg-emerald-500/15" : "border-rose-400/60 bg-rose-500/15") : "border-white/15 bg-white/[0.06]",
             )}
             aria-live="assertive"
@@ -193,43 +251,59 @@ export function BadgeScanner({
             <video ref={videoRef} muted playsInline className={cn("absolute inset-0 size-full object-cover opacity-35", !cameraOn && "hidden")} />
             <canvas ref={canvasRef} className="hidden" />
             {result ? (
-              <div className="relative grid animate-[fade-in_0.25s_ease-out] justify-items-center gap-3">
-                {accepted ? <CheckCircle2 className="size-20 text-emerald-300" aria-hidden /> : <XCircle className="size-20 text-rose-300" aria-hidden />}
+              <div key={scanCount} className="relative grid animate-[fade-in_0.25s_ease-out] justify-items-center gap-3">
+                {accepted ? (
+                  <AnimatedSuccess className="size-24 text-emerald-300" label="Badge accepté" />
+                ) : (
+                  <AnimatedError className="size-24 text-rose-300" label="Badge refusé" />
+                )}
+                <p className={cn("text-sm font-semibold uppercase tracking-[0.2em]", accepted ? "text-emerald-200" : "text-rose-200")}>
+                  {accepted ? (result.kind === "departure" ? "Départ enregistré" : "Succès") : (REJECTION_TITLES[result.reason ?? ""] ?? "Badge refusé")}
+                </p>
                 {result.staff ? (
-                  <div className="grid">
+                  <div className="anim-fade-up grid" style={{ "--delay": "150ms" } as React.CSSProperties}>
                     <p className="font-display text-3xl font-semibold">{result.staff.name}</p>
                     <p className="text-[#c7d3f0]">{result.staff.job_title}</p>
                   </div>
                 ) : null}
-                <p className="max-w-lg text-xl font-medium" data-testid="scan-message">
+                <p className="anim-fade-up max-w-lg text-xl font-medium" style={{ "--delay": "220ms" } as React.CSSProperties} data-testid="scan-message">
                   {result.message}
                 </p>
                 {result.lesson ? (
-                  <p className="rounded-2xl bg-white/10 px-5 py-3 text-lg">
+                  <p className="anim-fade-up rounded-2xl bg-white/10 px-5 py-3 text-lg" style={{ "--delay": "300ms" } as React.CSSProperties}>
                     Appel disponible : <strong>{result.lesson.subject}</strong> · {result.lesson.class} · {result.lesson.starts_at}–{result.lesson.ends_at}
                     {result.lesson.room ? ` · ${result.lesson.room}` : ""}
                   </p>
                 ) : null}
               </div>
             ) : error ? (
-              <div className="relative grid justify-items-center gap-3">
-                <XCircle className="size-16 text-rose-300" aria-hidden />
+              <div key={scanCount} className="relative grid animate-[fade-in_0.25s_ease-out] justify-items-center gap-3">
+                <AnimatedError className="size-20 text-rose-300" label="Scan impossible" />
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-200">Vérification impossible</p>
                 <p className="text-lg">{error}</p>
               </div>
             ) : (
               <div className="relative grid justify-items-center gap-4">
-                <span className="relative flex size-28 items-center justify-center rounded-3xl border-2 border-dashed border-[#22d3ee]/70">
-                  <ScanLine className="size-14 text-[#22d3ee]" aria-hidden />
-                  <span aria-hidden className="absolute inset-x-3 top-1/2 h-0.5 animate-pulse bg-[#22d3ee]" />
+                <span className={cn("relative flex size-32 items-center justify-center", pending && "animate-pulse")}>
+                  {/* Viseur : quatre coins et ligne de lecture animée. */}
+                  <span aria-hidden className="absolute left-0 top-0 size-7 rounded-tl-2xl border-l-4 border-t-4 border-[#22d3ee]" />
+                  <span aria-hidden className="absolute right-0 top-0 size-7 rounded-tr-2xl border-r-4 border-t-4 border-[#22d3ee]" />
+                  <span aria-hidden className="absolute bottom-0 left-0 size-7 rounded-bl-2xl border-b-4 border-l-4 border-[#22d3ee]" />
+                  <span aria-hidden className="absolute bottom-0 right-0 size-7 rounded-br-2xl border-b-4 border-r-4 border-[#22d3ee]" />
+                  <ScanLine className="size-14 text-[#22d3ee]/80" aria-hidden />
+                  <span aria-hidden className="scan-beam absolute inset-x-3 h-0.5 rounded-full bg-[#22d3ee] shadow-[0_0_12px_2px_rgba(34,211,238,0.7)]" />
                 </span>
-                <h1 className="font-display text-4xl font-bold tracking-wide">SCANNER LE BADGE</h1>
+                <h1 className="font-display text-4xl font-bold tracking-wide">{pending ? "VÉRIFICATION…" : "SCANNER LE BADGE"}</h1>
                 <p className="max-w-md text-[#c7d3f0]">
-                  Présentez le QR Code de votre badge {cameraOn ? "devant la caméra" : "à la douchette"}. L&apos;arrivée est enregistrée et le cours en cours est
-                  débloqué.
+                  {pending
+                    ? "Contrôle du badge, de l'établissement et du cours en cours."
+                    : <>Présentez le QR Code de votre badge {cameraOn ? "devant la caméra" : "à la douchette"}. L&apos;arrivée est enregistrée et le cours en cours est débloqué.</>}
                 </p>
-                {pending ? <p className="text-sm text-[#9fb4de]">Vérification…</p> : null}
               </div>
             )}
+            <div className="absolute inset-x-0 bottom-4 px-4">
+              <PhaseTrack phase={phase} success={phase === "done" ? Boolean(accepted) : null} />
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-3">
@@ -277,7 +351,7 @@ export function BadgeScanner({
                 placeholder="NEOSCOL-BADGE:…"
               />
             </label>
-            <button type="submit" disabled={pending || !manual.trim()} className="h-12 rounded-xl bg-[#1e6fff] px-6 font-semibold disabled:opacity-50">
+            <button type="submit" disabled={pending || !manual.trim()} className="press h-12 rounded-xl bg-[#1e6fff] px-6 font-semibold transition-colors hover:bg-[#3b82f6] disabled:opacity-50">
               Valider
             </button>
           </form>
@@ -291,7 +365,7 @@ export function BadgeScanner({
             ) : (
               <ul className="grid gap-2">
                 {recent.map((scan) => (
-                  <li key={scan.id} className="flex items-start gap-3 rounded-xl bg-white/[0.05] px-3 py-2">
+                  <li key={scan.id} className="anim-fade-up flex items-start gap-3 rounded-xl bg-white/[0.05] px-3 py-2">
                     {scan.result === "accepted" ? (
                       <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-300" aria-hidden />
                     ) : (

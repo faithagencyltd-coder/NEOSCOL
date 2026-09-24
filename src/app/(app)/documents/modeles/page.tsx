@@ -78,7 +78,7 @@ export default async function DocumentStudioPage() {
           const found = templates.find((x) => x.kind === kind && x.is_default);
           const t = found && !isStandardLayout(found.layout, kind) ? found : undefined;
           return (
-            <Card key={kind} className="rise grid content-between gap-3 p-4" style={{ "--delay": `${i * 35}ms` } as React.CSSProperties}>
+            <Card key={kind} interactive className="rise grid content-between gap-3 p-4" style={{ "--delay": `${i * 35}ms` } as React.CSSProperties}>
               <div className="grid gap-1">
                 <h2 className="flex flex-wrap items-center gap-2 font-semibold">
                   {d.label}
@@ -124,7 +124,7 @@ export default async function DocumentStudioPage() {
           <EmptyState icon={FileCog} title="Aucun modèle personnalisé" description="Créez un modèle : il sera proposé à la délivrance depuis le dossier de l'élève." />
         ) : (
           <CardContent>
-            <ul className="divide-y divide-border">
+            <ul className="stagger divide-y divide-border">
               {custom.map((t) => (
                 <li key={t.id} className="flex flex-wrap items-center gap-3 py-3">
                   <div className="grid min-w-0 flex-1">

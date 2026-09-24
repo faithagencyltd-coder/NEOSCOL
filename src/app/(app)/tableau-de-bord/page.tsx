@@ -79,7 +79,7 @@ export default async function DashboardPage() {
   const stats = [
     overview.students_active !== undefined && {
       label: `${v.students} actifs`,
-      value: formatNumber(overview.students_active),
+      value: { count: overview.students_active },
       hint: overview.students_by_sex
         ? v.family === "school"
           ? `${overview.students_by_sex.F ?? 0} filles · ${overview.students_by_sex.M ?? 0} garçons`
@@ -90,27 +90,27 @@ export default async function DashboardPage() {
     },
     overview.enrollments_pending !== undefined && {
       label: "Inscriptions en attente",
-      value: formatNumber(overview.enrollments_pending),
+      value: { count: overview.enrollments_pending },
       hint: `${overview.enrollments_validated ?? 0} inscriptions · ${overview.reenrollments_validated ?? 0} réinscriptions validées`,
       icon: ClipboardList,
       tone: "warning" as const,
     },
     overview.classes !== undefined && {
       label: v.classes,
-      value: formatNumber(overview.classes),
+      value: { count: overview.classes },
       hint: overview.teachers !== undefined ? `${overview.teachers} ${v.teachers.toLowerCase()}` : undefined,
       icon: School,
       tone: "info" as const,
     },
     overview.payments_month !== undefined && {
       label: "Encaissé ce mois",
-      value: money(overview.payments_month),
+      value: { amount: overview.payments_month, currency },
       icon: Wallet,
       tone: "success" as const,
     },
     overview.outstanding_total !== undefined && {
       label: "Reste à encaisser",
-      value: money(overview.outstanding_total),
+      value: { amount: overview.outstanding_total, currency },
       hint: `${overview.overdue_invoices ?? 0} facture(s) en retard`,
       hintTone: (overview.overdue_invoices ?? 0) > 0 ? ("danger" as const) : undefined,
       icon: AlertTriangle,
@@ -118,7 +118,7 @@ export default async function DashboardPage() {
     },
     overview.absences_week !== undefined && {
       label: "Absences (7 jours)",
-      value: formatNumber(overview.absences_week),
+      value: { count: overview.absences_week },
       hint: `${overview.absences_today ?? 0} aujourd'hui · ${overview.lates_week ?? 0} retards`,
       icon: CalendarX,
       tone: "warning" as const,
@@ -171,7 +171,7 @@ export default async function DashboardPage() {
       </div>
 
       {stats.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {stats.map((stat) => (
             <StatCard key={stat.label} {...stat} />
           ))}
@@ -179,7 +179,7 @@ export default async function DashboardPage() {
       ) : null}
 
       {canFinance ? (
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="anim-fade-up grid gap-4 lg:grid-cols-3" style={{ "--delay": "120ms" } as React.CSSProperties}>
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Encaissements récents</CardTitle>
@@ -190,7 +190,7 @@ export default async function DashboardPage() {
                 <EmptyState icon={Wallet} title="Aucun paiement enregistré" />
               ) : (
                 <>
-                  <table className="hidden w-full text-sm sm:table">
+                  <table className="table-anim hidden w-full text-sm sm:table">
                     <thead>
                       <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground">
                         <th className="pb-2 font-semibold">Reçu</th>
@@ -222,7 +222,7 @@ export default async function DashboardPage() {
                       })}
                     </tbody>
                   </table>
-                  <ul className="grid gap-2 sm:hidden">
+                  <ul className="stagger grid gap-2 sm:hidden">
                     {payments.map((payment) => (
                       <li key={payment.id} className="flex items-center justify-between gap-3 rounded-xl border border-border p-3">
                         <div className="grid min-w-0">
@@ -266,7 +266,7 @@ export default async function DashboardPage() {
         </div>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="anim-fade-up grid gap-4 lg:grid-cols-3" style={{ "--delay": "180ms" } as React.CSSProperties}>
         {overview.recent_activity ? (
           <Card className="lg:col-span-2">
             <CardHeader>
@@ -277,7 +277,7 @@ export default async function DashboardPage() {
               {overview.recent_activity.length === 0 ? (
                 <EmptyState icon={Users} title="Aucune activité" />
               ) : (
-                <ul className="divide-y divide-border">
+                <ul className="stagger divide-y divide-border">
                   {overview.recent_activity.map((entry) => (
                     <li key={entry.id} className="flex items-start justify-between gap-3 py-2.5 text-sm">
                       <div className="min-w-0">
@@ -307,12 +307,12 @@ export default async function DashboardPage() {
                   <CheckCircle2 className="size-[18px]" aria-hidden /> Aucune alerte en cours.
                 </p>
               ) : (
-                <ul className="grid gap-2.5">
+                <ul className="stagger grid gap-2.5">
                   {alerts.map((alert) => (
                     <li
                       key={alert.label}
                       className={cn(
-                        "flex items-center gap-3 rounded-xl p-3 text-sm font-medium",
+                        "flex items-center gap-3 rounded-xl p-3 text-sm font-medium transition-transform duration-200 hover:translate-x-1",
                         alert.tone === "danger" && "bg-danger-soft text-danger",
                         alert.tone === "warning" && "bg-warning-soft text-warning",
                         alert.tone === "info" && "bg-primary-soft text-primary",
@@ -371,7 +371,7 @@ export default async function DashboardPage() {
         </Card>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="anim-fade-up grid gap-4 lg:grid-cols-2" style={{ "--delay": "240ms" } as React.CSSProperties}>
         {teaching.length > 0 ? (
           <Card>
             <CardHeader>
@@ -379,7 +379,7 @@ export default async function DashboardPage() {
               <CardDescription>Classes et matières qui vous sont affectées</CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="divide-y divide-border">
+              <ul className="stagger divide-y divide-border">
                 {teaching.map((item) => (
                   <li key={item.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
                     <div className="flex min-w-0 items-center gap-3">
@@ -431,7 +431,7 @@ export default async function DashboardPage() {
             {announcements.length === 0 ? (
               <EmptyState icon={Megaphone} title="Aucune annonce" description="Les annonces publiées apparaîtront ici." />
             ) : (
-              <ul className="grid gap-3">
+              <ul className="stagger grid gap-3">
                 {announcements.map((announcement) => (
                   <li key={announcement.id} className="flex gap-3 rounded-xl border border-border p-3">
                     <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">

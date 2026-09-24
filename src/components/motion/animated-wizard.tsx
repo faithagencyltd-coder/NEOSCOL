@@ -10,7 +10,18 @@ export type WizardStep = { key: string; label: string };
  * Barre de progression d'un assistant : la jauge avance en douceur, les étapes
  * validées affichent une coche animée, l'étape courante est mise en évidence.
  */
-export function AnimatedWizard({ steps, current, onSelect }: { steps: WizardStep[]; current: number; onSelect?: (index: number) => void }) {
+export function AnimatedWizard({
+  steps,
+  current,
+  reached = current,
+  onSelect,
+}: {
+  steps: WizardStep[];
+  current: number;
+  /** Étape la plus avancée déjà atteinte : on peut y revenir directement. */
+  reached?: number;
+  onSelect?: (index: number) => void;
+}) {
   const progress = steps.length > 1 ? (current / (steps.length - 1)) * 100 : 100;
   return (
     <nav aria-label="Étapes" className="grid gap-3">
@@ -25,14 +36,14 @@ export function AnimatedWizard({ steps, current, onSelect }: { steps: WizardStep
       </div>
       <ol className="flex gap-1 overflow-x-auto pb-1">
         {steps.map((step, i) => {
-          const done = i < current;
+          const done = i < current || (i <= reached && i !== current);
           const active = i === current;
           return (
             <li key={step.key} className="shrink-0">
               <button
                 type="button"
                 onClick={() => onSelect?.(i)}
-                disabled={!onSelect || i > current}
+                disabled={!onSelect || i > Math.max(current, reached)}
                 aria-current={active ? "step" : undefined}
                 className={cn(
                   "flex items-center gap-2 rounded-full px-2.5 py-1.5 text-xs font-medium transition-all duration-200",

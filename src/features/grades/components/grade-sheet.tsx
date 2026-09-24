@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { ActionForm } from "@/components/shared/action-form";
@@ -89,9 +90,17 @@ export function GradeSheet({
         ].map(([label, value]) => (
           <Card key={label} className="grid gap-0.5 p-3">
             <span className="text-xs text-muted-foreground">{label}</span>
-            <strong className="font-display text-lg tabular-nums">{value}</strong>
+            <strong key={value} className="anim-fade font-display text-lg tabular-nums">
+              {value}
+            </strong>
           </Card>
         ))}
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-surface-muted" aria-hidden>
+        <div
+          className="h-full rounded-full bg-success transition-[width] duration-300 ease-out"
+          style={{ width: `${students.length ? ((scores.length + students.filter((st) => rows[st.id]!.mention).length) / students.length) * 100 : 0}%` }}
+        />
       </div>
 
       <Card className="divide-y divide-border">
@@ -129,10 +138,11 @@ export function GradeSheet({
                     }
                   }}
                   className={cn(
-                    "h-11 w-20 rounded-xl border bg-surface px-3 text-right text-base font-semibold tabular-nums",
-                    bad ? "border-danger text-danger" : "border-input",
+                    "h-11 w-20 rounded-xl border bg-surface px-3 text-right text-base font-semibold tabular-nums transition-[border-color,box-shadow] duration-200 focus-visible:shadow-[0_0_0_4px_color-mix(in_srgb,var(--primary)_16%,transparent)]",
+                    bad ? "anim-shake border-danger text-danger" : n !== null ? "border-success/60" : "border-input",
                   )}
                 />
+                {!row.mention && n !== null && !bad ? <Check className="anim-pop size-4 text-success" aria-hidden /> : <span className="size-4" aria-hidden />}
                 <span className="text-sm text-muted-foreground">/ {maxScore}</span>
               </label>
               <select

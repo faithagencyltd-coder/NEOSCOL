@@ -51,6 +51,7 @@ import { can, canAny } from "@/lib/auth/session";
 import { INVOICE_PAYMENT_STATUS, PAYMENT_METHOD } from "@/lib/labels";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/utils/format";
 import { isUuid, pageParam, param } from "@/lib/utils/search-params";
+import { AnimatedMoney } from "@/components/motion/animated-counter";
 
 export const metadata: Metadata = { title: "Finances" };
 
@@ -173,18 +174,20 @@ async function SummarySection({ params }: { params: Params }) {
   return (
     <div className="grid gap-4">
       <PeriodForm tab="synthese" from={from} to={to} today={today} />
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="stagger grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[
-          { label: "Encaissements", value: money(summary.income), icon: TrendingUp, tone: "text-success" },
-          { label: "Dépenses", value: money(summary.spent), icon: TrendingDown, tone: "text-danger" },
-          { label: "Solde de la période", value: money(summary.net), icon: Wallet, tone: summary.net >= 0 ? "text-success" : "text-danger" },
-          { label: "Restes dus (total)", value: money(summary.outstanding), icon: Receipt, tone: "text-warning", hint: `${summary.overdueInvoices} facture(s) en retard` },
+          { label: "Encaissements", value: summary.income, icon: TrendingUp, tone: "text-success" },
+          { label: "Dépenses", value: summary.spent, icon: TrendingDown, tone: "text-danger" },
+          { label: "Solde de la période", value: summary.net, icon: Wallet, tone: summary.net >= 0 ? "text-success" : "text-danger" },
+          { label: "Restes dus (total)", value: summary.outstanding, icon: Receipt, tone: "text-warning", hint: `${summary.overdueInvoices} facture(s) en retard` },
         ].map(({ label, value, icon: Icon, tone, hint }) => (
-          <Card key={label} className="grid gap-1 p-4">
+          <Card key={label} interactive className="grid gap-1 p-4">
             <span className="flex items-center gap-2 text-sm text-muted-foreground">
               <Icon className="size-4" aria-hidden /> {label}
             </span>
-            <strong className={`font-display text-xl tabular-nums ${tone}`}>{value}</strong>
+            <strong className={`font-display text-xl tabular-nums ${tone}`}>
+              <AnimatedMoney value={value} currency={context.organization.currency} />
+            </strong>
             {hint ? <span className="text-xs text-muted-foreground">{hint}</span> : null}
           </Card>
         ))}
@@ -197,15 +200,23 @@ async function SummarySection({ params }: { params: Params }) {
           {summary.byCategory.length === 0 ? (
             <p className="text-sm text-muted-foreground">Aucune dépense sur la période.</p>
           ) : (
-            <ul className="grid gap-3">
-              {summary.byCategory.map(([name, total]) => (
-                <li key={name} className="grid gap-1">
+            <ul className="grid gap-1">
+              {summary.byCategory.map(([name, total], i) => (
+                <li key={name} className="group relative grid gap-1 rounded-lg px-2 py-1.5 transition-colors hover:bg-surface-muted/70">
                   <span className="flex justify-between text-sm">
                     <span>{name}</span>
-                    <span className="font-semibold tabular-nums">{money(total)}</span>
+                    <span className="font-semibold tabular-nums">
+                      {money(total)}
+                      <span className="ml-2 text-xs font-normal text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
+                        {Math.round((total / (summary.spent || 1)) * 100)} %
+                      </span>
+                    </span>
                   </span>
                   <span className="h-2 overflow-hidden rounded-full bg-surface-muted">
-                    <span className="block h-full rounded-full bg-primary" style={{ width: `${Math.max(4, (total / summary.spent) * 100)}%` }} />
+                    <span
+                      className="block h-full origin-left animate-[bar-grow-x_0.7s_var(--ease-out)_both] rounded-full bg-primary transition-[filter] group-hover:brightness-110"
+                      style={{ width: `${Math.max(4, (total / summary.spent) * 100)}%`, animationDelay: `${Math.min(i, 10) * 50}ms` }}
+                    />
                   </span>
                 </li>
               ))}

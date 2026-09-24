@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Plus } from "lucide-react";
+import { GripVertical, Minus, Pencil, Plus, ZoomIn } from "lucide-react";
 import { useActionState, useRef, useState } from "react";
 
 import { ActionForm } from "@/components/shared/action-form";
@@ -15,7 +15,9 @@ import { saveTemplate } from "@/features/documents/actions";
 import { fillText, sampleValues, TEMPLATE_DEFAULTS, TEMPLATE_VARIABLES } from "@/features/documents/templates";
 import type { TextDocumentKind } from "@/features/documents/types";
 import { vocabularyFor } from "@/lib/vocabulary";
+import { AnimatedSuccess } from "@/components/motion/animated-feedback";
 import { notifyResult } from "@/components/motion/animated-toast";
+import { cn } from "@/lib/utils/cn";
 
 type Initial = { id?: string; name: string; description: string; title: string; body: string; closing: string };
 
@@ -40,10 +42,20 @@ export function TemplateEditor({
   const [body, setBody] = useState(initial?.body ?? defaults.body);
   const [closing, setClosing] = useState(initial?.closing ?? defaults.closing);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const [zoom, setZoom] = useState(1);
+  const [dropping, setDropping] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [state, action, pending] = useActionState(async (prev: Awaited<ReturnType<typeof saveTemplate>> | null, formData: FormData) => {
     const result = await saveTemplate(prev, formData);
     notifyResult(result);
-    if (result.ok) setOpen(false);
+    if (result.ok) {
+      // « Modèle enregistré » reste visible un instant avant la fermeture.
+      setSaved(true);
+      setTimeout(() => {
+        setOpen(false);
+        setSaved(false);
+      }, 800);
+    }
     return result;
   }, null);
   const v = vocabularyFor(organization.type);
@@ -101,19 +113,39 @@ export function TemplateEditor({
               <Input id="t-desc" name="description" maxLength={300} defaultValue={initial?.description ?? ""} />
             </FormField>
             <FormField id="t-body" label="Texte du document *">
-              <Textarea id="t-body" ref={bodyRef} name="body" rows={8} required maxLength={6000} value={body} onChange={(e) => setBody(e.target.value)} />
+              <Textarea
+                id="t-body"
+                ref={bodyRef}
+                name="body"
+                rows={8}
+                required
+                maxLength={6000}
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                onDragOver={() => setDropping(true)}
+                onDragLeave={() => setDropping(false)}
+                onDrop={() => setDropping(false)}
+                className={cn("transition-shadow duration-200", dropping && "border-primary shadow-[0_0_0_4px_color-mix(in_srgb,var(--primary)_18%,transparent)]")}
+              />
             </FormField>
             <div className="grid gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground">Insérer une variable (à la position du curseur)</span>
-              <div className="flex flex-wrap gap-1.5">
+              <span className="text-xs font-medium text-muted-foreground">Variables : cliquez pour insérer au curseur, ou glissez-déposez dans le texte</span>
+              <div className="stagger flex flex-wrap gap-1.5">
                 {TEMPLATE_VARIABLES.map((v) => (
                   <button
                     key={v.key}
                     type="button"
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData("text/plain", `{{${v.key}}}`);
+                      e.dataTransfer.effectAllowed = "copy";
+                    }}
+                    onDragEnd={() => setDropping(false)}
                     onClick={() => insert(v.key)}
-                    className="rounded-full border border-border bg-surface px-2.5 py-1 text-xs transition-colors hover:border-primary hover:bg-primary-soft"
+                    className="press flex cursor-grab items-center gap-1 rounded-full border border-border bg-surface py-1 pl-1.5 pr-2.5 text-xs transition-colors hover:border-primary hover:bg-primary-soft active:cursor-grabbing"
                     title={`{{${v.key}}}`}
                   >
+                    <GripVertical className="size-3 text-muted-foreground" aria-hidden />
                     {v.label}
                   </button>
                 ))}
@@ -139,13 +171,36 @@ export function TemplateEditor({
                   Annuler
                 </Button>
               </DialogClose>
-              <SubmitButton pendingLabel="Enregistrement…">Enregistrer le modèle</SubmitButton>
+              {saved ? (
+                <span className="anim-fade flex h-10 items-center gap-2 rounded-xl bg-success-soft px-3 text-sm font-semibold text-success" role="status">
+                  <AnimatedSuccess className="size-6" label="" /> Modèle enregistré
+                </span>
+              ) : (
+                <SubmitButton pendingLabel="Enregistrement…">Enregistrer le modèle</SubmitButton>
+              )}
             </div>
           </ActionForm>
 
           <figure className="grid content-start gap-2" aria-label="Aperçu du document">
-            <figcaption className="text-xs font-medium text-muted-foreground">Aperçu (données d&apos;exemple)</figcaption>
-            <div className="aspect-[1/1.414] overflow-hidden rounded-lg border border-border bg-white p-6 text-[10px] leading-relaxed text-slate-800 shadow-lg">
+            <figcaption className="flex items-center justify-between gap-2 text-xs font-medium text-muted-foreground">
+              <span>Aperçu en direct (données d&apos;exemple)</span>
+              <span className="flex items-center gap-1" role="group" aria-label="Zoom de l'aperçu">
+                <Button type="button" variant="ghost" size="sm" onClick={() => setZoom((z) => Math.max(0.75, z - 0.25))} disabled={zoom <= 0.75} aria-label="Réduire l'aperçu">
+                  <Minus aria-hidden />
+                </Button>
+                <button type="button" onClick={() => setZoom(1)} className="flex w-14 items-center justify-center gap-1 tabular-nums hover:text-foreground" title="Taille normale">
+                  <ZoomIn className="size-3.5" aria-hidden /> {Math.round(zoom * 100)} %
+                </button>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setZoom((z) => Math.min(1.75, z + 0.25))} disabled={zoom >= 1.75} aria-label="Agrandir l'aperçu">
+                  <Plus aria-hidden />
+                </Button>
+              </span>
+            </figcaption>
+            <div className="max-h-[70vh] overflow-auto rounded-lg bg-surface-muted p-3">
+            <div
+              className="aspect-[1/1.414] origin-top-left overflow-hidden rounded-lg border border-border bg-white p-6 text-[10px] leading-relaxed text-slate-800 shadow-lg transition-[zoom] duration-200"
+              style={{ zoom }}
+            >
               <div className="flex items-center gap-3 border-b-2 pb-2" style={{ borderColor: organization.color }}>
                 {organization.logoId ? (
                   // eslint-disable-next-line @next/next/no-img-element -- aperçu : image servie par /api/fichiers
@@ -172,6 +227,7 @@ export function TemplateEditor({
                 <p className="mt-1">{organization.signatory ?? ""}</p>
               </div>
               {organization.footer ? <p className="mt-10 border-t pt-1 text-center text-[8px] text-slate-500">{organization.footer}</p> : null}
+            </div>
             </div>
           </figure>
         </div>

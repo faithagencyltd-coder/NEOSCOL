@@ -24,6 +24,7 @@ import type {
 } from "@/features/students/queries";
 import { ENROLLMENT_STATUS, ENROLLMENT_TYPE, INVOICE_PAYMENT_STATUS, PAYMENT_METHOD, RELATIONSHIP, SEX } from "@/lib/labels";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/utils/format";
+import { cn } from "@/lib/utils/cn";
 
 type Student = NonNullable<Awaited<ReturnType<typeof getStudent>>>;
 
@@ -486,14 +487,26 @@ export function HistoryTab({ history, timezone }: { history: Awaited<ReturnType<
         {history.length === 0 ? (
           <EmptyState icon={History} title="Aucune opération enregistrée" />
         ) : (
-          <ul className="divide-y divide-border">
-            {history.map((entry) => {
+          <ol className="relative grid gap-1 pl-7">
+            {/* Fil de la frise : se trace de haut en bas à l'ouverture de l'onglet. */}
+            <span aria-hidden className="timeline-line absolute bottom-3 left-[11px] top-3 w-0.5 rounded-full bg-border" />
+            {history.map((entry, index) => {
               const changed =
                 entry.changes && typeof entry.changes === "object" && !Array.isArray(entry.changes) && entry.action.endsWith(".update")
                   ? Object.keys(entry.changes)
                   : [];
+              const tone = /\.(insert|create)$/.test(entry.action)
+                ? "bg-success ring-success-soft"
+                : /\.(delete|archive|cancel|reject)/.test(entry.action)
+                  ? "bg-danger ring-danger-soft"
+                  : "bg-primary ring-primary-soft";
               return (
-                <li key={entry.id} className="flex flex-col gap-1 py-3 text-sm sm:flex-row sm:items-start sm:justify-between">
+                <li
+                  key={entry.id}
+                  className="anim-fade-up relative flex flex-col gap-1 rounded-xl px-3 py-2.5 text-sm transition-colors hover:bg-surface-muted/60 sm:flex-row sm:items-start sm:justify-between"
+                  style={{ "--delay": `${Math.min(index, 12) * 45}ms` } as React.CSSProperties}
+                >
+                  <span aria-hidden className={cn("absolute -left-[22px] top-4 size-3 rounded-full ring-4", tone)} />
                   <div className="grid gap-0.5">
                     <span className="font-semibold">{activityLabel(entry.action, entry.entity_type)}</span>
                     {changed.length > 0 ? (
@@ -507,7 +520,7 @@ export function HistoryTab({ history, timezone }: { history: Awaited<ReturnType<
                 </li>
               );
             })}
-          </ul>
+          </ol>
         )}
       </CardContent>
     </Card>

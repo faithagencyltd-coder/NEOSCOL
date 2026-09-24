@@ -1,5 +1,4 @@
-import Image from "next/image";
-
+import { AvatarPhoto } from "@/components/ui/avatar-photo";
 import { initials } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
 
@@ -7,14 +6,7 @@ import { cn } from "@/lib/utils/cn";
 export function Avatar({ name, className, photoId }: { name: string; className?: string; photoId?: string | null }) {
   if (photoId) {
     return (
-      <Image
-        src={`/api/fichiers/${photoId}`}
-        alt={`Photo de ${name}`}
-        width={160}
-        height={160}
-        unoptimized
-        className={cn("size-9 shrink-0 rounded-full object-cover", className)}
-      />
+      <AvatarPhoto src={`/api/fichiers/${photoId}`} alt={`Photo de ${name}`} className={className} />
     );
   }
   return (

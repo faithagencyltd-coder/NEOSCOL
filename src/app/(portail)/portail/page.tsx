@@ -13,6 +13,7 @@ import { isoWeekday, todayIn } from "@/lib/dates";
 import { ATTENDANCE_STATUS } from "@/lib/labels";
 import { cn } from "@/lib/utils/cn";
 import { formatDate, formatMoney } from "@/lib/utils/format";
+import { AnimatedCounter, AnimatedMoney } from "@/components/motion/animated-counter";
 
 export const metadata: Metadata = { title: "Portail" };
 
@@ -87,18 +88,18 @@ export default async function PortalHomePage() {
         </div>
       ) : null}
 
-      <section aria-label="Indicateurs" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <section aria-label="Indicateurs" className="stagger grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="Absences (30 j)" value={absences} tone={absences ? "danger" : "success"} />
         <Stat label="Retards (30 j)" value={lates} tone={lates ? "warning" : "success"} />
         <Stat label="Absences non justifiées" value={unjustified} tone={unjustified ? "danger" : "success"} />
         {parent && status ? (
-          <Stat label="Reste à payer" value={formatMoney(status.balance, currency)} tone={status.balance > 0 ? "warning" : "success"} />
+          <Stat label="Reste à payer" value={{ amount: status.balance, currency }} tone={status.balance > 0 ? "warning" : "success"} />
         ) : (
           <Stat label="Notes publiées" value={status?.features.grades ? "—" : grades.length} tone="primary" />
         )}
       </section>
 
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+      <div className="stagger grid grid-cols-1 gap-5 md:grid-cols-2">
         <Card>
           <CardHeader className="flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -213,7 +214,7 @@ export default async function PortalHomePage() {
         </Card>
       </div>
 
-      <nav aria-label="Accès rapides" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <nav aria-label="Accès rapides" className="stagger grid grid-cols-2 gap-3 sm:grid-cols-4">
         <QuickLink href="/portail/notes?onglet=bulletins" icon={FileText} label="Bulletins" />
         <QuickLink href="/portail/documents" icon={ShieldCheck} label="Documents" />
         <QuickLink href="/portail/emploi-du-temps" icon={CalendarClock} label="Emploi du temps" />
@@ -223,20 +224,22 @@ export default async function PortalHomePage() {
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: string | number; tone: "success" | "warning" | "danger" | "primary" }) {
+function Stat({ label, value, tone }: { label: string; value: string | number | { amount: number; currency: string }; tone: "success" | "warning" | "danger" | "primary" }) {
   const tones = { success: "text-success", warning: "text-warning", danger: "text-danger", primary: "text-primary" };
   return (
     <Card className="grid gap-1 p-3.5">
       <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      <span className={cn("text-xl font-bold tabular-nums", tones[tone])}>{value}</span>
+      <span className={cn("text-xl font-bold tabular-nums", tones[tone])}>
+        {typeof value === "number" ? <AnimatedCounter value={value} /> : typeof value === "string" ? value : <AnimatedMoney value={value.amount} currency={value.currency} />}
+      </span>
     </Card>
   );
 }
 
 function QuickLink({ href, icon: Icon, label }: { href: string; icon: typeof FileText; label: string }) {
   return (
-    <Link href={href} className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-surface p-4 text-sm font-medium hover:border-primary hover:text-primary">
-      <span className="flex size-10 items-center justify-center rounded-full bg-primary-soft text-primary">
+    <Link href={href} className="hover-lift press group flex flex-col items-center gap-2 rounded-2xl border border-border bg-surface p-4 text-sm font-medium hover:border-primary hover:text-primary">
+      <span className="flex size-10 items-center justify-center rounded-full bg-primary-soft text-primary transition-transform duration-200 group-hover:scale-110">
         <Icon className="size-5" aria-hidden />
       </span>
       {label}

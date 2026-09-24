@@ -13,12 +13,19 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { recordPayment } from "@/features/finance/actions";
 import { PAYMENT_METHOD } from "@/lib/labels";
+import { AnimatedSuccess } from "@/components/motion/animated-feedback";
 import { useFeedbackAction } from "@/components/motion/use-feedback-action";
+import { cn } from "@/lib/utils/cn";
 
 /** Encaissement à l'administration : le reçu PDF est proposé immédiatement. */
 export function PaymentDialog({ invoiceId, balance, currency }: { invoiceId: string; balance: number; currency: string }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useFeedbackAction(recordPayment);
+  const [amount, setAmount] = useState(balance > 0 ? String(balance) : "");
+  const money = (n: number) => new Intl.NumberFormat("fr-FR", { style: "currency", currency, maximumFractionDigits: currency === "XOF" || currency === "XAF" ? 0 : 2 }).format(n);
+  const typed = Math.max(0, Number(amount) || 0);
+  const after = Math.max(0, balance - typed);
+  const tooMuch = typed > balance;
   const done = state?.ok ? state.data : undefined;
   const errors = state && !state.ok ? (state.fieldErrors ?? {}) : {};
   return (
@@ -31,6 +38,14 @@ export function PaymentDialog({ invoiceId, balance, currency }: { invoiceId: str
       <DialogContent title="Enregistrer un paiement" description={`Reste dû : ${new Intl.NumberFormat("fr-FR").format(balance)} ${currency === "XOF" ? "FCFA" : currency}`}>
         {done ? (
           <div className="grid gap-3">
+            <div className="grid justify-items-center gap-2 py-2 text-center">
+              <AnimatedSuccess className="size-16" label="Paiement enregistré" />
+              {done.balanceAfter === 0 ? (
+                <span className="status-change rounded-full bg-success-soft px-3 py-1 text-sm font-semibold text-success">Payé · facture soldée</span>
+              ) : (
+                <span className="anim-fade text-sm text-muted-foreground">Reste dû : {money(done.balanceAfter)}</span>
+              )}
+            </div>
             <Alert tone="success">{state?.message}</Alert>
             <Button asChild>
               <a href={`/api/documents/recus/${done.paymentId}`} target="_blank" rel="noopener">
@@ -46,7 +61,7 @@ export function PaymentDialog({ invoiceId, balance, currency }: { invoiceId: str
             <input type="hidden" name="invoice_id" value={invoiceId} />
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField id="p-amount" label="Montant *" errors={errors.amount}>
-                <Input id="p-amount" name="amount" type="number" min={1} step="1" max={balance} defaultValue={balance > 0 ? String(balance) : ""} required />
+                <Input id="p-amount" name="amount" type="number" min={1} step="1" max={balance} value={amount} onChange={(e) => setAmount(e.target.value)} required />
               </FormField>
               <FormField id="p-method" label="Mode de paiement *">
                 <Select id="p-method" name="method" defaultValue="cash">
@@ -64,6 +79,22 @@ export function PaymentDialog({ invoiceId, balance, currency }: { invoiceId: str
                 <Input id="p-payer" name="payer_name" maxLength={120} />
               </FormField>
             </div>
+            {balance > 0 ? (
+              <div className="grid gap-1.5 rounded-xl bg-surface-muted p-3 text-sm" aria-live="polite">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Reste après ce paiement</span>
+                  <strong key={after} className={cn("anim-fade tabular-nums", tooMuch ? "text-danger" : after === 0 ? "text-success" : "")}>
+                    {tooMuch ? "Montant supérieur au reste dû" : after === 0 ? "0 — facture soldée" : money(after)}
+                  </strong>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-surface">
+                  <div
+                    className={cn("h-full rounded-full transition-[width] duration-300 ease-out", tooMuch ? "bg-danger" : "bg-success")}
+                    style={{ width: `${Math.min(100, (typed / balance) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            ) : null}
             {state && !state.ok ? <Alert tone="danger">{state.message}</Alert> : null}
             <div className="flex justify-end gap-2">
               <DialogClose asChild>

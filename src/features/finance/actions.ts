@@ -37,7 +37,7 @@ const paymentSchema = z.object({
  * de la facture et les restrictions du portail sont recalculés immédiatement
  * en base ; la famille est notifiée (et prévenue si l'accès est rétabli).
  */
-export async function recordPayment(_: ActionResult<{ paymentId: string }> | null, formData: FormData): Promise<ActionResult<{ paymentId: string }>> {
+export async function recordPayment(_: ActionResult<{ paymentId: string; balanceAfter: number }> | null, formData: FormData): Promise<ActionResult<{ paymentId: string; balanceAfter: number }>> {
   const auth = await authorize("finance.payments.create");
   if (!auth.ok) return auth;
   const parsed = paymentSchema.safeParse(readFields(formData, ["invoice_id", "amount", "method", "reference", "payer_name", "notes"]));
@@ -50,7 +50,7 @@ export async function recordPayment(_: ActionResult<{ paymentId: string }> | nul
     .single();
   if (error || !data) return { ok: false, message: dbErrorMessage(error, "Le paiement n'a pas pu être enregistré.") };
   refresh(parsed.data.invoice_id);
-  return { ok: true, message: `Paiement ${data.number} enregistré. Reste dû : ${Number(data.balance_after ?? 0).toLocaleString("fr-FR")}.`, data: { paymentId: data.id } };
+  return { ok: true, message: `Paiement ${data.number} enregistré. Reste dû : ${Number(data.balance_after ?? 0).toLocaleString("fr-FR")}.`, data: { paymentId: data.id, balanceAfter: Number(data.balance_after ?? 0) } };
 }
 
 export async function cancelPayment(_: ActionResult | null, formData: FormData): Promise<ActionResult> {

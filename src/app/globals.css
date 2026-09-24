@@ -290,13 +290,15 @@ h2,
   from { opacity: 1; }
   to { opacity: 0; }
 }
+/* Le centrage des fenêtres passe par la propriété `translate` (Tailwind 4) : les
+   images clés n'animent que `transform`, sans quoi les deux décalages s'additionnent. */
 @keyframes scale-in {
-  from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); filter: blur(2px); }
-  to { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0); }
+  from { opacity: 0; transform: translateY(8px) scale(0.96); filter: blur(2px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
 }
 @keyframes scale-out {
-  from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  to { opacity: 0; transform: translate(-50%, -48%) scale(0.97); }
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(8px) scale(0.97); }
 }
 @keyframes drawer-in {
   from { transform: translateX(100%); }
@@ -381,6 +383,23 @@ h2,
 .table-anim tbody tr:hover { box-shadow: inset 3px 0 0 var(--primary); }
 .row-new { animation: fade-up var(--dur-slow) var(--ease-out) both, row-flash 1.6s var(--ease-out) 200ms both; }
 
+/* Frise chronologique : le fil se trace de haut en bas. */
+.timeline-line { transform-origin: top; animation: grow-height 700ms var(--ease-out) both; }
+@keyframes grow-height { from { transform: scaleY(0); } }
+
+/* Viseur du kiosque : ligne de lecture qui balaie le cadre. */
+.scan-beam { top: 50%; animation: scan-line 2.4s var(--ease-in-out) infinite; }
+
+/* Assistant : l'étape entre depuis la droite (suivante) ou la gauche (précédente). */
+.wizard-step-next:not([hidden]) { animation: step-next var(--dur-slow) var(--ease-out) both; }
+.wizard-step-prev:not([hidden]) { animation: step-prev var(--dur-slow) var(--ease-out) both; }
+@keyframes step-next { from { opacity: 0; transform: translateX(28px); } }
+@keyframes step-prev { from { opacity: 0; transform: translateX(-28px); } }
+
+/* Graphiques : segments d'anneau tracés à l'apparition, réaction au survol. */
+.donut-arc { animation: donut-draw 700ms var(--ease-out) both; transition: opacity var(--dur-base), stroke-width var(--dur-base) var(--ease-out); }
+@keyframes donut-draw { from { stroke-dasharray: 0 400; } }
+
 /* Cartes interactives : élévation au survol, appui. */
 .hover-lift { transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out), border-color var(--dur-base); }
 .hover-lift:hover { transform: translateY(-3px); box-shadow: 0 12px 28px -12px color-mix(in srgb, var(--navy) 35%, transparent); border-color: color-mix(in srgb, var(--primary) 30%, var(--border)); }
@@ -433,7 +452,7 @@ h2,
     animation-duration: 0s !important;
     animation-delay: 0s !important;
   }
-  .stagger > *, .table-anim tbody tr, .anim-fade-up, .anim-fade, .anim-pop, .rise { animation: none !important; }
+  .stagger > *, .table-anim tbody tr, .anim-fade-up, .anim-fade, .anim-pop, .rise, .donut-arc, .wizard-step-next, .wizard-step-prev, .scan-beam, .timeline-line { animation: none !important; }
   .hover-lift:hover { transform: none; }
 }
 
@@ -441,12 +460,12 @@ h2,
 @keyframes drawer-left-in { from { transform: translateX(-100%); } to { transform: none; } }
 @keyframes drawer-left-out { from { transform: none; } to { transform: translateX(-100%); } }
 @keyframes palette-in {
-  from { opacity: 0; transform: translate(-50%, -10px) scale(0.98); filter: blur(2px); }
-  to { opacity: 1; transform: translate(-50%, 0) scale(1); filter: blur(0); }
+  from { opacity: 0; transform: translateY(-10px) scale(0.98); filter: blur(2px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
 }
 @keyframes palette-out {
-  from { opacity: 1; transform: translate(-50%, 0) scale(1); }
-  to { opacity: 0; transform: translate(-50%, -6px) scale(0.98); }
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(-6px) scale(0.98); }
 }
 @keyframes tooltip-in { from { opacity: 0; transform: translateX(-4px) scale(0.96); } to { opacity: 1; transform: none; } }
 .drawer-left-anim[data-state="open"] { animation: drawer-left-in var(--dur-slow) var(--ease-out) both; }

@@ -3,10 +3,11 @@ import type { Metadata } from "next";
 import { Alert } from "@/components/ui/alert";
 import { getAcademicYears, getClasses, getClassHeadcounts } from "@/features/academic/queries";
 import { EnrollmentForm } from "@/features/enrollments/components/enrollment-form";
-import { getEnrollmentForms, getStudentSummary } from "@/features/enrollments/queries";
+import { getEnrollmentFeeRates, getEnrollmentForms, getStudentSummary } from "@/features/enrollments/queries";
 import { requirePermission } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
 import { isUuid, param } from "@/lib/utils/search-params";
+import { vocabularyFor } from "@/lib/vocabulary";
 
 export const metadata: Metadata = { title: "Nouvelle inscription" };
 
@@ -20,6 +21,7 @@ export default async function NewEnrollmentPage({ searchParams }: PageProps<"/in
   const allClasses = classesByYear.flatMap((list, i) => list.map((c) => ({ ...c, yearId: years[i]!.id })));
   const counts = await getClassHeadcounts(organizationId, allClasses.map((c) => c.id));
   const forms = await getEnrollmentForms(organizationId);
+  const feeRates = await getEnrollmentFeeRates(organizationId, years.map((y) => y.id));
   const preset = isUuid(studentParam) ? await getStudentSummary(organizationId, studentParam) : null;
 
   return (
@@ -38,7 +40,18 @@ export default async function NewEnrollmentPage({ searchParams }: PageProps<"/in
       ) : (
         <EnrollmentForm
           years={years.map((y) => ({ id: y.id, name: y.name, is_current: y.is_current }))}
-          classes={allClasses.map((c) => ({ id: c.id, name: c.name, yearId: c.yearId, capacity: c.capacity, count: counts.get(c.id) ?? 0 }))}
+          classes={allClasses.map((c) => ({
+            id: c.id,
+            name: c.name,
+            yearId: c.yearId,
+            levelId: c.level?.id ?? null,
+            programId: c.program?.id ?? null,
+            capacity: c.capacity,
+            count: counts.get(c.id) ?? 0,
+          }))}
+          feeRates={feeRates}
+          currency={context.organization.currency}
+          vocabulary={vocabularyFor(context.organization.type)}
           forms={{ enrollment: forms.enrollment?.fields ?? [], reenrollment: forms.reenrollment?.fields ?? null }}
           presetStudent={
             preset && !preset.archived_at

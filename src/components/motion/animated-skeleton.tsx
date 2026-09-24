@@ -8,17 +8,17 @@ export function AnimatedSkeleton({ className, ...props }: ComponentProps<"div">)
 }
 
 /** Squelette de cartes statistiques (structure identique au tableau de bord). */
-export function StatCardsSkeleton({ count = 4 }: { count?: number }) {
+export function StatCardsSkeleton({ count = 4, className }: { count?: number; className?: string }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" role="status" aria-label="Chargement des indicateurs">
+    <div className={cn("grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4", className)} role="status" aria-label="Chargement des indicateurs">
       {Array.from({ length: count }, (_, i) => (
-        <div key={i} className="grid gap-3 rounded-[14px] border border-border bg-surface p-5">
-          <div className="flex items-center justify-between">
+        <div key={i} className="flex items-start gap-4 rounded-[14px] border border-border bg-surface p-5">
+          <AnimatedSkeleton className="size-11 shrink-0 rounded-xl" />
+          <div className="grid flex-1 gap-2">
             <AnimatedSkeleton className="h-4 w-28" />
-            <AnimatedSkeleton className="size-10 rounded-xl" />
+            <AnimatedSkeleton className="h-7 w-24" />
+            <AnimatedSkeleton className="h-3 w-40" />
           </div>
-          <AnimatedSkeleton className="h-8 w-24" />
-          <AnimatedSkeleton className="h-3 w-40" />
         </div>
       ))}
     </div>
