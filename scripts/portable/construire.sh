@@ -7,7 +7,7 @@
 # PG_DIR           : binaires PostgreSQL embarqués (bin/, lib/, share/), ex. paquet npm @embedded-postgres/windows-x64
 # AUTH_BIN         : GoTrue (supabase/auth) compilé pour la cible, AUTH_MIGRATIONS son dossier migrations/
 # POSTGREST_BIN    : PostgREST pour la cible
-# MSVC_DIR         : (Windows) dossier contenant vcruntime140.dll, vcruntime140_1.dll, msvcp140.dll
+# MSVC_DIR         : (Windows) dossier contenant (ex. roue PyPI msvc-runtime, data/Scripts) vcruntime140.dll, vcruntime140_1.dll, msvcp140.dll
 # Les clés JWT sont générées ici : propres à ce paquet, valables uniquement en local.
 set -euo pipefail
 TARGET="${1:?cible : windows ou linux}"
