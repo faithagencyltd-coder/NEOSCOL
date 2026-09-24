@@ -1,5 +1,6 @@
 import { FlaskConical } from "lucide-react";
 
+import { NotificationWatcher } from "@/components/layout/notification-watcher";
 import { NotificationsMenu } from "@/components/layout/notifications-menu";
 import { UserMenu } from "@/components/layout/user-menu";
 import { Logo } from "@/components/shared/logo";
@@ -55,6 +56,7 @@ export default async function PortalLayout({ children }: { children: React.React
       </header>
       <PortalNav parent={parent} />
       <main className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-5 px-4 py-5">{children}</main>
+      <NotificationWatcher />
     </div>
   );
 }

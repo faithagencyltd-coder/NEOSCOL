@@ -39,12 +39,19 @@ export function PortalNav({ parent }: { parent: boolean }) {
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex items-center gap-2 border-b-2 px-3 py-3 text-sm font-medium transition-colors",
-                    active ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground",
+                    "group relative flex items-center gap-2 px-3 py-3 text-sm font-medium transition-colors duration-200",
+                    active ? "text-primary" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  <item.icon className="size-4" aria-hidden />
+                  <item.icon className="size-4 transition-transform duration-200 group-hover:scale-110" aria-hidden />
                   {item.label}
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "absolute inset-x-2 bottom-0 h-[3px] rounded-full bg-primary transition-transform duration-300 ease-[var(--ease-out)]",
+                      active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-50 group-hover:bg-primary/40",
+                    )}
+                  />
                 </Link>
               </li>
             );
@@ -63,10 +70,18 @@ export function PortalNav({ parent }: { parent: boolean }) {
                 <Link
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={cn("flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium", active ? "text-primary" : "text-muted-foreground")}
+                  className={cn(
+                    "flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors duration-200 active:scale-95",
+                    active ? "text-primary" : "text-muted-foreground",
+                  )}
                 >
-                  <span className={cn("flex h-7 w-12 items-center justify-center rounded-full", active && "bg-primary-soft")}>
-                    <item.icon className="size-5" aria-hidden />
+                  <span
+                    className={cn(
+                      "flex h-7 w-12 items-center justify-center rounded-full transition-all duration-300 ease-[var(--ease-spring)]",
+                      active ? "scale-100 bg-primary-soft" : "scale-90 bg-transparent",
+                    )}
+                  >
+                    <item.icon className={cn("size-5 transition-transform duration-300", active && "anim-pop")} aria-hidden />
                   </span>
                   {item.label}
                 </Link>

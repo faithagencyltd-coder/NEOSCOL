@@ -32,7 +32,10 @@ export function NotificationsMenu({
         <Button variant="ghost" size="icon" className="relative rounded-xl bg-surface-muted hover:bg-border" aria-label={`Notifications (${unread} non lues)`}>
           <Bell className={cn(unread > 0 && "origin-top [animation:ring_1.2s_ease-in-out_2]")} />
           {unread > 0 ? (
-            <span className="absolute right-1.5 top-1.5 animate-[fade-in_0.3s_ease-out] flex min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold leading-4 text-white">
+            <span
+              key={unread}
+              className="anim-pop absolute right-1 top-1 flex min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold leading-4 text-white shadow-[0_0_0_2px_var(--surface)]"
+            >
               {unread > 99 ? "99+" : unread}
             </span>
           ) : null}
@@ -57,8 +60,12 @@ export function NotificationsMenu({
           </div>
         ) : (
           <ul className="grid max-h-96 gap-1 overflow-y-auto">
-            {items.map((item) => (
-              <li key={item.id} className={cn("rounded-md px-2.5 py-2", !item.read_at && "bg-primary-soft/60")}>
+            {items.map((item, index) => (
+              <li
+                key={item.id}
+                className={cn("anim-fade-up rounded-md px-2.5 py-2 transition-colors hover:bg-surface-muted", !item.read_at && "border-l-2 border-primary bg-primary-soft/60")}
+                style={{ "--delay": `${index * 35}ms` } as React.CSSProperties}
+              >
                 {item.link ? (
                   <Link href={item.link} className="grid hover:text-primary">
                     <span className="text-sm font-medium">{item.title}</span>

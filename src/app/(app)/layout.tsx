@@ -1,12 +1,14 @@
 import { FlaskConical } from "lucide-react";
+import { cookies } from "next/headers";
 
 import { CommandPalette } from "@/components/layout/command-palette";
+import { AppShell } from "@/components/layout/app-shell";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { NotificationWatcher } from "@/components/layout/notification-watcher";
 import { NotificationsMenu } from "@/components/layout/notifications-menu";
-import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { UserMenu } from "@/components/layout/user-menu";
-import { Logo } from "@/components/shared/logo";
 import { visibleNavigation } from "@/config/navigation";
+import { SIDEBAR_COOKIE } from "@/config/ui";
 import { getRecentNotifications } from "@/features/notifications/queries";
 import { requireOrganization } from "@/lib/auth/guards";
 import { displayName } from "@/lib/auth/session";
@@ -23,25 +25,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const vocab = vocabularyFor(context.organization.type);
   const searchPlaceholder = `Rechercher un ${vocab.student.toLowerCase()}, un parent, une ${vocab.klass.toLowerCase()}…`;
 
-  return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[17rem_1fr]">
-      <aside className="sticky top-0 hidden h-dvh flex-col gap-7 overflow-y-auto bg-sidebar px-4 py-5 lg:flex">
-        <div className="px-1.5">
-          <Logo inverted tagline />
-        </div>
-        <SidebarNav sections={sections} />
-        <div className="mt-auto grid gap-1 rounded-xl bg-sidebar-muted p-3.5">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-sidebar-foreground/70">Établissement</p>
-          <p className="text-sm font-semibold text-white" title={context.organization.name}>
-            {context.organization.name}
-          </p>
-          {context.organization.is_demo ? (
-            <p className="text-xs font-medium text-accent">Démonstration · données fictives</p>
-          ) : null}
-        </div>
-      </aside>
+  const collapsed = (await cookies()).get(SIDEBAR_COOKIE)?.value === "collapsed";
 
-      <div className="flex min-w-0 flex-col">
+  return (
+    <AppShell sections={sections} initialCollapsed={collapsed} organization={{ name: context.organization.name, isDemo: context.organization.is_demo }}>
         {context.organization.is_demo ? (
           <div className="flex items-center justify-center gap-2 bg-warning-soft px-4 py-1.5 text-center text-xs font-medium text-warning lg:hidden">
             <FlaskConical className="size-3.5" aria-hidden />
@@ -68,7 +55,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           />
         </header>
         <main className="mx-auto w-full max-w-[90rem] flex-1 px-4 py-6 sm:px-7 lg:py-7">{children}</main>
-      </div>
-    </div>
+        <NotificationWatcher />
+    </AppShell>
   );
 }

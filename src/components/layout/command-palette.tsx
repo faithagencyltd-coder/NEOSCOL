@@ -61,9 +61,9 @@ export function CommandPalette({ sections, placeholder = "Rechercher un élève,
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex h-11 w-full max-w-xl items-center gap-2.5 rounded-xl border border-border bg-background px-3.5 text-sm text-muted-foreground transition-colors hover:border-input"
+        className="group flex h-11 w-full max-w-md items-center gap-2.5 rounded-xl border border-border bg-background px-3.5 text-sm text-muted-foreground transition-all duration-300 ease-[var(--ease-out)] hover:max-w-xl hover:border-primary/40 hover:bg-surface hover:shadow-[0_6px_18px_-10px_rgba(11,31,77,0.35)] focus-visible:max-w-xl"
       >
-        <Search className="size-4" aria-hidden />
+        <Search className="size-4 transition-transform duration-300 group-hover:scale-110 group-hover:text-primary" aria-hidden />
         <span className="flex-1 truncate text-left">
           <span className="sm:hidden">Rechercher…</span>
           <span className="hidden sm:inline">{placeholder}</span>
@@ -72,8 +72,8 @@ export function CommandPalette({ sections, placeholder = "Rechercher un élève,
       </button>
       <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40" />
-          <Dialog.Content className="fixed left-1/2 top-[10vh] z-50 w-[calc(100vw-2rem)] max-w-xl -translate-x-1/2 overflow-hidden rounded-xl border border-border bg-surface shadow-2xl">
+          <Dialog.Overlay className="overlay-anim fixed inset-0 z-40 bg-[#0b1f4d]/40 backdrop-blur-[3px]" />
+          <Dialog.Content className="palette-anim fixed left-1/2 top-[10vh] z-50 w-[calc(100vw-2rem)] max-w-2xl -translate-x-1/2 overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl">
             <Dialog.Title className="sr-only">Centre de commande</Dialog.Title>
             <Dialog.Description className="sr-only">
               Tapez pour rechercher un élève, un parent, une classe, une inscription ou un module.
@@ -99,14 +99,15 @@ export function CommandPalette({ sections, placeholder = "Rechercher un élève,
                     heading="Résultats"
                     className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:text-muted-foreground"
                   >
-                    {results.map((result) => (
+                    {results.map((result, index) => (
                       <Command.Item
                         key={`${result.type}-${result.id}`}
                         value={`${result.type}-${result.id}`}
                         onSelect={() => go(result.href)}
-                        className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-2 text-sm data-[selected=true]:bg-surface-muted"
+                        className="anim-fade-up flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors data-[selected=true]:bg-primary-soft"
+                        style={{ "--delay": `${Math.min(index, 10) * 30}ms` } as React.CSSProperties}
                       >
-                        <span className="w-20 shrink-0 text-xs font-semibold uppercase tracking-wide text-primary">{result.label}</span>
+                        <span className="w-24 shrink-0 rounded-md bg-primary-soft px-1.5 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wide text-primary">{result.label}</span>
                         <span className="grid min-w-0">
                           <span className="truncate font-medium">{result.title}</span>
                           {result.subtitle ? <span className="truncate text-xs text-muted-foreground">{result.subtitle}</span> : null}
@@ -126,7 +127,7 @@ export function CommandPalette({ sections, placeholder = "Rechercher un élève,
                         key={item.href}
                         value={item.href}
                         onSelect={() => go(item.href)}
-                        className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-2 text-sm data-[selected=true]:bg-surface-muted"
+                        className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors data-[selected=true]:bg-primary-soft data-[selected=true]:text-primary"
                       >
                         <NavIcon name={item.icon} className="size-4 text-muted-foreground" />
                         {item.label}

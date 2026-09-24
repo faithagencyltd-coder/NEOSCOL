@@ -436,3 +436,29 @@ h2,
   .stagger > *, .table-anim tbody tr, .anim-fade-up, .anim-fade, .anim-pop, .rise { animation: none !important; }
   .hover-lift:hover { transform: none; }
 }
+
+/* Tiroir de navigation mobile (depuis la gauche), palette de recherche, infobulles. */
+@keyframes drawer-left-in { from { transform: translateX(-100%); } to { transform: none; } }
+@keyframes drawer-left-out { from { transform: none; } to { transform: translateX(-100%); } }
+@keyframes palette-in {
+  from { opacity: 0; transform: translate(-50%, -10px) scale(0.98); filter: blur(2px); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); filter: blur(0); }
+}
+@keyframes palette-out {
+  from { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  to { opacity: 0; transform: translate(-50%, -6px) scale(0.98); }
+}
+@keyframes tooltip-in { from { opacity: 0; transform: translateX(-4px) scale(0.96); } to { opacity: 1; transform: none; } }
+.drawer-left-anim[data-state="open"] { animation: drawer-left-in var(--dur-slow) var(--ease-out) both; }
+.drawer-left-anim[data-state="closed"] { animation: drawer-left-out var(--dur-base) ease-in both; }
+.palette-anim[data-state="open"] { animation: palette-in var(--dur-base) var(--ease-out) both; }
+.palette-anim[data-state="closed"] { animation: palette-out var(--dur-fast) ease-in both; }
+.tooltip-anim[data-state="delayed-open"], .tooltip-anim[data-state="instant-open"] { animation: tooltip-in var(--dur-fast) var(--ease-out) both; }
+
+/* Sous-menus : ouverture / fermeture fluide (grid-template-rows 0fr → 1fr). */
+.collapsible { display: grid; grid-template-rows: 1fr; transition: grid-template-rows var(--dur-slow) var(--ease-out), opacity var(--dur-base); }
+.collapsible[data-open="false"] { grid-template-rows: 0fr; opacity: 0; }
+.collapsible > * { min-height: 0; overflow: hidden; }
+
+/* Barre latérale : largeur animée entre mode complet et mode réduit. */
+.app-shell { transition: grid-template-columns var(--dur-slow) var(--ease-out); }
