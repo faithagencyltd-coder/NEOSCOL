@@ -45,6 +45,11 @@ if [[ "$TARGET" == "windows" ]]; then
   [[ -n "${SHARP_DIR:-}" ]] && cp -r "$SHARP_DIR" "$OUT/app/node_modules/@img/"
 fi
 cp -r "$PG_DIR"/{bin,lib,share} "$OUT/runtime/postgres/"
+# Inutile au serveur : bibliothèques graphiques (pgAdmin), traductions, fichiers de développement,
+# langages procéduraux Perl/Python/Tcl (non installés).
+rm -rf "$OUT"/runtime/postgres/bin/wx*.dll "$OUT"/runtime/postgres/bin/testplug.dll "$OUT/runtime/postgres/share/locale" \
+  "$OUT"/runtime/postgres/lib/*.lib "$OUT"/runtime/postgres/lib/*.a "$OUT"/runtime/postgres/lib/plperl* "$OUT"/runtime/postgres/lib/plpython* \
+  "$OUT"/runtime/postgres/lib/pltcl* "$OUT"/runtime/postgres/lib/*plperl* "$OUT"/runtime/postgres/lib/*plpython*
 EXT=""; [[ "$TARGET" == "windows" ]] && EXT=".exe"
 cp "$AUTH_BIN" "$OUT/runtime/auth/auth$EXT" && cp -r "$AUTH_MIGRATIONS" "$OUT/runtime/auth/migrations"
 cp "$POSTGREST_BIN" "$OUT/runtime/postgrest/postgrest$EXT"

@@ -277,6 +277,20 @@ async function main() {
   }
   console.log("\x1b[1;34m\n  NéoScol — démonstration locale\x1b[0m");
 
+  // Paquet livré en plusieurs .zip à extraire dans le même dossier.
+  const parts = [
+    [join(ROOT, "app", "server.js"), "NeoScol-1-application.zip"],
+    [join(PG_BIN, `postgres${EXE}`), "NeoScol-2-postgresql.zip"],
+    [join(RUNTIME, "auth", `auth${EXE}`), "NeoScol-3-services.zip"],
+    [join(RUNTIME, "postgrest", `postgrest${EXE}`), "NeoScol-3-services.zip"],
+  ];
+  const missing = [...new Set(parts.filter(([file]) => !existsSync(file)).map(([, zip]) => zip))];
+  if (missing.length) {
+    console.error(`\nERREUR : il manque ${missing.join(" et ")}.`);
+    console.error(`  Extrayez chaque fichier .zip dans le MÊME dossier (celui qui contient ce fichier) :\n  ${ROOT}`);
+    process.exit(1);
+  }
+
   if (process.argv.includes("--reinitialiser")) {
     say("Remise à zéro des données de démonstration");
     if (pgRunning()) pgCtl(["stop", "-D", PGDATA, "-m", "fast", "-w"]);

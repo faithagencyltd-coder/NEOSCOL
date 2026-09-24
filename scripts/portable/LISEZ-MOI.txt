@@ -8,10 +8,12 @@ CE QU'IL FAUT
   - 2 Go d'espace disque libre
 
 LANCER
-  1. Extrayez TOUT le fichier .zip (clic droit > « Extraire tout… »).
-     Ne lancez pas depuis l'intérieur du .zip.
-     Choisissez un dossier simple, par exemple C:\NeoScol
-  2. Double-cliquez sur  DEMARRER.cmd
+  1. NéoScol est livré en 3 fichiers .zip :
+       NeoScol-1-application.zip, NeoScol-2-postgresql.zip, NeoScol-3-services.zip
+     Pour CHACUN des 3 : clic droit > « Extraire tout… » > dans la case du dossier,
+     écrivez   C:\   puis « Extraire ».
+     Les 3 se rangent alors dans le même dossier  C:\NeoScol
+  2. Ouvrez C:\NeoScol et double-cliquez sur  DEMARRER.cmd
      - Premier lancement : 1 à 3 minutes (création de la base de données).
      - Si Windows affiche « Windows a protégé votre ordinateur » :
        cliquez « Informations complémentaires » puis « Exécuter quand même ».
