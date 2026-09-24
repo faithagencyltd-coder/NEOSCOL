@@ -3,6 +3,9 @@
 Une seule commande lance la vraie application avec les données de démonstration
 (3 établissements fictifs : groupe scolaire, centre de formation, université).
 
+> **Docker ne fonctionne pas sur votre ordinateur ?** Utilisez GitHub Codespaces
+> (voir « Sans Docker » plus bas) : tout tourne en ligne, rien à installer.
+
 ## 1. Installer (une seule fois)
 
 | Logiciel | Où le trouver | Vérifier |
@@ -81,3 +84,26 @@ parent : téléphone `+2250700000001`, nom `BAMBA`, prénom `Adjoua`, code SMS `
 
 ⚠ Toutes les données sont **fictives**. Ne pas utiliser ces réglages (code SMS fixe,
 mode démonstration) en production.
+
+## Sans Docker : GitHub Codespaces (depuis VS Code ou le navigateur)
+
+Un Codespace est une machine en ligne fournie par GitHub, avec Docker déjà
+installé. Le dépôt contient la configuration (`.devcontainer/`).
+
+1. Dans VS Code, installez l'extension **GitHub Codespaces** et connectez-vous à GitHub
+   (ou, dans le navigateur : page du dépôt → bouton vert **Code** → onglet **Codespaces**).
+2. `F1` → **Codespaces: Create New Codespace** → dépôt `faithagencyltd-coder/NEOSCOL`,
+   branche `claude/neoscol-architecture-design-81m58e`, machine **4 cœurs**.
+3. Attendez la fin de la préparation (quelques minutes la première fois), puis dans le
+   terminal du Codespace :
+
+   ```bash
+   npm run demo
+   ```
+
+4. À la fin, VS Code propose **Ouvrir dans le navigateur** (port 3000) ; sinon, onglet
+   **Ports** → ligne « NéoScol » → icône globe. Depuis VS Code sur l'ordinateur,
+   http://localhost:3000 fonctionne aussi (le port est redirigé).
+
+Arrêtez le Codespace quand vous avez fini (le quota gratuit mensuel est limité) :
+`F1` → **Codespaces: Stop Current Codespace**.

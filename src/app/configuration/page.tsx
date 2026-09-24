@@ -34,6 +34,10 @@ export default function ConfigurationPage() {
               <code className="rounded bg-surface px-1.5 py-0.5">npm run demo</code> sous macOS / Linux.
             </p>
             <p className="text-muted-foreground">La base, les comptes de démonstration et ce fichier de configuration sont préparés automatiquement.</p>
+            <p className="text-muted-foreground">
+              Docker ne fonctionne pas sur cet ordinateur ? Ouvrez le projet dans GitHub Codespaces (Docker inclus) puis lancez{" "}
+              <code className="rounded bg-surface px-1.5 py-0.5">npm run demo</code> : voir docs/DEMARRER-EN-LOCAL.md.
+            </p>
           </div>
           <p className="font-medium text-foreground">Ou, avec votre propre projet Supabase :</p>
           <ol className="grid list-decimal gap-2 pl-5">

@@ -26,6 +26,12 @@ if [[ "${1:-}" == "--reset" ]]; then
   $SUPABASE db reset
 fi
 
+# GitHub Codespaces : l'application est servie sur une adresse https://…app.github.dev.
+SITE_URL=http://localhost:3000
+if [[ -n "${CODESPACE_NAME:-}" && -n "${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-}" ]]; then
+  SITE_URL="https://${CODESPACE_NAME}-3000.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}"
+fi
+
 say "Configuration de l'application (.env.local)"
 eval "$($SUPABASE status -o env | grep -E '^(API_URL|ANON_KEY|SERVICE_ROLE_KEY)=')"
 if [[ -f .env.local ]] && ! grep -q "127.0.0.1:54321" .env.local; then
@@ -37,12 +43,12 @@ cat > .env.local <<ENV
 NEXT_PUBLIC_SUPABASE_URL=${API_URL}
 NEXT_PUBLIC_SUPABASE_ANON_KEY=${ANON_KEY}
 SUPABASE_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_SITE_URL=${SITE_URL}
 CRON_SECRET=demo-local-$(node -e 'console.log(require("crypto").randomBytes(12).toString("hex"))')
 NEOSCOL_DEMO_MODE=1
 ENV
 
-say "NéoScol démarre : ouvrez http://localhost:3000"
+say "NéoScol démarre : ouvrez ${SITE_URL}"
 echo "  Choisissez un rôle sur la page de connexion (mode démonstration)."
 echo "  Mot de passe commun : NeoScol-Demo-2026!   ·   Code SMS parent : 123456"
 echo "  Arrêt : Ctrl+C (puis « npx supabase stop » pour arrêter la base)."

@@ -1,0 +1,22 @@
+{
+  // NéoScol dans GitHub Codespaces (ou VS Code « Dev Containers ») : Node 22 + Docker,
+  // sans rien installer sur l'ordinateur. Lancer ensuite : npm run demo
+  "name": "NéoScol — démonstration",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "hostRequirements": { "cpus": 4, "memory": "8gb" },
+  "forwardPorts": [3000, 54321, 54323],
+  "portsAttributes": {
+    "3000": { "label": "NéoScol", "onAutoForward": "openBrowser" },
+    "54321": { "label": "Supabase API", "onAutoForward": "silent" },
+    "54323": { "label": "Supabase Studio", "onAutoForward": "silent" }
+  },
+  "postCreateCommand": "npm install --no-audit --no-fund",
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint", "bradlc.vscode-tailwindcss"]
+    }
+  }
+}

@@ -8,11 +8,16 @@ const securityHeaders = [
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
 ];
 
+// GitHub Codespaces : l'application est servie via https://<codespace>-3000.app.github.dev.
+// Autorisé uniquement quand le serveur tourne dans un Codespace (variable CODESPACES).
+const codespaceOrigins = process.env.CODESPACES === "true" ? [`*.${process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN ?? "app.github.dev"}`] : [];
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  allowedDevOrigins: codespaceOrigins,
   experimental: {
     // Justificatifs, photos et pièces jointes (5 Mo max côté base, D-15).
-    serverActions: { bodySizeLimit: "6mb" },
+    serverActions: { bodySizeLimit: "6mb", allowedOrigins: codespaceOrigins },
   },
   async headers() {
     return [
