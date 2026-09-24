@@ -44,8 +44,9 @@ if [[ "$TARGET" == "windows" ]]; then
   [[ -n "${SHARP_DIR:-}" ]] && cp -r "$SHARP_DIR" "$OUT/app/node_modules/@img/"
 fi
 cp -r "$PG_DIR"/{bin,lib,share} "$OUT/runtime/postgres/"
-cp "$AUTH_BIN" "$OUT/runtime/auth/" && cp -r "$AUTH_MIGRATIONS" "$OUT/runtime/auth/migrations"
-cp "$POSTGREST_BIN" "$OUT/runtime/postgrest/"
+EXT=""; [[ "$TARGET" == "windows" ]] && EXT=".exe"
+cp "$AUTH_BIN" "$OUT/runtime/auth/auth$EXT" && cp -r "$AUTH_MIGRATIONS" "$OUT/runtime/auth/migrations"
+cp "$POSTGREST_BIN" "$OUT/runtime/postgrest/postgrest$EXT"
 cp "$ROOT/scripts/db/supabase-stub.sql" "$ROOT/supabase/seed.sql" "$OUT/base/"
 cp -r "$ROOT/supabase/migrations" "$OUT/base/migrations"
 cp "$ROOT"/scripts/portable/{demarrer.mjs,DEMARRER.cmd,REINITIALISER.cmd,LISEZ-MOI.txt} "$OUT/"

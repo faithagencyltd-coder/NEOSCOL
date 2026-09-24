@@ -142,7 +142,7 @@ const kiosk = await staffLogin("pointage@demo.neoscol.app", "NeoScol-Demo-2026!"
 await kiosk.waitForURL("**/pointage");
 await kiosk.getByLabel("Code du badge").fill(`NEOSCOL-BADGE:${token}`);
 await kiosk.keyboard.press("Enter");
-await kiosk.getByText(/Appel disponible/).waitFor();
+await kiosk.getByText(/Appel disponible/).first().waitFor();
 ok("5. badge scanné sur la tablette → cours déverrouillé");
 await shot(kiosk, "final-04-scan");
 // 6. Présences
@@ -172,7 +172,7 @@ await teacher.getByRole("button", { name: /Enregistrer/ }).first().click();
 await teacher.getByText(/enregistrée|enregistrées/).first().waitFor();
 await teacher.getByRole("button", { name: "Valider les notes" }).click();
 await teacher.getByRole("dialog").getByRole("button", { name: "Valider" }).click();
-await teacher.getByText("Notes validées et verrouillées").waitFor();
+await teacher.getByText("Notes validées et verrouillées").first().waitFor();
 ok(`7. notes saisies (${n}) et validées`);
 await teacher.getByRole("button", { name: "Publier les notes" }).click();
 await teacher.getByRole("dialog").getByRole("button", { name: "Publier" }).click();
@@ -200,7 +200,7 @@ console.log("\n=== ADMINISTRATION (suite) ===");
 await admin.goto(`${base}/bulletins/configuration`);
 await admin.getByRole("heading", { name: "Configuration du bulletin" }).waitFor();
 await admin.getByRole("button", { name: "Enregistrer la configuration" }).click();
-await admin.getByText(/Configuration enregistrée/).waitFor();
+await admin.getByText(/Configuration enregistrée/).first().waitFor();
 ok("8. bulletin configuré");
 // 9. Bulletins : calcul, publication, PDF
 await admin.goto(`${base}/bulletins?classe=${klass}`);
@@ -310,7 +310,7 @@ check(st.status === "withdrawn" && st.status_reason === "Déménagement de la fa
 await admin.goto(`${base}/eleves/${others[1].id}`);
 await admin.getByRole("button", { name: "Archiver" }).click();
 await admin.getByRole("dialog").getByRole("button", { name: "Archiver" }).click();
-await admin.getByText("Dossier archivé").waitFor();
+await admin.getByText("Dossier archivé").first().waitFor();
 ok(`    élève archivé (${others[1].first_name}), dossier conservé`);
 
 console.log("\n=== PARENT (après paiement) ===");
@@ -363,7 +363,7 @@ console.log("\n=== SCÉNARIO 12 : élève archivé → portail désactivé, hist
 await admin.goto(`${base}/eleves/${kofi}`);
 await admin.getByRole("button", { name: "Archiver" }).click();
 await admin.getByRole("dialog").getByRole("button", { name: "Archiver" }).click();
-await admin.getByText("Dossier archivé").waitFor();
+await admin.getByText("Dossier archivé").first().waitFor();
 await stu.goto(`${base}/portail`);
 const stuBlocked = !stu.url().endsWith("/portail") || (await stu.getByText(/désactivé|indisponible|archivé|aucun élève/i).count()) > 0;
 const stu2Ctx = await browser.newContext(mobile);
