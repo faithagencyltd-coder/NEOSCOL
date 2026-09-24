@@ -82,6 +82,22 @@ Mot de passe commun : `NeoScol-Demo-2026!`
 Les comptes portail sont créés par l'établissement (fiche parent, onglet « Portail » de l'élève) ;
 aucune inscription publique.
 
+#### Lien des portails (un lien par établissement)
+
+Chaque établissement dispose d'un lien unique et partageable, **`/acces/CODE`** (ex. `/acces/DEMO`),
+qui ouvre les portails **Parent**, **Enseignant / Formateur** et **Élève / Étudiant** (plus
+l'administration). Chacun s'y connecte avec ses propres identifiants ; `?portail=parent|enseignant|eleve|personnel`
+ouvre directement un portail.
+
+- Administration : **Portails › Lien des portails** (`/parametres/portails`, permission `settings.manage`) :
+  copie, WhatsApp, SMS, e-mail, QR code et affiche A4 à imprimer (PDF).
+- Contrôle côté serveur : l'identifiant est recherché dans l'établissement du lien uniquement ; après
+  authentification, le compte doit en être membre avec un rôle correspondant au portail, sinon la session
+  est fermée et le refus journalisé (`auth.portal_denied`). L'établissement du lien devient l'établissement actif.
+- La page publique n'expose que l'identité de l'établissement (nom, type, ville, couleurs, logo) via
+  `organization_portal` ; établissements suspendus ou archivés : lien inactif.
+- L'adresse partagée vient de `NEXT_PUBLIC_SITE_URL` (domaine réel) ou, à défaut, de l'hôte de la requête.
+
 ### Tâches planifiées
 
 `GET /api/cron/rappels` avec l'en-tête `Authorization: Bearer $CRON_SECRET` envoie les rappels

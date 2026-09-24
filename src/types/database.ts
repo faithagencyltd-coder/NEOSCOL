@@ -4642,6 +4642,33 @@ export type Database = {
           unread: boolean
         }[]
       }
+      organization_portal: {
+        Args: {
+          p_code: string
+        }
+        Returns: {
+          id: string
+          name: string
+          short_name: string
+          code: string
+          type: Database["public"]["Enums"]["organization_type"]
+          city: string
+          country: string
+          primary_color: string
+          secondary_color: string
+          has_logo: boolean
+          is_demo: boolean
+        }[]
+      }
+      organization_portal_logo: {
+        Args: {
+          p_code: string
+        }
+        Returns: {
+          mime_type: string
+          content: string
+        }[]
+      }
       platform_add_org_admin: {
         Args: {
           p_organization_id: string
@@ -4670,6 +4697,12 @@ export type Database = {
         Args: {
           p_kind: string
           p_record_id: string
+        }
+        Returns: Json
+      }
+      portal_account_counts: {
+        Args: {
+          p_org: string
         }
         Returns: Json
       }

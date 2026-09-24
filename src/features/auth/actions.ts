@@ -6,6 +6,7 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { isPortalKind, normalizeOrgCode, PORTAL_PERSONAS, PORTALS, type PortalKind } from "@/features/auth/portals";
 import { emailSchema, newPasswordSchema, otpSchema, parentOtpSchema, phoneSchema, signInSchema, studentSignInSchema } from "@/features/auth/schemas";
 import { ACTIVE_ORG_COOKIE, getSessionContext } from "@/lib/auth/session";
 import { publicEnv } from "@/lib/env";
@@ -23,12 +24,14 @@ async function requestMetadata() {
 }
 
 /** Journalise un échec de connexion (identifiant haché, jamais en clair). */
-async function logFailedSignIn(identifier: string, method: "password" | "otp") {
+async function logFailedSignIn(identifier: string, method: "password" | "otp" | "portal", organizationId?: string, actorId?: string) {
   const admin = createAdminClient();
   if (!admin) return;
   await admin.from("audit_logs").insert({
-    action: "auth.login_failed",
-    summary: `Échec de connexion (${method})`,
+    organization_id: organizationId ?? null,
+    actor_id: actorId ?? null,
+    action: method === "portal" ? "auth.portal_denied" : "auth.login_failed",
+    summary: method === "portal" ? "Connexion refusée : compte hors de l'établissement ou du portail du lien" : `Échec de connexion (${method})`,
     metadata: {
       ...(await requestMetadata()),
       identifier_sha256: createHash("sha256").update(identifier.toLowerCase()).digest("hex"),
@@ -37,19 +40,76 @@ async function logFailedSignIn(identifier: string, method: "password" | "otp") {
   });
 }
 
-/** Après une authentification réussie : contrôle du compte, audit, redirection. */
-async function completeSignIn(next: unknown): Promise<ActionResult> {
+/** Établissement et portail visés par le lien des portails (/acces/CODE). */
+type PortalScope = { id: string; name: string; kind: PortalKind };
+
+/**
+ * Lit et revérifie l'établissement transmis par le lien des portails.
+ * null : connexion classique (/connexion) ; "invalid" : lien inconnu ou établissement inactif.
+ */
+async function portalScope(formData: FormData): Promise<PortalScope | null | "invalid"> {
+  const raw = formData.get("etablissement");
+  if (raw === null || raw === "") return null;
+  const code = normalizeOrgCode(raw);
+  const kind = formData.get("portail");
+  if (!code || !isPortalKind(kind)) return "invalid";
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("organization_portal", { p_code: code });
+  const org = data?.[0];
+  return org ? { id: org.id, name: org.name, kind } : "invalid";
+}
+
+const INVALID_PORTAL: ActionResult = { ok: false, message: "Lien d'accès invalide ou établissement inactif. Demandez le lien à votre établissement." };
+
+/**
+ * Après une authentification réussie : contrôle du compte, audit, redirection.
+ * Depuis le lien des portails, le compte doit appartenir à l'établissement du
+ * lien avec un rôle correspondant au portail ; cet établissement devient actif.
+ */
+async function completeSignIn(next: unknown, scope?: PortalScope | null): Promise<ActionResult> {
   const context = await getSessionContext();
   const supabase = await createClient();
   if (!context || context.profile?.is_active === false) {
     await supabase.auth.signOut();
     return { ok: false, message: "Ce compte est désactivé. Contactez l'administration de votre établissement." };
   }
+  let organizationId = context.organization?.id;
+  if (scope) {
+    const member = context.organizations.some((o) => o.id === scope.id);
+    const { data: memberships } = member
+      ? await supabase
+          .from("memberships")
+          .select("membership_roles(role:roles(persona))")
+          .eq("user_id", context.user.id)
+          .eq("organization_id", scope.id)
+          .eq("status", "active")
+      : { data: [] };
+    const personas = (memberships ?? []).flatMap((m) => m.membership_roles.map((mr) => mr.role?.persona));
+    if (!personas.some((p) => p && PORTAL_PERSONAS[scope.kind].includes(p))) {
+      await logFailedSignIn(`${context.user.email ?? context.user.phone ?? context.user.id}|${scope.kind}`, "portal", scope.id, context.user.id);
+      await supabase.auth.signOut();
+      return {
+        ok: false,
+        message: member
+          ? `Ce compte n'a pas accès au ${PORTALS[scope.kind].label.toLowerCase()} de ${scope.name}. Choisissez le portail qui correspond à votre profil.`
+          : `Ce compte n'appartient pas à ${scope.name}. Utilisez le lien de votre propre établissement.`,
+      };
+    }
+    organizationId = scope.id;
+    (await cookies()).set(ACTIVE_ORG_COOKIE, scope.id, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+    await supabase.from("profiles").update({ last_organization_id: scope.id }).eq("id", context.user.id);
+  }
   await supabase.rpc("log_event", {
-    p_organization_id: context.organization?.id,
+    p_organization_id: organizationId,
     p_action: "auth.login",
-    p_summary: "Connexion",
-    p_metadata: await requestMetadata(),
+    p_summary: scope ? `Connexion (${PORTALS[scope.kind].label})` : "Connexion",
+    p_metadata: { ...(await requestMetadata()), ...(scope ? { portal: scope.kind, via: "lien_portails" } : {}) },
   });
   redirect(safeRedirectPath(next));
 }
@@ -77,21 +137,23 @@ export async function signInWithPassword(_: ActionResult | null, formData: FormD
   if (!parsed.success) {
     return { ok: false, message: "Vérifiez les champs du formulaire.", fieldErrors: z.flattenError(parsed.error).fieldErrors };
   }
+  const scope = await portalScope(formData);
+  if (scope === "invalid") return INVALID_PORTAL;
   let email = parsed.data.email.toLowerCase();
   if (!email.includes("@")) {
     const admin = createAdminClient();
-    const { data: staff } = admin
-      ? await admin.from("staff_members").select("user_id").ilike("employee_number", parsed.data.email).not("user_id", "is", null).limit(2)
-      : { data: [] };
+    let staffQuery = admin?.from("staff_members").select("user_id").ilike("employee_number", parsed.data.email).not("user_id", "is", null);
+    if (staffQuery && scope) staffQuery = staffQuery.eq("organization_id", scope.id);
+    const { data: staff } = staffQuery ? await staffQuery.limit(2) : { data: [] };
     email = (staff?.length === 1 ? await accountEmail(staff[0]!.user_id) : null) ?? "";
   }
   const supabase = await createClient();
   const { error } = email ? await supabase.auth.signInWithPassword({ email, password: parsed.data.password }) : { error: true };
   if (error) {
-    await logFailedSignIn(parsed.data.email, "password");
+    await logFailedSignIn(parsed.data.email, "password", scope?.id);
     return { ok: false, message: "Identifiant ou mot de passe incorrect." };
   }
-  return completeSignIn(formData.get("suite"));
+  return completeSignIn(formData.get("suite"), scope);
 }
 
 /**
@@ -107,18 +169,20 @@ export async function signInStudent(_: ActionResult | null, formData: FormData):
   if (!parsed.success) {
     return { ok: false, message: "Vérifiez les champs du formulaire.", fieldErrors: z.flattenError(parsed.error).fieldErrors };
   }
+  const scope = await portalScope(formData);
+  if (scope === "invalid") return INVALID_PORTAL;
   const admin = createAdminClient();
-  const { data: student } = admin
-    ? await admin.from("students").select("user_id, birth_date").eq("matricule", parsed.data.matricule).maybeSingle()
-    : { data: null };
+  let studentQuery = admin?.from("students").select("user_id, birth_date").eq("matricule", parsed.data.matricule);
+  if (studentQuery && scope) studentQuery = studentQuery.eq("organization_id", scope.id);
+  const { data: student } = studentQuery ? await studentQuery.maybeSingle() : { data: null };
   const email = student && student.birth_date === parsed.data.birth_date ? await accountEmail(student.user_id) : null;
   const supabase = await createClient();
   const { error } = email ? await supabase.auth.signInWithPassword({ email, password: parsed.data.password }) : { error: true };
   if (error) {
-    await logFailedSignIn(parsed.data.matricule, "password");
+    await logFailedSignIn(parsed.data.matricule, "password", scope?.id);
     return { ok: false, message: "Matricule, date de naissance ou mot de passe incorrect." };
   }
-  return completeSignIn(formData.get("suite"));
+  return completeSignIn(formData.get("suite"), scope);
 }
 
 /**
@@ -137,18 +201,25 @@ export async function requestParentOtp(_: ActionResult<{ phone: string }> | null
       fieldErrors: { ...errors, phone: phone.success ? undefined : phone.error.issues.map((i) => i.message) },
     };
   }
+  const scope = await portalScope(formData);
+  if (scope === "invalid") return INVALID_PORTAL;
   const admin = createAdminClient();
   const digits = phone.data.replace(/\D/g, "");
-  const { data: guardians } = admin
-    ? await admin.from("guardians").select("first_name, last_name, phone, phone_secondary, user_id").not("user_id", "is", null).is("archived_at", null)
-        .or(`phone.eq.${phone.data},phone_secondary.eq.${phone.data},phone.eq.${digits},phone_secondary.eq.${digits}`)
-    : { data: [] };
+  let guardianQuery = admin
+    ?.from("guardians")
+    .select("first_name, last_name, phone, phone_secondary, user_id")
+    .not("user_id", "is", null)
+    .is("archived_at", null)
+    .or(`phone.eq.${phone.data},phone_secondary.eq.${phone.data},phone.eq.${digits},phone_secondary.eq.${digits}`);
+  // Depuis le lien des portails : seuls les parents de cet établissement reçoivent un code.
+  if (guardianQuery && scope) guardianQuery = guardianQuery.eq("organization_id", scope.id);
+  const { data: guardians } = guardianQuery ? await guardianQuery : { data: [] };
   const match = (guardians ?? []).find((g) => sameName(g.last_name, parsed.data.last_name) && sameName(g.first_name, parsed.data.first_name));
   if (match) {
     const supabase = await createClient();
     await supabase.auth.signInWithOtp({ phone: phone.data, options: { shouldCreateUser: false } });
   } else {
-    await logFailedSignIn(phone.data, "otp");
+    await logFailedSignIn(phone.data, "otp", scope?.id);
   }
   return { ok: true, message: "Si ces informations correspondent à un compte parent, un code vous a été envoyé par SMS.", data: { phone: phone.data } };
 }
@@ -158,13 +229,15 @@ export async function verifyPhoneOtp(_: ActionResult | null, formData: FormData)
   if (!parsed.success) {
     return { ok: false, message: "Vérifiez le code saisi.", fieldErrors: z.flattenError(parsed.error).fieldErrors };
   }
+  const scope = await portalScope(formData);
+  if (scope === "invalid") return INVALID_PORTAL;
   const supabase = await createClient();
   const { error } = await supabase.auth.verifyOtp({ phone: parsed.data.phone, token: parsed.data.token, type: "sms" });
   if (error) {
-    await logFailedSignIn(parsed.data.phone, "otp");
+    await logFailedSignIn(parsed.data.phone, "otp", scope?.id);
     return { ok: false, message: "Code incorrect ou expiré." };
   }
-  return completeSignIn(formData.get("suite"));
+  return completeSignIn(formData.get("suite"), scope);
 }
 
 export async function requestPasswordReset(_: ActionResult | null, formData: FormData): Promise<ActionResult> {

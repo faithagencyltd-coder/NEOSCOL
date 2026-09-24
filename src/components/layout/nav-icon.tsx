@@ -22,6 +22,7 @@ import {
   Layers,
   LayoutDashboard,
   LayoutTemplate,
+  Link2,
   ListChecks,
   NotebookPen,
   GraduationCap,
@@ -82,6 +83,7 @@ const ICONS: Record<NavIconName, LucideIcon> = {
   assistant: Bot,
   communication: MessagesSquare,
   history: Archive,
+  portalLink: Link2,
 };
 
 export function NavIcon({ name, className }: { name: NavIconName; className?: string }) {

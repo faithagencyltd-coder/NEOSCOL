@@ -5,8 +5,9 @@ import { isSupabaseConfigured, publicEnv } from "@/lib/env";
 import type { Database } from "@/types/database";
 
 /** Routes accessibles sans session. */
+// /acces : lien des portails d'un établissement (identité publique + formulaires de connexion).
 // /api/cron : protégé par CRON_SECRET (pas de session utilisateur).
-const PUBLIC_PATHS = ["/connexion", "/mot-de-passe-oublie", "/auth", "/verifier", "/configuration", "/api/cron", "/demo", "/hors-ligne"];
+const PUBLIC_PATHS = ["/connexion", "/acces", "/mot-de-passe-oublie", "/auth", "/verifier", "/configuration", "/api/cron", "/demo", "/hors-ligne"];
 
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));

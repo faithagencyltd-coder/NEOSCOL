@@ -7,6 +7,8 @@ import { AnimatedOTP } from "@/components/motion/animated-otp";
 import { ActionForm } from "@/components/shared/action-form";
 import { Alert } from "@/components/ui/alert";
 import { requestParentOtp, verifyPhoneOtp } from "@/features/auth/actions";
+import { PortalFields } from "@/features/auth/components/portal-fields";
+import type { PortalTarget } from "@/features/auth/portals";
 import { AuthInput, AuthSubmit } from "@/features/auth/components/auth-input";
 import { cn } from "@/lib/utils/cn";
 
@@ -17,7 +19,7 @@ const RESEND_SECONDS = 30;
  * Étape 2 : saisie case par case, validation automatique au 6e chiffre,
  * compte à rebours avant renvoi, secousse en cas de code erroné.
  */
-export function PhoneSignInForm({ next }: { next?: string }) {
+export function PhoneSignInForm({ next, portal }: { next?: string; portal?: PortalTarget }) {
   const [requestState, requestAction, requestPending] = useActionState(requestParentOtp, null);
   const [verifyState, verifyAction, verifyPending] = useActionState(verifyPhoneOtp, null);
   const [editing, setEditing] = useState(false);
@@ -50,6 +52,7 @@ export function PhoneSignInForm({ next }: { next?: string }) {
     const errors = requestState && !requestState.ok ? requestState.fieldErrors : undefined;
     return (
       <ActionForm dispatch={sendCode} pending={requestPending} className="stagger grid gap-4" noValidate>
+        <PortalFields portal={portal} />
         {requestState && !requestState.ok && !errors ? (
           <div className="anim-shake">
             <Alert tone="danger">{requestState.message}</Alert>
@@ -95,6 +98,7 @@ export function PhoneSignInForm({ next }: { next?: string }) {
       </div>
       <input type="hidden" name="phone" value={phone} />
       <input type="hidden" name="suite" value={next ?? ""} />
+      <PortalFields portal={portal} />
       <AnimatedOTP
         name="token"
         value={code}

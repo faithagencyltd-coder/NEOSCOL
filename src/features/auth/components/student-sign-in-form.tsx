@@ -6,10 +6,12 @@ import { useActionState } from "react";
 import { ActionForm } from "@/components/shared/action-form";
 import { Alert } from "@/components/ui/alert";
 import { signInStudent } from "@/features/auth/actions";
+import { PortalFields } from "@/features/auth/components/portal-fields";
+import type { PortalTarget } from "@/features/auth/portals";
 import { AuthInput, AuthSubmit } from "@/features/auth/components/auth-input";
 
 /** Connexion élève / étudiant / apprenant : matricule + date de naissance + mot de passe. */
-export function StudentSignInForm({ next }: { next?: string }) {
+export function StudentSignInForm({ next, portal }: { next?: string; portal?: PortalTarget }) {
   const [state, action, pending] = useActionState(signInStudent, null);
   const errors = state && !state.ok ? state.fieldErrors : undefined;
   return (
@@ -20,6 +22,7 @@ export function StudentSignInForm({ next }: { next?: string }) {
         </div>
       ) : null}
       <input type="hidden" name="suite" value={next ?? ""} />
+      <PortalFields portal={portal} />
       <AuthInput
         id="matricule"
         name="matricule"

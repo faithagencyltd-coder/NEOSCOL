@@ -1,4 +1,4 @@
-import { FileCog, Settings2 } from "lucide-react";
+import { FileCog, Link2, Settings2 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -31,6 +31,11 @@ export default async function OrganizationIdentityPage() {
         description={`Coordonnées et identité visuelle reprises sur tous les documents officiels. Code établissement : ${org?.code ?? "—"}.`}
         actions={
           <>
+            <Button asChild variant="secondary">
+              <Link href="/parametres/portails">
+                <Link2 aria-hidden /> Lien des portails
+              </Link>
+            </Button>
             <Button asChild variant="secondary">
               <Link href="/documents/modeles">
                 <FileCog aria-hidden /> Document Studio

@@ -7,10 +7,12 @@ import { useActionState } from "react";
 import { ActionForm } from "@/components/shared/action-form";
 import { Alert } from "@/components/ui/alert";
 import { signInWithPassword } from "@/features/auth/actions";
+import { PortalFields } from "@/features/auth/components/portal-fields";
+import type { PortalTarget } from "@/features/auth/portals";
 import { AuthInput, AuthSubmit } from "@/features/auth/components/auth-input";
 
 /** Personnel et enseignants : e-mail ou matricule + mot de passe. */
-export function PasswordSignInForm({ next }: { next?: string }) {
+export function PasswordSignInForm({ next, portal }: { next?: string; portal?: PortalTarget }) {
   const [state, action, pending] = useActionState(signInWithPassword, null);
   const errors = state && !state.ok ? state.fieldErrors : undefined;
 
@@ -22,6 +24,7 @@ export function PasswordSignInForm({ next }: { next?: string }) {
         </div>
       ) : null}
       <input type="hidden" name="suite" value={next ?? ""} />
+      <PortalFields portal={portal} />
       <AuthInput
         id="email"
         name="email"

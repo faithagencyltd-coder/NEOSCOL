@@ -6,6 +6,7 @@ export type NavIcon =
   | "account"
   | "students"
   | "history"
+  | "portalLink"
   | "enrollments"
   | "guardians"
   | "classes"
@@ -123,6 +124,7 @@ export const NAVIGATION: NavSection[] = [
     label: "Portails",
     items: [
       { href: "/portail", label: "Espace famille", icon: "portal", anyOf: ["portal.parent", "portal.student"], keywords: "portail parent élève enfants" },
+      { href: "/parametres/portails", label: "Lien des portails", icon: "portalLink", anyOf: ["settings.manage"], keywords: "lien partager connexion parent enseignant formateur élève étudiant QR code WhatsApp" },
     ],
   },
   {
