@@ -24,6 +24,18 @@ export default function ConfigurationPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 text-sm">
+          <div className="grid gap-1.5 rounded-xl border border-primary/30 bg-primary-soft/60 p-4">
+            <p className="font-semibold text-foreground">Essayer NéoScol sur votre ordinateur (données de démonstration)</p>
+            <p>
+              Démarrez Docker Desktop, arrêtez ce serveur (<kbd>Ctrl</kbd>+<kbd>C</kbd>) puis lancez dans le dossier du projet :
+            </p>
+            <p>
+              <code className="rounded bg-surface px-1.5 py-0.5">npm run demo:windows</code> sous Windows, ou{" "}
+              <code className="rounded bg-surface px-1.5 py-0.5">npm run demo</code> sous macOS / Linux.
+            </p>
+            <p className="text-muted-foreground">La base, les comptes de démonstration et ce fichier de configuration sont préparés automatiquement.</p>
+          </div>
+          <p className="font-medium text-foreground">Ou, avec votre propre projet Supabase :</p>
           <ol className="grid list-decimal gap-2 pl-5">
             <li>Créez un projet sur supabase.com (ou lancez <code>supabase start</code> en local).</li>
             <li>
