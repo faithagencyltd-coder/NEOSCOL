@@ -1,0 +1,48 @@
+﻿NéoScol — démonstration locale (Windows, sans Docker)
+=====================================================
+
+CE QU'IL FAUT
+  - Windows 10 ou 11 (64 bits)
+  - Node.js 20 ou plus, version « LTS » : https://nodejs.org
+    (vérifier : ouvrir « Invite de commandes » et taper  node -v)
+  - 2 Go d'espace disque libre
+
+LANCER
+  1. Extrayez TOUT le fichier .zip (clic droit > « Extraire tout… »).
+     Ne lancez pas depuis l'intérieur du .zip.
+     Choisissez un dossier simple, par exemple C:\NeoScol
+  2. Double-cliquez sur  DEMARRER.cmd
+     - Premier lancement : 1 à 3 minutes (création de la base de données).
+     - Si Windows affiche « Windows a protégé votre ordinateur » :
+       cliquez « Informations complémentaires » puis « Exécuter quand même ».
+     - Si le pare-feu Windows pose une question : « Autoriser » (réseaux privés).
+  3. Le navigateur s'ouvre sur http://localhost:3000
+     Choisissez un profil dans « Accès rapide — démonstration ».
+
+COMPTES DE DÉMONSTRATION (mot de passe commun : NeoScol-Demo-2026!)
+  - Administrateur    : admin@demo.neoscol.app
+  - Direction         : direction@demo.neoscol.app
+  - Secrétariat       : secretariat@demo.neoscol.app
+  - Comptabilité      : comptable@demo.neoscol.app
+  - Enseignant        : enseignant@demo.neoscol.app
+  - Tablette pointage : pointage@demo.neoscol.app
+  - Université        : universite@demo.neoscol.app
+  - Centre formation  : formation@demo.neoscol.app
+  - Parent (SMS)      : +2250700000001, BAMBA Adjoua, code 123456
+  - Élève             : matricule DEMO-26-00001, né le 12/03/2014
+
+ARRÊTER
+  Fermez la fenêtre noire (ou Ctrl + C dedans).
+  Les données sont conservées dans le dossier « donnees ».
+
+REMETTRE À ZÉRO
+  Double-cliquez sur  REINITIALISER.cmd
+
+EN CAS DE PROBLÈME
+  - « le port 3000 est déjà utilisé » : une autre fenêtre NéoScol (ou un autre
+    serveur, par ex. « npm run dev ») est ouverte : fermez-la puis relancez.
+  - Les journaux détaillés sont dans  donnees\journaux
+  - Tout reste sur cet ordinateur : rien n'est envoyé sur Internet.
+
+Contenu : application NéoScol, PostgreSQL 17, GoTrue (authentification),
+PostgREST (API). Données entièrement fictives.

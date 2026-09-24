@@ -14,6 +14,8 @@ const codespaceOrigins = process.env.CODESPACES === "true" ? [`*.${process.env.G
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Paquet portable (scripts/portable) : serveur autonome sans dépendances à installer.
+  output: process.env.NEOSCOL_STANDALONE === "1" ? "standalone" : undefined,
   allowedDevOrigins: codespaceOrigins,
   experimental: {
     // Justificatifs, photos et pièces jointes (5 Mo max côté base, D-15).
