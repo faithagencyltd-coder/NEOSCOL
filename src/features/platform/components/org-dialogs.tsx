@@ -2,7 +2,6 @@
 
 import { Building2, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useActionState } from "react";
 
 import { ActionForm } from "@/components/shared/action-form";
 import { SubmitButton } from "@/components/shared/submit-button";
@@ -13,6 +12,7 @@ import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { addOrganizationAdmin, createOrganization } from "@/features/platform/actions";
+import { useFeedbackAction } from "@/components/motion/use-feedback-action";
 
 export const ORG_TYPE_LABELS: Record<string, string> = {
   primary_school: "École primaire",
@@ -68,7 +68,7 @@ function AdminFields() {
 }
 
 export function CreateOrganizationDialog() {
-  const [state, action, pending] = useActionState(createOrganization, null);
+  const [state, action, pending] = useFeedbackAction(createOrganization);
   const router = useRouter();
   const created = state?.ok ? state.data : undefined;
   return (
@@ -124,7 +124,7 @@ export function CreateOrganizationDialog() {
 }
 
 export function AddAdminDialog({ organizationId, name }: { organizationId: string; name: string }) {
-  const [state, action, pending] = useActionState(addOrganizationAdmin, null);
+  const [state, action, pending] = useFeedbackAction(addOrganizationAdmin);
   const router = useRouter();
   const created = state?.ok ? state.data : undefined;
   return (

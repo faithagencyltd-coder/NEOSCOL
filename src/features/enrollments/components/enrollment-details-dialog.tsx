@@ -15,6 +15,7 @@ import { updateEnrollmentDetails } from "@/features/enrollments/actions";
 import { CustomFields } from "@/features/forms/components/custom-fields";
 import type { CustomValues, FieldDefinition } from "@/features/forms/fields";
 import type { ActionResult } from "@/lib/utils/action-result";
+import { notifyResult } from "@/components/motion/animated-toast";
 
 export function EnrollmentDetailsDialog({
   enrollmentId,
@@ -34,6 +35,7 @@ export function EnrollmentDetailsDialog({
   const [open, setOpen] = useState(false);
   const [state, action, pending] = useActionState(async (prev: ActionResult | null, formData: FormData) => {
     const result = await updateEnrollmentDetails(prev, formData);
+    notifyResult(result);
     if (result.ok) setOpen(false);
     return result;
   }, null);

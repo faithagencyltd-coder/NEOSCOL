@@ -9,15 +9,15 @@ export function Select({ className, children, ...props }: ComponentProps<"select
     <span className="relative block">
       <select
         className={cn(
-          "h-12 w-full appearance-none rounded-xl border border-input bg-surface pl-3 pr-10 text-sm text-foreground shadow-sm",
-          "focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 aria-invalid:border-danger disabled:opacity-60",
+          "peer h-12 w-full appearance-none rounded-xl border border-input bg-surface pl-3 pr-10 text-sm text-foreground shadow-sm transition-[border-color,box-shadow] duration-200 hover:border-primary/40",
+          "focus-visible:border-ring focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/15 aria-invalid:border-danger disabled:opacity-60",
           className,
         )}
         {...props}
       >
         {children}
       </select>
-      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-transform duration-200 peer-focus-visible:rotate-180 peer-focus-visible:text-primary" aria-hidden />
     </span>
   );
 }

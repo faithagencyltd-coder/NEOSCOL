@@ -15,6 +15,7 @@ import { saveTemplate } from "@/features/documents/actions";
 import { fillText, sampleValues, TEMPLATE_DEFAULTS, TEMPLATE_VARIABLES } from "@/features/documents/templates";
 import type { TextDocumentKind } from "@/features/documents/types";
 import { vocabularyFor } from "@/lib/vocabulary";
+import { notifyResult } from "@/components/motion/animated-toast";
 
 type Initial = { id?: string; name: string; description: string; title: string; body: string; closing: string };
 
@@ -41,6 +42,7 @@ export function TemplateEditor({
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const [state, action, pending] = useActionState(async (prev: Awaited<ReturnType<typeof saveTemplate>> | null, formData: FormData) => {
     const result = await saveTemplate(prev, formData);
+    notifyResult(result);
     if (result.ok) setOpen(false);
     return result;
   }, null);

@@ -14,6 +14,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { saveMedicalRecord } from "@/features/students/actions";
 import type { ActionResult } from "@/lib/utils/action-result";
+import { notifyResult } from "@/components/motion/animated-toast";
 
 type Medical = Partial<Record<
   "blood_group" | "allergies" | "conditions" | "medications" | "emergency_contact_name" |
@@ -25,6 +26,7 @@ export function MedicalDialog({ studentId, medical }: { studentId: string; medic
   const [open, setOpen] = useState(false);
   const [state, action, pending] = useActionState(async (prev: ActionResult | null, formData: FormData) => {
     const result = await saveMedicalRecord(prev, formData);
+    notifyResult(result);
     if (result.ok) setOpen(false);
     return result;
   }, null);

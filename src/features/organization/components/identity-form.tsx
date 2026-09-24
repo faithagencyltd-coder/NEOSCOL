@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 
 import { ActionForm } from "@/components/shared/action-form";
 import { SubmitButton } from "@/components/shared/submit-button";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { saveIdentity } from "@/features/organization/actions";
 import { ORGANIZATION_TYPE_LABELS, vocabularyFor } from "@/lib/vocabulary";
+import { useFeedbackAction } from "@/components/motion/use-feedback-action";
 
 type Values = {
   name: string;
@@ -27,7 +28,7 @@ type Values = {
 
 /** Coordonnées et couleurs de l'établissement, avec aperçu de l'en-tête des documents. */
 export function IdentityForm({ values, canEdit }: { values: Values; canEdit: boolean }) {
-  const [state, action, pending] = useActionState(saveIdentity, null);
+  const [state, action, pending] = useFeedbackAction(saveIdentity);
   const [name, setName] = useState(values.name);
   const [primary, setPrimary] = useState(values.primary_color);
   const [secondary, setSecondary] = useState(values.secondary_color);

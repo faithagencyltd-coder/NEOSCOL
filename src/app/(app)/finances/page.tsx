@@ -10,7 +10,7 @@ import { FilterBar } from "@/components/shared/filter-bar";
 import { Pagination } from "@/components/shared/pagination";
 import { QuickFormDialog } from "@/components/shared/quick-form-dialog";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { TabNav } from "@/components/shared/tab-nav";
+import { TabNav, TabPanel } from "@/components/shared/tab-nav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -98,13 +98,15 @@ export default async function FinancePage({ searchParams }: PageProps<"/finances
         {can(context, "finance.invoices.manage") ? <NewInvoiceButton organizationId={context.organization.id} today={todayIn(context.organization.timezone)} /> : null}
       </div>
       <TabNav tabs={tabs} active={tab} label="Rubriques financières" />
-      {tab === "synthese" ? <SummarySection params={params} /> : null}
-      {tab === "factures" ? <InvoicesSection params={params} /> : null}
-      {tab === "paiements" ? <PaymentsSection params={params} /> : null}
-      {tab === "depenses" ? <ExpensesSection params={params} /> : null}
-      {tab === "impayes" ? <OutstandingSection params={params} /> : null}
-      {tab === "rappels" ? <RemindersSection /> : null}
-      {tab === "tarifs" ? <FeesSection /> : null}
+      <TabPanel active={tab}>
+        {tab === "synthese" ? <SummarySection params={params} /> : null}
+        {tab === "factures" ? <InvoicesSection params={params} /> : null}
+        {tab === "paiements" ? <PaymentsSection params={params} /> : null}
+        {tab === "depenses" ? <ExpensesSection params={params} /> : null}
+        {tab === "impayes" ? <OutstandingSection params={params} /> : null}
+        {tab === "rappels" ? <RemindersSection /> : null}
+        {tab === "tarifs" ? <FeesSection /> : null}
+      </TabPanel>
     </div>
   );
 }

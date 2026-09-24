@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 
 import { ConfirmAction } from "@/components/shared/confirm-action";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { TabNav, type TabLink } from "@/components/shared/tab-nav";
+import { TabNav, TabPanel, type TabLink } from "@/components/shared/tab-nav";
 import { Alert } from "@/components/ui/alert";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -180,59 +180,61 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
       </Card>
 
       <TabNav tabs={tabs} active={active} label="Sections du dossier" />
-
-      {active === "informations" ? (
-        <InformationTab
-          student={student}
-          customFields={await getStudentFormFields(organization.id)}
-          medical={showMedical ? await getStudentMedical(student.id) : null}
-          showMedical={showMedical}
-          canEditMedical={can(context, "students.medical.manage")}
-        />
-      ) : null}
-      {active === "parents" ? <GuardiansTab student={student} canManage={can(context, "guardians.manage")} /> : null}
-      {active === "scolarite" ? (
-        <>
-          <SchoolingTab student={student} canEnroll={can(context, "enrollments.manage") && !archived} />
-          <PreviousSchoolsCard studentId={student.id} schools={await getStudentPreviousSchools(student.id)} canManage={can(context, "students.update") && !archived} />
-        </>
-      ) : null}
-      {active === "bulletins" ? (
-        <ReportCardsTab
-          cards={await getStudentReportCards(student.id)}
-          canPdf={can(context, "documents.generate") && (can(context, "report_cards.manage") || can(context, "report_cards.publish"))}
-        />
-      ) : null}
-      {active === "discipline" ? (
-        <ConductTab studentId={student.id} records={await getStudentConduct(student.id)} canManage={can(context, "conduct.manage") && !archived} today={todayIn(organization.timezone)} />
-      ) : null}
-      {active === "notes" ? <GradesTab grades={await getStudentGrades(student.id)} /> : null}
-      {active === "presences" ? <AttendanceTab attendance={await getStudentAttendance(student.id)} /> : null}
-      {active === "finance" ? <FinanceTab finance={await getStudentFinance(student.id)} currency={organization.currency} /> : null}
-      {active === "documents" ? (
-        <StudentDocumentsTab
-          studentId={student.id}
-          documents={can(context, "documents.read") ? await listStudentDocuments(organization.id, student.id) : []}
-          enrollments={student.enrollments.filter((e) => e.status !== "cancelled" && e.status !== "draft")}
-          can={{
-            generate: can(context, "documents.generate") && !archived,
-            dossier: can(context, "documents.dossier") && can(context, "documents.generate"),
-            revoke: can(context, "documents.revoke"),
-            saveDefault: can(context, "settings.manage"),
-            transcript: can(context, "documents.generate") && (can(context, "report_cards.manage") || can(context, "report_cards.publish")),
-          }}
-          dossierOrder={dossierOrder(null, (organization.settings as { documents?: { dossier_sections?: unknown } } | null)?.documents?.dossier_sections)}
-          timezone={organization.timezone}
-          customTemplates={await listCustomTemplates(organization.id)}
-        />
-      ) : null}
-      {active === "portail" ? <PortalTab studentId={student.id} hasBirthDate={Boolean(student.birth_date)} canManage={can(context, "portal_access.manage")} organization={organization} /> : null}
-      {active === "historique" ? (
-        <HistoryTab
-          history={await getStudentHistory(organization.id, [student.id, ...student.enrollments.map((e) => e.id)])}
-          timezone={organization.timezone}
-        />
-      ) : null}
+      <TabPanel active={active}>
+  
+        {active === "informations" ? (
+          <InformationTab
+            student={student}
+            customFields={await getStudentFormFields(organization.id)}
+            medical={showMedical ? await getStudentMedical(student.id) : null}
+            showMedical={showMedical}
+            canEditMedical={can(context, "students.medical.manage")}
+          />
+        ) : null}
+        {active === "parents" ? <GuardiansTab student={student} canManage={can(context, "guardians.manage")} /> : null}
+        {active === "scolarite" ? (
+          <>
+            <SchoolingTab student={student} canEnroll={can(context, "enrollments.manage") && !archived} />
+            <PreviousSchoolsCard studentId={student.id} schools={await getStudentPreviousSchools(student.id)} canManage={can(context, "students.update") && !archived} />
+          </>
+        ) : null}
+        {active === "bulletins" ? (
+          <ReportCardsTab
+            cards={await getStudentReportCards(student.id)}
+            canPdf={can(context, "documents.generate") && (can(context, "report_cards.manage") || can(context, "report_cards.publish"))}
+          />
+        ) : null}
+        {active === "discipline" ? (
+          <ConductTab studentId={student.id} records={await getStudentConduct(student.id)} canManage={can(context, "conduct.manage") && !archived} today={todayIn(organization.timezone)} />
+        ) : null}
+        {active === "notes" ? <GradesTab grades={await getStudentGrades(student.id)} /> : null}
+        {active === "presences" ? <AttendanceTab attendance={await getStudentAttendance(student.id)} /> : null}
+        {active === "finance" ? <FinanceTab finance={await getStudentFinance(student.id)} currency={organization.currency} /> : null}
+        {active === "documents" ? (
+          <StudentDocumentsTab
+            studentId={student.id}
+            documents={can(context, "documents.read") ? await listStudentDocuments(organization.id, student.id) : []}
+            enrollments={student.enrollments.filter((e) => e.status !== "cancelled" && e.status !== "draft")}
+            can={{
+              generate: can(context, "documents.generate") && !archived,
+              dossier: can(context, "documents.dossier") && can(context, "documents.generate"),
+              revoke: can(context, "documents.revoke"),
+              saveDefault: can(context, "settings.manage"),
+              transcript: can(context, "documents.generate") && (can(context, "report_cards.manage") || can(context, "report_cards.publish")),
+            }}
+            dossierOrder={dossierOrder(null, (organization.settings as { documents?: { dossier_sections?: unknown } } | null)?.documents?.dossier_sections)}
+            timezone={organization.timezone}
+            customTemplates={await listCustomTemplates(organization.id)}
+          />
+        ) : null}
+        {active === "portail" ? <PortalTab studentId={student.id} hasBirthDate={Boolean(student.birth_date)} canManage={can(context, "portal_access.manage")} organization={organization} /> : null}
+        {active === "historique" ? (
+          <HistoryTab
+            history={await getStudentHistory(organization.id, [student.id, ...student.enrollments.map((e) => e.id)])}
+            timezone={organization.timezone}
+          />
+        ) : null}
+      </TabPanel>
     </div>
   );
 }

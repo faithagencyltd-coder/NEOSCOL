@@ -14,11 +14,13 @@ import { Select } from "@/components/ui/select";
 import { addGuardianToStudent } from "@/features/students/actions";
 import { RELATIONSHIP } from "@/lib/labels";
 import type { ActionResult } from "@/lib/utils/action-result";
+import { notifyResult } from "@/components/motion/animated-toast";
 
 export function GuardianDialog({ studentId }: { studentId: string }) {
   const [open, setOpen] = useState(false);
   const [state, action, pending] = useActionState(async (prev: ActionResult | null, formData: FormData) => {
     const result = await addGuardianToStudent(prev, formData);
+    notifyResult(result);
     if (result.ok) setOpen(false);
     return result;
   }, null);

@@ -1,7 +1,7 @@
 "use client";
 
 import { Banknote, Printer } from "lucide-react";
-import { useActionState, useState } from "react";
+import { useState } from "react";
 
 import { ActionForm } from "@/components/shared/action-form";
 import { SubmitButton } from "@/components/shared/submit-button";
@@ -13,11 +13,12 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { recordPayment } from "@/features/finance/actions";
 import { PAYMENT_METHOD } from "@/lib/labels";
+import { useFeedbackAction } from "@/components/motion/use-feedback-action";
 
 /** Encaissement à l'administration : le reçu PDF est proposé immédiatement. */
 export function PaymentDialog({ invoiceId, balance, currency }: { invoiceId: string; balance: number; currency: string }) {
   const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState(recordPayment, null);
+  const [state, formAction, pending] = useFeedbackAction(recordPayment);
   const done = state?.ok ? state.data : undefined;
   const errors = state && !state.ok ? (state.fieldErrors ?? {}) : {};
   return (

@@ -2,7 +2,6 @@
 
 import { KeyRound, LockOpen, ShieldAlert, Smartphone, UserCheck, UserX } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useActionState } from "react";
 
 import { ActionForm } from "@/components/shared/action-form";
 import { ConfirmAction } from "@/components/shared/confirm-action";
@@ -23,6 +22,7 @@ import {
   setPortalAccount,
   setPortalOverride,
 } from "@/features/portal/actions";
+import { useFeedbackAction } from "@/components/motion/use-feedback-action";
 
 type Account = { has_account: boolean; status?: string; last_sign_in_at?: string | null; login?: string | null } | null;
 
@@ -122,7 +122,7 @@ export function GuardianPortalAccess({
 }
 
 function ActivateStudentDialog({ studentId, hasBirthDate }: { studentId: string; hasBirthDate: boolean }) {
-  const [state, formAction, pending] = useActionState(activateStudentPortal, null);
+  const [state, formAction, pending] = useFeedbackAction(activateStudentPortal);
   const created = state?.ok ? state.data : undefined;
   const router = useRouter();
   return (
@@ -173,7 +173,7 @@ function ActivateStudentDialog({ studentId, hasBirthDate }: { studentId: string;
 }
 
 function OverrideForm({ studentId }: { studentId: string }) {
-  const [state, formAction, pending] = useActionState(setPortalOverride, null);
+  const [state, formAction, pending] = useFeedbackAction(setPortalOverride);
   return (
     <ActionForm dispatch={formAction} pending={pending} className="grid gap-3 rounded-xl border border-border p-3 sm:grid-cols-2">
       <input type="hidden" name="student_id" value={studentId} />

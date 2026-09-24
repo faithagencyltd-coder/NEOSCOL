@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { ActionForm } from "@/components/shared/action-form";
 import { SubmitButton } from "@/components/shared/submit-button";
@@ -8,6 +8,7 @@ import { Alert } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
 import { saveGradeSheet } from "@/features/grades/actions";
 import { cn } from "@/lib/utils/cn";
+import { useFeedbackAction } from "@/components/motion/use-feedback-action";
 
 type Student = { id: string; first_name: string; last_name: string; matricule: string };
 type Grade = { student_id: string; score: number | null; is_absent: boolean; is_exempt: boolean; comment: string | null };
@@ -50,7 +51,7 @@ export function GradeSheet({
       }),
     ),
   );
-  const [state, action, pending] = useActionState(saveGradeSheet, null);
+  const [state, action, pending] = useFeedbackAction(saveGradeSheet);
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
 
   const scores = students

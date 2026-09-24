@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { saveAppreciation } from "@/features/report-cards/actions";
 import type { ActionResult } from "@/lib/utils/action-result";
+import { notifyResult } from "@/components/motion/animated-toast";
 
 export function AppreciationDialog({
   reportCardId,
@@ -26,6 +27,7 @@ export function AppreciationDialog({
   const [open, setOpen] = useState(false);
   const [state, action, pending] = useActionState(async (prev: ActionResult | null, formData: FormData) => {
     const result = await saveAppreciation(prev, formData);
+    notifyResult(result);
     if (result.ok) setOpen(false);
     return result;
   }, null);

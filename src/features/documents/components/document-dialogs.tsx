@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowDown, ArrowUp, FileStack, FileText } from "lucide-react";
-import { useActionState, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import { ActionForm } from "@/components/shared/action-form";
 import { SubmitButton } from "@/components/shared/submit-button";
@@ -16,6 +16,7 @@ import { saveDossierOrder } from "@/features/documents/actions";
 import { DOSSIER_SECTIONS, type DossierSectionKey } from "@/features/documents/dossier";
 import { TEMPLATE_DEFAULTS } from "@/features/documents/templates";
 import { TEXT_DOCUMENT_KINDS, type TextDocumentKind } from "@/features/documents/types";
+import { useFeedbackAction } from "@/components/motion/use-feedback-action";
 
 /**
  * Documents rédigés (Document Studio) : type ou modèle personnalisé, champ
@@ -97,7 +98,7 @@ export function DossierDialog({ studentId, initialOrder, canSaveDefault }: { stu
     ...DOSSIER_SECTIONS.map((s) => s.key).filter((k) => !initialOrder.includes(k)),
   ]);
   const [enabled, setEnabled] = useState<Set<DossierSectionKey>>(() => new Set(initialOrder));
-  const [state, formAction, pending] = useActionState(saveDossierOrder, null);
+  const [state, formAction, pending] = useFeedbackAction(saveDossierOrder);
   const selected = order.filter((k) => enabled.has(k));
   const move = (index: number, delta: number) =>
     setOrder((current) => {

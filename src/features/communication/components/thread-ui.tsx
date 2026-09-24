@@ -13,12 +13,14 @@ import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { replyThread, startThread } from "@/features/communication/actions";
+import { notifyResult } from "@/components/motion/animated-toast";
 
 /** Réponse dans une conversation. */
 export function ReplyForm({ threadId }: { threadId: string }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [state, action, pending] = useActionState(async (prev: Awaited<ReturnType<typeof replyThread>> | null, formData: FormData) => {
     const result = await replyThread(prev, formData);
+    notifyResult(result);
     if (result.ok) formRef.current?.reset();
     return result;
   }, null);
@@ -49,6 +51,7 @@ export function NewThreadDialog({ contacts }: { contacts: Contact[] }) {
   const router = useRouter();
   const [state, action, pending] = useActionState(async (prev: Awaited<ReturnType<typeof startThread>> | null, formData: FormData) => {
     const result = await startThread(prev, formData);
+    notifyResult(result);
     if (result.ok && result.data) {
       setOpen(false);
       setSelected(new Set());

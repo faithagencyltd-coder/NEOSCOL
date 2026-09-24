@@ -1,6 +1,5 @@
 "use client";
 
-import { useActionState } from "react";
 
 import { ActionForm } from "@/components/shared/action-form";
 import { FormSection } from "@/components/shared/form-section";
@@ -10,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { saveOrganizationSettings } from "@/features/portal/actions";
+import { useFeedbackAction } from "@/components/motion/use-feedback-action";
 
 export type SettingsValues = {
   restrictions_enabled: boolean;
@@ -39,7 +39,7 @@ function NumberField({ name, label, hint, value, min = 0, max }: { name: string;
 
 /** Paramètres de l'établissement (settings.manage) : impayés, rappels, pointage, notes. */
 export function SettingsForm({ values, currency }: { values: SettingsValues; currency: string }) {
-  const [state, action, pending] = useActionState(saveOrganizationSettings, null);
+  const [state, action, pending] = useFeedbackAction(saveOrganizationSettings);
   return (
     <ActionForm dispatch={action} pending={pending} className="grid gap-5">
       {state ? <Alert tone={state.ok ? "success" : "danger"}>{state.message}</Alert> : null}

@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { ActionResult } from "@/lib/utils/action-result";
+import { notifyResult } from "@/components/motion/animated-toast";
 
 /**
  * Dépôt (ou nouvel envoi après demande de correction) d'un justificatif
@@ -37,6 +38,7 @@ export function JustificationForm({
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(async (prev: ActionResult | null, formData: FormData) => {
     const result = await action(prev, formData);
+    notifyResult(result);
     if (result.ok) setOpen(false);
     return result;
   }, null);

@@ -14,6 +14,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { createExpense, updateExpense } from "@/features/finance/actions";
 import { PAYMENT_METHOD } from "@/lib/labels";
+import { notifyResult } from "@/components/motion/animated-toast";
 
 type Expense = {
   id: string;
@@ -32,6 +33,7 @@ export function ExpenseDialog({ categories, today, expense, trigger }: { categor
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(async (prev: Awaited<ReturnType<typeof createExpense>> | null, formData: FormData) => {
     const result = await (expense ? updateExpense : createExpense)(prev, formData);
+    notifyResult(result);
     if (result.ok) setOpen(false);
     return result;
   }, null);

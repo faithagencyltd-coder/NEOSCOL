@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { saveAnnouncement } from "@/features/communication/actions";
+import { notifyResult } from "@/components/motion/animated-toast";
 
 export const AUDIENCE_LABELS = { staff: "Personnel", teacher: "Enseignants", parent: "Parents", student: "Élèves" } as const;
 
@@ -43,6 +44,7 @@ export function AnnouncementDialog({ classes, announcement, trigger, today }: { 
   const [mode, setMode] = useState(initialMode);
   const [state, action, pending] = useActionState(async (prev: Awaited<ReturnType<typeof saveAnnouncement>> | null, formData: FormData) => {
     const result = await saveAnnouncement(prev, formData);
+    notifyResult(result);
     if (result.ok) setOpen(false);
     return result;
   }, null);

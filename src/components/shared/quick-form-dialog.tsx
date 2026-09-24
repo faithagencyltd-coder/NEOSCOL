@@ -14,6 +14,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { ActionResult } from "@/lib/utils/action-result";
 import { cn } from "@/lib/utils/cn";
+import { notifyResult } from "@/components/motion/animated-toast";
 
 export type QuickField = {
   name: string;
@@ -55,6 +56,7 @@ export function QuickFormDialog({
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(async (prev: ActionResult | null, formData: FormData) => {
     const result = await action(prev, formData);
+    notifyResult(result);
     if (result.ok) setOpen(false);
     return result;
   }, null);

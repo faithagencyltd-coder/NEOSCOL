@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, Poppins } from "next/font/google";
-import { Toaster } from "sonner";
 
+import { AnimatedToaster } from "@/components/motion/animated-toast";
 import { ServiceWorkerRegistration } from "@/components/shared/pwa";
 
 import "./globals.css";
@@ -29,7 +29,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="fr" className={`${body.variable} ${heading.variable}`}>
       <body className="min-h-dvh">
         {children}
-        <Toaster position="top-right" richColors closeButton />
+        <AnimatedToaster />
         <ServiceWorkerRegistration />
       </body>
     </html>

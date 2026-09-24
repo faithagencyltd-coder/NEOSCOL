@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckCheck, Lock, MessageSquare } from "lucide-react";
-import { useActionState, useState } from "react";
+import { useState } from "react";
 
 import { ActionForm } from "@/components/shared/action-form";
 import { SubmitButton } from "@/components/shared/submit-button";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { ActionResult } from "@/lib/utils/action-result";
 import { cn } from "@/lib/utils/cn";
+import { useFeedbackAction } from "@/components/motion/use-feedback-action";
 
 type Status = "present" | "absent" | "late" | "excused";
 type Student = { id: string; first_name: string; last_name: string; matricule: string; photo_path?: string | null };
@@ -68,7 +69,7 @@ export function RollCall({
       }),
     ),
   );
-  const [state, formAction, pending] = useActionState(action, null);
+  const [state, formAction, pending] = useFeedbackAction(action);
   const update = (id: string, patch: Partial<Line>) => setLines((prev) => ({ ...prev, [id]: { ...prev[id]!, ...patch } }));
   const counts = STATUSES.map((s) => ({ ...s, count: Object.values(lines).filter((v) => v.status === s.value).length }));
   const records = students.map((s) => {

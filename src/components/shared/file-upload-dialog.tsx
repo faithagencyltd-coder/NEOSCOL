@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import type { ActionResult } from "@/lib/utils/action-result";
+import { notifyResult } from "@/components/motion/animated-toast";
 
 type Action = (state: ActionResult | null, formData: FormData) => Promise<ActionResult>;
 
@@ -35,6 +36,7 @@ export function FileUploadDialog({
   const [preview, setPreview] = useState<string | null>(null);
   const [state, formAction, pending] = useActionState(async (prev: ActionResult | null, formData: FormData) => {
     const result = await action(prev, formData);
+    notifyResult(result);
     if (result.ok) {
       setOpen(false);
       setPreview(null);

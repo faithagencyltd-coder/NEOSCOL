@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
-import { useActionState, useState } from "react";
+import { useState } from "react";
 
 import { ActionForm } from "@/components/shared/action-form";
 import { SubmitButton } from "@/components/shared/submit-button";
@@ -15,6 +15,7 @@ import { saveReportConfig } from "@/features/report-cards/actions";
 import { BOOLEAN_OPTIONS, type ReportConfig } from "@/features/report-cards/config";
 import { ASSESSMENT_KINDS } from "@/lib/labels";
 import { cn } from "@/lib/utils/cn";
+import { useFeedbackAction } from "@/components/motion/use-feedback-action";
 
 type Rule = { min: number; label: string };
 
@@ -43,7 +44,7 @@ function move<T>(list: T[], index: number, delta: number): T[] {
 /** Éditeur du bulletin : colonnes, pondérations, calcul, mentions, décisions, signatures, identité visuelle. */
 export function ReportConfigEditor({ initial }: { initial: ReportConfig }) {
   const [config, setConfig] = useState<ReportConfig>(initial);
-  const [state, formAction, pending] = useActionState(saveReportConfig, null);
+  const [state, formAction, pending] = useFeedbackAction(saveReportConfig);
   const set = <K extends keyof ReportConfig>(key: K, value: ReportConfig[K]) => setConfig((c) => ({ ...c, [key]: value }));
 
   const rulesEditor = (key: "mentions" | "decisions", title: string, description: string) => {

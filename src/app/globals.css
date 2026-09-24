@@ -37,6 +37,17 @@
   --sidebar-muted: #122f6b;
   --radius: 0.75rem;
   color-scheme: light;
+
+  /* Mouvement (design system) : durées et courbes uniques pour toute l'application. */
+  --dur-fast: 150ms;
+  --dur-base: 220ms;
+  --dur-slow: 380ms;
+  --dur-success: 650ms;
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --navy: #0b1f4d;
+  --orange: #f59e0b;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -258,4 +269,170 @@ h2,
 .rise {
   animation: fade-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   animation-delay: var(--delay, 0ms);
+}
+
+
+/* ============================================================================
+   NéoScol — système d'animation (design system)
+   Toutes les animations de l'application passent par ces classes et keyframes.
+   Durées : 150–300 ms (interactions), 300–500 ms (transitions), ≤ 800 ms (succès).
+   prefers-reduced-motion : désactivé globalement (règle plus haut + fin de fichier).
+   ========================================================================== */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fade-only {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); filter: blur(2px); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0); }
+}
+@keyframes scale-out {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  to { opacity: 0; transform: translate(-50%, -48%) scale(0.97); }
+}
+@keyframes drawer-in {
+  from { transform: translateX(100%); }
+  to { transform: none; }
+}
+@keyframes drawer-out {
+  from { transform: none; }
+  to { transform: translateX(100%); }
+}
+@keyframes pop-in {
+  0% { opacity: 0; transform: scale(0.6); }
+  70% { opacity: 1; transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(3px); }
+}
+@keyframes shimmer {
+  from { background-position: 150% 0; }
+  to { background-position: -50% 0; }
+}
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes row-flash {
+  from { background-color: color-mix(in srgb, var(--success) 16%, transparent); }
+  to { background-color: transparent; }
+}
+@keyframes grow-width {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes blob {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(30px, -20px, 0) scale(1.08); }
+  66% { transform: translate3d(-20px, 16px, 0) scale(0.95); }
+}
+@keyframes caret {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+
+/* Apparitions */
+.anim-fade-up { animation: fade-up var(--dur-slow) var(--ease-out) both; animation-delay: var(--delay, 0ms); }
+.anim-fade { animation: fade-only var(--dur-base) var(--ease-out) both; animation-delay: var(--delay, 0ms); }
+.anim-pop { animation: pop-in var(--dur-success) var(--ease-out) both; }
+.anim-shake { animation: shake 420ms var(--ease-in-out); }
+
+/* Cascade : chaque enfant apparaît avec 40 ms de décalage (12 premiers). */
+.stagger > * { animation: fade-up var(--dur-slow) var(--ease-out) both; }
+.stagger > *:nth-child(2) { animation-delay: 40ms; }
+.stagger > *:nth-child(3) { animation-delay: 80ms; }
+.stagger > *:nth-child(4) { animation-delay: 120ms; }
+.stagger > *:nth-child(5) { animation-delay: 160ms; }
+.stagger > *:nth-child(6) { animation-delay: 200ms; }
+.stagger > *:nth-child(7) { animation-delay: 240ms; }
+.stagger > *:nth-child(8) { animation-delay: 280ms; }
+.stagger > *:nth-child(9) { animation-delay: 320ms; }
+.stagger > *:nth-child(10) { animation-delay: 360ms; }
+.stagger > *:nth-child(11) { animation-delay: 400ms; }
+.stagger > *:nth-child(n + 12) { animation-delay: 440ms; }
+
+/* Lignes de tableau : apparition en cascade, survol avec liseré. */
+.table-anim tbody tr { animation: fade-up var(--dur-slow) var(--ease-out) both; }
+.table-anim tbody tr:nth-child(2) { animation-delay: 25ms; }
+.table-anim tbody tr:nth-child(3) { animation-delay: 50ms; }
+.table-anim tbody tr:nth-child(4) { animation-delay: 75ms; }
+.table-anim tbody tr:nth-child(5) { animation-delay: 100ms; }
+.table-anim tbody tr:nth-child(6) { animation-delay: 125ms; }
+.table-anim tbody tr:nth-child(7) { animation-delay: 150ms; }
+.table-anim tbody tr:nth-child(8) { animation-delay: 175ms; }
+.table-anim tbody tr:nth-child(9) { animation-delay: 200ms; }
+.table-anim tbody tr:nth-child(n + 10) { animation-delay: 225ms; }
+.table-anim tbody tr { box-shadow: inset 3px 0 0 transparent; transition: background-color var(--dur-fast), box-shadow var(--dur-base) var(--ease-out); }
+.table-anim tbody tr:hover { box-shadow: inset 3px 0 0 var(--primary); }
+.row-new { animation: fade-up var(--dur-slow) var(--ease-out) both, row-flash 1.6s var(--ease-out) 200ms both; }
+
+/* Cartes interactives : élévation au survol, appui. */
+.hover-lift { transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out), border-color var(--dur-base); }
+.hover-lift:hover { transform: translateY(-3px); box-shadow: 0 12px 28px -12px color-mix(in srgb, var(--navy) 35%, transparent); border-color: color-mix(in srgb, var(--primary) 30%, var(--border)); }
+.press { transition: transform var(--dur-fast) var(--ease-out); }
+.press:active { transform: scale(0.97); }
+
+/* Squelettes avec reflet (shimmer). */
+.shimmer {
+  background: linear-gradient(90deg, var(--surface-muted) 25%, color-mix(in srgb, var(--surface) 75%, var(--surface-muted)) 50%, var(--surface-muted) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+/* Verre dépoli (connexion, en-têtes flottants). */
+.glass {
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid color-mix(in srgb, #ffffff 55%, transparent);
+}
+
+/* Changement de statut (badge qui « pulse » quand sa valeur change). */
+.status-change { animation: pop-in 520ms var(--ease-out) both; }
+
+/* Fenêtres (Radix) : fondu + échelle, tiroir latéral, voile flouté. */
+.overlay-anim[data-state="open"] { animation: fade-only var(--dur-base) var(--ease-out) both; }
+.overlay-anim[data-state="closed"] { animation: fade-out var(--dur-fast) ease-in both; }
+.modal-anim[data-state="open"] { animation: scale-in var(--dur-slow) var(--ease-out) both; }
+.modal-anim[data-state="closed"] { animation: scale-out var(--dur-fast) ease-in both; }
+.drawer-anim[data-state="open"] { animation: drawer-in var(--dur-slow) var(--ease-out) both; }
+.drawer-anim[data-state="closed"] { animation: drawer-out var(--dur-base) ease-in both; }
+.menu-anim[data-state="open"] { animation: fade-up var(--dur-base) var(--ease-out) both; }
+.menu-anim[data-state="closed"] { animation: fade-out var(--dur-fast) ease-in both; }
+
+/* Champs : halo de focus animé. */
+.field-focus { transition: border-color var(--dur-base), box-shadow var(--dur-base) var(--ease-out), background-color var(--dur-base); }
+.field-focus:focus-within { box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 16%, transparent); border-color: var(--primary); }
+
+/* Transitions de page (React ViewTransition). */
+::view-transition { pointer-events: none; }
+::view-transition-old(.page-exit) { animation: var(--dur-fast) ease-in both fade-out; }
+::view-transition-new(.page-enter) { animation: var(--dur-slow) var(--ease-out) both fade-up; }
+::view-transition-old(.tab-swap) { animation: var(--dur-fast) ease-in both fade-out; }
+::view-transition-new(.tab-swap) { animation: var(--dur-base) var(--ease-out) both fade-up; }
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+  .stagger > *, .table-anim tbody tr, .anim-fade-up, .anim-fade, .anim-pop, .rise { animation: none !important; }
+  .hover-lift:hover { transform: none; }
 }

@@ -2,7 +2,6 @@
 
 import { KeyRound } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useActionState } from "react";
 
 import { ActionForm } from "@/components/shared/action-form";
 import { SubmitButton } from "@/components/shared/submit-button";
@@ -12,10 +11,11 @@ import { Dialog, DialogClose, DialogContent, DialogTrigger } from "@/components/
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { createStaffAccount } from "@/features/staff/actions";
+import { useFeedbackAction } from "@/components/motion/use-feedback-action";
 
 /** Création du compte de connexion : le mot de passe provisoire est affiché une seule fois. */
 export function CreateAccountDialog({ staffId, roles, defaultRoleId }: { staffId: string; roles: { id: string; name: string }[]; defaultRoleId?: string }) {
-  const [state, formAction, pending] = useActionState(createStaffAccount, null);
+  const [state, formAction, pending] = useFeedbackAction(createStaffAccount);
   const created = state?.ok ? state.data : undefined;
   const router = useRouter();
   return (

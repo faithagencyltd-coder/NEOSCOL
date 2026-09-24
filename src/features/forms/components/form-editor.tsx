@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
-import { useActionState, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { ActionForm } from "@/components/shared/action-form";
 import { SubmitButton } from "@/components/shared/submit-button";
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { saveFormDefinition } from "@/features/forms/actions";
 import { FIELD_TYPES, slugifyKey, type FieldDefinition, type FieldType } from "@/features/forms/fields";
+import { useFeedbackAction } from "@/components/motion/use-feedback-action";
 
 type EditableField = FieldDefinition & { uid: string; optionsText: string; isNew?: boolean };
 
@@ -36,7 +37,7 @@ function uniqueKey(label: string, taken: Set<string>): string {
 export function FormEditor({ kind, fields: initial, canEdit }: { kind: string; fields: FieldDefinition[]; canEdit: boolean }) {
   const [fields, setFields] = useState<EditableField[]>(() => initial.map((f, i) => toEditable(f, `${kind}-${i}`)));
   const created = useRef(0);
-  const [state, action, pending] = useActionState(saveFormDefinition, null);
+  const [state, action, pending] = useFeedbackAction(saveFormDefinition);
 
   const update = (uid: string, patch: Partial<EditableField>) =>
     setFields((list) => list.map((f) => (f.uid === uid ? { ...f, ...patch } : f)));

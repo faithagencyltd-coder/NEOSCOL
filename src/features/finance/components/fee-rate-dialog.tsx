@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { saveFeeRate } from "@/features/finance/actions";
 import { cn } from "@/lib/utils/cn";
+import { notifyResult } from "@/components/motion/animated-toast";
 
 type Option = { id: string; name: string };
 type Step = { key: number; label: string; due_on: string; percent: string };
@@ -58,6 +59,7 @@ export function FeeRateDialog({
   const [plan, setPlan] = useState<Step[]>(() => initialPlan(rate));
   const [state, action, pending] = useActionState(async (prev: Awaited<ReturnType<typeof saveFeeRate>> | null, formData: FormData) => {
     const result = await saveFeeRate(prev, formData);
+    notifyResult(result);
     if (result.ok) setOpen(false);
     return result;
   }, null);

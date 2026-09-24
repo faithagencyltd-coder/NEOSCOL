@@ -15,6 +15,7 @@ import { CustomFields } from "@/features/forms/components/custom-fields";
 import type { CustomValues, FieldDefinition } from "@/features/forms/fields";
 import { updateGuardian } from "@/features/guardians/actions";
 import type { ActionResult } from "@/lib/utils/action-result";
+import { notifyResult } from "@/components/motion/animated-toast";
 
 type Guardian = Record<
   "id" | "first_name" | "last_name",
@@ -26,6 +27,7 @@ export function GuardianEditDialog({ guardian, customFields = [], customValues =
   const [open, setOpen] = useState(false);
   const [state, action, pending] = useActionState(async (prev: ActionResult | null, formData: FormData) => {
     const result = await updateGuardian(prev, formData);
+    notifyResult(result);
     if (result.ok) setOpen(false);
     return result;
   }, null);
