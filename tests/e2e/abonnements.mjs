@@ -50,7 +50,7 @@ console.log("\n=== 1. Page publique des tarifs ===");
   await page.goto(`${base}/pricing`);
   check(page.url().endsWith("/tarifs"), "/pricing redirige vers /tarifs");
   let t = await text(page);
-  check(["MODULE SCOLAIRE", "CENTRE DE FORMATION", "UNIVERSITÉ", "ENTERPRISE"].every((n) => t.toUpperCase().includes(n)), "4 formules présentées (Module Scolaire unique)");
+  check(["MODULE SCOLAIRE", "FORMATION PROFESSIONNELLE", "UNIVERSITÉ", "ENTERPRISE"].every((n) => t.toUpperCase().includes(n)), "4 formules présentées (Module Scolaire unique)");
   check(!t.toUpperCase().includes("MATERNELLE & PRIMAIRE") && !/(^|[^\d])8 000 F CFA/.test(t), "ancienne formule Maternelle & Primaire retirée de l'offre");
   check(["15 000 F CFA", "20 000 F CFA", "28 000 F CFA"].every((p) => t.includes(p)), "prix mensuels officiels");
   check((t.match(/Essai gratuit 14 jours/g) ?? []).length === 4, "« Essai gratuit 14 jours » sur les 4 cartes");

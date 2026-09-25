@@ -41,6 +41,14 @@ export const TEMPLATE_DEFAULTS: Record<TextDocumentKind, TemplateDefaults> = {
     closing: "Le présent certificat lui est délivré pour servir et valoir ce que de droit.",
     content: { label: "Précisions (durée, résultat…) — facultatif", required: false, placeholder: "Durée : 120 heures. Résultat : admis(e)." },
   },
+  training_attestation: {
+    label: "Attestation de formation",
+    description: "Formation professionnelle : atteste l'inscription et le suivi de la formation (en cours ou terminée).",
+    title: "ATTESTATION DE FORMATION",
+    body: "Je soussigné(e), {{signataire.nom}}, {{signataire.fonction}} de {{etablissement.nom}}, atteste que {{eleve.prenom}} {{eleve.nom}}, matricule {{eleve.matricule}}, né(e) le {{eleve.date_naissance}} à {{eleve.lieu_naissance}}, est inscrit(e) et suit la formation « {{formation.nom}} » ({{formation.duree}} heures), {{classe.nom}}, au titre de l'année {{annee.nom}}. {{contenu}}",
+    closing: "La présente attestation lui est délivrée pour servir et valoir ce que de droit.",
+    content: { label: "Précisions (assiduité, période, stage…) — facultatif", required: false, placeholder: "Assiduité : 96 %. Stage prévu en entreprise." },
+  },
   convocation: {
     label: "Convocation",
     description: "Convocation de l'élève ou de sa famille (conseil, examen, entretien).",

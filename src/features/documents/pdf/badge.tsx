@@ -46,3 +46,50 @@ export function StaffBadgePage({ data, images }: { data: BadgeData; images: DocI
     </Page>
   );
 }
+
+export type LearnerBadgeData = {
+  organization: DocOrganization;
+  learner: { first_name: string; last_name: string; matricule: string };
+  formation: string | null;
+  session: string | null;
+  group: string | null;
+  badge: { number: string; status: string };
+  qr: string;
+};
+
+/** Badge de l'apprenant (CR80, portrait) : logo, photo, identité, matricule, formation, session, groupe, QR personnel. */
+export function LearnerBadgePage({ data, images }: { data: LearnerBadgeData; images: DocImages }) {
+  const { organization: org, learner, badge } = data;
+  return (
+    <Page size={[CR80[1], CR80[0]]} style={{ fontFamily: "Helvetica", fontSize: 7, color: COLORS.ink, backgroundColor: "#FFFFFF" }}>
+      <View style={{ backgroundColor: org.primary_color || COLORS.navy, paddingTop: 7, paddingBottom: 16, alignItems: "center", gap: 2 }}>
+        <OrgMark organization={org} images={images} size={20} />
+        <Text style={{ color: "#FFFFFF", fontFamily: "Helvetica-Bold", fontSize: 7, textAlign: "center", paddingHorizontal: 6 }}>{pdfText(org.name)}</Text>
+        <Text style={{ color: "#FFFFFF", fontSize: 5.5, letterSpacing: 1 }}>APPRENANT</Text>
+        {badge.status !== "active" || org.is_demo ? (
+          <Text style={{ fontSize: 5.5, color: "#FCA5A5", fontFamily: "Helvetica-Bold" }}>{badge.status !== "active" ? "BADGE DÉSACTIVÉ" : "DÉMONSTRATION"}</Text>
+        ) : null}
+      </View>
+      <View style={{ alignItems: "center", marginTop: -12 }}>
+        {images.photo ? (
+          <Image src={images.photo} style={{ width: 54, height: 64, objectFit: "cover", borderRadius: 4, borderWidth: 2, borderColor: "#FFFFFF" }} />
+        ) : (
+          <View style={{ width: 54, height: 64, borderRadius: 4, backgroundColor: COLORS.soft, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: "#FFFFFF" }}>
+            <Text style={{ fontSize: 15, color: COLORS.muted }}>{`${learner.first_name[0] ?? ""}${learner.last_name[0] ?? ""}`}</Text>
+          </View>
+        )}
+        <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 9, marginTop: 3 }}>{pdfText(learner.last_name)}</Text>
+        <Text style={{ fontSize: 7.5 }}>{pdfText(learner.first_name)}</Text>
+        <Text style={{ fontSize: 6.5, marginTop: 1 }}>Matricule {learner.matricule}</Text>
+        {data.formation ? <Text style={{ fontSize: 6.5, color: COLORS.blue, marginTop: 1, textAlign: "center", paddingHorizontal: 6 }}>{pdfText(data.formation)}</Text> : null}
+        {data.session ? (
+          <Text style={{ fontSize: 5.5, color: COLORS.muted, textAlign: "center", paddingHorizontal: 6 }}>
+            {pdfText(data.session + (data.group ? ` · ${data.group}` : ""))}
+          </Text>
+        ) : null}
+        <Image src={data.qr} style={{ width: 56, height: 56, marginTop: 4 }} />
+        <Text style={{ fontSize: 5.5, color: COLORS.muted, marginTop: 1 }}>{badge.number}</Text>
+      </View>
+    </Page>
+  );
+}

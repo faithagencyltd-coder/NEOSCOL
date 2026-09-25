@@ -107,7 +107,7 @@ export async function listBadgeScans(organizationId: string, filters: { from: st
   const supabase = await createClient();
   let query = supabase
     .from("badge_scans")
-    .select("id, scanned_at, result, kind, reason, message, device, staff:staff_members(id, first_name, last_name)")
+    .select("id, scanned_at, result, kind, reason, message, device, staff:staff_members(id, first_name, last_name), student:students(first_name, last_name)")
     .eq("organization_id", organizationId)
     .gte("scanned_at", `${filters.from}T00:00:00Z`)
     .lte("scanned_at", `${filters.to}T23:59:59Z`);

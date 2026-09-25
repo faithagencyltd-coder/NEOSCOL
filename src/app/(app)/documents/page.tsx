@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DossierDialog, WrittenDocumentDialog } from "@/features/documents/components/document-dialogs";
+import { isTrainingOrg } from "@/features/training/config";
 import { PdfPreviewDialog } from "@/features/documents/components/pdf-preview-dialog";
 import { DOSSIER_SECTIONS, dossierOrder } from "@/features/documents/dossier";
 import { listCustomTemplates } from "@/features/documents/queries";
@@ -204,6 +205,7 @@ export default async function DocumentsPage({ searchParams }: PageProps<"/docume
                 <WrittenDocumentDialog
                   studentId={student!.id}
                   customTemplates={customTemplates}
+                  training={isTrainingOrg(context.organization.type)}
                   trigger={
                     <Button size="sm">
                       <ScrollText aria-hidden /> Choisir et générer

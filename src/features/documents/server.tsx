@@ -14,6 +14,7 @@ import type { Database, Json } from "@/types/database";
 
 import { InvoicePage, ReceiptPage } from "./pdf/finance";
 import { ReportCardPage } from "./pdf/report-card";
+import { CompetencySheetPage, TrainingTranscriptPage } from "./pdf/training";
 import { CertificatePage, CommitmentPage, DossierCoverPage, EnrollmentFormPage, StudentCardPage, TranscriptPage } from "./pdf/student";
 import type { DocImages, DocOrganization, DocumentSnapshot, Verification } from "./types";
 
@@ -168,6 +169,7 @@ export function snapshotPages(snapshot: DocumentSnapshot, images: DocImages, ver
     case "school_certificate":
     case "attestation":
     case "training_certificate":
+    case "training_attestation":
     case "convocation":
     case "contract":
     case "custom":
@@ -182,6 +184,10 @@ export function snapshotPages(snapshot: DocumentSnapshot, images: DocImages, ver
       return <StudentCardPage snapshot={snapshot} images={images} verification={verification} />;
     case "dossier":
       return <DossierCoverPage snapshot={snapshot} images={images} verification={verification} issuedAt={issuedAt} />;
+    case "training_transcript":
+      return <TrainingTranscriptPage snapshot={snapshot} images={images} verification={verification} issuedAt={issuedAt} />;
+    case "competency_sheet":
+      return <CompetencySheetPage snapshot={snapshot} images={images} verification={verification} issuedAt={issuedAt} />;
   }
 }
 

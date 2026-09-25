@@ -41,6 +41,7 @@ import {
   getStudentMedical,
 } from "@/features/students/queries";
 import { featureEnabled } from "@/lib/features";
+import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth/guards";
 import { todayIn } from "@/lib/dates";
 import { can } from "@/lib/auth/session";
@@ -49,6 +50,10 @@ import { formatDate, formatDateTime, formatMoney } from "@/lib/utils/format";
 import { isUuid, param } from "@/lib/utils/search-params";
 import { vocabularyFor } from "@/lib/vocabulary";
 import { PastRecordsTab } from "@/features/migration/components/past-records";
+import { AssiduityTab, BadgeTab, CompetenciesTab, TrainingTab } from "@/features/training/components/learner-tabs";
+import { isTrainingOrg } from "@/features/training/config";
+import { learnerAttendanceSummary, learnerTraining } from "@/features/training/queries";
+import { qrDataUrl } from "@/lib/pdf/qr";
 import { getStudentPastRecords } from "@/features/migration/queries";
 
 export const metadata: Metadata = { title: "Dossier élève" };
@@ -72,8 +77,19 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
   const canConduct = can(context, "conduct.read") || can(context, "conduct.manage");
   const canDocuments = can(context, "documents.read") || can(context, "documents.generate") || can(context, "documents.dossier");
 
+  // Module Formation professionnelle : sections propres au dossier de l'apprenant.
+  const training = isTrainingOrg(organization.type);
+  const trainingTabs: TabLink[] = training
+    ? [
+        { key: "formation", label: "Formation", href: "?onglet=formation" },
+        { key: "assiduite", label: "Assiduité", href: "?onglet=assiduite" },
+        { key: "competences", label: "Compétences", href: "?onglet=competences" },
+        { key: "badge", label: "Badge", href: "?onglet=badge" },
+      ]
+    : [];
   const tabs: TabLink[] = [
     { key: "informations", label: "Informations", href: "?onglet=informations" },
+    ...trainingTabs,
     { key: "parents", label: "Parents", href: "?onglet=parents", count: student.student_guardians.length },
     { key: "scolarite", label: "Scolarité", href: "?onglet=scolarite", count: student.enrollments.length },
     { key: "parcours", label: "Parcours antérieur", href: "?onglet=parcours" },
@@ -124,7 +140,7 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
               Matricule <strong className="text-foreground">{student.matricule}</strong>
             </span>
             <span>
-              Classe <strong className="text-foreground">{current?.class?.name ?? "—"}</strong>
+              {v.klass} <strong className="text-foreground">{current?.class?.name ?? "—"}</strong>
             </span>
             {current?.academic_year ? (
               <span>
@@ -143,7 +159,7 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
         <div className="flex flex-wrap gap-2">
           {can(context, "enrollments.manage") && !archived ? (
             <Button asChild variant="secondary">
-              <Link href={`/inscriptions/nouvelle?eleve=${student.id}`}>
+              <Link href={training ? `/formation/inscription?apprenant=${student.id}` : `/inscriptions/nouvelle?eleve=${student.id}`}>
                 <ClipboardPlus aria-hidden /> Inscrire
               </Link>
             </Button>
@@ -194,6 +210,23 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
             canEditMedical={can(context, "students.medical.manage")}
           />
         ) : null}
+        {training && ["formation", "competences", "badge"].includes(active) ? (
+          <TrainingSections
+            active={active}
+            studentId={student.id}
+            organization={organization}
+            studentActive={student.status === "active" && !archived}
+            can={{
+              documents: can(context, "documents.generate") && !archived,
+              update: can(context, "students.update") && !archived,
+              enroll: can(context, "enrollments.manage") && !archived,
+              finance: canFinance,
+              evaluate: (can(context, "grades.enter") || can(context, "grades.manage")) && !archived,
+              badges: can(context, "students.badges.manage") && !archived,
+            }}
+          />
+        ) : null}
+        {active === "assiduite" ? <AssiduityTab data={await learnerAttendanceSummary(student.id)} /> : null}
         {active === "parents" ? <GuardiansTab student={student} canManage={can(context, "guardians.manage")} /> : null}
         {active === "parcours" ? (
           <PastRecordsTab
@@ -237,6 +270,7 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
             dossierOrder={dossierOrder(null, (organization.settings as { documents?: { dossier_sections?: unknown } } | null)?.documents?.dossier_sections)}
             timezone={organization.timezone}
             customTemplates={await listCustomTemplates(organization.id)}
+            training={training}
           />
         ) : null}
         {active === "portail" ? <PortalTab studentId={student.id} hasBirthDate={Boolean(student.birth_date)} canManage={can(context, "portal_access.manage")} organization={organization} /> : null}
@@ -248,6 +282,59 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
         ) : null}
       </TabPanel>
     </div>
+  );
+}
+
+async function TrainingSections({
+  active,
+  studentId,
+  organization,
+  studentActive,
+  can: allowed,
+}: {
+  active: string;
+  studentId: string;
+  organization: { id: string; currency: string; timezone: string };
+  studentActive: boolean;
+  can: { documents: boolean; update: boolean; enroll: boolean; finance: boolean; evaluate: boolean; badges: boolean };
+}) {
+  const training = await learnerTraining(organization.id, studentId);
+  if (active === "competences") return <CompetenciesTab studentId={studentId} training={training} canEvaluate={allowed.evaluate} />;
+  if (active === "badge") {
+    const supabase = await createClient();
+    const { data: token } = await supabase.from("student_badges").select("token").eq("student_id", studentId).eq("status", "active").maybeSingle();
+    return (
+      <BadgeTab
+        studentId={studentId}
+        training={training}
+        qr={token ? await qrDataUrl(`NEOSCOL-BADGE:${token.token}`, "#000000") : null}
+        canManage={allowed.badges}
+        active={studentActive}
+        timezone={organization.timezone}
+      />
+    );
+  }
+  let finance = null;
+  if (allowed.finance) {
+    const { invoices } = await getStudentFinance(studentId);
+    const live = invoices.filter((i) => i.status !== "cancelled");
+    finance = {
+      total: live.reduce((s, i) => s + Number(i.total ?? 0), 0),
+      paid: live.reduce((s, i) => s + Number(i.paid ?? 0), 0),
+      balance: live.reduce((s, i) => s + Number(i.balance ?? 0), 0),
+      overdue: live.some((i) => i.is_overdue),
+      nextDue: live.map((i) => i.next_due_on).filter((d): d is string => Boolean(d)).sort()[0] ?? null,
+    };
+  }
+  return (
+    <TrainingTab
+      studentId={studentId}
+      training={training}
+      finance={finance}
+      currency={organization.currency}
+      today={todayIn(organization.timezone)}
+      can={{ documents: allowed.documents, update: allowed.update, enroll: allowed.enroll, finance: allowed.finance }}
+    />
   );
 }
 

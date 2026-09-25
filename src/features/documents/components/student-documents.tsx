@@ -25,6 +25,7 @@ export function StudentDocumentsTab({
   dossierOrder,
   timezone,
   customTemplates = [],
+  training = false,
 }: {
   studentId: string;
   documents: Awaited<ReturnType<typeof listStudentDocuments>>;
@@ -33,6 +34,7 @@ export function StudentDocumentsTab({
   dossierOrder: DossierSectionKey[];
   timezone: string;
   customTemplates?: { id: string; name: string }[];
+  training?: boolean;
 }) {
   const pdf = (href: string, label: string, Icon: typeof FileText) => (
     <Button asChild variant="secondary" size="sm">
@@ -53,7 +55,7 @@ export function StudentDocumentsTab({
               {can.generate ? (
                 <>
                   {pdf(`/api/documents/certificats/${studentId}`, "Certificat de scolarité", FileBadge)}
-                  <WrittenDocumentDialog studentId={studentId} customTemplates={customTemplates} />
+                  <WrittenDocumentDialog studentId={studentId} customTemplates={customTemplates} training={training} />
                   {pdf(`/api/documents/cartes/${studentId}`, "Carte scolaire", CreditCard)}
                   {can.transcript ? pdf(`/api/documents/releves/${studentId}`, "Relevé de notes", FileSpreadsheet) : null}
                 </>

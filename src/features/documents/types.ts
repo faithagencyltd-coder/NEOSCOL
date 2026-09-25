@@ -161,8 +161,10 @@ export type InvoiceSnapshot = {
 };
 
 /** Documents rédigés à partir d'un modèle de texte (Document Studio). */
-export const TEXT_DOCUMENT_KINDS = ["school_certificate", "attestation", "training_certificate", "convocation", "contract", "custom"] as const;
+export const TEXT_DOCUMENT_KINDS = ["school_certificate", "attestation", "training_certificate", "training_attestation", "convocation", "contract", "custom"] as const;
 export type TextDocumentKind = (typeof TEXT_DOCUMENT_KINDS)[number];
+/** Documents propres au Module Formation professionnelle (masqués pour les autres établissements). */
+export const TRAINING_ONLY_DOCUMENT_KINDS: readonly TextDocumentKind[] = ["training_attestation"];
 
 export type CertificateSnapshot = {
   kind: TextDocumentKind;
@@ -237,7 +239,34 @@ export type DossierSnapshot = {
   sections: { key: string; label: string; count: number }[];
 };
 
+/** Formation professionnelle : relevé des évaluations par module + assiduité. */
+export type TrainingTranscriptSnapshot = {
+  kind: "training_transcript";
+  organization: DocOrganization;
+  student: DocStudent;
+  formation: string;
+  session: string;
+  period: { starts_on: string | null; ends_on: string | null };
+  duration_hours: number | null;
+  modules: { name: string; assessments: { title: string; kind: string; date: string; score: number | null; max: number }[]; average: number | null }[];
+  average: number | null;
+  attendance: { rate: number | null; absences: number; lates: number; minutes: number } | null;
+};
+
+/** Formation professionnelle : niveau atteint pour chaque compétence visée. */
+export type CompetencySheetSnapshot = {
+  kind: "competency_sheet";
+  organization: DocOrganization;
+  student: DocStudent;
+  formation: string;
+  session: string;
+  competencies: { name: string; level: string | null; evaluated_on: string | null; comment: string | null }[];
+  internships: { company: string; starts_on: string; ends_on: string; status: string; score: number | null }[];
+};
+
 export type DocumentSnapshot =
+  | TrainingTranscriptSnapshot
+  | CompetencySheetSnapshot
   | ReportCardSnapshot
   | ReceiptSnapshot
   | InvoiceSnapshot
@@ -263,6 +292,9 @@ export const DOCUMENT_KIND_LABELS: Record<string, string> = {
   school_certificate: "Certificat de scolarité",
   attestation: "Attestation",
   training_certificate: "Certificat de formation",
+  training_attestation: "Attestation de formation",
+  training_transcript: "Relevé de notes de formation",
+  competency_sheet: "Fiche de compétences",
   convocation: "Convocation",
   contract: "Contrat",
   custom: "Document personnalisé",

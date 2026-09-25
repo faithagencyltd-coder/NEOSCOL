@@ -53,3 +53,29 @@ Concerne les établissements de type `vocational_center` et `technical_center`
 | Inscriptions | `group_id` nullable ; capacité contrôlée uniquement pour les sessions de formation. |
 | Permissions | une seule nouvelle permission (`students.badges.manage`), ajoutée au catalogue TypeScript et aux rôles modèles. |
 | Module Scolaire / Université | aucune table, aucun écran, aucun réglage `school` modifié ; les nouvelles entrées de menu sont masquées hors formation. |
+
+## 4. Livré (phases 1 à 14)
+
+| Phase | Où | Détail |
+| --- | --- | --- |
+| 1. Structure | menu « Formation professionnelle » (centres de formation uniquement), formule renommée | réglages `settings.training` |
+| 2. Formations et sessions | `/formation/formations`, `/formation/sessions` | création, modification, désactivation, suppression si jamais utilisée ; modules et formateurs par session |
+| 3. Classes / groupes facultatifs | `/formation/parametres`, fiche session | désactivés par défaut ; activer / désactiver ne supprime rien |
+| 4. Apprenants | dossier `/eleves/[id]` : onglets Formation, Assiduité, Compétences, Badge | niveau d'étude, personne à contacter, pièces du dossier |
+| 5. Formateurs | personnel existant (badge distinct) | évaluation des compétences `/formation/sessions/[id]/competences` |
+| 6. Badges et QR | `/formation/badges`, onglet Badge, PDF CR80 | générer, imprimer, réimprimer, désactiver, remplacer (badge perdu) |
+| 7. Scan dédié | `/pointage` « SCANNER VOTRE BADGE » | caméra, douchette, saisie ; salle du poste facultative |
+| 8. Entrées / sorties / retards | `/formation/presences` | ENTRÉE, SORTIE, EN RETARD — X MINUTES, périodes additionnées, anti double-scan |
+| 9. Emploi du temps | `/emploi-du-temps` | par session, groupe, formateur, salle |
+| 10. Paiements | `/formation/inscription` | intégral ou échelonné, remise, 1er versement, reçu, facture, reste à payer |
+| 11. Évaluations et compétences | notes existantes + compétences | niveaux Non acquise → Maîtrisée, progression |
+| 12. Stages | onglet Formation | entreprise, période, tuteur, statut, évaluation /20 |
+| 13. Documents | attestation, certificat, relevé de notes, fiche de compétences | numérotés, QR de vérification |
+| 14. Statistiques | `/formation` (jour), `/formation/statistiques` | présences, absences, retards, paiements, reliquats, certificats |
+
+## 5. Tests
+
+- SQL : `tests/db/formation.test.mjs` (16 tests) — suite complète 128/128 après réinitialisation.
+- Navigateur : `tests/e2e/formation-professionnelle.mjs` (74 vérifications) : parcours apprenant, formateur, paiement, centre avec et sans classes, scans (entrée, sortie, retard, double scan, badge désactivé, mauvais QR, QR d'un autre établissement, apprenant, formateur), isolation, mobile.
+- Non-régression : 12 scénarios (49), abonnements (40), Module Scolaire (51), tests unitaires (9).
+- Le serveur de test doit être lancé avec `PAYMENT_ALLOW_SIMULATION=1` pour le test des abonnements.

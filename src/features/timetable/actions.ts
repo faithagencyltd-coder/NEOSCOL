@@ -20,6 +20,7 @@ const slotSchema = z
     starts_at: time,
     ends_at: time,
     room_id: z.string().refine(isUuid).optional(),
+    group_id: z.string().refine(isUuid).optional(),
   })
   .refine((v) => v.ends_at > v.starts_at, { error: "L'heure de fin doit suivre l'heure de début.", path: ["ends_at"] });
 
@@ -32,7 +33,7 @@ const CONFLICTS: Record<string, string> = {
 export async function createSlot(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const auth = await authorize("timetable.manage");
   if (!auth.ok) return auth;
-  const parsed = slotSchema.safeParse(readFields(formData, ["class_id", "class_subject_id", "weekday", "starts_at", "ends_at", "room_id"]));
+  const parsed = slotSchema.safeParse(readFields(formData, ["class_id", "class_subject_id", "weekday", "starts_at", "ends_at", "room_id", "group_id"]));
   if (!parsed.success) {
     return { ok: false, message: parsed.error.issues[0]?.message ?? "Champs invalides.", fieldErrors: z.flattenError(parsed.error).fieldErrors };
   }
@@ -52,6 +53,7 @@ export async function createSlot(_: ActionResult | null, formData: FormData): Pr
     class_subject_id: d.class_subject_id,
     teacher_id: classSubject.teacher_id,
     room_id: d.room_id ?? null,
+    group_id: d.group_id ?? null,
     weekday: d.weekday,
     starts_at: d.starts_at,
     ends_at: d.ends_at,

@@ -42,7 +42,7 @@ type StudentRow = {
   photo_path: string | null;
 };
 
-function docStudent(row: StudentRow): DocStudent {
+export function docStudent(row: StudentRow): DocStudent {
   const { photo_path, ...rest } = row;
   return { ...rest, photo_file_id: photo_path };
 }
@@ -270,7 +270,7 @@ export async function buildInvoiceSnapshot(supabase: Client, organization: DocOr
   };
 }
 
-async function loadStudent(supabase: Client, organizationId: string, studentId: string) {
+export async function loadStudent(supabase: Client, organizationId: string, studentId: string) {
   const { data } = await supabase.from("students").select(STUDENT_FIELDS).eq("organization_id", organizationId).eq("id", studentId).maybeSingle();
   return data as StudentRow | null;
 }

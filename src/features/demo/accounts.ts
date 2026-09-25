@@ -3,7 +3,19 @@
  * servent qu'en mode démonstration (NEOSCOL_DEMO_MODE=1) pour changer de rôle
  * en un clic ; chaque compte n'a que les droits de son rôle réel.
  */
-export type DemoAccountKey = "admin" | "direction" | "secretariat" | "comptable" | "enseignant" | "parent" | "eleve" | "pointage" | "universite" | "formation";
+export type DemoAccountKey =
+  | "admin"
+  | "direction"
+  | "secretariat"
+  | "comptable"
+  | "enseignant"
+  | "parent"
+  | "eleve"
+  | "pointage"
+  | "universite"
+  | "formation"
+  | "formateur"
+  | "pointage-formation";
 
 export type DemoAccount = {
   key: DemoAccountKey;
@@ -93,7 +105,23 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
     name: "Moussa DIALLO",
     role: "Centre de formation",
     description: "Administrateur de l'Institut de formation professionnelle.",
-    sees: ["Vocabulaire formation (apprenants, sessions, formateurs)", "Formations en heures", "Certificat de formation"],
+    sees: ["Formations, sessions, classes facultatives", "Inscription avec échéancier et reçu", "Badges QR, présences du jour, statistiques"],
+  },
+  {
+    key: "formateur",
+    email: "formateur@demo.neoscol.app",
+    name: "Koffi AKA",
+    role: "Formateur",
+    description: "Formateur en informatique (session Bureautique) de l'Institut de formation.",
+    sees: ["Ses cours et l'emploi du temps", "Évaluation des compétences de ses apprenants", "Assiduité de ses apprenants"],
+  },
+  {
+    key: "pointage-formation",
+    email: "pointage.formation@demo.neoscol.app",
+    name: "Tablette des ateliers",
+    role: "Tablette « Scanner votre badge »",
+    description: "Borne du centre de formation : formateurs et apprenants.",
+    sees: ["Détection automatique formateur / apprenant", "Entrée, sortie, retard"],
   },
 ];
 

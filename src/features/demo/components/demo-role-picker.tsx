@@ -29,6 +29,8 @@ const ICONS: Record<DemoAccountKey, LucideIcon> = {
   pointage: ScanLine,
   universite: Landmark,
   formation: Wrench,
+  formateur: Presentation,
+  "pointage-formation": ScanLine,
 };
 
 /**

@@ -36,10 +36,21 @@ export const SCAN_KIND: Record<string, string> = { arrival: "Arrivée", departur
 export type ScanResult = {
   result: "accepted" | "rejected";
   reason?: string;
-  kind?: "arrival" | "departure" | "lesson";
+  kind?: "arrival" | "departure" | "lesson" | "entry" | "exit";
   message: string;
   at?: string;
   minutes_late?: number | null;
   staff?: { name: string; job_title: string | null; employee_number?: string; photo_file_id?: string | null } | null;
   lesson?: { class: string; subject: string; room: string | null; starts_at: string; ends_at: string } | null;
+  /** Scan unifié (centres de formation) : profil détecté automatiquement. */
+  profile?: "staff" | "trainer" | "learner";
+  greeting?: string;
+  course?: { subject: string; session?: string; formation?: string | null; group?: string | null; room: string | null; teacher?: string | null; starts_at: string; ends_at: string; in_progress?: boolean } | null;
+  learner?: { name: string; first_name: string; matricule: string; photo_file_id: string | null } | null;
+  formation?: string | null;
+  session?: string | null;
+  group?: string | null;
+  status?: "late" | "on_time" | null;
+  period_minutes?: number | null;
+  day_minutes?: number | null;
 };

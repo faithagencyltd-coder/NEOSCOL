@@ -9,6 +9,7 @@ import { z } from "zod";
 
 import { storeUpload } from "@/features/files/server";
 import { STAFF_FIELDS, staffSchema, type ScanResult } from "@/features/staff/schemas";
+import { isTrainingOrg } from "@/features/training/config";
 import { authorize } from "@/lib/auth/authorize";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -261,15 +262,23 @@ export async function createStaffAccount(
   };
 }
 
-/** Scan d'un badge sur la tablette : tous les contrôles sont faits en base. */
-export async function scanBadge(code: string): Promise<{ ok: true; result: ScanResult } | { ok: false; message: string }> {
+/**
+ * Scan d'un badge sur la tablette : tous les contrôles sont faits en base.
+ * Centres de formation : scan unifié (formateur / personnel / apprenant détecté
+ * automatiquement, salle du poste facultative) ; écoles et universités : pointage
+ * du personnel inchangé.
+ */
+export async function scanBadge(code: string, roomId?: string | null): Promise<{ ok: true; result: ScanResult } | { ok: false; message: string }> {
   const auth = await authorize("staff_attendance.scan");
   if (!auth.ok) return auth;
   const value = String(code ?? "").trim().slice(0, 200);
   if (!value) return { ok: false, message: "Aucun code lu." };
   const supabase = await createClient();
   const device = ((await headers()).get("user-agent") ?? "").slice(0, 120);
-  const { data, error } = await supabase.rpc("scan_staff_badge", { p_organization_id: auth.context.organization.id, p_code: value, p_device: device });
+  const organizationId = auth.context.organization.id;
+  const { data, error } = isTrainingOrg(auth.context.organization.type)
+    ? await supabase.rpc("scan_badge", { p_organization_id: organizationId, p_code: value, p_device: device, p_room_id: isUuid(roomId ?? "") ? roomId! : undefined })
+    : await supabase.rpc("scan_staff_badge", { p_organization_id: organizationId, p_code: value, p_device: device });
   if (error || !data) return { ok: false, message: dbErrorMessage(error, "Le scan n'a pas pu être traité.") };
   return { ok: true, result: data as ScanResult };
 }

@@ -1,5 +1,10 @@
 import {
   Archive,
+  CalendarDays,
+  DoorOpen,
+  Hammer,
+  PieChart,
+  UserPlus,
   BadgeCheck,
   BarChart3,
   Bot,
@@ -86,6 +91,11 @@ const ICONS: Record<NavIconName, LucideIcon> = {
   history: Archive,
   portalLink: Link2,
   subscription: Gem,
+  training: Hammer,
+  trainingSessions: CalendarDays,
+  enrollLearner: UserPlus,
+  learnerAttendance: DoorOpen,
+  stats: PieChart,
 };
 
 export function NavIcon({ name, className }: { name: NavIconName; className?: string }) {

@@ -43,7 +43,12 @@ export type NavIcon =
   | "templates"
   | "reports"
   | "assistant"
-  | "communication";
+  | "communication"
+  | "training"
+  | "trainingSessions"
+  | "enrollLearner"
+  | "learnerAttendance"
+  | "stats";
 
 export type NavItem = {
   href: string;
@@ -54,6 +59,8 @@ export type NavItem = {
   keywords?: string;
   /** Module Scolaire : entrée affichée seulement si ce niveau est activé pour l'établissement. */
   schoolLevel?: SchoolLevel;
+  /** Module Formation professionnelle : entrée réservée aux centres de formation. */
+  family?: Vocabulary["family"];
 };
 
 export type NavSection = { label: string; items: NavItem[] };
@@ -70,6 +77,19 @@ export const NAVIGATION: NavSection[] = [
       { href: "/notifications", label: "Notifications", icon: "notifications", anyOf: [], keywords: "alertes messages" },
       { href: "/assistant", label: "Assistant", icon: "assistant", anyOf: ["assistant.use"], keywords: "intelligence artificielle questions anomalies" },
       { href: "/rapports", label: "Rapports", icon: "reports", anyOf: ["reports.read"], keywords: "statistiques exports effectifs résultats finances absences" },
+    ],
+  },
+  {
+    label: "Formation professionnelle",
+    items: [
+      { href: "/formation", label: "Aujourd'hui", icon: "learnerAttendance", anyOf: ["attendance.read", "reports.read", "staff_attendance.read"], family: "training", keywords: "présents absents retards sorties formateurs apprenants tableau du jour" },
+      { href: "/formation/formations", label: "Formations", icon: "training", anyOf: ["academic.read"], family: "training", keywords: "formations métiers coût durée programme certificat conditions d'admission" },
+      { href: "/formation/sessions", label: "Sessions et groupes", icon: "trainingSessions", anyOf: ["academic.read"], family: "training", keywords: "sessions dates capacité groupes classes formateurs" },
+      { href: "/formation/inscription", label: "Inscrire un apprenant", icon: "enrollLearner", anyOf: ["enrollments.manage"], family: "training", keywords: "inscription apprenant tarif échéancier paiement" },
+      { href: "/formation/presences", label: "Entrées et sorties", icon: "attendance", anyOf: ["attendance.read"], family: "training", keywords: "pointage apprenants entrées sorties retards présence" },
+      { href: "/formation/badges", label: "Badges apprenants", icon: "badges", anyOf: ["students.badges.manage", "students.read"], family: "training", keywords: "badges QR apprenants imprimer remplacer perdu" },
+      { href: "/formation/statistiques", label: "Statistiques", icon: "stats", anyOf: ["reports.read", "attendance.read"], family: "training", keywords: "statistiques taux assiduité paiements reliquats certificats" },
+      { href: "/formation/parametres", label: "Paramètres de formation", icon: "settings", anyOf: ["settings.manage"], family: "training", keywords: "classes groupes facultatifs retard tolérance scan" },
     ],
   },
   {
@@ -181,6 +201,7 @@ export function visibleNavigation(
       .filter((item) => item.anyOf.length === 0 || item.anyOf.some((p) => permissions.has(p)))
       // Entrées propres à un niveau : uniquement si l'établissement l'a activé.
       .filter((item) => !item.schoolLevel || Boolean(options.school?.levels.includes(item.schoolLevel)))
+      .filter((item) => !item.family || item.family === v.family)
       .map((item) => ({ ...item, label: localizedLabel(item, v) })),
   })).filter((section) => section.items.length > 0);
 }

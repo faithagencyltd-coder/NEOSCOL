@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { AnimatedError, AnimatedSuccess } from "@/components/motion/animated-feedback";
 import { scanBadge } from "@/features/staff/actions";
 import type { ScanResult } from "@/features/staff/schemas";
+import { SCAN_REJECTIONS } from "@/features/training/config";
 import { cn } from "@/lib/utils/cn";
 
 type RecentScan = { id: string; at: string; result: "accepted" | "rejected"; name: string; message: string };
@@ -20,6 +21,23 @@ declare global {
 }
 
 const RESET_AFTER_MS = 6000;
+const ROOM_KEY = "neoscol:kiosque:salle";
+
+const PROFILE_LABELS: Record<string, string> = { learner: "APPRENANT", trainer: "FORMATEUR", staff: "PERSONNEL" };
+
+/** Statut affiché en grand (centres de formation). */
+function statusLine(result: ScanResult): string | null {
+  if (result.result !== "accepted") return null;
+  if (result.profile === "learner") {
+    if (result.kind === "exit") return "SORTIE";
+    return result.status === "late" ? `EN RETARD — ${result.minutes_late} MINUTE${(result.minutes_late ?? 0) > 1 ? "S" : ""}` : "À L'HEURE";
+  }
+  if (result.profile === "trainer") {
+    if (result.kind === "departure") return "DÉPART ENREGISTRÉ";
+    return result.minutes_late ? `FORMATEUR PRÉSENT — RETARD ${result.minutes_late} MIN` : "FORMATEUR PRÉSENT";
+  }
+  return null;
+}
 
 /** Titre court affiché pour chaque motif de refus renvoyé par scan_staff_badge. */
 const REJECTION_TITLES: Record<string, string> = {
@@ -80,6 +98,7 @@ export function BadgeScanner({
   canOpenBackOffice,
   signOut,
   initialScans,
+  training = null,
 }: {
   organizationName: string;
   operator: string;
@@ -87,7 +106,22 @@ export function BadgeScanner({
   canOpenBackOffice: boolean;
   signOut: () => Promise<void>;
   initialScans: RecentScan[];
+  /** Centre de formation : scan unifié formateurs + apprenants, salle du poste facultative. */
+  training?: { rooms: { id: string; name: string }[] } | null;
 }) {
+  const [roomId, setRoomId] = useState<string>("");
+  const roomRef = useRef<string>("");
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(ROOM_KEY) ?? "";
+      if (saved && training?.rooms.some((r) => r.id === saved)) {
+        roomRef.current = saved;
+        setRoomId(saved); // eslint-disable-line react-hooks/set-state-in-effect -- préférence locale du poste, lue une fois
+      }
+    } catch {
+      // Stockage indisponible (navigation privée) : pas de salle mémorisée.
+    }
+  }, [training]);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [recent, setRecent] = useState<RecentScan[]>(initialScans);
@@ -126,7 +160,7 @@ export function BadgeScanner({
     // Code lu et analysé localement (anti-rebond) : la vérification serveur commence.
     setPhase("verify");
     startTransition(async () => {
-      const response = await scanBadge(code);
+      const response = await scanBadge(code, roomRef.current || null);
       busy.current = false;
       setPhase("done");
       setScanCount((n) => n + 1);
@@ -143,7 +177,7 @@ export function BadgeScanner({
               id: `${Date.now()}`,
               at: new Date().toISOString(),
               result: response.result.result,
-              name: response.result.staff?.name ?? "Badge refusé",
+              name: response.result.staff?.name ?? response.result.learner?.name ?? "Badge refusé",
               message: response.result.message,
             },
             ...current,
@@ -227,7 +261,7 @@ export function BadgeScanner({
       <header className="relative z-10 flex flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-8">
         <div className="grid">
           <span className="text-sm text-[#9fb4de]">{organizationName}</span>
-          <span className="font-display text-lg font-semibold">Pointage du personnel</span>
+          <span className="font-display text-lg font-semibold">{training ? "Pointage — formateurs et apprenants" : "Pointage du personnel"}</span>
         </div>
         <div className="text-right">
           <p className="font-display text-3xl font-semibold tabular-nums" suppressHydrationWarning>
@@ -247,6 +281,7 @@ export function BadgeScanner({
               result ? (accepted ? "border-emerald-400/60 bg-emerald-500/15" : "border-rose-400/60 bg-rose-500/15") : "border-white/15 bg-white/[0.06]",
             )}
             aria-live="assertive"
+            data-scan-count={scanCount}
           >
             <video ref={videoRef} muted playsInline className={cn("absolute inset-0 size-full object-cover opacity-35", !cameraOn && "hidden")} />
             <canvas ref={canvasRef} className="hidden" />
@@ -258,8 +293,48 @@ export function BadgeScanner({
                   <AnimatedError className="size-24 text-rose-300" label="Badge refusé" />
                 )}
                 <p className={cn("text-sm font-semibold uppercase tracking-[0.2em]", accepted ? "text-emerald-200" : "text-rose-200")}>
-                  {accepted ? (result.kind === "departure" ? "Départ enregistré" : "Succès") : (REJECTION_TITLES[result.reason ?? ""] ?? "Badge refusé")}
+                  {result.profile ? <span className="mr-2 rounded-full bg-white/15 px-2.5 py-0.5 text-xs tracking-[0.15em]">{PROFILE_LABELS[result.profile]}</span> : null}
+                  {accepted
+                    ? result.kind === "departure"
+                      ? "Départ enregistré"
+                      : result.kind === "entry"
+                        ? "Entrée enregistrée"
+                        : result.kind === "exit"
+                          ? "Sortie enregistrée"
+                          : "Succès"
+                    : (REJECTION_TITLES[result.reason ?? ""] ?? SCAN_REJECTIONS[result.reason ?? ""] ?? "Badge refusé")}
                 </p>
+                {statusLine(result) ? (
+                  <p
+                    data-testid="scan-status"
+                    className={cn(
+                      "anim-pop rounded-2xl px-5 py-2 font-display text-2xl font-bold tracking-wide",
+                      result.status === "late" || (result.profile === "trainer" && result.minutes_late) ? "bg-amber-400/20 text-amber-200" : "bg-emerald-400/20 text-emerald-100",
+                    )}
+                  >
+                    {statusLine(result)}
+                  </p>
+                ) : null}
+                {result.learner ? (
+                  <div className="anim-fade-up grid" style={{ "--delay": "150ms" } as React.CSSProperties}>
+                    <p className="font-display text-3xl font-semibold">{result.learner.name}</p>
+                    <p className="text-[#c7d3f0]">
+                      Matricule {result.learner.matricule}
+                      {result.formation ? ` · ${result.formation}` : ""}
+                    </p>
+                    {result.session ? (
+                      <p className="text-sm text-[#9fb4de]">
+                        {result.session}
+                        {result.group ? ` · ${result.group}` : ""}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+                {result.greeting && accepted ? (
+                  <p className="anim-fade-up font-display text-2xl" style={{ "--delay": "120ms" } as React.CSSProperties}>
+                    {result.greeting} 👋
+                  </p>
+                ) : null}
                 {result.staff ? (
                   <div className="anim-fade-up grid" style={{ "--delay": "150ms" } as React.CSSProperties}>
                     <p className="font-display text-3xl font-semibold">{result.staff.name}</p>
@@ -269,7 +344,16 @@ export function BadgeScanner({
                 <p className="anim-fade-up max-w-lg text-xl font-medium" style={{ "--delay": "220ms" } as React.CSSProperties} data-testid="scan-message">
                   {result.message}
                 </p>
-                {result.lesson ? (
+                {result.course && accepted ? (
+                  <p className="anim-fade-up rounded-2xl bg-white/10 px-5 py-3 text-lg" style={{ "--delay": "300ms" } as React.CSSProperties} data-testid="scan-course">
+                    {result.profile === "trainer" ? "Votre cours" : "Cours"} : <strong>{result.course.subject}</strong>
+                    {result.course.session ? ` · ${result.course.session}` : ""}
+                    {result.course.group ? ` · ${result.course.group}` : ""} · {result.course.starts_at}–{result.course.ends_at}
+                    {result.course.room ? ` · Salle ${result.course.room}` : ""}
+                    {result.course.teacher && result.profile === "learner" ? ` · ${result.course.teacher}` : ""}
+                  </p>
+                ) : null}
+                {result.lesson && !result.course ? (
                   <p className="anim-fade-up rounded-2xl bg-white/10 px-5 py-3 text-lg" style={{ "--delay": "300ms" } as React.CSSProperties}>
                     Appel disponible : <strong>{result.lesson.subject}</strong> · {result.lesson.class} · {result.lesson.starts_at}–{result.lesson.ends_at}
                     {result.lesson.room ? ` · ${result.lesson.room}` : ""}
@@ -293,11 +377,13 @@ export function BadgeScanner({
                   <ScanLine className="size-14 text-[#22d3ee]/80" aria-hidden />
                   <span aria-hidden className="scan-beam absolute inset-x-3 h-0.5 rounded-full bg-[#22d3ee] shadow-[0_0_12px_2px_rgba(34,211,238,0.7)]" />
                 </span>
-                <h1 className="font-display text-4xl font-bold tracking-wide">{pending ? "VÉRIFICATION…" : "SCANNER LE BADGE"}</h1>
+                <h1 className="font-display text-4xl font-bold tracking-wide">{pending ? "VÉRIFICATION…" : training ? "SCANNER VOTRE BADGE" : "SCANNER LE BADGE"}</h1>
                 <p className="max-w-md text-[#c7d3f0]">
                   {pending
                     ? "Contrôle du badge, de l'établissement et du cours en cours."
-                    : <>Présentez le QR Code de votre badge {cameraOn ? "devant la caméra" : "à la douchette"}. L&apos;arrivée est enregistrée et le cours en cours est débloqué.</>}
+                    : training
+                      ? <>Présentez le QR Code de votre badge {cameraOn ? "devant la caméra" : "à la douchette"}. Formateur ou apprenant : le profil est reconnu automatiquement (entrée, sortie, retard).</>
+                      : <>Présentez le QR Code de votre badge {cameraOn ? "devant la caméra" : "à la douchette"}. L&apos;arrivée est enregistrée et le cours en cours est débloqué.</>}
                 </p>
               </div>
             )}
@@ -327,6 +413,33 @@ export function BadgeScanner({
             </button>
           </div>
           {cameraError ? <p className="text-sm text-amber-300">{cameraError}</p> : null}
+          {training && training.rooms.length > 0 ? (
+            <label className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm text-[#c7d3f0]">
+              Salle de ce poste (facultatif)
+              <select
+                value={roomId}
+                onChange={(e) => {
+                  setRoomId(e.target.value);
+                  roomRef.current = e.target.value;
+                  try {
+                    window.localStorage.setItem(ROOM_KEY, e.target.value);
+                  } catch {
+                    // Stockage indisponible : la salle reste choisie pour cette session.
+                  }
+                }}
+                className="h-11 rounded-xl border border-white/20 bg-[#0b2559] px-3 text-white"
+                aria-label="Salle de ce poste"
+              >
+                <option value="">Toutes les salles (accueil)</option>
+                {training.rooms.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+              <span className="text-xs text-[#9fb4de]">Si une salle est choisie, un apprenant dont le cours a lieu ailleurs est orienté vers la bonne salle.</span>
+            </label>
+          ) : null}
 
           <form
             className="flex flex-wrap items-end gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4"

@@ -19,7 +19,7 @@ export function TimetableGrid({
   canManage,
 }: {
   slots: Slot[];
-  mode: "class" | "teacher";
+  mode: "class" | "teacher" | "room";
   today: number;
   canManage: boolean;
 }) {
@@ -50,9 +50,10 @@ export function TimetableGrid({
                       {slot.startsAt}–{slot.endsAt}
                     </span>
                     <span className="font-semibold">{slot.subject ?? "Cours"}</span>
+                    {slot.group ? <span className="text-xs font-medium text-primary">{slot.group}</span> : null}
                     <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <UserRound className="size-3.5" aria-hidden />
-                      {mode === "class" ? (slot.teacher ?? "Enseignant non affecté") : slot.className}
+                      {mode === "class" ? (slot.teacher ?? "Enseignant non affecté") : mode === "room" ? `${slot.className}${slot.teacher ? ` · ${slot.teacher}` : ""}` : slot.className}
                     </span>
                     {slot.room ? (
                       <span className="flex items-center gap-1.5 text-xs text-muted-foreground">

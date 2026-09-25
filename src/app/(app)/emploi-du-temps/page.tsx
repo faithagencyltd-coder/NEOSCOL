@@ -10,7 +10,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getClasses, getCurrentYear, getRooms, getTeachers } from "@/features/academic/queries";
 import { createSlot } from "@/features/timetable/actions";
 import { TimetableGrid } from "@/features/timetable/components/timetable-grid";
-import { getClassSubjectsForClass, getMyStaffMember, getSlots } from "@/features/timetable/queries";
+import { getClassSubjectsForClass, getMyStaffMember, getSlots, getTrainingGroups } from "@/features/timetable/queries";
+import { isTrainingOrg } from "@/features/training/config";
 import { isoWeekday, todayIn, WEEKDAYS } from "@/lib/dates";
 import { requireOrganization } from "@/lib/auth/guards";
 import { can, canAny } from "@/lib/auth/session";
@@ -42,19 +43,31 @@ export default async function TimetablePage({ searchParams }: PageProps<"/emploi
 
   const requestedClass = param(params, "classe");
   const requestedTeacher = param(params, "enseignant");
-  const mode: "class" | "teacher" =
-    isUuid(requestedTeacher) || (!isUuid(requestedClass) && me?.is_teacher) ? "teacher" : "class";
+  const requestedRoom = param(params, "salle");
+  const requestedGroup = param(params, "groupe");
+  const training = isTrainingOrg(context.organization.type);
+  const mode: "class" | "teacher" | "room" = isUuid(requestedRoom)
+    ? "room"
+    : isUuid(requestedTeacher) || (!isUuid(requestedClass) && me?.is_teacher)
+      ? "teacher"
+      : "class";
   const teacherId = mode === "teacher" ? (isUuid(requestedTeacher) ? requestedTeacher : me?.id) : undefined;
   const classId = mode === "class" ? (isUuid(requestedClass) ? requestedClass : classes[0]?.id) : undefined;
+  const roomId = mode === "room" ? requestedRoom : undefined;
+  // Formation professionnelle : groupes (facultatifs) de la session affichée.
+  const groups = training && classId ? await getTrainingGroups(classId) : [];
+  const groupId = groups.some((g) => g.id === requestedGroup) ? requestedGroup : undefined;
 
   const teacherOptions = [
     ...(me?.is_teacher && !teachers.some((t) => t.id === me.id) ? [{ id: me.id, first_name: me.first_name, last_name: me.last_name }] : []),
     ...teachers,
   ];
-  const slots = classId || teacherId ? await getSlots(organizationId, year.id, { classId, teacherId }) : [];
+  const slots = classId || teacherId || roomId ? await getSlots(organizationId, year.id, { classId, teacherId, roomId, groupId }) : [];
   const canManage = can(context, "timetable.manage");
-  const [classSubjects, rooms] =
-    canManage && classId ? await Promise.all([getClassSubjectsForClass(classId), getRooms(organizationId)]) : [[], []];
+  const [classSubjects, rooms] = await Promise.all([
+    canManage && classId ? getClassSubjectsForClass(classId) : Promise.resolve([]),
+    (canManage && classId) || training ? getRooms(organizationId) : Promise.resolve([]),
+  ]);
   const today = isoWeekday(todayIn(context.organization.timezone));
   const selectedClass = classes.find((c) => c.id === classId);
 
@@ -77,6 +90,9 @@ export default async function TimetablePage({ searchParams }: PageProps<"/emploi
               { name: "class_subject_id", label: "Matière", type: "select", required: true, options: classSubjects.map((cs) => ({ value: cs.id, label: cs.label })), wide: true },
               { name: "weekday", label: "Jour", type: "select", required: true, options: [1, 2, 3, 4, 5, 6, 7].map((d) => ({ value: String(d), label: WEEKDAYS[d]! })), defaultValue: "1" },
               { name: "room_id", label: "Salle", type: "select", options: rooms.map((r) => ({ value: r.id, label: r.name })) },
+              ...(groups.length > 0
+                ? [{ name: "group_id", label: "Groupe", type: "select" as const, options: groups.map((g) => ({ value: g.id, label: g.name })), defaultValue: groupId, hint: "Vide : toute la session." }]
+                : []),
               { name: "starts_at", label: "Début", type: "time", required: true, defaultValue: "08:00" },
               { name: "ends_at", label: "Fin", type: "time", required: true, defaultValue: "10:00" },
             ]}
@@ -88,21 +104,42 @@ export default async function TimetablePage({ searchParams }: PageProps<"/emploi
         label="Vue"
         active={mode}
         tabs={[
-          { key: "class", label: "Par classe", href: `/emploi-du-temps?classe=${classId ?? classes[0]?.id ?? ""}` },
+          { key: "class", label: training ? "Par session" : "Par classe", href: `/emploi-du-temps?classe=${classId ?? classes[0]?.id ?? ""}` },
           ...(teacherOptions.length > 0
-            ? [{ key: "teacher", label: me?.is_teacher && teachers.length === 0 ? "Mon emploi du temps" : "Par enseignant", href: `/emploi-du-temps?enseignant=${teacherId ?? me?.id ?? teacherOptions[0]!.id}` }]
+            ? [{ key: "teacher", label: me?.is_teacher && teachers.length === 0 ? "Mon emploi du temps" : training ? "Par formateur" : "Par enseignant", href: `/emploi-du-temps?enseignant=${teacherId ?? me?.id ?? teacherOptions[0]!.id}` }]
             : []),
+          ...(training && rooms.length > 0 ? [{ key: "room", label: "Par salle", href: `/emploi-du-temps?salle=${roomId ?? rooms[0]!.id}` }] : []),
         ]}
       />
 
       <div className="flex flex-wrap gap-3">
-        {mode === "class" ? (
+        {mode === "room" ? (
           <LinkSelect
-            label="Classe"
+            label="Salle"
             className="w-full sm:w-64"
-            value={classId ?? ""}
-            options={classes.map((c) => ({ value: c.id, label: c.name, href: `/emploi-du-temps?classe=${c.id}` }))}
+            value={roomId ?? ""}
+            options={rooms.map((r) => ({ value: r.id, label: r.name, href: `/emploi-du-temps?salle=${r.id}` }))}
           />
+        ) : mode === "class" ? (
+          <>
+            <LinkSelect
+              label={training ? "Session" : "Classe"}
+              className="w-full sm:w-64"
+              value={classId ?? ""}
+              options={classes.map((c) => ({ value: c.id, label: c.name, href: `/emploi-du-temps?classe=${c.id}` }))}
+            />
+            {groups.length > 0 ? (
+              <LinkSelect
+                label="Groupe"
+                className="w-full sm:w-56"
+                value={groupId ?? ""}
+                options={[
+                  { value: "", label: "Toute la session", href: `/emploi-du-temps?classe=${classId}` },
+                  ...groups.map((g) => ({ value: g.id, label: g.name, href: `/emploi-du-temps?classe=${classId}&groupe=${g.id}` })),
+                ]}
+              />
+            ) : null}
+          </>
         ) : (
           <LinkSelect
             label="Enseignant"
