@@ -6,6 +6,7 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { LYCEE_TRACKS, SCHOOL_LEVELS } from "@/features/academic/school";
 import { newPasswordSchema } from "@/features/auth/schemas";
 import { secureCookiesForRequest } from "@/lib/utils/cookie-security";
 import { ACTIVE_ORG_COOKIE } from "@/lib/auth/session";
@@ -65,6 +66,16 @@ export async function signUpOrganization(_: ActionResult | null, formData: FormD
     terms: formData.get("terms"),
   });
   const password = newPasswordSchema.safeParse({ password: formData.get("password"), confirmation: formData.get("confirmation") });
+  // Module Scolaire : niveaux cochés (établissements scolaires uniquement).
+  const schoolType = parsed.success && !["university", "institute", "vocational_center", "technical_center"].includes(parsed.data.org_type);
+  const levels = SCHOOL_LEVELS.filter((l) => formData.get(`level_${l}`) === "on");
+  const tracks = LYCEE_TRACKS.filter((t) => formData.get(`track_${t}`) === "on");
+  if (schoolType && levels.length === 0) {
+    return { ok: false, message: "Vérifiez les champs du formulaire.", fieldErrors: { levels: ["Cochez au moins un niveau."] } };
+  }
+  if (schoolType && levels.includes("lycee") && tracks.length === 0) {
+    return { ok: false, message: "Vérifiez les champs du formulaire.", fieldErrors: { levels: ["Lycée : choisissez général, technique ou les deux."] } };
+  }
   if (!parsed.success || !password.success) {
     return {
       ok: false,
@@ -133,6 +144,10 @@ export async function signUpOrganization(_: ActionResult | null, formData: FormD
 
   const supabase = await createClient();
   await supabase.auth.signInWithPassword({ email: parsed.data.email, password: password.data.password });
+  if (schoolType) {
+    // Par le compte du responsable (settings.manage) : même contrôle que dans les paramètres.
+    await supabase.rpc("set_school_config", { p_org: organizationId, p_levels: levels, p_tracks: tracks });
+  }
   (await cookies()).set(ACTIVE_ORG_COOKIE, organizationId, {
     httpOnly: true,
     sameSite: "lax",

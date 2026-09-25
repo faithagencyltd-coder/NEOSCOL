@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import {
+  addCommonLyceeSeries,
   createAcademicYear,
   createLevel,
   createPeriod,
@@ -18,12 +19,27 @@ import {
   createSubject,
   setCurrentYear,
   setPeriodLocked,
+  setProgramActive,
+  updateProgram,
+  updateSubject,
 } from "@/features/academic/actions";
+import { SchoolLevelsCard } from "@/features/academic/components/school-levels-card";
+import {
+  LYCEE_TRACK_LABELS,
+  programVisible,
+  SCHOOL_LEVEL_LABELS,
+  SCHOOL_LEVELS,
+  schoolConfigOf,
+  type LyceeTrack,
+  type SchoolConfig,
+  type SchoolLevel,
+} from "@/features/academic/school";
 import { getAcademicYears, getLevels, getPeriods, getPrograms, getRooms, getSubjects } from "@/features/academic/queries";
 import { requirePermission } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
 import { options, PERIOD_TYPE, PROGRAM_KIND } from "@/lib/labels";
 import { formatDate } from "@/lib/utils/format";
+import { cn } from "@/lib/utils/cn";
 import { param } from "@/lib/utils/search-params";
 
 export const metadata: Metadata = { title: "Structure académique" };
@@ -41,8 +57,16 @@ const short = (d: string) => formatDate(d, "fr-FR", { dateStyle: "medium" });
 export default async function StructurePage({ searchParams }: PageProps<"/structure">) {
   const context = await requirePermission("academic.read");
   const organizationId = context.organization.id;
-  const requested = param(await searchParams, "onglet");
-  const active = TABS.some((t) => t.key === requested) ? requested! : "annees";
+  const school = schoolConfigOf(context.organization.settings);
+  // Module Scolaire : l'onglet des séries n'existe que si le lycée est activé.
+  const tabs = school
+    ? TABS.filter((t) => t.key !== "filieres" || school.levels.includes("lycee")).map((t) =>
+        t.key === "filieres" ? { ...t, label: "Séries et filières (lycée)" } : t.key === "matieres" ? { ...t, label: "Matières" } : t,
+      )
+    : TABS;
+  const params = await searchParams;
+  const requested = param(params, "onglet");
+  const active = tabs.some((t) => t.key === requested) ? requested! : "annees";
   const manage = can(context, "academic.manage");
 
   return (
@@ -54,11 +78,18 @@ export default async function StructurePage({ searchParams }: PageProps<"/struct
           Années scolaires, périodes d&apos;évaluation, niveaux, filières, formations, matières et salles.
         </p>
       </div>
-      <TabNav tabs={TABS} active={active} label="Rubriques de la structure" />
+      <TabNav tabs={tabs} active={active} label="Rubriques de la structure" />
       {active === "annees" ? <YearsSection organizationId={organizationId} manage={manage} canLock={can(context, "periods.lock")} /> : null}
-      {active === "niveaux" ? <LevelsSection organizationId={organizationId} manage={manage} /> : null}
-      {active === "filieres" ? <ProgramsSection organizationId={organizationId} manage={manage} /> : null}
-      {active === "matieres" ? <SubjectsSection organizationId={organizationId} manage={manage} /> : null}
+      {active === "niveaux" ? (
+        <>
+          {school ? <SchoolLevelsCard config={school} canEdit={can(context, "settings.manage")} /> : null}
+          <LevelsSection organizationId={organizationId} manage={manage} school={school} />
+        </>
+      ) : null}
+      {active === "filieres" ? <ProgramsSection organizationId={organizationId} manage={manage} school={school} /> : null}
+      {active === "matieres" ? (
+        <SubjectsSection organizationId={organizationId} manage={manage} school={school} filter={param(params, "niveau")} />
+      ) : null}
       {active === "salles" ? <RoomsSection organizationId={organizationId} manage={manage} /> : null}
     </div>
   );
@@ -189,92 +220,322 @@ async function YearsSection({ organizationId, manage, canLock }: { organizationI
   );
 }
 
-async function LevelsSection({ organizationId, manage }: { organizationId: string; manage: boolean }) {
+async function LevelsSection({ organizationId, manage, school }: { organizationId: string; manage: boolean; school: SchoolConfig | null }) {
   const levels = await getLevels(organizationId);
+  const cycleCell = (l: (typeof levels)[number]) => {
+    if (!school || !l.school_cycle) return l.cycle ?? "—";
+    const enabled = school.levels.includes(l.school_cycle as SchoolLevel);
+    return (
+      <span className="flex flex-wrap items-center gap-1.5">
+        <Badge tone={enabled ? "primary" : "neutral"}>{SCHOOL_LEVEL_LABELS[l.school_cycle as SchoolLevel]}</Badge>
+        {enabled ? null : <span className="text-xs">niveau désactivé (conservé)</span>}
+      </span>
+    );
+  };
   return (
     <SimpleList
       title="Niveaux"
-      description="Ex. CP, 6e, Terminale, Licence 1, Niveau 1…"
+      description={school ? "Classes de chaque niveau scolaire activé (ex. PS, CP, 6e, Terminale)." : "Ex. CP, 6e, Terminale, Licence 1, Niveau 1…"}
       empty={{ icon: Layers, title: "Aucun niveau" }}
       action={
         manage ? (
           <QuickFormDialog
             title="Nouveau niveau"
             action={createLevel}
-            fields={[
-              { name: "name", label: "Nom", required: true, placeholder: "Sixième" },
-              { name: "short_name", label: "Abréviation", placeholder: "6e" },
-              { name: "cycle", label: "Cycle", placeholder: "Collège" },
-              { name: "sequence", label: "Ordre", type: "number", required: true, min: 1, defaultValue: String(levels.length + 1) },
-            ]}
+            fields={
+              school
+                ? [
+                    { name: "name", label: "Nom", required: true, placeholder: "Sixième" },
+                    { name: "short_name", label: "Abréviation", placeholder: "6e" },
+                    {
+                      name: "school_cycle",
+                      label: "Niveau scolaire",
+                      type: "select",
+                      required: true,
+                      options: school.levels.map((l) => ({ value: l, label: SCHOOL_LEVEL_LABELS[l] })),
+                      defaultValue: school.levels[0],
+                    },
+                    { name: "sequence", label: "Ordre", type: "number", required: true, min: 1, defaultValue: String(levels.length + 1) },
+                  ]
+                : [
+                    { name: "name", label: "Nom", required: true, placeholder: "Sixième" },
+                    { name: "short_name", label: "Abréviation", placeholder: "6e" },
+                    { name: "cycle", label: "Cycle", placeholder: "Collège" },
+                    { name: "sequence", label: "Ordre", type: "number", required: true, min: 1, defaultValue: String(levels.length + 1) },
+                  ]
+            }
           />
         ) : null
       }
-      headers={["Ordre", "Niveau", "Abréviation", "Cycle"]}
-      rows={levels.map((l) => ({ key: l.id, cells: [String(l.sequence), l.name, l.short_name ?? "—", l.cycle ?? "—"] }))}
+      headers={["Ordre", "Niveau", "Abréviation", school ? "Niveau scolaire" : "Cycle"]}
+      rows={levels.map((l) => ({ key: l.id, cells: [String(l.sequence), l.name, l.short_name ?? "—", cycleCell(l)] }))}
     />
   );
 }
 
-async function ProgramsSection({ organizationId, manage }: { organizationId: string; manage: boolean }) {
+async function ProgramsSection({ organizationId, manage, school }: { organizationId: string; manage: boolean; school: SchoolConfig | null }) {
   const programs = await getPrograms(organizationId);
+  if (!school) {
+    return (
+      <SimpleList
+        title="Filières et formations"
+        description="Filières d'enseignement, formations professionnelles et diplômes."
+        empty={{ icon: Library, title: "Aucune filière ni formation" }}
+        action={
+          manage ? (
+            <QuickFormDialog
+              title="Nouvelle filière ou formation"
+              action={createProgram}
+              fields={[
+                { name: "name", label: "Nom", required: true, wide: true },
+                { name: "code", label: "Code", required: true, placeholder: "ELEC" },
+                { name: "kind", label: "Type", type: "select", required: true, options: options(PROGRAM_KIND), defaultValue: "track" },
+                { name: "duration_hours", label: "Durée (heures)", type: "number", min: 1 },
+                { name: "description", label: "Description", type: "textarea" },
+              ]}
+            />
+          ) : null
+        }
+        headers={["Code", "Nom", "Type", "Durée"]}
+        rows={programs.map((p) => ({
+          key: p.id,
+          cells: [p.code, p.name, PROGRAM_KIND[p.kind] ?? p.kind, p.duration_hours ? `${p.duration_hours} h` : "—"],
+        }))}
+      />
+    );
+  }
+  // Module Scolaire : séries du lycée (général / technique), configurables par l'établissement.
+  const tracks = school.lyceeTracks;
+  const trackOf = (p: (typeof programs)[number]) => (p.track_type as LyceeTrack | null) ?? null;
   return (
     <SimpleList
-      title="Filières et formations"
-      description="Filières d'enseignement, formations professionnelles et diplômes."
-      empty={{ icon: Library, title: "Aucune filière ni formation" }}
+      title="Séries et filières du lycée"
+      description={`${tracks.map((t) => LYCEE_TRACK_LABELS[t]).join(" et ")} : n'activez que les séries que vous utilisez. Désactiver une série la retire des listes sans rien supprimer.`}
+      empty={{ icon: Library, title: "Aucune série", description: "Ajoutez vos séries une à une, ou les séries courantes pour les modifier ensuite." }}
       action={
         manage ? (
-          <QuickFormDialog
-            title="Nouvelle filière ou formation"
-            action={createProgram}
-            fields={[
-              { name: "name", label: "Nom", required: true, wide: true },
-              { name: "code", label: "Code", required: true, placeholder: "ELEC" },
-              { name: "kind", label: "Type", type: "select", required: true, options: options(PROGRAM_KIND), defaultValue: "track" },
-              { name: "duration_hours", label: "Durée (heures)", type: "number", min: 1 },
-              { name: "description", label: "Description", type: "textarea" },
-            ]}
-          />
+          <div className="flex flex-wrap gap-2">
+            {tracks.map((track) => (
+              <ConfirmAction
+                key={track}
+                trigger={
+                  <Button size="sm" variant="secondary">
+                    Séries courantes ({LYCEE_TRACK_LABELS[track].replace("Lycée ", "")})
+                  </Button>
+                }
+                title={`Ajouter les séries courantes du ${LYCEE_TRACK_LABELS[track].toLowerCase()} ?`}
+                description="Seules les séries absentes sont ajoutées. Vous pourrez ensuite les renommer ou désactiver celles que vous n'utilisez pas."
+                confirmLabel="Ajouter"
+                action={addCommonLyceeSeries}
+                fields={{ track_type: track }}
+              />
+            ))}
+            <QuickFormDialog
+              title="Nouvelle série ou filière"
+              triggerLabel="Nouvelle série ou filière"
+              action={createProgram}
+              hidden={{ kind: "track" }}
+              fields={[
+                { name: "name", label: "Nom", required: true, wide: true, placeholder: "F4 — Génie civil" },
+                { name: "code", label: "Code", required: true, placeholder: "F4" },
+                {
+                  name: "track_type",
+                  label: "Enseignement",
+                  type: "select",
+                  required: true,
+                  options: tracks.map((t) => ({ value: t, label: LYCEE_TRACK_LABELS[t] })),
+                  defaultValue: tracks[0],
+                },
+                { name: "description", label: "Description", type: "textarea" },
+              ]}
+            />
+          </div>
         ) : null
       }
-      headers={["Code", "Nom", "Type", "Durée"]}
-      rows={programs.map((p) => ({
-        key: p.id,
-        cells: [p.code, p.name, PROGRAM_KIND[p.kind] ?? p.kind, p.duration_hours ? `${p.duration_hours} h` : "—"],
-      }))}
+      headers={manage ? ["Code", "Série / filière", "Enseignement", "Statut", ""] : ["Code", "Série / filière", "Enseignement", "Statut"]}
+      rows={programs.map((p) => {
+        const visible = programVisible(p, school);
+        const cells: React.ReactNode[] = [
+          p.code,
+          p.name,
+          trackOf(p) ? LYCEE_TRACK_LABELS[trackOf(p)!] : (PROGRAM_KIND[p.kind] ?? p.kind),
+          p.is_active ? (
+            visible ? <Badge tone="success">Active</Badge> : <Badge>Enseignement non activé</Badge>
+          ) : (
+            <Badge>Désactivée</Badge>
+          ),
+        ];
+        if (manage) {
+          cells.push(
+            <span className="flex justify-end gap-1.5">
+              <QuickFormDialog
+                title={`Modifier ${p.code}`}
+                trigger={
+                  <Button size="sm" variant="ghost">
+                    Modifier
+                  </Button>
+                }
+                action={updateProgram}
+                hidden={{ id: p.id }}
+                fields={[
+                  { name: "name", label: "Nom", required: true, wide: true, defaultValue: p.name },
+                  { name: "code", label: "Code", required: true, defaultValue: p.code },
+                  { name: "description", label: "Description", type: "textarea", defaultValue: p.description ?? "" },
+                ]}
+              />
+              <ConfirmAction
+                trigger={
+                  <Button size="sm" variant={p.is_active ? "ghost" : "secondary"}>
+                    {p.is_active ? "Désactiver" : "Activer"}
+                  </Button>
+                }
+                title={p.is_active ? `Désactiver ${p.code} ?` : `Activer ${p.code} ?`}
+                description={p.is_active ? "Elle ne sera plus proposée pour les nouvelles classes et matières. Les classes existantes sont conservées." : undefined}
+                confirmLabel={p.is_active ? "Désactiver" : "Activer"}
+                action={setProgramActive}
+                fields={{ id: p.id, active: p.is_active ? "0" : "1" }}
+              />
+            </span>,
+          );
+        }
+        return { key: p.id, cells, muted: !p.is_active };
+      })}
     />
   );
 }
 
-async function SubjectsSection({ organizationId, manage }: { organizationId: string; manage: boolean }) {
+async function SubjectsSection({
+  organizationId,
+  manage,
+  school,
+  filter,
+}: {
+  organizationId: string;
+  manage: boolean;
+  school: SchoolConfig | null;
+  filter?: string;
+}) {
   const [subjects, programs] = await Promise.all([getSubjects(organizationId), getPrograms(organizationId)]);
+  if (!school) {
+    return (
+      <SimpleList
+        title="Matières et modules"
+        description="Les coefficients et enseignants se définissent par classe."
+        empty={{ icon: School, title: "Aucune matière" }}
+        action={
+          manage ? (
+            <QuickFormDialog
+              title="Nouvelle matière ou module"
+              action={createSubject}
+              fields={[
+                { name: "name", label: "Nom", required: true, wide: true },
+                { name: "code", label: "Code", required: true, placeholder: "MATH" },
+                { name: "kind", label: "Type", type: "select", required: true, options: [{ value: "subject", label: "Matière" }, { value: "module", label: "Module" }], defaultValue: "subject" },
+                { name: "program_id", label: "Filière / formation", type: "select", options: programs.map((p) => ({ value: p.id, label: p.name })) },
+                { name: "credits", label: "Crédits", type: "number", min: 0, step: "0.5" },
+              ]}
+            />
+          ) : null
+        }
+        headers={["Code", "Nom", "Type", "Filière / formation"]}
+        rows={subjects.map((s) => ({
+          key: s.id,
+          cells: [s.code, s.name, s.kind === "module" ? "Module" : "Matière", s.program?.name ?? "—"],
+        }))}
+      />
+    );
+  }
+  // Module Scolaire : matières rattachées à des niveaux (vide = tous) et éventuellement à une série.
+  const series = programs.filter((p) => p.track_type && programVisible(p, school));
+  const level = school.levels.find((l) => l === filter) ?? null;
+  const shown = subjects.filter((s) => {
+    const cycles = (s.school_cycles ?? []) as SchoolLevel[];
+    if (level) return cycles.length === 0 || cycles.includes(level);
+    return cycles.length === 0 || cycles.some((c) => school.levels.includes(c));
+  });
+  const levelFields = school.levels.map((l) => ({ name: `cycle_${l}`, label: `Niveau : ${SCHOOL_LEVEL_LABELS[l]}`, type: "checkbox" as const }));
+  const seriesOptions = series.map((p) => ({ value: p.id, label: `${p.code} — ${p.name}` }));
+  const levelsCell = (cycles: string[]) =>
+    cycles.length === 0 ? (
+      <span className="text-xs">Tous les niveaux</span>
+    ) : (
+      <span className="flex flex-wrap gap-1">
+        {SCHOOL_LEVELS.filter((l) => cycles.includes(l)).map((l) => (
+          <Badge key={l} tone={school.levels.includes(l) ? "primary" : "neutral"}>
+            {SCHOOL_LEVEL_LABELS[l]}
+          </Badge>
+        ))}
+      </span>
+    );
   return (
-    <SimpleList
-      title="Matières et modules"
-      description="Les coefficients et enseignants se définissent par classe."
-      empty={{ icon: School, title: "Aucune matière" }}
-      action={
-        manage ? (
-          <QuickFormDialog
-            title="Nouvelle matière ou module"
-            action={createSubject}
-            fields={[
-              { name: "name", label: "Nom", required: true, wide: true },
-              { name: "code", label: "Code", required: true, placeholder: "MATH" },
-              { name: "kind", label: "Type", type: "select", required: true, options: [{ value: "subject", label: "Matière" }, { value: "module", label: "Module" }], defaultValue: "subject" },
-              { name: "program_id", label: "Filière / formation", type: "select", options: programs.map((p) => ({ value: p.id, label: p.name })) },
-              { name: "credits", label: "Crédits", type: "number", min: 0, step: "0.5" },
-            ]}
-          />
-        ) : null
-      }
-      headers={["Code", "Nom", "Type", "Filière / formation"]}
-      rows={subjects.map((s) => ({
-        key: s.id,
-        cells: [s.code, s.name, s.kind === "module" ? "Module" : "Matière", s.program?.name ?? "—"],
-      }))}
-    />
+    <div className="grid gap-3">
+      <nav aria-label="Filtrer par niveau" className="flex flex-wrap gap-1.5 text-xs">
+        {[{ key: null, label: "Tous les niveaux activés" }, ...school.levels.map((l) => ({ key: l, label: SCHOOL_LEVEL_LABELS[l] }))].map((f) => (
+          <a
+            key={f.key ?? "tous"}
+            href={f.key ? `?onglet=matieres&niveau=${f.key}` : "?onglet=matieres"}
+            aria-current={level === f.key ? "page" : undefined}
+            className={cn(
+              "rounded-full border px-3 py-1 font-medium transition-colors",
+              level === f.key ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary hover:text-primary",
+            )}
+          >
+            {f.label}
+          </a>
+        ))}
+      </nav>
+      <SimpleList
+        title="Matières"
+        description="Chaque matière s'applique à des niveaux (aucun coché = tous) et, au lycée, éventuellement à une série. Coefficients et enseignants : par classe."
+        empty={{ icon: School, title: "Aucune matière pour ce niveau" }}
+        action={
+          manage ? (
+            <QuickFormDialog
+              title="Nouvelle matière"
+              triggerLabel="Nouvelle matière"
+              description="Cochez les niveaux concernés (aucun : tous les niveaux)."
+              action={createSubject}
+              hidden={{ kind: "subject" }}
+              fields={[
+                { name: "name", label: "Nom", required: true, wide: true },
+                { name: "code", label: "Code", required: true, placeholder: "MATH" },
+                ...(seriesOptions.length ? [{ name: "program_id", label: "Série / filière (lycée)", type: "select" as const, options: seriesOptions, hint: "Vide : toutes les séries" }] : []),
+                ...levelFields,
+              ]}
+            />
+          ) : null
+        }
+        headers={manage ? ["Code", "Matière", "Niveaux", "Série / filière", ""] : ["Code", "Matière", "Niveaux", "Série / filière"]}
+        rows={shown.map((s) => {
+          const cycles = (s.school_cycles ?? []) as string[];
+          const cells: React.ReactNode[] = [s.code, s.name, levelsCell(cycles), s.program?.name ?? "—"];
+          if (manage) {
+            cells.push(
+              <span className="flex justify-end">
+                <QuickFormDialog
+                  title={`Modifier ${s.code}`}
+                  trigger={
+                    <Button size="sm" variant="ghost">
+                      Modifier
+                    </Button>
+                  }
+                  action={updateSubject}
+                  hidden={{ id: s.id }}
+                  fields={[
+                    { name: "name", label: "Nom", required: true, wide: true, defaultValue: s.name },
+                    ...(seriesOptions.length
+                      ? [{ name: "program_id", label: "Série / filière (lycée)", type: "select" as const, options: seriesOptions, defaultValue: s.program_id ?? undefined }]
+                      : []),
+                    ...levelFields.map((f) => ({ ...f, defaultValue: cycles.includes(f.name.replace("cycle_", "")) ? "true" : "" })),
+                  ]}
+                />
+              </span>,
+            );
+          }
+          return { key: s.id, cells };
+        })}
+      />
+    </div>
   );
 }
 
@@ -315,8 +576,8 @@ function SimpleList({
   description?: string;
   action: React.ReactNode;
   headers: string[];
-  rows: { key: string; cells: string[] }[];
-  empty: { icon: typeof School; title: string };
+  rows: { key: string; cells: React.ReactNode[]; muted?: boolean }[];
+  empty: { icon: typeof School; title: string; description?: string };
 }) {
   return (
     <Card>
@@ -329,7 +590,7 @@ function SimpleList({
       </CardHeader>
       {rows.length === 0 ? (
         <CardContent>
-          <EmptyState icon={empty.icon} title={empty.title} />
+          <EmptyState icon={empty.icon} title={empty.title} description={empty.description} />
         </CardContent>
       ) : (
         <Table>
@@ -342,7 +603,7 @@ function SimpleList({
           </THead>
           <tbody>
             {rows.map((row) => (
-              <TR key={row.key}>
+              <TR key={row.key} className={row.muted ? "opacity-60" : undefined}>
                 {row.cells.map((cell, i) => (
                   <TD key={i} className={i === 1 ? "font-semibold" : "text-muted-foreground"}>
                     {cell}

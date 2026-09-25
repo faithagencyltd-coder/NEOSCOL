@@ -1,3 +1,4 @@
+import type { SchoolConfig, SchoolLevel } from "@/features/academic/school";
 import type { Permission } from "@/config/permissions";
 import { vocabularyFor, type Vocabulary } from "@/lib/vocabulary";
 
@@ -51,6 +52,8 @@ export type NavItem = {
   /** Au moins une de ces permissions est requise (vide = tout utilisateur connecté). */
   anyOf: readonly Permission[];
   keywords?: string;
+  /** Module Scolaire : entrée affichée seulement si ce niveau est activé pour l'établissement. */
+  schoolLevel?: SchoolLevel;
 };
 
 export type NavSection = { label: string; items: NavItem[] };
@@ -78,6 +81,7 @@ export const NAVIGATION: NavSection[] = [
       { href: "/parents", label: "Parents et tuteurs", icon: "guardians", anyOf: ["guardians.read"], keywords: "famille tuteur" },
       { href: "/personnel", label: "Personnel", icon: "staff", anyOf: ["staff.read"], keywords: "enseignants formateurs administratif badges comptes matricule" },
       { href: "/classes", label: "Classes", icon: "classes", anyOf: ["academic.read"], keywords: "effectif session filière" },
+      { href: "/structure?onglet=filieres", label: "Séries et filières", icon: "structure", anyOf: ["academic.manage"], keywords: "lycée général technique séries filières F1 F2 F3 F4 G1 G2 G3 génie civil électrotechnique", schoolLevel: "lycee" },
       { href: "/structure?onglet=matieres", label: "Matières", icon: "subjects", anyOf: ["academic.manage"], keywords: "matières modules coefficients" },
       { href: "/emploi-du-temps", label: "Emploi du temps", icon: "timetable", anyOf: ["timetable.read", "timetable.manage"], keywords: "cours horaires salles" },
     ],
@@ -163,7 +167,10 @@ function localizedLabel(item: NavItem, v: Vocabulary): string {
   return item.label;
 }
 
-export function visibleNavigation(permissions: ReadonlySet<Permission>, options: { demo?: boolean; organizationType?: string | null } = {}): NavSection[] {
+export function visibleNavigation(
+  permissions: ReadonlySet<Permission>,
+  options: { demo?: boolean; organizationType?: string | null; school?: SchoolConfig | null } = {},
+): NavSection[] {
   const v = vocabularyFor(options.organizationType);
   const sections = options.demo
     ? NAVIGATION.map((section) => (section.label === "Portails" ? { ...section, items: [...section.items, DEMO_NAV_ITEM] } : section))
@@ -172,6 +179,8 @@ export function visibleNavigation(permissions: ReadonlySet<Permission>, options:
     ...section,
     items: section.items
       .filter((item) => item.anyOf.length === 0 || item.anyOf.some((p) => permissions.has(p)))
+      // Entrées propres à un niveau : uniquement si l'établissement l'a activé.
+      .filter((item) => !item.schoolLevel || Boolean(options.school?.levels.includes(item.schoolLevel)))
       .map((item) => ({ ...item, label: localizedLabel(item, v) })),
   })).filter((section) => section.items.length > 0);
 }

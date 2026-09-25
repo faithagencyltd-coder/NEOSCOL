@@ -5,6 +5,8 @@ import Link from "next/link";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SchoolLevelsCard } from "@/features/academic/components/school-levels-card";
+import { schoolConfigOf } from "@/features/academic/school";
 import { BrandingAssets } from "@/features/organization/components/branding-assets";
 import { IdentityForm } from "@/features/organization/components/identity-form";
 import { getBranding } from "@/features/report-cards/queries";
@@ -24,6 +26,7 @@ export default async function OrganizationIdentityPage() {
     supabase.from("organizations").select("name, type, short_name, code, email, phone, website, address, city").eq("id", orgId).single(),
     getBranding(orgId),
   ]);
+  const school = schoolConfigOf(context.organization.settings);
   return (
     <div className="grid gap-5">
       <PageHeader
@@ -49,6 +52,7 @@ export default async function OrganizationIdentityPage() {
           </>
         }
       />
+      {school ? <SchoolLevelsCard config={school} canEdit={can(context, "settings.manage")} /> : null}
       <Card>
         <CardHeader>
           <CardTitle>Coordonnées et couleurs</CardTitle>

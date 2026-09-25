@@ -2068,6 +2068,7 @@ export type Database = {
           id: string
           name: string
           organization_id: string
+          school_cycle: string | null
           sequence: number
           short_name: string | null
           updated_at: string
@@ -2078,6 +2079,7 @@ export type Database = {
           id?: string
           name: string
           organization_id: string
+          school_cycle?: string | null
           sequence?: number
           short_name?: string | null
           updated_at?: string
@@ -2088,6 +2090,7 @@ export type Database = {
           id?: string
           name?: string
           organization_id?: string
+          school_cycle?: string | null
           sequence?: number
           short_name?: string | null
           updated_at?: string
@@ -3306,7 +3309,9 @@ export type Database = {
           kind: string
           name: string
           organization_id: string
+          school_cycle: string | null
           search_text: string | null
+          track_type: string | null
           updated_at: string
         }
         Insert: {
@@ -3319,7 +3324,9 @@ export type Database = {
           kind?: string
           name: string
           organization_id: string
+          school_cycle?: string | null
           search_text?: never
+          track_type?: string | null
           updated_at?: string
         }
         Update: {
@@ -3332,7 +3339,9 @@ export type Database = {
           kind?: string
           name?: string
           organization_id?: string
+          school_cycle?: string | null
           search_text?: never
+          track_type?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -4466,6 +4475,7 @@ export type Database = {
           name: string
           organization_id: string
           program_id: string | null
+          school_cycles: string[]
           updated_at: string
         }
         Insert: {
@@ -4479,6 +4489,7 @@ export type Database = {
           name: string
           organization_id: string
           program_id?: string | null
+          school_cycles?: string[]
           updated_at?: string
         }
         Update: {
@@ -4492,6 +4503,7 @@ export type Database = {
           name?: string
           organization_id?: string
           program_id?: string | null
+          school_cycles?: string[]
           updated_at?: string
         }
         Relationships: [
@@ -5711,6 +5723,14 @@ export type Database = {
           p_active: boolean
         }
         Returns: undefined
+      }
+      set_school_config: {
+        Args: {
+          p_org: string
+          p_levels: string[]
+          p_tracks: string[]
+        }
+        Returns: Json
       }
       signup_create_organization: {
         Args: {

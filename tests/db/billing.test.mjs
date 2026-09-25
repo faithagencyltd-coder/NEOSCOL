@@ -15,7 +15,7 @@ async function asService(q) {
   await switchTo(q, null);
   await q("set local role service_role");
 }
-async function checkout(q, plan = "COLLEGE_LYCEE", interval = "YEARLY", provider = "simulation", mode = "test") {
+async function checkout(q, plan = "MODULE_SCOLAIRE", interval = "YEARLY", provider = "simulation", mode = "test") {
   const [{ c }] = await q("select public.billing_start_checkout($1, $2, $3, $4, $5) as c", [ORG_DEMO, plan, interval, provider, mode]);
   return c;
 }
@@ -23,20 +23,24 @@ const confirm = (q, c, { amount = c.amount, mode = "test", currency = "XOF" } = 
   q("select public.billing_confirm_payment('simulation', $1, $2, $3, $4, $5) as r", [mode, `SIM-${c.reference}`, c.reference, amount, currency]).then((rows) => rows[0].r);
 
 describe("Abonnements NéoScol", () => {
-  test("formules officielles : prix mensuels, annuels -30 %, prix barré et économie exacts, essai 14 jours", async () => {
+  test("formules proposées : Module Scolaire unique à 15 000, annuel -30 %, prix barré et économie exacts, essai 14 jours", async () => {
     await as("anon", async (q) => {
       const plans = await q("select code, monthly_price, annual_price, annual_list_price, annual_savings, annual_discount_percent::int as d, currency, trial_days from subscription_plans order by sort_order");
       assert.deepEqual(
         plans.map((p) => [p.code, p.monthly_price, p.annual_price, p.annual_list_price, p.annual_savings, p.d, p.currency, p.trial_days]),
         [
-          ["MATERNELLE_PRIMAIRE", 8000, 67200, 96000, 28800, 30, "XOF", 14],
-          ["COLLEGE_LYCEE", 15000, 126000, 180000, 54000, 30, "XOF", 14],
+          ["MODULE_SCOLAIRE", 15000, 126000, 180000, 54000, 30, "XOF", 14],
           ["CENTRE_FORMATION", 15000, 126000, 180000, 54000, 30, "XOF", 14],
           ["UNIVERSITE", 20000, 168000, 240000, 72000, 30, "XOF", 14],
           ["ENTERPRISE", 28000, 235200, 336000, 100800, 30, "XOF", 14],
         ],
       );
       assert.match(await rejects(q("select id from subscriptions")), /permission denied/);
+    });
+    // L'ancienne formule Maternelle & Primaire est désactivée, pas supprimée (abonnés existants).
+    await as(null, async (q) => {
+      const [old] = await q("select is_active, monthly_price from subscription_plans where code = 'MATERNELLE_PRIMAIRE'");
+      assert.deepEqual([old.is_active, old.monthly_price], [false, 8000]);
     });
   });
 
@@ -45,9 +49,9 @@ describe("Abonnements NéoScol", () => {
       const [{ id }] = await q("select public.create_organization('École Essai Test', 'ESSAI1', 'ecole-essai-test', 'primary_school') as id");
       const [s] = await q("select s.status, p.code, s.billing_interval, s.trial_end - s.trial_start as len, s.monthly_price from subscriptions s join subscription_plans p on p.id = s.plan_id where s.organization_id = $1", [id]);
       assert.equal(s.status, "TRIALING");
-      assert.equal(s.code, "MATERNELLE_PRIMAIRE");
+      assert.equal(s.code, "MODULE_SCOLAIRE", "école primaire → Module Scolaire");
       assert.equal(s.len.days, 14);
-      assert.equal(s.monthly_price, 8000);
+      assert.equal(s.monthly_price, 15000);
       assert.equal((await q("select count(*)::int n from subscription_events where organization_id = $1 and event_type = 'trial_started'", [id]))[0].n, 1);
       const [a] = await q("select public.billing_access_state($1) a", [id]);
       assert.equal(a.a.days_left, 14);
@@ -59,9 +63,9 @@ describe("Abonnements NéoScol", () => {
     await as(USERS.admin, async (q) => {
       await realTrial(q);
       await switchTo(q, USERS.admin);
-      const monthly = await checkout(q, "COLLEGE_LYCEE", "MONTHLY");
+      const monthly = await checkout(q, "MODULE_SCOLAIRE", "MONTHLY");
       assert.equal(monthly.amount, 15000);
-      const c = await checkout(q, "COLLEGE_LYCEE", "YEARLY");
+      const c = await checkout(q, "MODULE_SCOLAIRE", "YEARLY");
       assert.equal(c.amount, 126000, "annuel : 126 000 (et non 12 × 15 000)");
       assert.match(c.reference, /^NEO-\d{4}-\d{6}$/);
       assert.match(c.invoice_number, /^NSC-\d{4}-\d{6}$/);
@@ -136,7 +140,7 @@ describe("Abonnements NéoScol", () => {
       await step(70, "EXPIRED");
       // Paiement confirmé → réactivation immédiate, sans synchronisation manuelle.
       await switchTo(q, USERS.admin);
-      const c = await checkout(q, "COLLEGE_LYCEE", "MONTHLY");
+      const c = await checkout(q, "MODULE_SCOLAIRE", "MONTHLY");
       await asService(q);
       await q("select public.billing_attach_checkout($1, $2, 'http://x', '{}')", [c.transaction_id, `SIM-${c.reference}`]);
       assert.equal((await confirm(q, c)).event, "subscription_reactivated");
@@ -170,7 +174,7 @@ describe("Abonnements NéoScol", () => {
       for (const table of ["subscriptions", "subscription_invoices", "payment_transactions", "subscription_events", "subscription_payments"]) {
         assert.equal((await q(`select id from ${table} where organization_id = $1`, [ORG_DEMO])).length, 0, table);
       }
-      assert.match(await rejects(q("select public.billing_start_checkout($1, 'COLLEGE_LYCEE', 'MONTHLY', 'simulation', 'test')", [ORG_DEMO])), /billing\.manage/);
+      assert.match(await rejects(q("select public.billing_start_checkout($1, 'MODULE_SCOLAIRE', 'MONTHLY', 'simulation', 'test')", [ORG_DEMO])), /billing\.manage/);
       assert.match(await rejects(q("select public.billing_cancel($1)", [ORG_DEMO])), /billing\.manage/);
       assert.match(await rejects(q("select public.billing_access_state($1)", [ORG_DEMO])), /autorisé/);
       assert.equal((await q("select id from payment_webhooks")).length, 0);
@@ -185,7 +189,7 @@ describe("Abonnements NéoScol", () => {
   test("permissions : enseignant et comptable ne gèrent pas l'abonnement ; plateforme réservée au super administrateur", async () => {
     await as(USERS.teacher, async (q) => {
       assert.equal((await q("select id from subscriptions")).length, 0);
-      assert.match(await rejects(q("select public.billing_start_checkout($1, 'COLLEGE_LYCEE', 'MONTHLY', 'simulation', 'test')", [ORG_DEMO])), /billing\.manage/);
+      assert.match(await rejects(q("select public.billing_start_checkout($1, 'MODULE_SCOLAIRE', 'MONTHLY', 'simulation', 'test')", [ORG_DEMO])), /billing\.manage/);
     });
     await as(USERS.accountant, async (q) => {
       assert.equal((await q("select id from subscriptions where organization_id = $1", [ORG_DEMO])).length, 1, "comptable : lecture");
@@ -195,7 +199,7 @@ describe("Abonnements NéoScol", () => {
       assert.match(await rejects(q("select public.platform_billing_overview()")), /plateforme/);
       assert.match(await rejects(q("select public.platform_record_manual_payment(gen_random_uuid(), 'REF', 1, 'virement')")), /plateforme/);
       assert.match(await rejects(q("select public.billing_process_lifecycle()")), /permission denied/);
-      assert.match(await rejects(q("select public.billing_start_checkout($1, 'COLLEGE_LYCEE', 'MONTHLY', 'manual', 'live')", [ORG_DEMO])), /indisponible/);
+      assert.match(await rejects(q("select public.billing_start_checkout($1, 'MODULE_SCOLAIRE', 'MONTHLY', 'manual', 'live')", [ORG_DEMO])), /indisponible/);
     });
   });
 

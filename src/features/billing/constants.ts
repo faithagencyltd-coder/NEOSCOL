@@ -90,6 +90,7 @@ export const FEATURE_LABELS: Record<string, string> = {
 };
 
 export const PLAN_ACCENTS: Record<string, string> = {
+  MODULE_SCOLAIRE: "from-blue-600 to-sky-500",
   MATERNELLE_PRIMAIRE: "from-sky-500 to-cyan-400",
   COLLEGE_LYCEE: "from-blue-600 to-sky-500",
   CENTRE_FORMATION: "from-emerald-500 to-teal-400",

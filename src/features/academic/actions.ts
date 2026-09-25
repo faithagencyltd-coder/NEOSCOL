@@ -10,6 +10,8 @@ import { dbErrorMessage } from "@/lib/utils/db-error";
 import { readBoolean, readFields } from "@/lib/utils/form-data";
 import { isUuid } from "@/lib/utils/search-params";
 
+import { LYCEE_SERIES_CATALOG, LYCEE_TRACKS, SCHOOL_LEVEL_LABELS, SCHOOL_LEVELS, type SchoolLevel } from "./school";
+
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { error: "Date invalide." });
 const uuid = z.string().refine(isUuid, { error: "Sélection invalide." });
 const text = (max: number) => z.string({ error: "Champ requis." }).trim().min(1, { error: "Champ requis." }).max(max);
@@ -116,20 +118,26 @@ export async function setPeriodLocked(_: ActionResult | null, formData: FormData
 
 // --------------------------------------------------------------------------- Niveaux, filières, matières, salles
 
+const schoolLevel = z.enum(SCHOOL_LEVELS, { error: "Niveau scolaire invalide." });
+const lyceeTrack = z.enum(LYCEE_TRACKS, { error: "Type de lycée invalide." });
+
 const levelSchema = z.object({
   name: text(60),
   short_name: z.string().trim().max(20).optional(),
   cycle: z.string().trim().max(60).optional(),
+  school_cycle: schoolLevel.optional(),
   sequence: positiveInt,
 });
 
 export async function createLevel(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const auth = await authorize("academic.manage");
   if (!auth.ok) return auth;
-  const parsed = parse(levelSchema, readFields(formData, ["name", "short_name", "cycle", "sequence"]));
+  const parsed = parse(levelSchema, readFields(formData, ["name", "short_name", "cycle", "school_cycle", "sequence"]));
   if (!parsed.ok) return parsed.result;
   const supabase = await createClient();
-  const { error } = await supabase.from("levels").insert({ organization_id: auth.context.organization.id, ...parsed.data });
+  // Module Scolaire : le libellé du cycle suit le niveau choisi (Collège, Lycée…).
+  const cycle = parsed.data.cycle ?? (parsed.data.school_cycle ? SCHOOL_LEVEL_LABELS[parsed.data.school_cycle] : undefined);
+  const { error } = await supabase.from("levels").insert({ organization_id: auth.context.organization.id, ...parsed.data, cycle });
   if (error) return { ok: false, message: dbErrorMessage(error) };
   return done(["/structure"], "Niveau créé.");
 }
@@ -140,19 +148,24 @@ const programSchema = z.object({
   kind: z.enum(["track", "training", "degree"]),
   duration_hours: positiveInt.optional(),
   description: z.string().trim().max(1000).optional(),
+  track_type: lyceeTrack.optional(),
 });
 
 export async function createProgram(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const auth = await authorize("academic.manage");
   if (!auth.ok) return auth;
-  const parsed = parse(programSchema, readFields(formData, ["name", "code", "kind", "duration_hours", "description"]));
+  const parsed = parse(programSchema, readFields(formData, ["name", "code", "kind", "duration_hours", "description", "track_type"]));
   if (!parsed.ok) return parsed.result;
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("programs")
-    .insert({ organization_id: auth.context.organization.id, ...parsed.data, code: parsed.data.code.toUpperCase() });
+  const { error } = await supabase.from("programs").insert({
+    organization_id: auth.context.organization.id,
+    ...parsed.data,
+    code: parsed.data.code.toUpperCase(),
+    // Série / filière de lycée (général ou technique).
+    school_cycle: parsed.data.track_type ? "lycee" : null,
+  });
   if (error) return { ok: false, message: dbErrorMessage(error) };
-  return done(["/structure"], "Filière / formation créée.");
+  return done(["/structure"], parsed.data.track_type ? "Série / filière créée." : "Filière / formation créée.");
 }
 
 const subjectSchema = z.object({
@@ -163,17 +176,112 @@ const subjectSchema = z.object({
   credits: z.coerce.number().min(0).max(100).optional(),
 });
 
+/** Niveaux cochés (cases « cycle_maternelle »…) ; aucun = tous les niveaux. */
+function readSchoolCycles(formData: FormData): SchoolLevel[] {
+  return SCHOOL_LEVELS.filter((level) => readBoolean(formData, `cycle_${level}`));
+}
+
 export async function createSubject(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const auth = await authorize("academic.manage");
   if (!auth.ok) return auth;
   const parsed = parse(subjectSchema, readFields(formData, ["name", "code", "kind", "program_id", "credits"]));
   if (!parsed.ok) return parsed.result;
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("subjects")
-    .insert({ organization_id: auth.context.organization.id, ...parsed.data, code: parsed.data.code.toUpperCase() });
+  const { error } = await supabase.from("subjects").insert({
+    organization_id: auth.context.organization.id,
+    ...parsed.data,
+    code: parsed.data.code.toUpperCase(),
+    school_cycles: readSchoolCycles(formData),
+  });
   if (error) return { ok: false, message: dbErrorMessage(error) };
   return done(["/structure"], "Matière créée.");
+}
+
+const subjectUpdateSchema = z.object({ id: uuid, name: text(120), program_id: uuid.optional() });
+
+/** Matière : nom, niveaux concernés et série / filière. */
+export async function updateSubject(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await authorize("academic.manage");
+  if (!auth.ok) return auth;
+  const parsed = parse(subjectUpdateSchema, readFields(formData, ["id", "name", "program_id"]));
+  if (!parsed.ok) return parsed.result;
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("subjects")
+    .update({ name: parsed.data.name, program_id: parsed.data.program_id ?? null, school_cycles: readSchoolCycles(formData) })
+    .eq("organization_id", auth.context.organization.id)
+    .eq("id", parsed.data.id);
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  return done(["/structure", "/classes"], "Matière mise à jour.");
+}
+
+// --------------------------------------------------------------------------- Module Scolaire
+
+/** Niveaux activés du Module Scolaire (Maternelle, Primaire, Collège, Lycée) et types de lycée. */
+export async function saveSchoolLevels(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await authorize("settings.manage");
+  if (!auth.ok) return auth;
+  const levels = SCHOOL_LEVELS.filter((level) => readBoolean(formData, `level_${level}`));
+  const tracks = LYCEE_TRACKS.filter((track) => readBoolean(formData, `track_${track}`));
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_school_config", { p_org: auth.context.organization.id, p_levels: levels, p_tracks: tracks });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  revalidatePath("/", "layout");
+  return { ok: true, message: `Niveaux enregistrés : ${levels.map((l) => SCHOOL_LEVEL_LABELS[l]).join(", ")}.` };
+}
+
+const programUpdateSchema = z.object({
+  id: uuid,
+  name: text(120),
+  code,
+  description: z.string().trim().max(1000).optional(),
+});
+
+/** Renommer une série / filière (le code reste unique dans l'établissement). */
+export async function updateProgram(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await authorize("academic.manage");
+  if (!auth.ok) return auth;
+  const parsed = parse(programUpdateSchema, readFields(formData, ["id", "name", "code", "description"]));
+  if (!parsed.ok) return parsed.result;
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("programs")
+    .update({ name: parsed.data.name, code: parsed.data.code.toUpperCase(), description: parsed.data.description ?? null })
+    .eq("organization_id", auth.context.organization.id)
+    .eq("id", parsed.data.id);
+  if (error) return { ok: false, message: error.code === "23505" ? "Ce code est déjà utilisé." : dbErrorMessage(error) };
+  return done(["/structure", "/classes"], "Série / filière mise à jour.");
+}
+
+/** Activer / désactiver une série : désactivée, elle n'est plus proposée ; rien n'est supprimé. */
+export async function setProgramActive(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await authorize("academic.manage");
+  if (!auth.ok) return auth;
+  const id = String(formData.get("id") ?? "");
+  if (!isUuid(id)) return { ok: false, message: "Série introuvable." };
+  const active = formData.get("active") === "1";
+  const supabase = await createClient();
+  const { error } = await supabase.from("programs").update({ is_active: active }).eq("organization_id", auth.context.organization.id).eq("id", id);
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  return done(["/structure", "/classes"], active ? "Série activée." : "Série désactivée : elle n'est plus proposée (données conservées).");
+}
+
+/** Ajoute les séries courantes d'un type de lycée qui n'existent pas encore (toutes modifiables). */
+export async function addCommonLyceeSeries(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await authorize("academic.manage");
+  if (!auth.ok) return auth;
+  const track = lyceeTrack.safeParse(formData.get("track_type"));
+  if (!track.success) return { ok: false, message: "Type de lycée invalide." };
+  const supabase = await createClient();
+  const { data: existing } = await supabase.from("programs").select("code").eq("organization_id", auth.context.organization.id);
+  const codes = new Set((existing ?? []).map((p) => p.code.toUpperCase()));
+  const rows = LYCEE_SERIES_CATALOG[track.data]
+    .filter((s) => !codes.has(s.code))
+    .map((s) => ({ organization_id: auth.context.organization.id, code: s.code, name: s.name, kind: "track" as const, school_cycle: "lycee", track_type: track.data }));
+  if (rows.length === 0) return { ok: true, message: "Toutes les séries courantes sont déjà présentes." };
+  const { error } = await supabase.from("programs").insert(rows);
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  return done(["/structure"], `${rows.length} série(s) ajoutée(s) : ${rows.map((r) => r.code).join(", ")}. Désactivez celles que vous n'utilisez pas.`);
 }
 
 const roomSchema = z.object({ name: text(60), building: z.string().trim().max(60).optional(), capacity: positiveInt.optional() });

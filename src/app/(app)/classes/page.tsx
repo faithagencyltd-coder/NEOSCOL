@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { createClass } from "@/features/academic/actions";
 import { classFields } from "@/features/academic/components/class-fields";
+import { levelVisible, programVisible, SCHOOL_LEVEL_LABELS, schoolConfigOf } from "@/features/academic/school";
 import {
   getAcademicYears,
   getClasses,
@@ -46,7 +47,13 @@ export default async function ClassesPage({ searchParams }: PageProps<"/classes"
     manage ? getRooms(organizationId) : Promise.resolve([]),
     manage && can(context, "staff.read") ? getTeachers(organizationId) : Promise.resolve([]),
   ]);
-  const classes = scope ? allClasses.filter((c) => scope.has(c.id)) : allClasses;
+  // Module Scolaire : seuls les niveaux et séries activés sont proposés ; filtre par niveau.
+  const school = schoolConfigOf(context.organization.settings);
+  const levelChoices = levels.filter((l) => levelVisible(l, school));
+  const programChoices = programs.filter((p) => programVisible(p, school));
+  const cycleFilter = school?.levels.find((l) => l === param(params, "niveau")) ?? null;
+  const scoped = scope ? allClasses.filter((c) => scope.has(c.id)) : allClasses;
+  const classes = cycleFilter ? scoped.filter((c) => c.level?.school_cycle === cycleFilter) : scoped;
   const counts = await getClassHeadcounts(organizationId, classes.map((c) => c.id));
 
   return (
@@ -84,11 +91,34 @@ export default async function ClassesPage({ searchParams }: PageProps<"/classes"
               triggerLabel={`Nouvelle ${v.klass.toLowerCase()}`}
               action={createClass}
               hidden={{ academic_year_id: year.id }}
-              fields={classFields({ levels, programs, rooms, teachers })}
+              fields={classFields({ levels: levelChoices, programs: programChoices, rooms, teachers })}
             />
           ) : null}
         </div>
       </div>
+
+      {school && school.levels.length > 1 ? (
+        <nav aria-label="Filtrer par niveau" className="flex flex-wrap gap-1.5 text-xs">
+          {[{ key: null, label: "Tous les niveaux" }, ...school.levels.map((l) => ({ key: l, label: SCHOOL_LEVEL_LABELS[l] }))].map((f) => {
+            const query = new URLSearchParams();
+            if (year && years.length > 1) query.set("annee", year.id);
+            if (f.key) query.set("niveau", f.key);
+            return (
+              <Link
+                key={f.key ?? "tous"}
+                href={`/classes${query.size ? `?${query}` : ""}`}
+                aria-current={cycleFilter === f.key ? "page" : undefined}
+                className={cn(
+                  "rounded-full border px-3 py-1 font-medium transition-colors",
+                  cycleFilter === f.key ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary hover:text-primary",
+                )}
+              >
+                {f.label}
+              </Link>
+            );
+          })}
+        </nav>
+      ) : null}
 
       {!year ? (
         <Card>

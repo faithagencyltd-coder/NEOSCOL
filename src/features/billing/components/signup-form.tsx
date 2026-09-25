@@ -11,20 +11,28 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import {
+  LYCEE_TRACK_LABELS,
+  LYCEE_TRACKS,
+  SCHOOL_LEVEL_LABELS,
+  SCHOOL_LEVELS,
+  type LyceeTrack,
+  type SchoolLevel,
+} from "@/features/academic/school";
 import { IntervalToggle, PlanPrice, type Interval } from "@/features/billing/components/pricing-grid";
 import type { PlanWithFeatures } from "@/features/billing/queries";
 import { signUpOrganization } from "@/features/billing/signup";
 
 const TYPES: [string, string, string][] = [
-  ["primary_school", "École maternelle et primaire", "MATERNELLE_PRIMAIRE"],
-  ["middle_school", "Collège", "COLLEGE_LYCEE"],
-  ["high_school", "Lycée", "COLLEGE_LYCEE"],
-  ["private_school", "École privée (secondaire)", "COLLEGE_LYCEE"],
+  ["primary_school", "École maternelle et primaire", "MODULE_SCOLAIRE"],
+  ["middle_school", "Collège", "MODULE_SCOLAIRE"],
+  ["high_school", "Lycée", "MODULE_SCOLAIRE"],
+  ["private_school", "École privée (secondaire)", "MODULE_SCOLAIRE"],
   ["vocational_center", "Centre de formation professionnelle", "CENTRE_FORMATION"],
   ["technical_center", "Centre de formation technique", "CENTRE_FORMATION"],
   ["university", "Université", "UNIVERSITE"],
   ["institute", "Institut / école supérieure", "UNIVERSITE"],
-  ["school_complex", "Groupe scolaire (maternelle → lycée)", "ENTERPRISE"],
+  ["school_complex", "Groupe scolaire (maternelle → lycée)", "MODULE_SCOLAIRE"],
   ["school_group", "Réseau / groupe d'établissements", "ENTERPRISE"],
 ];
 
@@ -33,12 +41,25 @@ const COUNTRIES: [string, string][] = [
   ["NE", "Niger"], ["GN", "Guinée"], ["CM", "Cameroun"], ["GA", "Gabon"], ["CG", "Congo"], ["CD", "RD Congo"],
 ];
 
+const NON_SCHOOL_TYPES = ["university", "institute", "vocational_center", "technical_center"];
+/** Niveaux proposés selon le type (même règle que app.default_school_levels). */
+function defaultLevels(type: string): SchoolLevel[] {
+  if (type === "primary_school") return ["maternelle", "primaire"];
+  if (type === "middle_school") return ["college"];
+  if (type === "high_school") return ["lycee"];
+  return [...SCHOOL_LEVELS];
+}
+
 /** Création d'un établissement : 14 jours d'essai gratuit, sans paiement. */
 export function SignupForm({ plans, initialPlan, initialInterval }: { plans: PlanWithFeatures[]; initialPlan?: string; initialInterval: Interval }) {
   const [state, action, pending] = useActionState(signUpOrganization, null);
   const [planCode, setPlanCode] = useState(initialPlan && plans.some((p) => p.code === initialPlan) ? initialPlan : (plans[1]?.code ?? plans[0]?.code ?? ""));
   const [interval, setBillingInterval] = useState<Interval>(initialInterval);
   const [planTouched, setPlanTouched] = useState(Boolean(initialPlan));
+  const [orgType, setOrgType] = useState("");
+  const [levels, setLevels] = useState<SchoolLevel[]>([]);
+  const [tracks, setTracks] = useState<LyceeTrack[]>(["general"]);
+  const schoolType = orgType !== "" && !NON_SCHOOL_TYPES.includes(orgType);
   const errors = state && !state.ok ? (state.fieldErrors ?? {}) : {};
   const plan = plans.find((p) => p.code === planCode);
 
@@ -72,6 +93,8 @@ export function SignupForm({ plans, initialPlan, initialInterval }: { plans: Pla
               onChange={(e) => {
                 const suggested = TYPES.find(([value]) => value === e.target.value)?.[2];
                 if (suggested && !planTouched) setPlanCode(suggested);
+                setOrgType(e.target.value);
+                setLevels(defaultLevels(e.target.value));
               }}
             >
               <option value="" disabled>
@@ -101,6 +124,44 @@ export function SignupForm({ plans, initialPlan, initialInterval }: { plans: Pla
           </FormField>
         </div>
       </fieldset>
+
+      {schoolType ? (
+        <fieldset className="anim-fade-up grid gap-2 rounded-2xl border border-border bg-surface/70 p-4">
+          <legend className="px-1 text-sm font-semibold text-primary">Niveaux de votre établissement (Module Scolaire)</legend>
+          <p className="text-xs text-muted-foreground">Cochez ce que vous possédez réellement ; modifiable à tout moment.</p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {SCHOOL_LEVELS.map((level) => (
+              <label key={level} className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-border px-3 text-sm has-[:checked]:border-primary has-[:checked]:bg-primary-soft/60">
+                <input
+                  type="checkbox"
+                  name={`level_${level}`}
+                  checked={levels.includes(level)}
+                  onChange={() => setLevels((l) => (l.includes(level) ? l.filter((x) => x !== level) : [...l, level]))}
+                  className="size-4 accent-[var(--primary)]"
+                />
+                {SCHOOL_LEVEL_LABELS[level]}
+              </label>
+            ))}
+          </div>
+          {levels.includes("lycee") ? (
+            <div className="flex flex-wrap gap-4 pt-1 text-sm">
+              {LYCEE_TRACKS.map((track) => (
+                <label key={track} className="flex min-h-10 cursor-pointer items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name={`track_${track}`}
+                    checked={tracks.includes(track)}
+                    onChange={() => setTracks((t) => (t.includes(track) ? t.filter((x) => x !== track) : [...t, track]))}
+                    className="size-4 accent-[var(--primary)]"
+                  />
+                  {LYCEE_TRACK_LABELS[track]}
+                </label>
+              ))}
+            </div>
+          ) : null}
+          {errors.levels ? <p className="text-xs font-medium text-danger">{errors.levels[0]}</p> : null}
+        </fieldset>
+      ) : null}
 
       <fieldset className="grid gap-4">
         <legend className="mb-1 text-sm font-semibold text-primary">2. Votre compte administrateur</legend>

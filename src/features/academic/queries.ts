@@ -35,7 +35,7 @@ export const getClasses = cache(async (organizationId: string, yearId: string) =
   const { data } = await supabase
     .from("classes")
     .select(
-      "id, name, code, kind, capacity, starts_on, ends_on, archived_at, level:levels(id, name, sequence), program:programs(id, name), head_teacher:staff_members(id, first_name, last_name), room:rooms(id, name)",
+      "id, name, code, kind, capacity, starts_on, ends_on, archived_at, level:levels(id, name, sequence, school_cycle), program:programs(id, name), head_teacher:staff_members(id, first_name, last_name), room:rooms(id, name)",
     )
     .eq("organization_id", organizationId)
     .eq("academic_year_id", yearId)
@@ -50,7 +50,7 @@ export const getLevels = cache(async (organizationId: string) => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("levels")
-    .select("id, name, short_name, cycle, sequence")
+    .select("id, name, short_name, cycle, school_cycle, sequence")
     .eq("organization_id", organizationId)
     .order("sequence");
   return data ?? [];
@@ -60,7 +60,7 @@ export const getPrograms = cache(async (organizationId: string) => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("programs")
-    .select("id, name, code, kind, duration_hours, is_active, description")
+    .select("id, name, code, kind, duration_hours, is_active, description, school_cycle, track_type")
     .eq("organization_id", organizationId)
     .order("name");
   return data ?? [];
@@ -70,7 +70,7 @@ export const getSubjects = cache(async (organizationId: string) => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("subjects")
-    .select("id, name, code, kind, credits, is_active, program:programs(id, name)")
+    .select("id, name, code, kind, credits, is_active, program_id, school_cycles, program:programs(id, name)")
     .eq("organization_id", organizationId)
     .order("name");
   return data ?? [];
@@ -123,7 +123,7 @@ export async function getClassDetail(organizationId: string, classId: string) {
     .from("classes")
     .select(
       `id, name, code, kind, capacity, starts_on, ends_on, archived_at, academic_year_id, level_id, program_id, room_id, head_teacher_id,
-       academic_year:academic_years(id, name, is_current), level:levels(id, name), program:programs(id, name),
+       academic_year:academic_years(id, name, is_current), level:levels(id, name, school_cycle), program:programs(id, name),
        room:rooms(id, name), head_teacher:staff_members(id, first_name, last_name),
        class_subjects(id, coefficient, weekly_hours, sort_order, subject:subjects(id, name, code), teacher:staff_members(id, first_name, last_name))`,
     )

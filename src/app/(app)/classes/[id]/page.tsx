@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { moveClassSubject, removeClassSubject, saveClassSubject, updateClass } from "@/features/academic/actions";
 import { classFields } from "@/features/academic/components/class-fields";
+import { levelVisible, programVisible, SCHOOL_LEVEL_LABELS, schoolConfigOf, subjectFits, type SchoolLevel } from "@/features/academic/school";
 import {
   getClassDetail,
   getClassStudents,
@@ -32,7 +33,7 @@ import { vocabularyFor } from "@/lib/vocabulary";
 
 export const metadata: Metadata = { title: "Classe" };
 
-export default async function ClassPage({ params }: PageProps<"/classes/[id]">) {
+export default async function ClassPage({ params, searchParams }: PageProps<"/classes/[id]">) {
   const context = await requirePermission("academic.read");
   const v = vocabularyFor(context.organization.type);
   const { id } = await params;
@@ -53,6 +54,14 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
     manage && can(context, "staff.read") ? getTeachers(organizationId) : Promise.resolve([]),
     manage ? getSubjects(organizationId) : Promise.resolve([]),
   ]);
+  // Module Scolaire : niveaux / séries activés (la valeur actuelle de la classe reste proposée)
+  // et matières du niveau et de la série de la classe (toutes sur demande).
+  const school = schoolConfigOf(context.organization.settings);
+  const levelChoices = levels.filter((l) => l.id === klass.level_id || levelVisible(l, school));
+  const programChoices = programs.filter((p) => p.id === klass.program_id || programVisible(p, school));
+  const showAllSubjects = !school || (await searchParams).matieres === "toutes";
+  const classCycle = klass.level?.school_cycle ?? null;
+  const subjectChoices = showAllSubjects ? subjects : subjects.filter((s) => subjectFits(s, { cycle: classCycle, programId: klass.program_id }));
   const classSubjects = [...klass.class_subjects].sort(
     (a, b) => a.sort_order - b.sort_order || (a.subject?.name ?? "").localeCompare(b.subject?.name ?? "", "fr"),
   );
@@ -105,7 +114,7 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
             action={updateClass}
             hidden={{ class_id: klass.id, academic_year_id: klass.academic_year_id }}
             fields={classFields(
-              { levels, programs, rooms, teachers },
+              { levels: levelChoices, programs: programChoices, rooms, teachers },
               {
                 name: klass.name,
                 code: klass.code,
@@ -130,6 +139,14 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
               <CardTitle>Matières et enseignants</CardTitle>
               <CardDescription>
                 {classSubjects.length} matière{classSubjects.length > 1 ? "s" : ""} · total des coefficients : {totalCoefficient}
+                {manage && school && classCycle ? (
+                  <>
+                    {" · "}
+                    <Link href={showAllSubjects ? `/classes/${klass.id}` : `/classes/${klass.id}?matieres=toutes`} className="font-semibold text-primary hover:underline">
+                      {showAllSubjects ? "Proposer les matières du niveau" : "Proposer toutes les matières"}
+                    </Link>
+                  </>
+                ) : null}
               </CardDescription>
             </div>
             {manage ? (
@@ -140,7 +157,18 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
                 action={saveClassSubject}
                 hidden={{ class_id: klass.id }}
                 fields={[
-                  { name: "subject_id", label: "Matière", type: "select", required: true, options: subjects.map((s) => ({ value: s.id, label: s.name })), wide: true },
+                  {
+                    name: "subject_id",
+                    label: "Matière",
+                    type: "select",
+                    required: true,
+                    options: subjectChoices.map((s) => ({ value: s.id, label: s.name })),
+                    wide: true,
+                    hint:
+                      school && !showAllSubjects && classCycle
+                        ? `Matières du niveau ${SCHOOL_LEVEL_LABELS[classCycle as SchoolLevel]}${klass.program ? ` et de la série ${klass.program.name}` : ""}.`
+                        : undefined,
+                  },
                   { name: "teacher_id", label: "Enseignant", type: "select", options: teacherOptions, wide: true },
                   { name: "coefficient", label: "Coefficient", type: "number", required: true, min: 0.5, step: "0.5", defaultValue: "1" },
                   { name: "weekly_hours", label: "Heures / semaine", type: "number", min: 0, step: "0.5" },

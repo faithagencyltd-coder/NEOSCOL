@@ -172,3 +172,24 @@ l'établissement (scolarité, reçus, dépenses), qui ne partagent ni table ni p
   `PAYDUNYA_MASTER_KEY`, `PAYDUNYA_PRIVATE_KEY`, `PAYDUNYA_PUBLIC_KEY`, `PAYDUNYA_TOKEN`, `PAYMENT_WEBHOOK_SECRET`.
 - **Tests** : `npm run db:test` (dont `tests/db/billing.test.mjs`), `npm run test:unit` (fournisseurs, secrets),
   `tests/e2e/abonnements.mjs` (parcours navigateur complet, avec `PAYMENT_PROVIDER=simulation`).
+
+## Module 1 — Scolaire
+
+Un seul module commercial, **Module Scolaire (15 000 F CFA / mois, 126 000 F CFA / an)**, avec quatre
+niveaux configurables par établissement : **Maternelle, Primaire, Collège, Lycée** (lycée général et/ou
+technique). Ce ne sont pas quatre abonnements : l'ancienne formule Maternelle & Primaire (8 000 F) est
+désactivée ; les abonnements déjà payés la conservent au même prix.
+
+- **Configuration** : Paramètres › Établissement › « Module scolaire » (permission `settings.manage`), aussi en
+  tête de Structure › Niveaux et à l'inscription. Stockée dans `organizations.settings.school`
+  (`levels`, `lycee_tracks`), validée en base (`set_school_config`, contrôle des écritures directes), tracée.
+- **Adaptation** : niveaux proposés (6e, CM1…), séries / filières du lycée (onglet et entrée de menu
+  « Séries et filières » seulement si le lycée est activé), matières par niveau et par série, filtre des classes
+  par niveau, choix des matières d'une classe limité à son niveau et sa série.
+- **Séries et filières** : configurables (créer, renommer, activer, désactiver) ; séries courantes proposées
+  (générales A1, A2, B, C, D ; techniques F1–F4, EAA, G1–G3), jamais imposées.
+- **Compatibilité** : colonnes ajoutées uniquement (`levels.school_cycle`, `programs.school_cycle` /
+  `track_type`, `subjects.school_cycles` — vide = tous les niveaux), valeurs par défaut déduites du type et des
+  niveaux existants ; désactiver un niveau masque ses éléments sans rien supprimer ; centres de formation et
+  universités inchangés ; présences et pointage tablette non modifiés.
+- **Tests** : `tests/db/module-scolaire.test.mjs` (12), `tests/e2e/module-scolaire.mjs` (51 contrôles).
