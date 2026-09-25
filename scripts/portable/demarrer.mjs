@@ -328,6 +328,9 @@ async function main() {
     SUPABASE_SERVICE_ROLE_KEY: CONFIG.serviceKey,
     CRON_SECRET: CONFIG.cronSecret,
     NEOSCOL_DEMO_MODE: "1",
+    // Abonnements : paiement simulé (poste local de démonstration, aucun argent réel).
+    PAYMENT_PROVIDER: process.env.PAYMENT_PROVIDER ?? "simulation",
+    PAYMENT_ALLOW_SIMULATION: "1",
     NEXT_TELEMETRY_DISABLED: "1",
   });
   const url = `http://localhost:${PORTS.app}`;

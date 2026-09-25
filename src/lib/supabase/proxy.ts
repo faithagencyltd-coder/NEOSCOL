@@ -7,7 +7,12 @@ import type { Database } from "@/types/database";
 /** Routes accessibles sans session. */
 // /acces : lien des portails d'un établissement (identité publique + formulaires de connexion).
 // /api/cron : protégé par CRON_SECRET (pas de session utilisateur).
-const PUBLIC_PATHS = ["/connexion", "/acces", "/mot-de-passe-oublie", "/auth", "/verifier", "/configuration", "/api/cron", "/demo", "/hors-ligne"];
+// /api/webhooks : notifications des fournisseurs de paiement (revérifiées auprès du fournisseur).
+// /tarifs, /pricing, /inscription : offre NéoScol et création d'un établissement (essai gratuit).
+const PUBLIC_PATHS = [
+  "/connexion", "/acces", "/mot-de-passe-oublie", "/auth", "/verifier", "/configuration", "/api/cron", "/api/webhooks",
+  "/demo", "/hors-ligne", "/tarifs", "/pricing", "/inscription",
+];
 
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));

@@ -144,3 +144,31 @@ Menu **Établissement › Données historiques** (permission `students.import`) 
 - Historique des migrations (date, administrateur, fichier, lignes, importées, doublons, rejets) et journal d'audit.
 - Toutes les données sont rattachées à l'établissement et protégées par RLS (tests : `tests/db/migration.test.mjs`).
 - Fichiers d'exemple : [`docs/exemples/`](docs/exemples) ; modèles CSV téléchargeables depuis l'écran.
+
+## Abonnements NéoScol (SaaS)
+
+Paiement de l'abonnement **par l'établissement à NéoScol** — totalement distinct des finances de
+l'établissement (scolarité, reçus, dépenses), qui ne partagent ni table ni permission.
+
+- **Formules officielles** (XOF) : Maternelle & Primaire 8 000/mois (67 200/an), Collège & Lycée et
+  Centre de formation 15 000/mois (126 000/an), Université 20 000/mois (168 000/an), Enterprise
+  28 000/mois (235 200/an). Annuel = -30 % ; prix barré et économie exacts, jamais recalculés.
+- **Essai gratuit de 14 jours** à la création de chaque établissement (`/inscription` ou console plateforme).
+- **Pages** : `/tarifs` (alias `/pricing`), `/inscription`, `/abonnement` (Mon abonnement), `/abonnement/souscrire`
+  (paiement en 5 étapes), factures PDF `/api/abonnement/factures/[id]`, console `/plateforme`
+  (Établissements, Abonnements, Paiements, Formules).
+- **Statuts** `TRIALING, ACTIVE, PAST_DUE, GRACE_PERIOD, RESTRICTED, CANCELLED, EXPIRED`, fixés uniquement par
+  la base (migration `20260928001900_subscriptions_billing.sql`). Impayé : accès complet pendant le délai de
+  grâce, puis **lecture seule** (appliquée par `app.permitted_org_ids`, donc par toutes les politiques RLS) ;
+  aucune donnée n'est jamais supprimée ; réactivation immédiate au paiement confirmé. Délais configurables.
+- **Paiement** : interface `PaymentProvider` (`src/lib/payments`) — PayDunya (API Checkout Invoice, mode test /
+  live) et paiement simulé pour le développement local. Montant calculé en base, référence `NEO-AAAA-000001`,
+  facture `NSC-AAAA-000001`. Le retour navigateur et le webhook ne sont que des signaux : le paiement est
+  **revérifié auprès du fournisseur** par le serveur, puis appliqué de façon **idempotente** (montant, devise,
+  référence et mode contrôlés). Webhook : `POST /api/webhooks/payments/[provider]`.
+- **Tâche quotidienne** : `GET /api/cron/abonnements` (Bearer `CRON_SECRET`) — rappels d'essai J-7/J-3/J-1/J,
+  factures de renouvellement, impayés, paiements abandonnés.
+- **Variables** (serveur uniquement, voir `.env.example`) : `PAYMENT_PROVIDER`, `PAYDUNYA_MODE`,
+  `PAYDUNYA_MASTER_KEY`, `PAYDUNYA_PRIVATE_KEY`, `PAYDUNYA_PUBLIC_KEY`, `PAYDUNYA_TOKEN`, `PAYMENT_WEBHOOK_SECRET`.
+- **Tests** : `npm run db:test` (dont `tests/db/billing.test.mjs`), `npm run test:unit` (fournisseurs, secrets),
+  `tests/e2e/abonnements.mjs` (parcours navigateur complet, avec `PAYMENT_PROVIDER=simulation`).

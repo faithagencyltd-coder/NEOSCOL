@@ -8,10 +8,11 @@ import { NotificationWatcher } from "@/components/layout/notification-watcher";
 import { NotificationsMenu } from "@/components/layout/notifications-menu";
 import { UserMenu } from "@/components/layout/user-menu";
 import { visibleNavigation } from "@/config/navigation";
+import { SubscriptionBanner } from "@/features/billing/components/subscription-banner";
 import { SIDEBAR_COOKIE } from "@/config/ui";
 import { getRecentNotifications } from "@/features/notifications/queries";
 import { requireOrganization } from "@/lib/auth/guards";
-import { displayName } from "@/lib/auth/session";
+import { can, displayName } from "@/lib/auth/session";
 import { isDemoMode } from "@/lib/demo";
 import { vocabularyFor } from "@/lib/vocabulary";
 
@@ -54,6 +55,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             demo={demo}
           />
         </header>
+        <SubscriptionBanner organizationId={context.organization.id} canBill={can(context, "billing.read")} />
         <main className="mx-auto w-full max-w-[90rem] flex-1 px-4 py-6 sm:px-7 lg:py-7">{children}</main>
         <NotificationWatcher />
     </AppShell>

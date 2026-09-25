@@ -67,6 +67,8 @@ export const PERMISSIONS = [
   "portal.parent",
   "portal.student",
   "assistant.use",
+  "billing.read",
+  "billing.manage",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];

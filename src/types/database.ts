@@ -2734,6 +2734,284 @@ export type Database = {
           }
         ]
       }
+      payment_provider_events: {
+        Row: {
+          created_at: string
+          event_key: string
+          id: string
+          mode: string
+          organization_id: string | null
+          payload: Json
+          provider: string
+          provider_transaction_id: string | null
+          status: string
+          transaction_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_key: string
+          id?: string
+          mode: string
+          organization_id?: string | null
+          payload?: Json
+          provider: string
+          provider_transaction_id?: string | null
+          status: string
+          transaction_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_key?: string
+          id?: string
+          mode?: string
+          organization_id?: string | null
+          payload?: Json
+          provider?: string
+          provider_transaction_id?: string | null
+          status?: string
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_provider_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_provider_events_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "payment_transactions"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      payment_providers: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          is_active: boolean
+          name: string
+          supports_refund: boolean
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          is_active?: boolean
+          name: string
+          supports_refund?: boolean
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          is_active?: boolean
+          name?: string
+          supports_refund?: boolean
+        }
+        Relationships: [
+          
+        ]
+      }
+      payment_simulations: {
+        Row: {
+          amount: number
+          created_at: string
+          outcome: string
+          reference: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          outcome: string
+          reference: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          outcome?: string
+          reference?: string
+        }
+        Relationships: [
+          
+        ]
+      }
+      payment_transactions: {
+        Row: {
+          amount: number
+          checkout_url: string | null
+          confirmed_by: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          failure_reason: string | null
+          id: string
+          internal_reference: string
+          invoice_id: string
+          mode: string
+          organization_id: string
+          paid_at: string | null
+          payment_method: string | null
+          provider: string
+          provider_response: Json
+          provider_transaction_id: string | null
+          status: string
+          subscription_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          checkout_url?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency: string
+          failure_reason?: string | null
+          id?: string
+          internal_reference: string
+          invoice_id: string
+          mode: string
+          organization_id: string
+          paid_at?: string | null
+          payment_method?: string | null
+          provider: string
+          provider_response?: Json
+          provider_transaction_id?: string | null
+          status?: string
+          subscription_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          checkout_url?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          failure_reason?: string | null
+          id?: string
+          internal_reference?: string
+          invoice_id?: string
+          mode?: string
+          organization_id?: string
+          paid_at?: string | null
+          payment_method?: string | null
+          provider?: string
+          provider_response?: Json
+          provider_transaction_id?: string | null
+          status?: string
+          subscription_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_confirmed_by_fkey"
+            columns: ["confirmed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_transactions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_transactions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_transactions_organization_id_invoice_id_fkey"
+            columns: ["organization_id", "invoice_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_invoices"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "payment_transactions_organization_id_subscription_id_fkey"
+            columns: ["organization_id", "subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "payment_transactions_provider_fkey"
+            columns: ["provider"]
+            isOneToOne: false
+            referencedRelation: "payment_providers"
+            referencedColumns: ["code"]
+          }
+        ]
+      }
+      payment_webhooks: {
+        Row: {
+          error: string | null
+          id: string
+          ip: string | null
+          mode: string | null
+          organization_id: string | null
+          payload: Json
+          processing_status: string
+          provider: string
+          provider_transaction_id: string | null
+          received_at: string
+          result: Json | null
+          transaction_id: string | null
+        }
+        Insert: {
+          error?: string | null
+          id?: string
+          ip?: string | null
+          mode?: string | null
+          organization_id?: string | null
+          payload?: Json
+          processing_status?: string
+          provider: string
+          provider_transaction_id?: string | null
+          received_at?: string
+          result?: Json | null
+          transaction_id?: string | null
+        }
+        Update: {
+          error?: string | null
+          id?: string
+          ip?: string | null
+          mode?: string | null
+          organization_id?: string | null
+          payload?: Json
+          processing_status?: string
+          provider?: string
+          provider_transaction_id?: string | null
+          received_at?: string
+          result?: Json | null
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_webhooks_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_webhooks_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "payment_transactions"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       payments: {
         Row: {
           amount: number
@@ -2873,6 +3151,47 @@ export type Database = {
             foreignKeyName: "platform_admins_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      platform_billing_settings: {
+        Row: {
+          checkout_expiry_hours: number
+          expire_after_days: number
+          id: number
+          past_due_days: number
+          renewal_notice_days: number
+          restrict_after_days: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          checkout_expiry_hours?: number
+          expire_after_days?: number
+          id?: number
+          past_due_days?: number
+          renewal_notice_days?: number
+          restrict_after_days?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          checkout_expiry_hours?: number
+          expire_after_days?: number
+          id?: number
+          past_due_days?: number
+          renewal_notice_days?: number
+          restrict_after_days?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_billing_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           }
@@ -4192,6 +4511,445 @@ export type Database = {
           }
         ]
       }
+      subscription_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          organization_id: string
+          subscription_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          organization_id: string
+          subscription_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          organization_id?: string
+          subscription_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      subscription_features: {
+        Row: {
+          enabled: boolean
+          feature_code: string
+          limit_value: number | null
+          plan_id: string
+        }
+        Insert: {
+          enabled?: boolean
+          feature_code: string
+          limit_value?: number | null
+          plan_id: string
+        }
+        Update: {
+          enabled?: boolean
+          feature_code?: string
+          limit_value?: number | null
+          plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_features_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      subscription_invoices: {
+        Row: {
+          amount: number
+          billing_interval: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          discount_amount: number
+          due_at: string
+          id: string
+          invoice_number: string
+          issued_at: string
+          kind: string
+          list_amount: number
+          organization_id: string
+          paid_at: string | null
+          payment_method: string | null
+          payment_transaction_id: string | null
+          pdf_url: string | null
+          period_end: string | null
+          period_start: string | null
+          plan_code: string
+          plan_id: string
+          plan_name: string
+          status: string
+          subscription_id: string
+          unit_annual_price: number
+          unit_monthly_price: number
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          billing_interval: string
+          created_at?: string
+          created_by?: string | null
+          currency: string
+          discount_amount?: number
+          due_at?: string
+          id?: string
+          invoice_number: string
+          issued_at?: string
+          kind?: string
+          list_amount: number
+          organization_id: string
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_transaction_id?: string | null
+          pdf_url?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          plan_code: string
+          plan_id: string
+          plan_name: string
+          status?: string
+          subscription_id: string
+          unit_annual_price: number
+          unit_monthly_price: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          billing_interval?: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          discount_amount?: number
+          due_at?: string
+          id?: string
+          invoice_number?: string
+          issued_at?: string
+          kind?: string
+          list_amount?: number
+          organization_id?: string
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_transaction_id?: string | null
+          pdf_url?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          plan_code?: string
+          plan_id?: string
+          plan_name?: string
+          status?: string
+          subscription_id?: string
+          unit_annual_price?: number
+          unit_monthly_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_invoices_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_invoices_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_invoices_organization_id_subscription_id_fkey"
+            columns: ["organization_id", "subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "subscription_invoices_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_invoices_tx_fk"
+            columns: ["organization_id", "payment_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "payment_transactions"
+            referencedColumns: ["organization_id", "id"]
+          }
+        ]
+      }
+      subscription_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          duplicate_of_invoice: boolean
+          id: string
+          invoice_id: string
+          method: string | null
+          mode: string
+          note: string | null
+          organization_id: string
+          paid_at: string
+          provider: string
+          recorded_by: string | null
+          reference: string
+          subscription_id: string
+          transaction_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency: string
+          duplicate_of_invoice?: boolean
+          id?: string
+          invoice_id: string
+          method?: string | null
+          mode: string
+          note?: string | null
+          organization_id: string
+          paid_at: string
+          provider: string
+          recorded_by?: string | null
+          reference: string
+          subscription_id: string
+          transaction_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          duplicate_of_invoice?: boolean
+          id?: string
+          invoice_id?: string
+          method?: string | null
+          mode?: string
+          note?: string | null
+          organization_id?: string
+          paid_at?: string
+          provider?: string
+          recorded_by?: string | null
+          reference?: string
+          subscription_id?: string
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_payments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_payments_organization_id_invoice_id_fkey"
+            columns: ["organization_id", "invoice_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_invoices"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "subscription_payments_organization_id_subscription_id_fkey"
+            columns: ["organization_id", "subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "subscription_payments_organization_id_transaction_id_fkey"
+            columns: ["organization_id", "transaction_id"]
+            isOneToOne: false
+            referencedRelation: "payment_transactions"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "subscription_payments_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      subscription_plans: {
+        Row: {
+          annual_discount_percent: number
+          annual_list_price: number | null
+          annual_price: number
+          annual_savings: number | null
+          audience: string | null
+          code: string
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          is_active: boolean
+          monthly_price: number
+          name: string
+          org_types: Database["public"]["Enums"]["organization_type"][]
+          sort_order: number
+          trial_days: number
+          updated_at: string
+        }
+        Insert: {
+          annual_discount_percent?: number
+          annual_list_price?: never
+          annual_price: number
+          annual_savings?: never
+          audience?: string | null
+          code: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          monthly_price: number
+          name: string
+          org_types?: Database["public"]["Enums"]["organization_type"][]
+          sort_order?: number
+          trial_days?: number
+          updated_at?: string
+        }
+        Update: {
+          annual_discount_percent?: number
+          annual_list_price?: never
+          annual_price?: number
+          annual_savings?: never
+          audience?: string | null
+          code?: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          monthly_price?: number
+          name?: string
+          org_types?: Database["public"]["Enums"]["organization_type"][]
+          sort_order?: number
+          trial_days?: number
+          updated_at?: string
+        }
+        Relationships: [
+          
+        ]
+      }
+      subscriptions: {
+        Row: {
+          annual_price: number
+          billing_interval: string
+          cancel_at_period_end: boolean
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          created_at: string
+          currency: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          is_demo: boolean
+          monthly_price: number
+          next_billing_date: string | null
+          organization_id: string
+          plan_id: string
+          status: string
+          status_changed_at: string
+          trial_end: string | null
+          trial_start: string | null
+          updated_at: string
+        }
+        Insert: {
+          annual_price: number
+          billing_interval?: string
+          cancel_at_period_end?: boolean
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          currency?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          is_demo?: boolean
+          monthly_price: number
+          next_billing_date?: string | null
+          organization_id: string
+          plan_id: string
+          status?: string
+          status_changed_at?: string
+          trial_end?: string | null
+          trial_start?: string | null
+          updated_at?: string
+        }
+        Update: {
+          annual_price?: number
+          billing_interval?: string
+          cancel_at_period_end?: boolean
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          currency?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          is_demo?: boolean
+          monthly_price?: number
+          next_billing_date?: string | null
+          organization_id?: string
+          plan_id?: string
+          status?: string
+          status_changed_at?: string
+          trial_end?: string | null
+          trial_start?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       thread_participants: {
         Row: {
           created_at: string
@@ -4357,6 +5115,81 @@ export type Database = {
           p_guardian: Json
         }
         Returns: string
+      }
+      billing_access_state: {
+        Args: {
+          p_org: string
+        }
+        Returns: Json
+      }
+      billing_attach_checkout: {
+        Args: {
+          p_transaction: string
+          p_provider_tx: string
+          p_checkout_url: string
+          p_response: Json
+        }
+        Returns: undefined
+      }
+      billing_cancel: {
+        Args: {
+          p_org: string
+          p_reason?: string
+        }
+        Returns: undefined
+      }
+      billing_change_trial_plan: {
+        Args: {
+          p_org: string
+          p_plan_code: string
+          p_interval: string
+        }
+        Returns: undefined
+      }
+      billing_confirm_payment: {
+        Args: {
+          p_provider: string
+          p_mode: string
+          p_provider_tx: string
+          p_reference: string
+          p_amount: number
+          p_currency: string
+          p_method?: string
+          p_response?: Json
+        }
+        Returns: Json
+      }
+      billing_fail_payment: {
+        Args: {
+          p_provider: string
+          p_mode: string
+          p_provider_tx: string
+          p_reference: string
+          p_status: string
+          p_reason: string
+          p_response?: Json
+        }
+        Returns: Json
+      }
+      billing_process_lifecycle: {
+        Args: never
+        Returns: Json
+      }
+      billing_resume: {
+        Args: {
+          p_org: string
+        }
+        Returns: undefined
+      }
+      billing_start_checkout: {
+        Args: {
+          p_org: string
+          p_plan_code: string
+          p_interval: string
+          p_provider: string
+          p_mode: string
+        }
+        Returns: Json
       }
       change_student_status: {
         Args: {
@@ -4676,6 +5509,18 @@ export type Database = {
         }
         Returns: undefined
       }
+      platform_billing_overview: {
+        Args: never
+        Returns: Json
+      }
+      platform_issue_invoice: {
+        Args: {
+          p_org: string
+          p_plan_code: string
+          p_interval: string
+        }
+        Returns: string
+      }
       platform_overview: {
         Args: never
         Returns: {
@@ -4692,6 +5537,35 @@ export type Database = {
           members: number
           admins: number
         }[]
+      }
+      platform_record_manual_payment: {
+        Args: {
+          p_invoice: string
+          p_reference: string
+          p_amount: number
+          p_method: string
+          p_note?: string
+        }
+        Returns: Json
+      }
+      platform_update_billing_settings: {
+        Args: {
+          p_past_due: number
+          p_restrict: number
+          p_expire: number
+          p_renewal_notice: number
+        }
+        Returns: undefined
+      }
+      platform_update_plan: {
+        Args: {
+          p_plan: string
+          p_description: string
+          p_audience: string
+          p_is_active: boolean
+          p_features: Json
+        }
+        Returns: undefined
       }
       portal_account: {
         Args: {
@@ -4837,6 +5711,21 @@ export type Database = {
           p_active: boolean
         }
         Returns: undefined
+      }
+      signup_create_organization: {
+        Args: {
+          p_user: string
+          p_name: string
+          p_code_base: string
+          p_type: Database["public"]["Enums"]["organization_type"]
+          p_city: string
+          p_country: string
+          p_phone: string
+          p_email: string
+          p_plan_code: string
+          p_interval: string
+        }
+        Returns: Json
       }
       start_thread: {
         Args: {

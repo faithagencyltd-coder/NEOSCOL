@@ -23,6 +23,7 @@ import {
   LayoutDashboard,
   LayoutTemplate,
   Link2,
+  Gem,
   ListChecks,
   NotebookPen,
   GraduationCap,
@@ -84,6 +85,7 @@ const ICONS: Record<NavIconName, LucideIcon> = {
   communication: MessagesSquare,
   history: Archive,
   portalLink: Link2,
+  subscription: Gem,
 };
 
 export function NavIcon({ name, className }: { name: NavIconName; className?: string }) {

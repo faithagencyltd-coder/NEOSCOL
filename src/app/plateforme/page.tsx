@@ -3,16 +3,15 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ConfirmAction } from "@/components/shared/confirm-action";
-import { Logo } from "@/components/shared/logo";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
-import { UserMenu } from "@/components/layout/user-menu";
+import { SUBSCRIPTION_STATUS } from "@/features/billing/constants";
 import { setOrganizationStatus } from "@/features/platform/actions";
 import { AddAdminDialog, CreateOrganizationDialog, ORG_TYPE_LABELS } from "@/features/platform/components/org-dialogs";
 import { requireSession } from "@/lib/auth/guards";
-import { displayName } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, formatNumber } from "@/lib/utils/format";
 
@@ -20,30 +19,20 @@ export const metadata: Metadata = { title: "Plateforme NéoScol" };
 
 /** Console du Super Administrateur : tous les établissements de la plateforme. */
 export default async function PlatformPage() {
-  const context = await requireSession();
+  await requireSession();
   const supabase = await createClient();
   const { data: isAdmin } = await supabase.rpc("is_platform_admin");
   if (!isAdmin) notFound();
-  const { data: orgs } = await supabase.rpc("platform_overview");
+  const [{ data: orgs }, { data: subs }] = await Promise.all([
+    supabase.rpc("platform_overview"),
+    supabase.from("subscriptions").select("organization_id, status, is_demo, plan:subscription_plans(name)"),
+  ]);
   const rows = orgs ?? [];
+  const subscriptionOf = new Map((subs ?? []).map((s) => [s.organization_id, s]));
   const total = (key: "students" | "staff" | "members") => rows.reduce((sum, o) => sum + Number(o[key]), 0);
 
   return (
-    <div className="min-h-dvh bg-background">
-      <header className="bg-gradient-to-br from-[#07142b] via-[#0b2559] to-[#0e4a9a] text-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-8">
-          <Logo inverted tagline />
-          <div className="rounded-xl bg-white text-foreground">
-            <UserMenu name={displayName(context)} email={context.user.email} roleLabel="Super administrateur" organizations={context.organizations} activeOrganizationId={context.organization?.id ?? ""} />
-          </div>
-        </div>
-        <div className="mx-auto grid max-w-7xl gap-1 px-4 pb-8 pt-2 sm:px-8">
-          <p className="text-xs font-semibold uppercase tracking-widest text-cyan-300">Plateforme</p>
-          <h1 className="text-3xl font-bold">Établissements NéoScol</h1>
-          <p className="text-white/75">Création, suspension et premiers administrateurs. Les données de chaque établissement restent strictement séparées.</p>
-        </div>
-      </header>
-      <main className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-8">
+    <div className="grid gap-6">
         <section className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Indicateurs">
           {[
             { label: "Établissements", value: rows.length, icon: Building2 },
@@ -75,6 +64,7 @@ export default async function PlatformPage() {
                 <TH>Élèves</TH>
                 <TH>Personnel</TH>
                 <TH>Comptes</TH>
+                <TH>Abonnement</TH>
                 <TH>Statut</TH>
                 <TH className="text-right">Actions</TH>
               </tr>
@@ -96,6 +86,16 @@ export default async function PlatformPage() {
                   <TD className="tabular-nums">{formatNumber(Number(o.staff))}</TD>
                   <TD className="tabular-nums">
                     {formatNumber(Number(o.members))} <span className="text-xs text-muted-foreground">({Number(o.admins)} admin.)</span>
+                  </TD>
+                  <TD>
+                    {subscriptionOf.get(o.id) ? (
+                      <span className="grid gap-0.5">
+                        <span className="text-xs">{subscriptionOf.get(o.id)?.plan?.name}</span>
+                        {subscriptionOf.get(o.id)?.is_demo ? <Badge>Démonstration</Badge> : <StatusBadge value={subscriptionOf.get(o.id)!.status} map={SUBSCRIPTION_STATUS} />}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
                   </TD>
                   <TD>{o.status === "active" ? <Badge tone="success">Actif</Badge> : <Badge tone="danger">Suspendu</Badge>}</TD>
                   <TD>
@@ -121,7 +121,6 @@ export default async function PlatformPage() {
             </tbody>
           </Table>
         </Card>
-      </main>
     </div>
   );
 }
