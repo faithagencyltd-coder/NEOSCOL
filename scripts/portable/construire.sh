@@ -72,7 +72,7 @@ while IFS= read -r link; do
 done < <(find "$OUT" -type l)
 cp "$ROOT/scripts/db/supabase-stub.sql" "$ROOT/supabase/seed.sql" "$OUT/base/"
 cp -r "$ROOT/supabase/migrations" "$OUT/base/migrations"
-cp "$ROOT"/scripts/portable/{demarrer.mjs,DEMARRER.cmd,REINITIALISER.cmd,LISEZ-MOI.txt} "$OUT/"
+cp "$ROOT"/scripts/portable/{demarrer.mjs,DEMARRER.cmd,REINITIALISER.cmd,AUTORISER-WIFI.cmd,LISEZ-MOI.txt} "$OUT/"
 node -e 'require("fs").writeFileSync(process.argv[1], JSON.stringify(JSON.parse(process.argv[2]), null, 2))' "$OUT/config.json" "$KEYS"
 printf '{ "name": "neoscol-portable", "private": true, "type": "module" }\n' > "$OUT/package.json"
 ( cd "$OUT" && npm install --no-audit --no-fund --no-package-lock --omit=dev pg@8 >/dev/null )

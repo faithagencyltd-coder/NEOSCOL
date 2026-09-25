@@ -6,7 +6,9 @@
 //   2. le serveur d'authentification (GoTrue) et l'API REST (PostgREST) ;
 //   3. une passerelle locale (/auth/v1 et /rest/v1), comme Supabase ;
 //   4. l'application NéoScol, puis ouvre le navigateur.
-// Tout n'écoute que sur cet ordinateur (127.0.0.1 / localhost).
+// La base, l'authentification et l'API n'écoutent que sur cet ordinateur (127.0.0.1).
+// L'application écoute sur le réseau local : tout appareil connecté au même Wi-Fi
+// (téléphone, tablette, autre ordinateur) l'ouvre via http://<adresse du poste>:3000.
 //
 // Usage : DEMARRER.cmd (ou « node demarrer.mjs ») ; « node demarrer.mjs --reinitialiser »
 // remet les données de démonstration à zéro.
@@ -15,6 +17,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { closeSync, createWriteStream, existsSync, mkdirSync, openSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import http from "node:http";
 import net from "node:net";
+import os from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -320,11 +323,21 @@ async function main() {
   await waitFor(() => httpOk(`http://127.0.0.1:${PORTS.gateway}/auth/v1/health`), "L'authentification");
   await waitFor(() => httpOk(`http://127.0.0.1:${PORTS.gateway}/rest/v1/`), "L'API");
 
+  // Adresses du poste sur le réseau local (Wi-Fi / Ethernet), privées uniquement.
+  const lanAddresses = Object.values(os.networkInterfaces())
+    .flat()
+    .filter((a) => a && a.family === "IPv4" && !a.internal && /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(a.address))
+    .map((a) => a.address)
+    .sort((a, b) => Number(b.startsWith("192.168.")) - Number(a.startsWith("192.168.")));
+  const lanUrl = lanAddresses[0] ? `http://${lanAddresses[0]}:${PORTS.app}` : "";
+
   say("Démarrage de l'application");
   start("application", process.execPath, [join(ROOT, "app", "server.js")], {
     NODE_ENV: "production",
     PORT: String(PORTS.app),
-    HOSTNAME: "localhost",
+    // Toutes les interfaces : accessible depuis les appareils du même réseau local.
+    HOSTNAME: "0.0.0.0",
+    NEOSCOL_LAN_URL: lanUrl,
     SUPABASE_SERVICE_ROLE_KEY: CONFIG.serviceKey,
     CRON_SECRET: CONFIG.cronSecret,
     NEOSCOL_DEMO_MODE: "1",
@@ -337,6 +350,13 @@ async function main() {
   await waitFor(() => httpOk(`${url}/connexion`), "L'application", 120);
 
   console.log(`\n\x1b[1;32m  NéoScol est prêt : ${url}\x1b[0m`);
+  if (lanAddresses.length) {
+    console.log(`\x1b[1;36m  Sur les autres appareils du même Wi-Fi (téléphone, tablette, PC) :\x1b[0m`);
+    for (const address of lanAddresses) console.log(`\x1b[1;36m      http://${address}:${PORTS.app}\x1b[0m`);
+    info("Si les autres appareils n'y accèdent pas : double-cliquez sur AUTORISER-WIFI.cmd (pare-feu Windows).");
+  } else {
+    info("Aucun réseau local détecté : connectez ce poste au Wi-Fi pour l'ouvrir depuis d'autres appareils.");
+  }
   info("Choisissez un profil dans « Accès rapide — démonstration » sur la page de connexion.");
   info("Mot de passe commun : NeoScol-Demo-2026!   ·   Code SMS parent : 123456");
   info("Pour arrêter : fermez cette fenêtre ou appuyez sur Ctrl + C.");

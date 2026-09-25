@@ -8,6 +8,7 @@ import { z } from "zod";
 
 import { isPortalKind, normalizeOrgCode, PORTAL_PERSONAS, PORTALS, type PortalKind } from "@/features/auth/portals";
 import { emailSchema, newPasswordSchema, otpSchema, parentOtpSchema, phoneSchema, signInSchema, studentSignInSchema } from "@/features/auth/schemas";
+import { secureCookiesForRequest } from "@/lib/utils/cookie-security";
 import { ACTIVE_ORG_COOKIE, getSessionContext } from "@/lib/auth/session";
 import { publicEnv } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -99,7 +100,7 @@ async function completeSignIn(next: unknown, scope?: PortalScope | null): Promis
     (await cookies()).set(ACTIVE_ORG_COOKIE, scope.id, {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: await secureCookiesForRequest(),
       path: "/",
       maxAge: 60 * 60 * 24 * 365,
     });
@@ -307,7 +308,7 @@ export async function switchOrganization(formData: FormData): Promise<void> {
   (await cookies()).set(ACTIVE_ORG_COOKIE, organizationId, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: await secureCookiesForRequest(),
     path: "/",
     maxAge: 60 * 60 * 24 * 365,
   });

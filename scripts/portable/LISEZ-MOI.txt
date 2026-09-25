@@ -21,6 +21,20 @@ LANCER
   3. Le navigateur s'ouvre sur http://localhost:3000
      Choisissez un profil dans « Accès rapide — démonstration ».
 
+UTILISER SUR LES AUTRES APPAREILS (MÊME WI-FI)
+  Téléphones, tablettes et autres ordinateurs connectés au MÊME Wi-Fi que ce poste
+  peuvent utiliser NéoScol dans leur navigateur, sans rien installer :
+  1. Lancez DEMARRER.cmd sur ce poste (il doit rester allumé et la fenêtre ouverte).
+  2. La fenêtre affiche l'adresse à ouvrir, par exemple :
+         Sur les autres appareils du même Wi-Fi :  http://192.168.1.20:3000
+  3. Tapez cette adresse dans le navigateur du téléphone ou de la tablette.
+  4. Si la page ne s'ouvre pas : double-cliquez sur  AUTORISER-WIFI.cmd  (accepter la
+     demande administrateur) et vérifiez que le Wi-Fi est un « réseau privé » dans
+     Windows (Paramètres > Réseau et Internet > Wi-Fi > Profil réseau : Privé).
+  Chacun se connecte avec son propre compte. Le « Lien des portails » (menu Portails)
+  et ses QR codes utilisent automatiquement cette adresse Wi-Fi.
+  Hors du Wi-Fi (Internet), NéoScol n'est pas accessible : c'est une installation locale.
+
 COMPTES DE DÉMONSTRATION (mot de passe commun : NeoScol-Demo-2026!)
   - Administrateur    : admin@demo.neoscol.app
   - Direction         : direction@demo.neoscol.app
@@ -44,7 +58,8 @@ EN CAS DE PROBLÈME
   - « le port 3000 est déjà utilisé » : une autre fenêtre NéoScol (ou un autre
     serveur, par ex. « npm run dev ») est ouverte : fermez-la puis relancez.
   - Les journaux détaillés sont dans  donnees\journaux
-  - Tout reste sur cet ordinateur : rien n'est envoyé sur Internet.
+  - Les données restent sur cet ordinateur : rien n'est envoyé sur Internet.
+    Seuls les appareils du même réseau local peuvent ouvrir l'application.
 
 Contenu : application NéoScol, PostgreSQL 17, GoTrue (authentification),
 PostgREST (API). Données entièrement fictives.

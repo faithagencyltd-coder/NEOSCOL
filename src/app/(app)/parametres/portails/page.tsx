@@ -34,6 +34,7 @@ export default async function PortalLinkSettingsPage() {
   ]);
   const c = (counts ?? { parents: 0, students: 0, teachers: 0, staff: 0 }) as Counts;
   const local = /\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(url);
+  const lan = /\/\/(10\.\d+|192\.168|172\.(1[6-9]|2\d|3[01]))\.\d+\.\d+(:|\/|$)/.test(url);
   const rows: { kind: PortalKind; accounts: number; noun: string }[] = [
     { kind: "parent", accounts: c.parents, noun: "parent(s) avec accès" },
     { kind: "enseignant", accounts: c.teachers, noun: "enseignant(s) / formateur(s)" },
@@ -66,6 +67,11 @@ export default async function PortalLinkSettingsPage() {
         <Alert tone="warning" title="Adresse locale">
           Ce lien utilise l&apos;adresse de cet ordinateur ({new URL(url).host}) : il ne fonctionne que sur ce poste ou ce réseau. Une fois NéoScol
           en ligne (adresse définie par NEXT_PUBLIC_SITE_URL), le lien affiché ici devient partageable partout.
+        </Alert>
+      ) : lan ? (
+        <Alert tone="info" title="Adresse du réseau local (Wi-Fi)">
+          Ce lien ({new URL(url).host}) s&apos;ouvre sur tous les appareils connectés au même Wi-Fi que ce poste : téléphones, tablettes,
+          ordinateurs. Il ne fonctionne pas depuis Internet.
         </Alert>
       ) : null}
 

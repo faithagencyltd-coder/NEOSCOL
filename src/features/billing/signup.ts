@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { newPasswordSchema } from "@/features/auth/schemas";
+import { secureCookiesForRequest } from "@/lib/utils/cookie-security";
 import { ACTIVE_ORG_COOKIE } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -135,7 +136,7 @@ export async function signUpOrganization(_: ActionResult | null, formData: FormD
   (await cookies()).set(ACTIVE_ORG_COOKIE, organizationId, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: await secureCookiesForRequest(),
     path: "/",
     maxAge: 60 * 60 * 24 * 365,
   });
