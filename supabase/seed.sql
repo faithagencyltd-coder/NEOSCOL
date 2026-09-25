@@ -62,6 +62,8 @@ select pg_temp.demo_user('00000000-0000-4000-a000-000000000009', 'eleve@demo.neo
 select pg_temp.demo_user('00000000-0000-4000-a000-000000000010', 'formation@demo.neoscol.app', 'Moussa', 'DIALLO');
 select pg_temp.demo_user('00000000-0000-4000-a000-000000000011', 'pointage@demo.neoscol.app', 'Tablette', 'ACCUEIL');
 select pg_temp.demo_user('00000000-0000-4000-a000-000000000012', 'universite@demo.neoscol.app', 'Clarisse', 'ADOU');
+select pg_temp.demo_user('00000000-0000-4000-a000-000000000013', 'formateur@demo.neoscol.app', 'Koffi', 'AKA');
+select pg_temp.demo_user('00000000-0000-4000-a000-000000000014', 'pointage.formation@demo.neoscol.app', 'Tablette', 'ATELIERS');
 
 insert into public.platform_admins (user_id) values ('00000000-0000-4000-a000-000000000001');
 
@@ -92,6 +94,8 @@ select pg_temp.grant_role('10000000-0000-4000-a000-000000000001', '00000000-0000
 select pg_temp.grant_role('10000000-0000-4000-a000-000000000002', '00000000-0000-4000-a000-000000000010', 'org_admin');
 select pg_temp.grant_role('10000000-0000-4000-a000-000000000001', '00000000-0000-4000-a000-000000000011', 'kiosk');
 select pg_temp.grant_role('10000000-0000-4000-a000-000000000003', '00000000-0000-4000-a000-000000000012', 'org_admin');
+select pg_temp.grant_role('10000000-0000-4000-a000-000000000002', '00000000-0000-4000-a000-000000000013', 'teacher');
+select pg_temp.grant_role('10000000-0000-4000-a000-000000000002', '00000000-0000-4000-a000-000000000014', 'kiosk');
 
 -- Données scolaires de l'établissement DEMO -------------------------------------------
 do $$
@@ -704,6 +708,214 @@ begin
   update public.organizations
      set settings = jsonb_set(jsonb_set(settings, '{grading,credit_threshold}', '10'), '{features,ranking}', 'false')
    where id = v_org;
+  perform set_config('request.jwt.claims', '', true);
+end;
+$$;
+
+-- MODULE 2 — FORMATION PROFESSIONNELLE : démonstration DEMOF -----------------------
+-- Formations libres (bureautique, couture, électricité), deux sessions EN COURS
+-- (dates relatives au jour de l'installation), formateurs avec badges, apprenants
+-- inscrits avec échéancier et premiers versements, emploi du temps, badges QR,
+-- historique d'entrées / sorties, compétences et un stage. Centre SANS classes
+-- (groupes désactivés) : le logiciel fonctionne sans groupes.
+do $$
+declare
+  v_org constant uuid := '10000000-0000-4000-a000-000000000002';
+  v_year uuid;
+  v_tz text;
+  v_elec uuid;
+  v_bur uuid;
+  v_cout uuid;
+  v_s_bur uuid;
+  v_s_cout uuid;
+  v_room_b2 uuid;
+  v_room_at uuid;
+  v_room_el uuid;
+  v_aka uuid;
+  v_traore uuid;
+  v_konan uuid;
+  v_bamba uuid;
+  v_word uuid;
+  v_excel uuid;
+  v_net uuid;
+  v_coupe uuid;
+  v_montage uuid;
+  v_cs uuid;
+  v_learner record;
+  v_result jsonb;
+  v_i integer := 0;
+  v_d date;
+  v_c1 uuid;
+  v_c2 uuid;
+  v_c3 uuid;
+  v_enr uuid;
+  v_student uuid;
+begin
+  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-000000000010","role":"authenticated"}', true);
+  select id into v_year from public.academic_years where organization_id = v_org and is_current;
+  select timezone into v_tz from public.organizations where id = v_org;
+  insert into public.academic_periods (organization_id, academic_year_id, name, type, sequence, starts_on, ends_on) values
+    (v_org, v_year, 'Semestre 1', 'semester', 1, date '2026-09-01', date '2027-01-31'),
+    (v_org, v_year, 'Semestre 2', 'semester', 2, date '2027-02-01', date '2027-08-31');
+
+  insert into public.rooms (organization_id, name, building, capacity) values (v_org, 'Salle informatique B2', 'Bâtiment B', 16) returning id into v_room_b2;
+  insert into public.rooms (organization_id, name, building, capacity) values (v_org, 'Atelier couture', 'Ateliers', 12) returning id into v_room_at;
+  insert into public.rooms (organization_id, name, building, capacity) values (v_org, 'Atelier électricité', 'Ateliers', 14) returning id into v_room_el;
+
+  -- Formations (définies librement par le centre)
+  select id into v_elec from public.programs where organization_id = v_org and code = 'ELEC';
+  update public.programs
+     set training_level = 'Niveau 3e (BEPC) ou équivalent', duration_label = '6 mois',
+         admission_conditions = 'Avoir 16 ans révolus ; test de positionnement et entretien.',
+         certificate_title = 'Certificat de qualification professionnelle — Électricien du bâtiment',
+         syllabus = 'Électricité générale ; lecture de schémas ; installations domestiques ; sécurité électrique ; stage en entreprise.',
+         tuition_amount = 350000, registration_fee = 25000, default_installments = 3,
+         description = 'Former des électriciens capables de réaliser et dépanner des installations domestiques.'
+   where id = v_elec;
+  insert into public.programs (organization_id, name, code, kind, duration_hours, duration_label, training_level, admission_conditions,
+                               certificate_title, syllabus, tuition_amount, registration_fee, default_installments, description)
+  values (v_org, 'Informatique bureautique', 'BUREAU', 'training', 120, '3 mois', 'Savoir lire et écrire',
+          'Aucun prérequis en informatique.', 'Attestation de formation en bureautique',
+          'Traitement de texte (Word) ; tableur (Excel) ; Internet et messagerie professionnelle.',
+          150000, 10000, 3, 'Maîtriser les outils bureautiques du quotidien professionnel.')
+  returning id into v_bur;
+  insert into public.programs (organization_id, name, code, kind, duration_hours, duration_label, training_level, admission_conditions,
+                               certificate_title, syllabus, tuition_amount, registration_fee, default_installments, description)
+  values (v_org, 'Couture et stylisme', 'COUTURE', 'training', 600, '9 mois', 'Aucun niveau exigé',
+          'Entretien de motivation.', 'Certificat de fin de formation — Couture et stylisme',
+          'Prise de mesures ; patronage ; coupe ; montage ; finitions ; stage en atelier.',
+          300000, 15000, 6, 'Former des couturiers et couturières autonomes.')
+  returning id into v_cout;
+
+  insert into public.subjects (organization_id, program_id, name, code, kind) values (v_org, v_bur, 'Traitement de texte', 'WORD', 'module') returning id into v_word;
+  insert into public.subjects (organization_id, program_id, name, code, kind) values (v_org, v_bur, 'Tableur', 'EXCEL', 'module') returning id into v_excel;
+  insert into public.subjects (organization_id, program_id, name, code, kind) values (v_org, v_bur, 'Internet et messagerie', 'NET', 'module') returning id into v_net;
+  insert into public.subjects (organization_id, program_id, name, code, kind) values (v_org, v_cout, 'Coupe et patronage', 'COUPE', 'module') returning id into v_coupe;
+  insert into public.subjects (organization_id, program_id, name, code, kind) values (v_org, v_cout, 'Montage et finitions', 'MONTAGE', 'module') returning id into v_montage;
+
+  -- Formateurs (badges QR distincts de ceux des apprenants)
+  insert into public.staff_members (organization_id, user_id, first_name, last_name, sex, job_title, is_teacher, phone, email)
+  values (v_org, '00000000-0000-4000-a000-000000000013', 'Koffi', 'AKA', 'M', 'Formateur en informatique', true, '+225 07 11 22 33 01', 'formateur@demo.neoscol.app')
+  returning id into v_aka;
+  insert into public.staff_members (organization_id, first_name, last_name, sex, job_title, is_teacher, phone)
+  values (v_org, 'Fanta', 'TRAORÉ', 'F', 'Formatrice en informatique', true, '+225 07 11 22 33 02') returning id into v_traore;
+  insert into public.staff_members (organization_id, first_name, last_name, sex, job_title, is_teacher, phone)
+  values (v_org, 'Ama', 'KONAN', 'F', 'Formatrice en couture', true, '+225 07 11 22 33 03') returning id into v_konan;
+  insert into public.staff_members (organization_id, first_name, last_name, sex, job_title, is_teacher, phone)
+  values (v_org, 'Issa', 'BAMBA', 'M', 'Formateur en électricité', true, '+225 07 11 22 33 04') returning id into v_bamba;
+  perform public.issue_staff_badge(x, null) from unnest(array[v_aka, v_traore, v_konan, v_bamba]) x;
+  update public.classes set head_teacher_id = v_bamba, room_id = v_room_el, capacity = 14,
+         tuition_amount = null, syllabus = 'Session de 24 semaines, stage de 4 semaines en entreprise.'
+   where organization_id = v_org and program_id = v_elec;
+
+  -- Sessions en cours (dates relatives : la démonstration fonctionne le jour même)
+  insert into public.classes (organization_id, academic_year_id, program_id, kind, name, starts_on, ends_on, capacity, room_id, head_teacher_id, syllabus)
+  values (v_org, v_year, v_bur, 'training_session', 'Bureautique — Session en cours', current_date - 28, current_date + 120, 16, v_room_b2, v_aka,
+          'Trois modules : Word, Excel, Internet. Évaluation pratique en fin de module.')
+  returning id into v_s_bur;
+  insert into public.classes (organization_id, academic_year_id, program_id, kind, name, starts_on, ends_on, capacity, room_id, head_teacher_id)
+  values (v_org, v_year, v_cout, 'training_session', 'Couture — Session en cours', current_date - 21, current_date + 240, 12, v_room_at, v_konan)
+  returning id into v_s_cout;
+
+  insert into public.class_subjects (organization_id, class_id, subject_id, teacher_id, weekly_hours) values (v_org, v_s_bur, v_word, v_aka, 12) returning id into v_cs;
+  insert into public.timetable_slots (organization_id, academic_year_id, class_id, class_subject_id, teacher_id, room_id, weekday, starts_at, ends_at)
+  select v_org, v_year, v_s_bur, v_cs, v_aka, v_room_b2, d, time '08:00', time '10:00' from generate_series(1, 6) d;
+  insert into public.class_subjects (organization_id, class_id, subject_id, teacher_id, weekly_hours) values (v_org, v_s_bur, v_excel, v_aka, 12) returning id into v_cs;
+  insert into public.timetable_slots (organization_id, academic_year_id, class_id, class_subject_id, teacher_id, room_id, weekday, starts_at, ends_at)
+  select v_org, v_year, v_s_bur, v_cs, v_aka, v_room_b2, d, time '10:15', time '12:15' from generate_series(1, 6) d;
+  insert into public.class_subjects (organization_id, class_id, subject_id, teacher_id, weekly_hours) values (v_org, v_s_bur, v_net, v_traore, 12) returning id into v_cs;
+  insert into public.timetable_slots (organization_id, academic_year_id, class_id, class_subject_id, teacher_id, room_id, weekday, starts_at, ends_at)
+  select v_org, v_year, v_s_bur, v_cs, v_traore, v_room_b2, d, time '14:00', time '16:00' from generate_series(1, 6) d;
+  insert into public.class_subjects (organization_id, class_id, subject_id, teacher_id, weekly_hours) values (v_org, v_s_cout, v_coupe, v_konan, 20) returning id into v_cs;
+  insert into public.timetable_slots (organization_id, academic_year_id, class_id, class_subject_id, teacher_id, room_id, weekday, starts_at, ends_at)
+  select v_org, v_year, v_s_cout, v_cs, v_konan, v_room_at, d, time '08:00', time '12:00' from generate_series(1, 5) d;
+  insert into public.class_subjects (organization_id, class_id, subject_id, teacher_id, weekly_hours) values (v_org, v_s_cout, v_montage, v_konan, 20) returning id into v_cs;
+  insert into public.timetable_slots (organization_id, academic_year_id, class_id, class_subject_id, teacher_id, room_id, weekday, starts_at, ends_at)
+  select v_org, v_year, v_s_cout, v_cs, v_konan, v_room_at, d, time '13:00', time '17:00' from generate_series(1, 5) d;
+
+  -- Apprenants : inscription complète (formation → session → tarif → échéancier → versement)
+  for v_learner in
+    select * from (values
+      ('Aminata', 'COULIBALY', 'F', date '2001-04-12', '+225 07 40 00 00 01', 'BAC', 'bur', 'installments', 60000, 'mobile_money', 'Mariam COULIBALY', '+225 07 50 00 00 01'),
+      ('Yao', 'KOUAKOU', 'M', date '1999-11-03', '+225 07 40 00 00 02', 'Licence 1', 'bur', 'full', 160000, 'cash', 'Jean KOUAKOU', '+225 07 50 00 00 02'),
+      ('Salimata', 'OUÉDRAOGO', 'F', date '2003-06-21', '+225 07 40 00 00 03', 'Niveau 3e', 'bur', 'installments', 30000, 'cash', 'Awa OUÉDRAOGO', '+225 07 50 00 00 03'),
+      ('Christian', 'N''DRI', 'M', date '2000-02-09', '+225 07 40 00 00 04', 'BAC', 'bur', 'installments', 0, 'cash', 'Paul N''DRI', '+225 07 50 00 00 04'),
+      ('Fatou', 'DIABATÉ', 'F', date '2002-09-30', '+225 07 40 00 00 05', 'Niveau 1re', 'bur', 'full', 80000, 'mobile_money', 'Karim DIABATÉ', '+225 07 50 00 00 05'),
+      ('Ismaël', 'TOURÉ', 'M', date '2004-01-17', '+225 07 40 00 00 06', 'BEPC', 'bur', 'installments', 60000, 'cash', 'Aïcha TOURÉ', '+225 07 50 00 00 06'),
+      ('Grâce', 'ESSOH', 'F', date '1998-07-08', '+225 07 40 00 00 07', 'Niveau 3e', 'cout', 'installments', 65000, 'cash', 'Marie ESSOH', '+225 07 50 00 00 07'),
+      ('Rokia', 'SANGARÉ', 'F', date '2000-12-25', '+225 07 40 00 00 08', 'CM2', 'cout', 'installments', 65000, 'mobile_money', 'Bakary SANGARÉ', '+225 07 50 00 00 08'),
+      ('Josiane', 'KOFFI', 'F', date '1997-03-14', '+225 07 40 00 00 09', 'BEPC', 'cout', 'full', 315000, 'bank_transfer', 'Hervé KOFFI', '+225 07 50 00 00 09'),
+      ('Brice', 'GNAHORÉ', 'M', date '2001-10-02', '+225 07 40 00 00 10', 'Niveau 4e', 'cout', 'installments', 0, 'cash', 'Odile GNAHORÉ', '+225 07 50 00 00 10')
+    ) t(first_name, last_name, sex, birth_date, phone, level, sess, plan, paid, method, contact, contact_phone)
+  loop
+    v_i := v_i + 1;
+    v_result := public.enroll_learner(v_org, jsonb_build_object(
+      'student', jsonb_build_object('first_name', v_learner.first_name, 'last_name', v_learner.last_name, 'sex', v_learner.sex,
+                                    'birth_date', v_learner.birth_date, 'phone', v_learner.phone, 'city', 'Bouaké',
+                                    'education_level', v_learner.level),
+      'guardian', jsonb_build_object('first_name', split_part(v_learner.contact, ' ', 1), 'last_name', split_part(v_learner.contact, ' ', 2),
+                                     'phone', v_learner.contact_phone, 'relationship', 'other'),
+      'session_id', case v_learner.sess when 'bur' then v_s_bur else v_s_cout end,
+      'plan', v_learner.plan,
+      'first_due_on', current_date - 20,
+      'payment', jsonb_build_object('amount', v_learner.paid, 'method', v_learner.method, 'payer_name', v_learner.contact)));
+    perform public.issue_student_badge((v_result ->> 'student_id')::uuid, null);
+  end loop;
+  -- L'apprenant déjà inscrit en électricité (session d'octobre) reçoit aussi son badge.
+  perform public.issue_student_badge(s.id, null) from public.students s
+   where s.organization_id = v_org and s.last_name = 'SANOGO' and s.status = 'active';
+
+  -- Historique d'entrées / sorties des jours passés (quelques retards et absences)
+  for v_learner in
+    select e.student_id, e.id as enrollment_id, e.class_id, row_number() over (order by s.last_name) as n
+    from public.enrollments e join public.students s on s.id = e.student_id
+    where e.class_id in (v_s_bur, v_s_cout) and e.status = 'validated'
+  loop
+    for v_d in select d::date from generate_series(current_date - 20, current_date - 1, interval '1 day') d loop
+      continue when not exists (select 1 from public.timetable_slots ts where ts.class_id = v_learner.class_id and ts.weekday = extract(isodow from v_d));
+      continue when (extract(doy from v_d)::integer + v_learner.n) % 9 = 0; -- absent ce jour-là
+      insert into public.learner_attendance (organization_id, student_id, enrollment_id, class_id, timetable_slot_id, room_id,
+                                             attendance_date, entered_at, exited_at, expected_start, minutes_late)
+      select v_org, v_learner.student_id, v_learner.enrollment_id, v_learner.class_id, ts.id, ts.room_id, v_d,
+             (v_d + ts.starts_at - interval '6 minutes' + case when (extract(doy from v_d)::integer + v_learner.n) % 5 = 0 then interval '18 minutes' else interval '0' end) at time zone v_tz,
+             (v_d + time '12:20') at time zone v_tz,
+             ts.starts_at,
+             case when (extract(doy from v_d)::integer + v_learner.n) % 5 = 0 then 12 else 0 end
+      from public.timetable_slots ts
+      where ts.class_id = v_learner.class_id and ts.weekday = extract(isodow from v_d) and ts.starts_at = time '08:00';
+      insert into public.learner_attendance (organization_id, student_id, enrollment_id, class_id, timetable_slot_id, room_id,
+                                             attendance_date, entered_at, exited_at, expected_start, minutes_late)
+      select v_org, v_learner.student_id, v_learner.enrollment_id, v_learner.class_id, ts.id, ts.room_id, v_d,
+             (v_d + ts.starts_at - interval '5 minutes') at time zone v_tz, (v_d + ts.ends_at + interval '4 minutes') at time zone v_tz, ts.starts_at, 0
+      from public.timetable_slots ts
+      where ts.class_id = v_learner.class_id and ts.weekday = extract(isodow from v_d) and ts.starts_at >= time '13:00';
+    end loop;
+  end loop;
+
+  -- Compétences de la bureautique et premières évaluations
+  insert into public.training_competencies (organization_id, program_id, name, sequence) values (v_org, v_bur, 'Saisir et mettre en forme un document professionnel', 1) returning id into v_c1;
+  insert into public.training_competencies (organization_id, program_id, name, sequence) values (v_org, v_bur, 'Construire un tableau de calcul avec formules', 2) returning id into v_c2;
+  insert into public.training_competencies (organization_id, program_id, name, sequence) values (v_org, v_bur, 'Utiliser une messagerie professionnelle', 3) returning id into v_c3;
+  insert into public.training_competencies (organization_id, program_id, name, sequence) values
+    (v_org, v_cout, 'Prendre des mesures et tracer un patron', 1),
+    (v_org, v_cout, 'Couper et monter un vêtement simple', 2),
+    (v_org, v_elec, 'Lire un schéma électrique', 1),
+    (v_org, v_elec, 'Réaliser une installation domestique conforme', 2);
+  for v_enr in select id from public.enrollments where class_id = v_s_bur and status = 'validated' loop
+    insert into public.learner_competencies (organization_id, enrollment_id, student_id, competency_id, level)
+    values (v_org, v_enr, (select student_id from public.enrollments where id = v_enr), v_c1, 'acquired'),
+           (v_org, v_enr, (select student_id from public.enrollments where id = v_enr), v_c2, 'in_progress');
+  end loop;
+
+  -- Un stage en atelier
+  select e.student_id, e.id into v_student, v_enr from public.enrollments e join public.students s on s.id = e.student_id
+   where e.class_id = v_s_cout and s.last_name = 'KOFFI';
+  insert into public.internships (organization_id, student_id, enrollment_id, company_name, company_address, company_phone,
+                                  tutor_name, tutor_title, missions, starts_on, ends_on, status)
+  values (v_org, v_student, v_enr, 'Atelier Mode Élégance', 'Quartier Commerce, Bouaké', '+225 27 31 00 00 00',
+          'Mme Adjoua KOUAMÉ', 'Styliste, gérante', 'Retouches, montage de pagnes, accueil de la clientèle.',
+          current_date + 60, current_date + 90, 'planned');
+
   perform set_config('request.jwt.claims', '', true);
 end;
 $$;

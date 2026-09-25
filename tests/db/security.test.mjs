@@ -19,8 +19,10 @@ describe("Isolation multi-établissements", () => {
       const orgs = await q("select id from organizations");
       assert.deepEqual(orgs.map((o) => o.id), [ORG_DEMOF]);
       assert.equal(count(await q("select count(*) from students where organization_id = $1", [ORG_DEMO])), 0);
-      assert.equal(count(await q("select count(*) from students")), 1);
-      assert.equal(count(await q("select count(*) from payments")), 0);
+      // Tout ce qui est visible appartient à SON établissement (apprenants, paiements du centre).
+      assert.ok(count(await q("select count(*) from students")) >= 1);
+      assert.equal(count(await q("select count(*) from students where organization_id <> $1", [ORG_DEMOF])), 0);
+      assert.equal(count(await q("select count(*) from payments where organization_id <> $1", [ORG_DEMOF])), 0);
       assert.equal(count(await q("select count(*) from audit_logs where organization_id = $1", [ORG_DEMO])), 0);
     });
   });

@@ -607,6 +607,8 @@ export type Database = {
           scanned_at: string
           scanned_by: string | null
           staff_id: string | null
+          student_badge_id: string | null
+          student_id: string | null
         }
         Insert: {
           badge_id?: string | null
@@ -621,6 +623,8 @@ export type Database = {
           scanned_at?: string
           scanned_by?: string | null
           staff_id?: string | null
+          student_badge_id?: string | null
+          student_id?: string | null
         }
         Update: {
           badge_id?: string | null
@@ -635,6 +639,8 @@ export type Database = {
           scanned_at?: string
           scanned_by?: string | null
           staff_id?: string | null
+          student_badge_id?: string | null
+          student_id?: string | null
         }
         Relationships: [
           {
@@ -670,6 +676,20 @@ export type Database = {
             columns: ["staff_id"]
             isOneToOne: false
             referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "badge_scans_student_badge_id_fkey"
+            columns: ["student_badge_id"]
+            isOneToOne: false
+            referencedRelation: "student_badges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "badge_scans_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           }
         ]
@@ -753,6 +773,8 @@ export type Database = {
           room_id: string | null
           search_text: string | null
           starts_on: string | null
+          syllabus: string | null
+          tuition_amount: number | null
           updated_at: string
         }
         Insert: {
@@ -772,6 +794,8 @@ export type Database = {
           room_id?: string | null
           search_text?: never
           starts_on?: string | null
+          syllabus?: string | null
+          tuition_amount?: number | null
           updated_at?: string
         }
         Update: {
@@ -791,6 +815,8 @@ export type Database = {
           room_id?: string | null
           search_text?: never
           starts_on?: string | null
+          syllabus?: string | null
+          tuition_amount?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -946,6 +972,7 @@ export type Database = {
           decision_reason: string | null
           form_data: Json
           form_definition_id: string | null
+          group_id: string | null
           id: string
           level_id: string | null
           notes: string | null
@@ -969,6 +996,7 @@ export type Database = {
           decision_reason?: string | null
           form_data?: Json
           form_definition_id?: string | null
+          group_id?: string | null
           id?: string
           level_id?: string | null
           notes?: string | null
@@ -992,6 +1020,7 @@ export type Database = {
           decision_reason?: string | null
           form_data?: Json
           form_definition_id?: string | null
+          group_id?: string | null
           id?: string
           level_id?: string | null
           notes?: string | null
@@ -1039,6 +1068,13 @@ export type Database = {
             columns: ["organization_id", "form_definition_id"]
             isOneToOne: false
             referencedRelation: "form_definitions"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "enrollments_organization_id_group_id_fkey"
+            columns: ["organization_id", "group_id"]
+            isOneToOne: false
+            referencedRelation: "training_groups"
             referencedColumns: ["organization_id", "id"]
           },
           {
@@ -1641,6 +1677,110 @@ export type Database = {
           }
         ]
       }
+      internships: {
+        Row: {
+          company_address: string | null
+          company_email: string | null
+          company_name: string
+          company_phone: string | null
+          created_at: string
+          created_by: string | null
+          ends_on: string
+          enrollment_id: string | null
+          evaluated_at: string | null
+          evaluation_comment: string | null
+          evaluation_score: number | null
+          id: string
+          missions: string | null
+          organization_id: string
+          starts_on: string
+          status: string
+          student_id: string
+          tutor_email: string | null
+          tutor_name: string | null
+          tutor_phone: string | null
+          tutor_title: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_address?: string | null
+          company_email?: string | null
+          company_name: string
+          company_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          ends_on: string
+          enrollment_id?: string | null
+          evaluated_at?: string | null
+          evaluation_comment?: string | null
+          evaluation_score?: number | null
+          id?: string
+          missions?: string | null
+          organization_id: string
+          starts_on: string
+          status?: string
+          student_id: string
+          tutor_email?: string | null
+          tutor_name?: string | null
+          tutor_phone?: string | null
+          tutor_title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_address?: string | null
+          company_email?: string | null
+          company_name?: string
+          company_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          ends_on?: string
+          enrollment_id?: string | null
+          evaluated_at?: string | null
+          evaluation_comment?: string | null
+          evaluation_score?: number | null
+          id?: string
+          missions?: string | null
+          organization_id?: string
+          starts_on?: string
+          status?: string
+          student_id?: string
+          tutor_email?: string | null
+          tutor_name?: string | null
+          tutor_phone?: string | null
+          tutor_title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internships_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internships_organization_id_enrollment_id_fkey"
+            columns: ["organization_id", "enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "internships_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internships_organization_id_student_id_fkey"
+            columns: ["organization_id", "student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["organization_id", "id"]
+          }
+        ]
+      }
       invoice_lines: {
         Row: {
           amount: number | null
@@ -1974,6 +2114,211 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          }
+        ]
+      }
+      learner_attendance: {
+        Row: {
+          attendance_date: string
+          auto_closed: boolean
+          class_id: string
+          created_at: string
+          enrollment_id: string
+          entered_at: string
+          entry_scan_id: string | null
+          exit_scan_id: string | null
+          exited_at: string | null
+          expected_start: string | null
+          group_id: string | null
+          id: string
+          minutes_late: number
+          organization_id: string
+          room_id: string | null
+          student_id: string
+          timetable_slot_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          attendance_date: string
+          auto_closed?: boolean
+          class_id: string
+          created_at?: string
+          enrollment_id: string
+          entered_at: string
+          entry_scan_id?: string | null
+          exit_scan_id?: string | null
+          exited_at?: string | null
+          expected_start?: string | null
+          group_id?: string | null
+          id?: string
+          minutes_late?: number
+          organization_id: string
+          room_id?: string | null
+          student_id: string
+          timetable_slot_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attendance_date?: string
+          auto_closed?: boolean
+          class_id?: string
+          created_at?: string
+          enrollment_id?: string
+          entered_at?: string
+          entry_scan_id?: string | null
+          exit_scan_id?: string | null
+          exited_at?: string | null
+          expected_start?: string | null
+          group_id?: string | null
+          id?: string
+          minutes_late?: number
+          organization_id?: string
+          room_id?: string | null
+          student_id?: string
+          timetable_slot_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learner_attendance_entry_scan_id_fkey"
+            columns: ["entry_scan_id"]
+            isOneToOne: false
+            referencedRelation: "badge_scans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learner_attendance_exit_scan_id_fkey"
+            columns: ["exit_scan_id"]
+            isOneToOne: false
+            referencedRelation: "badge_scans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learner_attendance_organization_id_class_id_fkey"
+            columns: ["organization_id", "class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "learner_attendance_organization_id_enrollment_id_fkey"
+            columns: ["organization_id", "enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "learner_attendance_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learner_attendance_organization_id_group_id_fkey"
+            columns: ["organization_id", "group_id"]
+            isOneToOne: false
+            referencedRelation: "training_groups"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "learner_attendance_organization_id_room_id_fkey"
+            columns: ["organization_id", "room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "learner_attendance_organization_id_student_id_fkey"
+            columns: ["organization_id", "student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "learner_attendance_organization_id_timetable_slot_id_fkey"
+            columns: ["organization_id", "timetable_slot_id"]
+            isOneToOne: false
+            referencedRelation: "timetable_slots"
+            referencedColumns: ["organization_id", "id"]
+          }
+        ]
+      }
+      learner_competencies: {
+        Row: {
+          comment: string | null
+          competency_id: string
+          created_at: string
+          enrollment_id: string
+          evaluated_by: string | null
+          evaluated_on: string
+          id: string
+          level: string
+          organization_id: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          comment?: string | null
+          competency_id: string
+          created_at?: string
+          enrollment_id: string
+          evaluated_by?: string | null
+          evaluated_on?: string
+          id?: string
+          level: string
+          organization_id: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          competency_id?: string
+          created_at?: string
+          enrollment_id?: string
+          evaluated_by?: string | null
+          evaluated_on?: string
+          id?: string
+          level?: string
+          organization_id?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learner_competencies_evaluated_by_fkey"
+            columns: ["evaluated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learner_competencies_organization_id_competency_id_fkey"
+            columns: ["organization_id", "competency_id"]
+            isOneToOne: false
+            referencedRelation: "training_competencies"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "learner_competencies_organization_id_enrollment_id_fkey"
+            columns: ["organization_id", "enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "learner_competencies_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learner_competencies_organization_id_student_id_fkey"
+            columns: ["organization_id", "student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["organization_id", "id"]
           }
         ]
       }
@@ -3300,48 +3645,72 @@ export type Database = {
       }
       programs: {
         Row: {
+          admission_conditions: string | null
+          certificate_title: string | null
           code: string
           created_at: string
+          default_installments: number | null
           description: string | null
           duration_hours: number | null
+          duration_label: string | null
           id: string
           is_active: boolean
           kind: string
           name: string
           organization_id: string
+          registration_fee: number | null
           school_cycle: string | null
           search_text: string | null
+          syllabus: string | null
           track_type: string | null
+          training_level: string | null
+          tuition_amount: number | null
           updated_at: string
         }
         Insert: {
+          admission_conditions?: string | null
+          certificate_title?: string | null
           code: string
           created_at?: string
+          default_installments?: number | null
           description?: string | null
           duration_hours?: number | null
+          duration_label?: string | null
           id?: string
           is_active?: boolean
           kind?: string
           name: string
           organization_id: string
+          registration_fee?: number | null
           school_cycle?: string | null
           search_text?: never
+          syllabus?: string | null
           track_type?: string | null
+          training_level?: string | null
+          tuition_amount?: number | null
           updated_at?: string
         }
         Update: {
+          admission_conditions?: string | null
+          certificate_title?: string | null
           code?: string
           created_at?: string
+          default_installments?: number | null
           description?: string | null
           duration_hours?: number | null
+          duration_label?: string | null
           id?: string
           is_active?: boolean
           kind?: string
           name?: string
           organization_id?: string
+          registration_fee?: number | null
           school_cycle?: string | null
           search_text?: never
+          syllabus?: string | null
           track_type?: string | null
+          training_level?: string | null
+          tuition_amount?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -3829,6 +4198,86 @@ export type Database = {
           {
             foreignKeyName: "staff_members_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      student_badges: {
+        Row: {
+          id: string
+          issued_at: string
+          issued_by: string | null
+          last_printed_at: string | null
+          number: string
+          organization_id: string
+          printed_count: number
+          replaces_badge_id: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          revoked_reason: string | null
+          status: string
+          student_id: string
+          token: string
+        }
+        Insert: {
+          id?: string
+          issued_at?: string
+          issued_by?: string | null
+          last_printed_at?: string | null
+          number: string
+          organization_id: string
+          printed_count?: number
+          replaces_badge_id?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          revoked_reason?: string | null
+          status?: string
+          student_id: string
+          token?: string
+        }
+        Update: {
+          id?: string
+          issued_at?: string
+          issued_by?: string | null
+          last_printed_at?: string | null
+          number?: string
+          organization_id?: string
+          printed_count?: number
+          replaces_badge_id?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          revoked_reason?: string | null
+          status?: string
+          student_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_badges_issued_by_fkey"
+            columns: ["issued_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_badges_organization_id_student_id_fkey"
+            columns: ["organization_id", "student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "student_badges_replaces_badge_id_fkey"
+            columns: ["replaces_badge_id"]
+            isOneToOne: false
+            referencedRelation: "student_badges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_badges_revoked_by_fkey"
+            columns: ["revoked_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -4327,6 +4776,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           custom_fields: Json
+          education_level: string | null
           email: string | null
           entry_year: number | null
           exit_year: number | null
@@ -4363,6 +4813,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           custom_fields?: Json
+          education_level?: string | null
           email?: string | null
           entry_year?: number | null
           exit_year?: number | null
@@ -4399,6 +4850,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           custom_fields?: Json
+          education_level?: string | null
           email?: string | null
           entry_year?: number | null
           exit_year?: number | null
@@ -5008,6 +5460,7 @@ export type Database = {
           class_subject_id: string | null
           created_at: string
           ends_at: string
+          group_id: string | null
           id: string
           label: string | null
           organization_id: string
@@ -5023,6 +5476,7 @@ export type Database = {
           class_subject_id?: string | null
           created_at?: string
           ends_at: string
+          group_id?: string | null
           id?: string
           label?: string | null
           organization_id: string
@@ -5038,6 +5492,7 @@ export type Database = {
           class_subject_id?: string | null
           created_at?: string
           ends_at?: string
+          group_id?: string | null
           id?: string
           label?: string | null
           organization_id?: string
@@ -5070,6 +5525,13 @@ export type Database = {
             referencedColumns: ["organization_id", "id"]
           },
           {
+            foreignKeyName: "timetable_slots_organization_id_group_id_fkey"
+            columns: ["organization_id", "group_id"]
+            isOneToOne: false
+            referencedRelation: "training_groups"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
             foreignKeyName: "timetable_slots_organization_id_room_id_fkey"
             columns: ["organization_id", "room_id"]
             isOneToOne: false
@@ -5081,6 +5543,115 @@ export type Database = {
             columns: ["organization_id", "teacher_id"]
             isOneToOne: false
             referencedRelation: "staff_members"
+            referencedColumns: ["organization_id", "id"]
+          }
+        ]
+      }
+      training_competencies: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          organization_id: string
+          program_id: string
+          sequence: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          organization_id: string
+          program_id: string
+          sequence?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          organization_id?: string
+          program_id?: string
+          sequence?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_competencies_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_competencies_organization_id_program_id_fkey"
+            columns: ["organization_id", "program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["organization_id", "id"]
+          }
+        ]
+      }
+      training_groups: {
+        Row: {
+          archived_at: string | null
+          capacity: number | null
+          class_id: string
+          created_at: string
+          id: string
+          name: string
+          organization_id: string
+          room_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          capacity?: number | null
+          class_id: string
+          created_at?: string
+          id?: string
+          name: string
+          organization_id: string
+          room_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          capacity?: number | null
+          class_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          organization_id?: string
+          room_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_groups_organization_id_class_id_fkey"
+            columns: ["organization_id", "class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "training_groups_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_groups_organization_id_room_id_fkey"
+            columns: ["organization_id", "room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
             referencedColumns: ["organization_id", "id"]
           }
         ]
@@ -5282,6 +5853,19 @@ export type Database = {
         }
         Returns: undefined
       }
+      delete_training_program: {
+        Args: {
+          p_program_id: string
+        }
+        Returns: undefined
+      }
+      enroll_learner: {
+        Args: {
+          p_organization_id: string
+          p_payload: Json
+        }
+        Returns: Json
+      }
       enrollment_fee_preview: {
         Args: {
           p_enrollment_id: string
@@ -5358,12 +5942,33 @@ export type Database = {
         Args: never
         Returns: boolean
       }
+      issue_session_badges: {
+        Args: {
+          p_class_id: string
+        }
+        Returns: number
+      }
       issue_staff_badge: {
         Args: {
           p_staff_id: string
           p_reason?: string
         }
         Returns: string
+      }
+      issue_student_badge: {
+        Args: {
+          p_student_id: string
+          p_reason?: string
+        }
+        Returns: string
+      }
+      learner_attendance_summary: {
+        Args: {
+          p_student_id: string
+          p_from?: string
+          p_to?: string
+        }
+        Returns: Json
       }
       log_event: {
         Args: {
@@ -5696,6 +6301,15 @@ export type Database = {
         }
         Returns: number
       }
+      scan_badge: {
+        Args: {
+          p_organization_id: string
+          p_code: string
+          p_device?: string
+          p_room_id?: string
+        }
+        Returns: Json
+      }
       scan_staff_badge: {
         Args: {
           p_organization_id: string
@@ -5729,6 +6343,13 @@ export type Database = {
           p_org: string
           p_levels: string[]
           p_tracks: string[]
+        }
+        Returns: Json
+      }
+      set_training_config: {
+        Args: {
+          p_org: string
+          p_config: Json
         }
         Returns: Json
       }
@@ -5793,6 +6414,21 @@ export type Database = {
           sender: string
           mine: boolean
         }[]
+      }
+      training_dashboard: {
+        Args: {
+          p_organization_id: string
+          p_date?: string
+        }
+        Returns: Json
+      }
+      training_statistics: {
+        Args: {
+          p_organization_id: string
+          p_from?: string
+          p_to?: string
+        }
+        Returns: Json
       }
       unlock_lesson_manually: {
         Args: {

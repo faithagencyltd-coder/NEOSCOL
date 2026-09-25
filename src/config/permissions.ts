@@ -23,6 +23,7 @@ export const PERMISSIONS = [
   "students.archive",
   "students.delete",
   "students.import",
+  "students.badges.manage",
   "portal_access.manage",
   "students.medical.read",
   "students.medical.manage",
