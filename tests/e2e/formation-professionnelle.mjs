@@ -83,7 +83,7 @@ await d1.locator("[name=admission_conditions]").fill("Test pratique d'entrée");
 await d1.locator("[name=syllabus]").fill("Soudure à l'arc ; MIG ; sécurité");
 await d1.getByRole("button", { name: "Créer la formation" }).click();
 await admin.waitForURL(/\/formation\/formations\/[0-9a-f-]{36}/);
-const formationId = admin.url().split("/").pop().split("?")[0];
+check(/\/formation\/formations\/[0-9a-f-]{36}/.test(admin.url()), "fiche de la formation ouverte");
 check(await admin.getByText("CQP Soudeur").isVisible(), "formation créée avec certificat, coût, conditions");
 check(await admin.getByText(/200\s000/).first().isVisible(), "coût affiché");
 
