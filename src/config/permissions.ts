@@ -70,6 +70,10 @@ export const PERMISSIONS = [
   "assistant.use",
   "billing.read",
   "billing.manage",
+  "deliberations.read",
+  "deliberations.manage",
+  "theses.manage",
+  "diplomas.manage",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];

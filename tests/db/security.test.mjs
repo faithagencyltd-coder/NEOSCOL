@@ -611,7 +611,7 @@ describe("Recherche globale", () => {
 describe("Université (LMD)", () => {
   test("crédits par unité d'enseignement et relevés du semestre isolés des autres établissements", async () => {
     await as("00000000-0000-4000-a000-000000000012", async (q) => {
-      const [{ total }] = await q("select sum(s.credits)::int as total from class_subjects cs join subjects s on s.id = cs.subject_id join classes c on c.id = cs.class_id where c.name = 'L1 Informatique'");
+      const [{ total }] = await q("select sum(s.credits)::int as total from class_subjects cs join subjects s on s.id = cs.subject_id join teaching_units tu on tu.id = s.teaching_unit_id and tu.semester_no = 1 join classes c on c.id = cs.class_id where c.name = 'L1 Informatique'");
       assert.equal(total, 30, "30 crédits ECTS au semestre");
       assert.equal((await q("select id from report_cards where status = 'published'")).length, 10);
       assert.equal((await q("select id from students where organization_id = $1", [ORG_DEMO])).length, 0);

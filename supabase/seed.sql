@@ -64,6 +64,10 @@ select pg_temp.demo_user('00000000-0000-4000-a000-000000000011', 'pointage@demo.
 select pg_temp.demo_user('00000000-0000-4000-a000-000000000012', 'universite@demo.neoscol.app', 'Clarisse', 'ADOU');
 select pg_temp.demo_user('00000000-0000-4000-a000-000000000013', 'formateur@demo.neoscol.app', 'Koffi', 'AKA');
 select pg_temp.demo_user('00000000-0000-4000-a000-000000000014', 'pointage.formation@demo.neoscol.app', 'Tablette', 'ATELIERS');
+select pg_temp.demo_user('00000000-0000-4000-a000-000000000015', 'etudiant@demo.neoscol.app', 'Kouamé', 'KONAN');
+select pg_temp.demo_user('00000000-0000-4000-a000-000000000016', 'professeur@demo.neoscol.app', 'Clément', 'KOUAKOU');
+select pg_temp.demo_user('00000000-0000-4000-a000-000000000017', 'scolarite@demo.neoscol.app', 'Nadia', 'EHOUMAN');
+select pg_temp.demo_user('00000000-0000-4000-a000-000000000018', 'pointage.universite@demo.neoscol.app', 'Borne', 'CAMPUS');
 
 insert into public.platform_admins (user_id) values ('00000000-0000-4000-a000-000000000001');
 
@@ -96,6 +100,10 @@ select pg_temp.grant_role('10000000-0000-4000-a000-000000000001', '00000000-0000
 select pg_temp.grant_role('10000000-0000-4000-a000-000000000003', '00000000-0000-4000-a000-000000000012', 'org_admin');
 select pg_temp.grant_role('10000000-0000-4000-a000-000000000002', '00000000-0000-4000-a000-000000000013', 'teacher');
 select pg_temp.grant_role('10000000-0000-4000-a000-000000000002', '00000000-0000-4000-a000-000000000014', 'kiosk');
+select pg_temp.grant_role('10000000-0000-4000-a000-000000000003', '00000000-0000-4000-a000-000000000015', 'student');
+select pg_temp.grant_role('10000000-0000-4000-a000-000000000003', '00000000-0000-4000-a000-000000000016', 'teacher');
+select pg_temp.grant_role('10000000-0000-4000-a000-000000000003', '00000000-0000-4000-a000-000000000017', 'registrar');
+select pg_temp.grant_role('10000000-0000-4000-a000-000000000003', '00000000-0000-4000-a000-000000000018', 'kiosk');
 
 -- Données scolaires de l'établissement DEMO -------------------------------------------
 do $$
@@ -628,9 +636,10 @@ begin
   perform set_config('request.jwt.claims', json_build_object('sub', v_admin, 'role', 'authenticated')::text, true);
 
   insert into public.academic_years (organization_id, name, starts_on, ends_on, is_current, status)
-  values (v_org, '2026-2027', date '2026-10-05', date '2027-07-16', true, 'active') returning id into v_year;
+  -- Dates relatives au jour de l'installation : l'année est toujours « en cours » (scan, présences).
+  values (v_org, '2026-2027', least(date '2026-10-05', current_date - 30), greatest(date '2027-07-16', current_date + 120), true, 'active') returning id into v_year;
   insert into public.academic_periods (organization_id, academic_year_id, name, type, sequence, starts_on, ends_on)
-  values (v_org, v_year, 'Semestre 1', 'semester', 1, date '2026-10-05', date '2027-02-12') returning id into v_s1;
+  values (v_org, v_year, 'Semestre 1', 'semester', 1, least(date '2026-10-05', current_date - 30), date '2027-02-12') returning id into v_s1;
   insert into public.academic_periods (organization_id, academic_year_id, name, type, sequence, starts_on, ends_on)
   values (v_org, v_year, 'Semestre 2', 'semester', 2, date '2027-02-22', date '2027-07-16');
 
@@ -915,6 +924,230 @@ begin
   values (v_org, v_student, v_enr, 'Atelier Mode Élégance', 'Quartier Commerce, Bouaké', '+225 27 31 00 00 00',
           'Mme Adjoua KOUAMÉ', 'Styliste, gérante', 'Retouches, montage de pagnes, accueil de la clientèle.',
           current_date + 60, current_date + 90, 'planned');
+
+  perform set_config('request.jwt.claims', '', true);
+end;
+$$;
+
+-- MODULE 3 — UNIVERSITÉ : démonstration DEMOU complète ------------------------------
+-- Facultés, départements, cycles LMD, parcours, UE → matières, enseignants (grades),
+-- salles, emploi du temps, inscriptions pédagogiques, frais et paiements, badges,
+-- résultats du semestre 1 délibérés, promotion de Master avec mémoire, stage et
+-- soutenance, un diplômé.
+do $$
+declare
+  v_org constant uuid := '10000000-0000-4000-a000-000000000003';
+  v_year uuid;
+  v_s1 uuid;
+  v_s2 uuid;
+  v_l1 uuid;
+  v_m1 uuid;
+  v_lic uuid;
+  v_mas uuid;
+  v_doc uuid;
+  v_fst uuid;
+  v_fdse uuid;
+  v_dinfo uuid;
+  v_program uuid;
+  v_master uuid;
+  v_class uuid;
+  v_mclass uuid;
+  v_t uuid[];
+  v_ue uuid;
+  v_subject uuid;
+  v_cs uuid;
+  v_amphi uuid;
+  v_s12 uuid;
+  v_labo uuid;
+  v_fee_reg uuid;
+  v_fee_tui uuid;
+  v_invoice uuid;
+  v_student uuid;
+  v_enr record;
+  v_delib uuid;
+  v_thesis uuid;
+  v_i integer := 0;
+begin
+  perform set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-000000000012","role":"authenticated"}', true);
+  select id into v_year from public.academic_years where organization_id = v_org and is_current;
+  select id into v_s1 from public.academic_periods where academic_year_id = v_year and sequence = 1;
+  select id into v_s2 from public.academic_periods where academic_year_id = v_year and sequence = 2;
+  update public.academic_years set registration_starts_on = starts_on - 45, registration_ends_on = starts_on + 30 where id = v_year;
+
+  -- Cycles LMD (configurables) et niveaux.
+  insert into public.academic_cycles (organization_id, name, code, credits_required, duration_years, sequence) values (v_org, 'Licence', 'LIC', 180, 3, 1) returning id into v_lic;
+  insert into public.academic_cycles (organization_id, name, code, credits_required, duration_years, sequence) values (v_org, 'Master', 'MAS', 120, 2, 2) returning id into v_mas;
+  insert into public.academic_cycles (organization_id, name, code, credits_required, duration_years, sequence) values (v_org, 'Doctorat', 'DOC', 180, 3, 3) returning id into v_doc;
+  update public.levels set academic_cycle_id = v_lic, credits_target = 60 where organization_id = v_org and short_name in ('L1', 'L2', 'L3');
+  update public.levels set academic_cycle_id = v_mas, credits_target = 60 where organization_id = v_org and short_name = 'M1';
+  insert into public.levels (organization_id, name, short_name, cycle, sequence, academic_cycle_id, credits_target) values
+    (v_org, 'Master 2', 'M2', 'Master', 5, v_mas, 60), (v_org, 'Doctorat 1', 'D1', 'Doctorat', 6, v_doc, 60);
+  select id into v_l1 from public.levels where organization_id = v_org and short_name = 'L1';
+  select id into v_m1 from public.levels where organization_id = v_org and short_name = 'M1';
+
+  -- Facultés et départements.
+  insert into public.faculties (organization_id, name, code, kind) values (v_org, 'Faculté des Sciences et Technologies', 'FST', 'faculte') returning id into v_fst;
+  insert into public.faculties (organization_id, name, code, kind) values (v_org, 'Faculté de Droit et des Sciences Économiques', 'FDSE', 'faculte') returning id into v_fdse;
+  insert into public.departments (organization_id, faculty_id, name, code) values (v_org, v_fst, 'Département d''Informatique', 'DINFO') returning id into v_dinfo;
+  insert into public.departments (organization_id, faculty_id, name, code) values (v_org, v_fst, 'Département de Mathématiques', 'DMATH'), (v_org, v_fdse, 'Département de Droit privé', 'DDP');
+
+  -- Enseignants : grades et département ; le professeur Clément KOUAKOU a un compte.
+  select array_agg(id order by hired_on, last_name) into v_t from public.staff_members where organization_id = v_org and is_teacher;
+  select array_agg(id order by x.o) into v_t from (select id, case last_name when 'KOUAKOU' then 1 when 'ADJOBI' then 2 else 3 end as o from public.staff_members where organization_id = v_org and is_teacher) x;
+  update public.staff_members set academic_rank = 'Maître de conférences', department_id = v_dinfo, user_id = '00000000-0000-4000-a000-000000000016', email = 'professeur@demo.neoscol.app' where id = v_t[1];
+  update public.staff_members set academic_rank = 'Professeur titulaire', department_id = v_dinfo where id = v_t[2];
+  update public.staff_members set academic_rank = 'Chargé de cours', department_id = v_dinfo where id = v_t[3];
+  perform public.issue_staff_badge(x, null) from unnest(v_t) x;
+
+  -- Filière Licence Informatique enrichie, parcours ; filière Droit ; Master Informatique.
+  select id into v_program from public.programs where organization_id = v_org and code = 'LINFO';
+  update public.programs set faculty_id = v_fst, department_id = v_dinfo, responsible_id = v_t[1], academic_cycle_id = v_lic,
+         degree_title = 'Licence en Informatique', duration_years = 3,
+         admission_conditions = 'Baccalauréat scientifique (séries C, D, E) ou équivalent ; étude du dossier.',
+         description = 'Former des informaticiens polyvalents : programmation, systèmes, réseaux, données.'
+   where id = v_program;
+  insert into public.program_tracks (organization_id, program_id, name, code, kind, starts_at_level_id)
+  select v_org, v_program, t.name, t.code, 'parcours', (select id from public.levels where organization_id = v_org and short_name = 'L3')
+  from (values ('Génie logiciel', 'GL'), ('Réseaux et cybersécurité', 'RS'), ('Intelligence artificielle', 'IA')) t(name, code);
+  insert into public.programs (organization_id, name, code, kind, faculty_id, academic_cycle_id, degree_title, duration_years)
+  values (v_org, 'Licence en Droit', 'LDROIT', 'degree', v_fdse, v_lic, 'Licence en Droit', 3);
+  insert into public.programs (organization_id, name, code, kind, faculty_id, department_id, responsible_id, academic_cycle_id, degree_title, duration_years)
+  values (v_org, 'Master Informatique', 'MINFO', 'degree', v_fst, v_dinfo, v_t[2], v_mas, 'Master en Informatique', 2) returning id into v_master;
+
+  -- Salles universitaires.
+  insert into public.rooms (organization_id, name, number, building, capacity, room_type, equipment) values
+    (v_org, 'Amphithéâtre A', 'A', 'Bâtiment central', 300, 'amphi', 'Sonorisation, vidéoprojecteur') returning id into v_amphi;
+  insert into public.rooms (organization_id, name, number, building, capacity, room_type, equipment) values
+    (v_org, 'Salle 12', '12', 'Bâtiment B', 60, 'cours', 'Tableau blanc, vidéoprojecteur') returning id into v_s12;
+  insert into public.rooms (organization_id, name, number, building, capacity, room_type, equipment) values
+    (v_org, 'Laboratoire informatique 1', 'LI1', 'Bâtiment B', 40, 'informatique', '40 postes, réseau, vidéoprojecteur') returning id into v_labo;
+
+  -- UE du semestre 1 : les matières existantes sont rattachées à leurs UE.
+  select id into v_class from public.classes where organization_id = v_org and code = 'L1INF';
+  insert into public.teaching_units (organization_id, program_id, level_id, semester_no, code, name, credits, coefficient, category, responsible_id)
+  values (v_org, v_program, v_l1, 1, 'UE-INF11', 'Informatique fondamentale', 12, 2, 'Fondamentale', v_t[1]) returning id into v_ue;
+  update public.subjects set teaching_unit_id = v_ue, coefficient = 1, hours_cm = 30, hours_td = 20, hours_tp = 10, teaching_types = '{cm,td,tp}'
+   where organization_id = v_org and code in ('INF101', 'INF102');
+  insert into public.teaching_units (organization_id, program_id, level_id, semester_no, code, name, credits, coefficient, category, responsible_id)
+  values (v_org, v_program, v_l1, 1, 'UE-MAT11', 'Mathématiques pour l''informatique', 6, 1, 'Fondamentale', v_t[2]) returning id into v_ue;
+  update public.subjects set teaching_unit_id = v_ue, coefficient = 1, hours_cm = 24, hours_td = 24, teaching_types = '{cm,td}' where organization_id = v_org and code = 'MAT101';
+  insert into public.teaching_units (organization_id, program_id, level_id, semester_no, code, name, credits, coefficient, category, responsible_id)
+  values (v_org, v_program, v_l1, 1, 'UE-WEB11', 'Développement web', 6, 1, 'Fondamentale', v_t[1]) returning id into v_ue;
+  update public.subjects set teaching_unit_id = v_ue, coefficient = 1, hours_cm = 12, hours_tp = 36, teaching_types = '{cm,tp}' where organization_id = v_org and code = 'INF103';
+  insert into public.teaching_units (organization_id, program_id, level_id, semester_no, code, name, credits, coefficient, category, responsible_id)
+  values (v_org, v_program, v_l1, 1, 'UE-TRA11', 'Unité transversale', 6, 1, 'Transversale', v_t[3]) returning id into v_ue;
+  update public.subjects set teaching_unit_id = v_ue, coefficient = 1, hours_td = 24, teaching_types = '{td}' where organization_id = v_org and code in ('LAN101', 'MET101');
+
+  -- UE du semestre 2 (matières affectées aux enseignants de la promotion).
+  insert into public.teaching_units (organization_id, program_id, level_id, semester_no, code, name, credits, coefficient, category, responsible_id)
+  values (v_org, v_program, v_l1, 2, 'UE-INF12', 'Programmation avancée', 12, 2, 'Fondamentale', v_t[1]) returning id into v_ue;
+  insert into public.subjects (organization_id, name, code, kind, program_id, credits, teaching_unit_id, coefficient, hours_cm, hours_tp, teaching_types)
+  values (v_org, 'Programmation orientée objet', 'INF121', 'module', v_program, 6, v_ue, 1, 24, 24, '{cm,tp}') returning id into v_subject;
+  insert into public.class_subjects (organization_id, class_id, subject_id, teacher_id, coefficient, weekly_hours) values (v_org, v_class, v_subject, v_t[1], 1, 4);
+  insert into public.subjects (organization_id, name, code, kind, program_id, credits, teaching_unit_id, coefficient, hours_cm, hours_td, teaching_types)
+  values (v_org, 'Bases de données', 'INF122', 'module', v_program, 6, v_ue, 1, 24, 24, '{cm,td}') returning id into v_subject;
+  insert into public.class_subjects (organization_id, class_id, subject_id, teacher_id, coefficient, weekly_hours) values (v_org, v_class, v_subject, v_t[3], 1, 4);
+  insert into public.teaching_units (organization_id, program_id, level_id, semester_no, code, name, credits, coefficient, category, responsible_id)
+  values (v_org, v_program, v_l1, 2, 'UE-MAT12', 'Probabilités et statistiques', 12, 2, 'Fondamentale', v_t[2]) returning id into v_ue;
+  insert into public.subjects (organization_id, name, code, kind, program_id, credits, teaching_unit_id, coefficient, hours_cm, hours_td, teaching_types)
+  values (v_org, 'Probabilités', 'MAT121', 'module', v_program, 12, v_ue, 1, 30, 30, '{cm,td}') returning id into v_subject;
+  insert into public.class_subjects (organization_id, class_id, subject_id, teacher_id, coefficient, weekly_hours) values (v_org, v_class, v_subject, v_t[2], 1, 4);
+  insert into public.teaching_units (organization_id, program_id, level_id, semester_no, code, name, credits, coefficient, category, responsible_id)
+  values (v_org, v_program, v_l1, 2, 'UE-TRA12', 'Communication professionnelle', 6, 1, 'Transversale', v_t[3]) returning id into v_ue;
+  insert into public.subjects (organization_id, name, code, kind, program_id, credits, teaching_unit_id, coefficient, hours_td, teaching_types)
+  values (v_org, 'Expression écrite et orale', 'COM121', 'module', v_program, 6, v_ue, 1, 24, '{td}') returning id into v_subject;
+  insert into public.class_subjects (organization_id, class_id, subject_id, teacher_id, coefficient, weekly_hours) values (v_org, v_class, v_subject, v_t[3], 1, 2);
+
+  -- Emploi du temps de la L1 (lundi → samedi) : CM en amphithéâtre, TD en salle, TP au laboratoire.
+  insert into public.timetable_slots (organization_id, academic_year_id, class_id, class_subject_id, teacher_id, room_id, weekday, starts_at, ends_at, session_type)
+  select v_org, v_year, v_class, cs.id, cs.teacher_id, x.room, d, x.s, x.e, x.kind
+  from (values ('INF101', time '08:00', time '10:00', 'cm'), ('INF102', time '10:15', time '12:15', 'td'),
+               ('MAT101', time '13:30', time '15:30', 'cm'), ('INF103', time '15:45', time '17:45', 'tp')) v(code, s, e, kind)
+  cross join lateral (select v.s as s, v.e as e, v.kind as kind,
+                             case v.kind when 'cm' then v_amphi when 'td' then v_s12 else v_labo end as room) x
+  join public.subjects su on su.organization_id = v_org and su.code = v.code
+  join public.class_subjects cs on cs.class_id = v_class and cs.subject_id = su.id
+  cross join generate_series(1, 6) d;
+
+  -- Sessions d'examen.
+  insert into public.exam_sessions (organization_id, academic_year_id, academic_period_id, name, kind, starts_on, ends_on, status) values
+    (v_org, v_year, v_s1, 'Session 1 — Semestre 1', 'normal', date '2027-01-25', date '2027-02-06', 'planned'),
+    (v_org, v_year, v_s1, 'Rattrapage — Semestre 1', 'retake', date '2027-03-01', date '2027-03-06', 'planned');
+
+  -- Promotion : filière / niveau ; inscriptions administratives complétées ; compte étudiant.
+  update public.classes set starts_on = null where id = v_class;
+  update public.students set user_id = '00000000-0000-4000-a000-000000000015', email = 'etudiant@demo.neoscol.app', phone = '+225 07 20 00 00 01'
+   where organization_id = v_org and last_name = 'KONAN' and first_name = 'Kouamé';
+
+  -- Frais universitaires (par filière et niveau) et échéancier en 3 tranches.
+  insert into public.fee_types (organization_id, name, code, category) values (v_org, 'Droits d''inscription', 'INSCR', 'registration') returning id into v_fee_reg;
+  insert into public.fee_types (organization_id, name, code, category) values (v_org, 'Frais de scolarité', 'SCOL', 'tuition') returning id into v_fee_tui;
+  insert into public.fee_types (organization_id, name, code, category) values (v_org, 'Frais de soutenance', 'SOUT', 'defense'), (v_org, 'Frais de diplôme', 'DIPL', 'diploma');
+  insert into public.fee_rates (organization_id, academic_year_id, fee_type_id, program_id, amount, is_mandatory, installment_plan) values
+    (v_org, v_year, v_fee_reg, v_program, 50000, true, '[]'),
+    (v_org, v_year, v_fee_tui, v_program, 450000, true,
+     jsonb_build_array(jsonb_build_object('label', '1re tranche', 'percent', 40, 'due_on', current_date + 10),
+                       jsonb_build_object('label', '2e tranche', 'percent', 30, 'due_on', current_date + 70),
+                       jsonb_build_object('label', '3e tranche', 'percent', 30, 'due_on', current_date + 130)));
+
+  for v_enr in select e.id, e.student_id from public.enrollments e where e.class_id = v_class and e.status = 'validated' order by e.created_at loop
+    v_i := v_i + 1;
+    -- Inscription pédagogique : UE des semestres 1 et 2.
+    perform public.register_curriculum(v_enr.id, v_s1);
+    perform public.register_curriculum(v_enr.id, v_s2);
+    perform public.issue_student_badge(v_enr.student_id, null);
+    insert into public.invoices (organization_id, student_id, enrollment_id, academic_year_id, status)
+    values (v_org, v_enr.student_id, v_enr.id, v_year, 'draft') returning id into v_invoice;
+    insert into public.invoice_lines (organization_id, invoice_id, fee_type_id, description, unit_amount, sort_order) values
+      (v_org, v_invoice, v_fee_reg, 'Droits d''inscription 2026-2027', 50000, 1),
+      (v_org, v_invoice, v_fee_tui, 'Frais de scolarité 2026-2027', 450000, 2);
+    insert into public.installments (organization_id, invoice_id, label, due_on, amount, sequence) values
+      (v_org, v_invoice, '1re tranche', current_date - 5, 230000, 1),
+      (v_org, v_invoice, '2e tranche', current_date + 60, 135000, 2),
+      (v_org, v_invoice, '3e tranche', current_date + 120, 135000, 3);
+    update public.invoices set status = 'issued', due_on = current_date + 120 where id = v_invoice;
+    insert into public.payments (organization_id, invoice_id, student_id, amount, method, payer_name)
+    values (v_org, v_invoice, v_enr.student_id, case when v_i % 3 = 0 then 500000 when v_i % 3 = 1 then 230000 else 100000 end,
+            (array['mobile_money', 'cash', 'bank_transfer'])[1 + v_i % 3]::public.payment_method, 'Famille');
+  end loop;
+
+  -- Résultats du semestre 1 délibérés et publiés (session normale).
+  insert into public.deliberations (organization_id, class_id, academic_period_id, session, title, held_on, president, members)
+  values (v_org, v_class, v_s1, 'normal', 'Jury du semestre 1 — L1 Informatique (session 1)', current_date - 3, 'Pr. Rachelle ADJOBI',
+          'Dr Clément KOUAKOU, M. Désiré N''DRI') returning id into v_delib;
+  perform public.deliberation_prepare(v_delib);
+  perform public.deliberation_close(v_delib);
+
+  -- Master 1 Informatique : mémoire, stage et soutenance.
+  insert into public.classes (organization_id, academic_year_id, level_id, program_id, name, code, capacity, head_teacher_id)
+  values (v_org, v_year, v_m1, v_master, 'M1 Informatique', 'M1INF', 30, v_t[2]) returning id into v_mclass;
+  for v_i in 1..3 loop
+    insert into public.students (organization_id, first_name, last_name, sex, birth_date, city, status)
+    values (v_org, (array['Ange', 'Prisca', 'Yves'])[v_i], (array['ASSI', 'KOUADIO', 'BLÉ'])[v_i], (array['M', 'F', 'M'])[v_i],
+            date '2002-05-10' + v_i * 90, 'Yamoussoukro', 'active') returning id into v_student;
+    insert into public.enrollments (organization_id, student_id, academic_year_id, class_id, level_id, program_id, type, status)
+    values (v_org, v_student, v_year, v_mclass, v_m1, v_master, 'new', 'validated');
+    perform public.issue_student_badge(v_student, null);
+    if v_i = 1 then
+      insert into public.theses (organization_id, student_id, academic_year_id, kind, title, summary, director_id, director_name, co_director_name, status)
+      values (v_org, v_student, v_year, 'memoire', 'Détection d''intrusions réseau par apprentissage automatique',
+              'Étude comparative de modèles de classification appliqués aux journaux de pare-feu.', v_t[2], 'Pr. Rachelle ADJOBI', 'Dr Clément KOUAKOU', 'in_progress')
+      returning id into v_thesis;
+      insert into public.defenses (organization_id, student_id, thesis_id, title, scheduled_at, room_id, jury, status)
+      values (v_org, v_student, v_thesis, 'Détection d''intrusions réseau par apprentissage automatique', now() + interval '60 days', v_s12,
+              '[{"name":"Pr. Rachelle ADJOBI","role":"Présidente"},{"name":"Dr Clément KOUAKOU","role":"Rapporteur"},{"name":"M. Désiré N''DRI","role":"Examinateur"}]', 'scheduled');
+      insert into public.internships (organization_id, student_id, company_name, host_kind, tutor_name, tutor_title, supervisor_name, missions,
+                                      starts_on, ends_on, status, convention_signed)
+      values (v_org, v_student, 'Orange Côte d''Ivoire', 'entreprise', 'M. Serge KOFFI', 'Responsable sécurité', 'Pr. Rachelle ADJOBI',
+              'Analyse des journaux de sécurité et prototype de détection.', current_date - 20, current_date + 70, 'ongoing', true);
+    end if;
+  end loop;
+
+  -- Un diplômé (Licence) : diplôme délivré et numéroté.
+  insert into public.students (organization_id, first_name, last_name, sex, birth_date, city, status)
+  values (v_org, 'Marc', 'DIBY', 'M', date '2001-11-02', 'Bouaflé', 'alumni') returning id into v_student;
+  insert into public.student_diplomas (organization_id, student_id, kind, title, year_label, mention, conferred_on, program_id, academic_year_id, source)
+  values (v_org, v_student, 'diploma', 'Licence en Informatique', '2025-2026', 'Assez bien', date '2026-07-20', v_program, v_year, 'app');
 
   perform set_config('request.jwt.claims', '', true);
 end;
