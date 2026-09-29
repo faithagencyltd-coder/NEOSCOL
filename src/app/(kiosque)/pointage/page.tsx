@@ -32,6 +32,7 @@ export default async function KioskPage() {
       signOut={signOut}
       training={training ? { rooms: rooms.map((r) => ({ id: r.id, name: r.name })) } : null}
       university={university}
+      offline={training ? undefined : { userId: context.user.id, organizationId: organization.id }}
       initialScans={scans.map((s) => ({
         id: s.id,
         at: s.scanned_at,

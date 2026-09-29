@@ -14,6 +14,7 @@ import { reopenSession, saveLessonAttendance } from "@/features/attendance/actio
 import { RollCall } from "@/features/attendance/components/roll-call";
 import { getLesson, LESSON_STATUS, type LessonStatus } from "@/features/attendance/lessons";
 import { isIsoDate, isoWeekday, todayIn } from "@/lib/dates";
+import { OfflineStatus } from "@/features/offline/components/offline-status";
 import { requireOrganization } from "@/lib/auth/guards";
 import { can, canAny } from "@/lib/auth/session";
 import { formatDate, formatDateTime } from "@/lib/utils/format";
@@ -134,6 +135,7 @@ export default async function LessonPage({ params, searchParams }: PageProps<"/m
               />
             </div>
           ) : null}
+          <OfflineStatus userId={context.user.id} kinds={["lesson_attendance"]} />
           {session?.notes && session.status === "draft" ? <Alert tone="warning">Appel rouvert : {session.notes}</Alert> : null}
           <RollCall
             key={`${slotId}-${date}-${session?.status ?? "new"}`}
@@ -143,6 +145,7 @@ export default async function LessonPage({ params, searchParams }: PageProps<"/m
             students={students}
             existing={session?.attendance_records ?? []}
             hidden={{ slot_id: slotId, date }}
+            offline={{ userId: context.user.id, organizationId: organization.id }}
           />
         </>
       )}

@@ -876,6 +876,7 @@ export type Database = {
       badge_scans: {
         Row: {
           badge_id: string | null
+          captured_offline: boolean
           device: string | null
           id: string
           kind: string | null
@@ -892,6 +893,7 @@ export type Database = {
         }
         Insert: {
           badge_id?: string | null
+          captured_offline?: boolean
           device?: string | null
           id?: string
           kind?: string | null
@@ -908,6 +910,7 @@ export type Database = {
         }
         Update: {
           badge_id?: string | null
+          captured_offline?: boolean
           device?: string | null
           id?: string
           kind?: string | null
@@ -4448,6 +4451,44 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      offline_submissions: {
+        Row: {
+          captured_at: string
+          client_id: string
+          kind: string
+          organization_id: string
+          received_at: string
+          result: Json
+          user_id: string
+        }
+        Insert: {
+          captured_at: string
+          client_id: string
+          kind: string
+          organization_id: string
+          received_at?: string
+          result?: Json
+          user_id?: string
+        }
+        Update: {
+          captured_at?: string
+          client_id?: string
+          kind?: string
+          organization_id?: string
+          received_at?: string
+          result?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offline_submissions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           }
         ]
@@ -9054,6 +9095,8 @@ export type Database = {
           p_organization_id: string
           p_code: string
           p_device?: string
+          p_at?: string
+          p_offline?: boolean
         }
         Returns: Json
       }
@@ -9167,6 +9210,27 @@ export type Database = {
           p_justification_id?: string
         }
         Returns: string
+      }
+      sync_offline_lesson_attendance: {
+        Args: {
+          p_client_id: string
+          p_slot_id: string
+          p_date: string
+          p_records: Json
+          p_validate: boolean
+          p_captured_at: string
+        }
+        Returns: Json
+      }
+      sync_offline_staff_scan: {
+        Args: {
+          p_organization_id: string
+          p_client_id: string
+          p_code: string
+          p_captured_at: string
+          p_device?: string
+        }
+        Returns: Json
       }
       take_lesson_attendance: {
         Args: {

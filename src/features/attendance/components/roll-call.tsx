@@ -4,6 +4,7 @@ import { CheckCheck, Lock, MessageSquare } from "lucide-react";
 import { useState } from "react";
 
 import { ActionForm } from "@/components/shared/action-form";
+import { enqueue, isNetworkError } from "@/lib/offline/outbox";
 import { SubmitButton } from "@/components/shared/submit-button";
 import { Alert } from "@/components/ui/alert";
 import { Avatar } from "@/components/ui/avatar";
@@ -44,6 +45,7 @@ export function RollCall({
   action,
   mode,
   locked = false,
+  offline,
 }: {
   students: Student[];
   existing: Existing[];
@@ -51,6 +53,8 @@ export function RollCall({
   action: (state: ActionResult | null, formData: FormData) => Promise<ActionResult>;
   mode: "lesson" | "free";
   locked?: boolean;
+  /** Mode cours : l'appel saisi sans réseau est gardé sur l'appareil puis envoyé automatiquement. */
+  offline?: { userId: string; organizationId: string };
 }) {
   const [lines, setLines] = useState<Record<string, Line>>(() =>
     Object.fromEntries(
@@ -69,7 +73,31 @@ export function RollCall({
       }),
     ),
   );
-  const [state, formAction, pending] = useFeedbackAction(action);
+  const submit = async (prev: ActionResult | null, formData: FormData): Promise<ActionResult> => {
+    const keep = async (): Promise<ActionResult> => {
+      await enqueue({
+        kind: "lesson_attendance",
+        userId: offline!.userId,
+        organizationId: offline!.organizationId,
+        payload: {
+          slot_id: String(formData.get("slot_id")),
+          date: String(formData.get("date")),
+          validate: formData.get("intent") === "validate",
+          records: JSON.parse(String(formData.get("records") ?? "[]")),
+        },
+      });
+      return { ok: true, message: "Hors ligne : appel gardé sur cet appareil. Il sera envoyé automatiquement dès le retour du réseau." };
+    };
+    if (!offline) return action(prev, formData);
+    if (!navigator.onLine) return keep();
+    try {
+      return await action(prev, formData);
+    } catch (error) {
+      if (isNetworkError(error)) return keep();
+      throw error;
+    }
+  };
+  const [state, formAction, pending] = useFeedbackAction(submit);
   const update = (id: string, patch: Partial<Line>) => setLines((prev) => ({ ...prev, [id]: { ...prev[id]!, ...patch } }));
   const counts = STATUSES.map((s) => ({ ...s, count: Object.values(lines).filter((v) => v.status === s.value).length }));
   const records = students.map((s) => {

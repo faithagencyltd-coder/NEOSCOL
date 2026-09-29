@@ -1,14 +1,16 @@
 "use client";
 
 import jsQR from "jsqr";
-import { Camera, CameraOff, Check, CheckCircle2, Keyboard, LogOut, Maximize, ScanLine, XCircle } from "lucide-react";
+import { Camera, CameraOff, Check, CheckCircle2, CloudOff, Keyboard, LogOut, Maximize, ScanLine, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 import { AnimatedError, AnimatedSuccess } from "@/components/motion/animated-feedback";
+import { OfflineStatus } from "@/features/offline/components/offline-status";
 import { scanBadge } from "@/features/staff/actions";
 import type { ScanResult } from "@/features/staff/schemas";
 import { SCAN_REJECTIONS } from "@/features/training/config";
+import { enqueue, isNetworkError } from "@/lib/offline/outbox";
 import { cn } from "@/lib/utils/cn";
 
 type RecentScan = { id: string; at: string; result: "accepted" | "rejected"; name: string; message: string };
@@ -103,6 +105,7 @@ export function BadgeScanner({
   initialScans,
   training = null,
   university = false,
+  offline,
 }: {
   organizationName: string;
   operator: string;
@@ -114,6 +117,8 @@ export function BadgeScanner({
   training?: { rooms: { id: string; name: string }[] } | null;
   /** Enseignement supérieur : libellés ÉTUDIANT / ENSEIGNANT, filière, niveau, année. */
   university?: boolean;
+  /** Pointage du personnel (établissement scolaire) : scans gardés sur la tablette sans réseau, envoyés ensuite à leur heure réelle. */
+  offline?: { userId: string; organizationId: string };
 }) {
   const profileLabels = university ? UNIVERSITY_PROFILE_LABELS : PROFILE_LABELS;
   const [roomId, setRoomId] = useState<string>("");
@@ -131,6 +136,11 @@ export function BadgeScanner({
   }, [training]);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [queued, setQueued] = useState(false);
+  const offlineRef = useRef(offline);
+  useEffect(() => {
+    offlineRef.current = offline;
+  }, [offline]);
   const [recent, setRecent] = useState<RecentScan[]>(initialScans);
   const [cameraOn, setCameraOn] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -166,8 +176,33 @@ export function BadgeScanner({
     setError(null);
     // Code lu et analysé localement (anti-rebond) : la vérification serveur commence.
     setPhase("verify");
+    setQueued(false);
     startTransition(async () => {
-      const response = await scanBadge(code, roomRef.current || null);
+      // Sans réseau : le scan est gardé (code + heure, aucune donnée personnelle) et envoyé au retour du réseau.
+      const keep = async () => {
+        const target = offlineRef.current!;
+        await enqueue({ kind: "staff_scan", userId: target.userId, organizationId: target.organizationId, payload: { code } });
+        busy.current = false;
+        setPhase("done");
+        setScanCount((n) => n + 1);
+        setResult(null);
+        setError(null);
+        setQueued(true);
+        if (resetTimer.current) clearTimeout(resetTimer.current);
+        resetTimer.current = setTimeout(() => {
+          setQueued(false);
+          setPhase("idle");
+        }, RESET_AFTER_MS);
+        wedgeRef.current?.focus();
+      };
+      if (offlineRef.current && !navigator.onLine) return keep();
+      let response: Awaited<ReturnType<typeof scanBadge>>;
+      try {
+        response = await scanBadge(code, roomRef.current || null);
+      } catch (e) {
+        if (offlineRef.current && isNetworkError(e)) return keep();
+        response = { ok: false, message: "Serveur injoignable : réessayez." };
+      }
       busy.current = false;
       setPhase("done");
       setScanCount((n) => n + 1);
@@ -371,6 +406,12 @@ export function BadgeScanner({
                   </p>
                 ) : null}
               </div>
+            ) : queued ? (
+              <div key={scanCount} data-testid="scan-queued" className="relative grid animate-[fade-in_0.25s_ease-out] justify-items-center gap-3">
+                <CloudOff className="size-20 text-amber-300" aria-hidden />
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-200">Hors ligne — scan gardé</p>
+                <p className="max-w-md text-lg">Le pointage sera vérifié et enregistré à son heure réelle dès le retour du réseau.</p>
+              </div>
             ) : error ? (
               <div key={scanCount} className="relative grid animate-[fade-in_0.25s_ease-out] justify-items-center gap-3">
                 <AnimatedError className="size-20 text-rose-300" label="Scan impossible" />
@@ -399,10 +440,11 @@ export function BadgeScanner({
               </div>
             )}
             <div className="absolute inset-x-0 bottom-4 px-4">
-              <PhaseTrack phase={phase} success={phase === "done" ? Boolean(accepted) : null} />
+              <PhaseTrack phase={phase} success={phase === "done" && !queued ? Boolean(accepted) : null} />
             </div>
           </div>
 
+          {offline ? <OfflineStatus userId={offline.userId} kinds={["staff_scan"]} className="text-foreground" /> : null}
           <div className="flex flex-wrap gap-3">
             <button
               type="button"
