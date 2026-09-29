@@ -1263,6 +1263,132 @@ export type Database = {
           }
         ]
       }
+      country_connect_jobs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          direction: string
+          error_rows: number
+          file_name: string | null
+          id: string
+          mapping_id: string | null
+          mapping_name: string
+          ok_rows: number
+          organization_id: string
+          report: Json
+          status: string
+          total_rows: number
+          updated_rows: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          direction: string
+          error_rows?: number
+          file_name?: string | null
+          id?: string
+          mapping_id?: string | null
+          mapping_name: string
+          ok_rows?: number
+          organization_id: string
+          report?: Json
+          status: string
+          total_rows?: number
+          updated_rows?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          direction?: string
+          error_rows?: number
+          file_name?: string | null
+          id?: string
+          mapping_id?: string | null
+          mapping_name?: string
+          ok_rows?: number
+          organization_id?: string
+          report?: Json
+          status?: string
+          total_rows?: number
+          updated_rows?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "country_connect_jobs_mapping_id_fkey"
+            columns: ["mapping_id"]
+            isOneToOne: false
+            referencedRelation: "country_connect_mappings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "country_connect_jobs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      country_connect_mappings: {
+        Row: {
+          columns: Json
+          country_code: string | null
+          created_by: string | null
+          date_format: string
+          delimiter: string
+          description: string | null
+          direction: string
+          id: string
+          is_active: boolean
+          name: string
+          organization_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          columns: Json
+          country_code?: string | null
+          created_by?: string | null
+          date_format?: string
+          delimiter?: string
+          description?: string | null
+          direction: string
+          id?: string
+          is_active?: boolean
+          name: string
+          organization_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          columns?: Json
+          country_code?: string | null
+          created_by?: string | null
+          date_format?: string
+          delimiter?: string
+          description?: string | null
+          direction?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          organization_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "country_connect_mappings_country_code_fkey"
+            columns: ["country_code"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "country_connect_mappings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       course_registrations: {
         Row: {
           academic_period_id: string
@@ -7720,6 +7846,31 @@ export type Database = {
         }
         Returns: number
       }
+      country_connect_export: {
+        Args: {
+          p_org: string
+          p_mapping: string
+        }
+        Returns: {
+          row_data: Json
+        }[]
+      }
+      country_connect_import: {
+        Args: {
+          p_org: string
+          p_mapping: string
+          p_rows: Json
+          p_apply: boolean
+          p_file_name?: string
+        }
+        Returns: Json
+      }
+      country_connect_overview: {
+        Args: {
+          p_org: string
+        }
+        Returns: Json
+      }
       create_component_space: {
         Args: {
           p_parent: string
@@ -8472,6 +8623,21 @@ export type Database = {
           p_rules: Json
           p_notes?: string
           p_based_on?: string
+        }
+        Returns: string
+      }
+      save_country_connect_mapping: {
+        Args: {
+          p_org: string
+          p_country: string
+          p_id: string
+          p_name: string
+          p_direction: string
+          p_columns: Json
+          p_delimiter?: string
+          p_date_format?: string
+          p_active?: boolean
+          p_description?: string
         }
         Returns: string
       }

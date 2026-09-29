@@ -34,6 +34,7 @@ const countrySchema = z.object({
   grading_scale: z.coerce.number().int().min(5).max(100),
   school_periods: z.enum(["trimester", "semester"]),
   national_id_label: z.string().trim().max(80).optional(),
+  national_id_pattern: z.string().trim().max(200).optional(),
   sort_order: z.coerce.number().int().min(0).max(9999),
 });
 
@@ -54,6 +55,7 @@ export async function saveCountry(_: ActionResult | null, formData: FormData): P
     grading_scale: formData.get("grading_scale") || 20,
     school_periods: formData.get("school_periods") || "trimester",
     national_id_label: String(formData.get("national_id_label") ?? "") || undefined,
+    national_id_pattern: String(formData.get("national_id_pattern") ?? "") || undefined,
     sort_order: formData.get("sort_order") || 100,
   });
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Données invalides." };
@@ -73,7 +75,12 @@ export async function saveCountry(_: ActionResult | null, formData: FormData): P
       timezone: d.timezone,
       phone_pattern: d.phone_pattern ?? null,
       date_format: d.date_format,
-      settings: { grading_scale: d.grading_scale, school_periods: d.school_periods, national_id_label: d.national_id_label ?? null },
+      settings: {
+        grading_scale: d.grading_scale,
+        school_periods: d.school_periods,
+        national_id_label: d.national_id_label ?? null,
+        national_id_pattern: d.national_id_pattern ?? null,
+      },
       is_active: formData.get("is_active") === "on",
       sort_order: d.sort_order,
     },
@@ -81,6 +88,7 @@ export async function saveCountry(_: ActionResult | null, formData: FormData): P
   if (error) return { ok: false, message: dbErrorMessage(error) };
   revalidatePath("/plateforme/pays");
   revalidatePath("/inscription");
+  revalidatePath("/plateforme/country-connect");
   return { ok: true, message: `Pays ${d.name} enregistré : disponible dans NéoScol.` };
 }
 

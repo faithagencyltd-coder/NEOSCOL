@@ -1,5 +1,6 @@
 import {
   Archive,
+  ArrowLeftRight,
   Award,
   Briefcase,
   Building,
@@ -104,6 +105,7 @@ const ICONS: Record<NavIconName, LucideIcon> = {
   assistant: Bot,
   communication: MessagesSquare,
   history: Archive,
+  countryConnect: ArrowLeftRight,
   portalLink: Link2,
   subscription: Gem,
   training: Hammer,
