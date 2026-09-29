@@ -257,7 +257,7 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
             can={{
               enroll: can(context, "enrollments.manage") && !archived,
               badges: can(context, "students.badges.manage") && !archived,
-              transcript: can(context, "documents.generate"),
+              transcript: can(context, "documents.generate") && (can(context, "deliberations.read") || can(context, "grades.manage")),
             }}
           />
         ) : null}
@@ -306,6 +306,7 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
             timezone={organization.timezone}
             customTemplates={await listCustomTemplates(organization.id)}
             training={training}
+            university={Boolean(university)}
           />
         ) : null}
         {active === "portail" ? <PortalTab studentId={student.id} hasBirthDate={Boolean(student.birth_date)} canManage={can(context, "portal_access.manage")} organization={organization} /> : null}
@@ -392,7 +393,15 @@ async function UniversitySections({
 }) {
   const record = await studentAcademicRecord(organizationId, studentId);
   if (active === "universite") return <AcademicRecordTab record={record} config={config} />;
-  if (active === "resultats") return <ResultsTab record={record} showRank={config.features.ranking} />;
+  if (active === "resultats") {
+    return (
+      <ResultsTab
+        record={record}
+        showRank={config.features.ranking}
+        transcriptHref={allowed.transcript && config.features.documents ? (periodId) => `/api/documents/universite/releve/${studentId}?semestre=${periodId}` : undefined}
+      />
+    );
+  }
   if (active === "badge") {
     const supabase = await createClient();
     const { data: token } = await supabase.from("student_badges").select("token").eq("student_id", studentId).eq("status", "active").maybeSingle();

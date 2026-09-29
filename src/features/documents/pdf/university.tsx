@@ -15,11 +15,12 @@ export function UniversityTranscriptPage({ snapshot: s, images, verification, is
   const rows: string[][] = [];
   for (const u of s.units) {
     rows.push([`${u.code} — ${u.name}`, cr(u.credits), note(u.session1), note(u.retake), note(u.average), `${cr(u.credits_earned)}/${cr(u.credits)}`, UE_STATUS[u.status] ?? u.status]);
-    for (const m of u.subjects) rows.push([`    ${m.name} (coef. ${cr(m.coefficient)})`, "", note(m.session1), note(m.retake), note(m.average), "", ""]);
+    for (const m of u.subjects) rows.push([`› ${m.name} (coef. ${cr(m.coefficient)})`, "", note(m.session1), note(m.retake), note(m.average), "", ""]);
   }
   return (
     <Page size="A4" style={styles.page}>
       <DemoMark organization={org} />
+      {!s.published ? <Watermark text="PROVISOIRE" /> : null}
       <DocHeader organization={org} images={images} />
       <DocTitle color={org.primary_color}>RELEVÉ DE NOTES</DocTitle>
       <InfoGrid
@@ -130,7 +131,7 @@ export function DiplomaPage({ snapshot: s, images, verification, issuedAt }: { s
   const org = s.organization;
   const color = org.primary_color || COLORS.navy;
   return (
-    <Page size="A4" orientation="landscape" style={{ padding: 22, fontFamily: "Helvetica", color: COLORS.ink }}>
+    <Page size="A4" orientation="landscape" style={{ padding: 22, fontFamily: "Helvetica", fontSize: 10, color: COLORS.ink }}>
       <DemoMark organization={org} />
       {s.status === "revoked" ? <Watermark text="RÉVOQUÉ" /> : null}
       <View style={{ flex: 1, borderWidth: 3, borderColor: color, padding: 6 }}>
@@ -169,8 +170,14 @@ export function DiplomaPage({ snapshot: s, images, verification, issuedAt }: { s
                 </>
               ) : null}
             </View>
-            <View style={{ width: "40%" }}>
-              <Signatures labels={[org.signatory_title ?? "Le Président"]} organization={org} images={images} date={s.issued_on ?? issuedAt} signatory={org.signatory_name} />
+            <View style={{ width: "40%", alignItems: "center", fontSize: 10 }}>
+              <Text>{pdfText(`${org.city ? `Fait à ${org.city}, le ` : "Fait le "}${pdfDate(s.issued_on ?? issuedAt, org.timezone, true)}`)}</Text>
+              <Text style={[styles.bold, { marginTop: 4 }]}>{pdfText(org.signatory_title ?? "Le Président")}</Text>
+              <View style={{ height: 52, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4 }}>
+                {images.stamp ? <Image src={images.stamp} style={{ width: 50, height: 50, objectFit: "contain", opacity: 0.85 }} /> : null}
+                {images.signature ? <Image src={images.signature} style={{ width: 90, height: 42, objectFit: "contain" }} /> : null}
+              </View>
+              {org.signatory_name ? <Text>{pdfText(org.signatory_name)}</Text> : null}
             </View>
           </View>
         </View>

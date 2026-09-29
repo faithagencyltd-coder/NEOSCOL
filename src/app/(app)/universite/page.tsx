@@ -1,6 +1,7 @@
 import { AlarmClock, Award, BookOpen, Briefcase, Building2, CalendarClock, FileBadge, GitBranch, GraduationCap, Presentation, Scale, ScanLine, Sigma, UserCheck, UserX, Users, Wallet } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,13 +14,16 @@ import { UniversityHeader } from "@/features/university/components/university-he
 import { ESTABLISHMENT_KINDS, fmtCredits } from "@/features/university/config";
 import { requireUniversity } from "@/features/university/guard";
 import { myTeaching, universityStatistics } from "@/features/university/queries";
-import { can } from "@/lib/auth/session";
+import { can, isPortalOnly } from "@/lib/auth/session";
 import { WEEKDAYS } from "@/lib/dates";
 
 export const metadata: Metadata = { title: "Tableau de bord universitaire" };
 
 export default async function UniversityDashboardPage() {
   const context = await requireUniversity([]);
+  // Tablette de pointage : écran de scan ; étudiants et parents : portail dédié (mêmes règles que le tableau de bord général).
+  if (context.permissions.size === 1 && can(context, "staff_attendance.scan")) redirect("/pointage");
+  if (isPortalOnly(context)) redirect("/portail");
   const organization = context.organization;
   const u = context.university;
   const canStats = can(context, "reports.read") || can(context, "deliberations.read") || can(context, "academic.manage");

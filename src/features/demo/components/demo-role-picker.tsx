@@ -31,6 +31,10 @@ const ICONS: Record<DemoAccountKey, LucideIcon> = {
   formation: Wrench,
   formateur: Presentation,
   "pointage-formation": ScanLine,
+  scolarite: ClipboardList,
+  professeur: Presentation,
+  etudiant: GraduationCap,
+  "pointage-universite": ScanLine,
 };
 
 /**

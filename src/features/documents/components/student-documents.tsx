@@ -26,6 +26,7 @@ export function StudentDocumentsTab({
   timezone,
   customTemplates = [],
   training = false,
+  university = false,
 }: {
   studentId: string;
   documents: Awaited<ReturnType<typeof listStudentDocuments>>;
@@ -35,6 +36,8 @@ export function StudentDocumentsTab({
   timezone: string;
   customTemplates?: { id: string; name: string }[];
   training?: boolean;
+  /** Enseignement supérieur : attestations universitaires, carte étudiant ; relevés par semestre dans « Résultats et crédits ». */
+  university?: boolean;
 }) {
   const pdf = (href: string, label: string, Icon: typeof FileText) => (
     <Button asChild variant="secondary" size="sm">
@@ -55,9 +58,10 @@ export function StudentDocumentsTab({
               {can.generate ? (
                 <>
                   {pdf(`/api/documents/certificats/${studentId}`, "Certificat de scolarité", FileBadge)}
-                  <WrittenDocumentDialog studentId={studentId} customTemplates={customTemplates} training={training} />
-                  {pdf(`/api/documents/cartes/${studentId}`, "Carte scolaire", CreditCard)}
-                  {can.transcript ? pdf(`/api/documents/releves/${studentId}`, "Relevé de notes", FileSpreadsheet) : null}
+                  {university ? pdf(`/api/documents/certificats/${studentId}?type=enrollment_certificate`, "Attestation d'inscription", FileBadge) : null}
+                  <WrittenDocumentDialog studentId={studentId} customTemplates={customTemplates} training={training} university={university} />
+                  {pdf(`/api/documents/cartes/${studentId}`, university ? "Carte étudiant" : "Carte scolaire", CreditCard)}
+                  {can.transcript && !university ? pdf(`/api/documents/releves/${studentId}`, "Relevé de notes", FileSpreadsheet) : null}
                 </>
               ) : null}
               {can.dossier ? <DossierDialog studentId={studentId} initialOrder={dossierOrder} canSaveDefault={can.saveDefault} /> : null}

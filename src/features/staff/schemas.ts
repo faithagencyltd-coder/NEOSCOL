@@ -50,6 +50,10 @@ export type ScanResult = {
   formation?: string | null;
   session?: string | null;
   group?: string | null;
+  /** Université : niveau, année académique, sortie avant la fin du cours (minutes). */
+  level?: string | null;
+  year?: string | null;
+  early_exit_minutes?: number | null;
   status?: "late" | "on_time" | null;
   period_minutes?: number | null;
   day_minutes?: number | null;

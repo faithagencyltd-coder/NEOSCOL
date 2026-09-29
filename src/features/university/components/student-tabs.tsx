@@ -391,11 +391,23 @@ export function PedagogicalTab({
 }
 
 /** Résultats par semestre : moyennes des UE (session 1, rattrapage, finale), crédits, décision. */
-export function ResultsTab({ record, showRank, transcriptHref }: { record: AcademicRecord; showRank: boolean; transcriptHref?: (periodId: string) => string }) {
+export function ResultsTab({
+  record,
+  showRank,
+  transcriptHref,
+  notesHref = "?onglet=notes",
+  emptyHint = "Les résultats apparaissent après le calcul par la scolarité ou le jury.",
+}: {
+  record: AcademicRecord;
+  showRank: boolean;
+  transcriptHref?: (periodId: string) => string;
+  notesHref?: string;
+  emptyHint?: string;
+}) {
   const semesters = [...record.semesters].sort((a, b) =>
     `${a.period?.academic_year?.name ?? ""}${a.period?.sequence ?? 0}`.localeCompare(`${b.period?.academic_year?.name ?? ""}${b.period?.sequence ?? 0}`),
   );
-  if (semesters.length === 0) return <EmptyState icon={GraduationCap} title="Aucun résultat calculé" description="Les résultats apparaissent après le calcul par la scolarité ou le jury." />;
+  if (semesters.length === 0) return <EmptyState icon={GraduationCap} title="Aucun résultat" description={emptyHint} />;
   return (
     <div className="grid min-w-0 gap-4 [&>*]:min-w-0">
       {semesters.map((s) => {
@@ -423,7 +435,35 @@ export function ResultsTab({ record, showRank, transcriptHref }: { record: Acade
                 </Button>
               ) : null}
             </CardHeader>
-            <div className="overflow-x-auto">
+            {/* Téléphone : une carte par UE (lecture sans défilement horizontal). */}
+            <ul className="grid gap-2 px-4 pb-4 sm:hidden">
+              {ues.map((u) => (
+                <li key={u.teaching_unit_id} className="grid gap-1.5 rounded-xl border border-border p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-medium">
+                      <span className="font-mono text-xs text-primary">{u.unit?.code}</span> {u.unit?.name}
+                    </p>
+                    <StatusBadge value={u.status} map={UE_STATUS} />
+                  </div>
+                  <p className="flex flex-wrap gap-x-3 text-sm tabular-nums">
+                    <span>
+                      Moyenne <strong>{fmtNote(u.average)}</strong>
+                    </span>
+                    <span>
+                      Crédits {fmtCredits(u.credits_earned)}/{fmtCredits(u.credits)}
+                    </span>
+                    {u.retake_average !== null ? <span className="text-muted-foreground">Session 1 {fmtNote(u.session1_average)} → rattrapage {fmtNote(u.retake_average)}</span> : null}
+                  </p>
+                  {((u.subjects as SubjectLine[] | null) ?? []).map((m) => (
+                    <span key={m.name} className="text-xs text-muted-foreground">
+                      {m.name} : {fmtNote(m.session1)}
+                      {m.retake !== null && m.retake !== undefined ? ` → ${fmtNote(m.retake)}` : ""}
+                    </span>
+                  ))}
+                </li>
+              ))}
+            </ul>
+            <div className="hidden overflow-x-auto sm:block">
               <Table>
                 <THead>
                   <TR>
@@ -467,8 +507,8 @@ export function ResultsTab({ record, showRank, transcriptHref }: { record: Acade
         );
       })}
       <p className="text-xs text-muted-foreground">
-        Les notes détaillées par évaluation sont dans l&apos;onglet{" "}
-        <Link href="?onglet=notes" className="text-primary underline-offset-2 hover:underline">
+        Les notes détaillées par évaluation sont dans{" "}
+        <Link href={notesHref} className="text-primary underline-offset-2 hover:underline">
           Notes
         </Link>
         .

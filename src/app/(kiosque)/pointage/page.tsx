@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getRooms } from "@/features/academic/queries";
 import { BadgeScanner } from "@/features/staff/components/badge-scanner";
 import { isTrainingOrg } from "@/features/training/config";
+import { isHigherOrg } from "@/features/university/config";
 import { listBadgeScans } from "@/features/staff/queries";
 import { signOut } from "@/features/auth/actions";
 import { requireOrganization } from "@/lib/auth/guards";
@@ -15,7 +16,9 @@ export default async function KioskPage() {
   const context = await requireOrganization();
   const organization = context.organization;
   const today = todayIn(organization.timezone);
-  const training = isTrainingOrg(organization.type);
+  // Formation professionnelle et université : scan unifié (enseignants + apprenants / étudiants).
+  const university = isHigherOrg(organization.type);
+  const training = isTrainingOrg(organization.type) || university;
   const [scans, rooms] = await Promise.all([
     listBadgeScans(organization.id, { from: today, to: today }, 12),
     training ? getRooms(organization.id) : Promise.resolve([]),
@@ -28,6 +31,7 @@ export default async function KioskPage() {
       canOpenBackOffice={can(context, "staff_attendance.read")}
       signOut={signOut}
       training={training ? { rooms: rooms.map((r) => ({ id: r.id, name: r.name })) } : null}
+      university={university}
       initialScans={scans.map((s) => ({
         id: s.id,
         at: s.scanned_at,

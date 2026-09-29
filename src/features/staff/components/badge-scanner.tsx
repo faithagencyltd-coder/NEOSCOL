@@ -24,17 +24,20 @@ const RESET_AFTER_MS = 6000;
 const ROOM_KEY = "neoscol:kiosque:salle";
 
 const PROFILE_LABELS: Record<string, string> = { learner: "APPRENANT", trainer: "FORMATEUR", staff: "PERSONNEL" };
+/** Enseignement supérieur : même moteur de scan, vocabulaire universitaire. */
+const UNIVERSITY_PROFILE_LABELS: Record<string, string> = { learner: "ÉTUDIANT", trainer: "ENSEIGNANT", staff: "PERSONNEL" };
 
-/** Statut affiché en grand (centres de formation). */
-function statusLine(result: ScanResult): string | null {
+/** Statut affiché en grand (centres de formation, universités). */
+function statusLine(result: ScanResult, university = false): string | null {
   if (result.result !== "accepted") return null;
   if (result.profile === "learner") {
-    if (result.kind === "exit") return "SORTIE";
+    if (result.kind === "exit") return result.early_exit_minutes ? `SORTIE ANTICIPÉE — ${result.early_exit_minutes} MIN AVANT LA FIN` : "SORTIE";
     return result.status === "late" ? `EN RETARD — ${result.minutes_late} MINUTE${(result.minutes_late ?? 0) > 1 ? "S" : ""}` : "À L'HEURE";
   }
   if (result.profile === "trainer") {
     if (result.kind === "departure") return "DÉPART ENREGISTRÉ";
-    return result.minutes_late ? `FORMATEUR PRÉSENT — RETARD ${result.minutes_late} MIN` : "FORMATEUR PRÉSENT";
+    const who = university ? "ENSEIGNANT PRÉSENT" : "FORMATEUR PRÉSENT";
+    return result.minutes_late ? `${who} — RETARD ${result.minutes_late} MIN` : who;
   }
   return null;
 }
@@ -99,6 +102,7 @@ export function BadgeScanner({
   signOut,
   initialScans,
   training = null,
+  university = false,
 }: {
   organizationName: string;
   operator: string;
@@ -106,9 +110,12 @@ export function BadgeScanner({
   canOpenBackOffice: boolean;
   signOut: () => Promise<void>;
   initialScans: RecentScan[];
-  /** Centre de formation : scan unifié formateurs + apprenants, salle du poste facultative. */
+  /** Centre de formation ou université : scan unifié enseignants + apprenants/étudiants, salle du poste facultative. */
   training?: { rooms: { id: string; name: string }[] } | null;
+  /** Enseignement supérieur : libellés ÉTUDIANT / ENSEIGNANT, filière, niveau, année. */
+  university?: boolean;
 }) {
+  const profileLabels = university ? UNIVERSITY_PROFILE_LABELS : PROFILE_LABELS;
   const [roomId, setRoomId] = useState<string>("");
   const roomRef = useRef<string>("");
   useEffect(() => {
@@ -261,7 +268,7 @@ export function BadgeScanner({
       <header className="relative z-10 flex flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-8">
         <div className="grid">
           <span className="text-sm text-[#9fb4de]">{organizationName}</span>
-          <span className="font-display text-lg font-semibold">{training ? "Pointage — formateurs et apprenants" : "Pointage du personnel"}</span>
+          <span className="font-display text-lg font-semibold">{university ? "Pointage — enseignants et étudiants" : training ? "Pointage — formateurs et apprenants" : "Pointage du personnel"}</span>
         </div>
         <div className="text-right">
           <p className="font-display text-3xl font-semibold tabular-nums" suppressHydrationWarning>
@@ -293,7 +300,7 @@ export function BadgeScanner({
                   <AnimatedError className="size-24 text-rose-300" label="Badge refusé" />
                 )}
                 <p className={cn("text-sm font-semibold uppercase tracking-[0.2em]", accepted ? "text-emerald-200" : "text-rose-200")}>
-                  {result.profile ? <span className="mr-2 rounded-full bg-white/15 px-2.5 py-0.5 text-xs tracking-[0.15em]">{PROFILE_LABELS[result.profile]}</span> : null}
+                  {result.profile ? <span className="mr-2 rounded-full bg-white/15 px-2.5 py-0.5 text-xs tracking-[0.15em]">{profileLabels[result.profile]}</span> : null}
                   {accepted
                     ? result.kind === "departure"
                       ? "Départ enregistré"
@@ -304,15 +311,17 @@ export function BadgeScanner({
                           : "Succès"
                     : (REJECTION_TITLES[result.reason ?? ""] ?? SCAN_REJECTIONS[result.reason ?? ""] ?? "Badge refusé")}
                 </p>
-                {statusLine(result) ? (
+                {statusLine(result, university) ? (
                   <p
                     data-testid="scan-status"
                     className={cn(
                       "anim-pop rounded-2xl px-5 py-2 font-display text-2xl font-bold tracking-wide",
-                      result.status === "late" || (result.profile === "trainer" && result.minutes_late) ? "bg-amber-400/20 text-amber-200" : "bg-emerald-400/20 text-emerald-100",
+                      result.status === "late" || result.early_exit_minutes || (result.profile === "trainer" && result.minutes_late)
+                        ? "bg-amber-400/20 text-amber-200"
+                        : "bg-emerald-400/20 text-emerald-100",
                     )}
                   >
-                    {statusLine(result)}
+                    {statusLine(result, university)}
                   </p>
                 ) : null}
                 {result.learner ? (
@@ -322,7 +331,9 @@ export function BadgeScanner({
                       Matricule {result.learner.matricule}
                       {result.formation ? ` · ${result.formation}` : ""}
                     </p>
-                    {result.session ? (
+                    {university && (result.level || result.year) ? (
+                      <p className="text-sm text-[#9fb4de]">{[result.level, result.year, result.group].filter(Boolean).join(" · ")}</p>
+                    ) : result.session ? (
                       <p className="text-sm text-[#9fb4de]">
                         {result.session}
                         {result.group ? ` · ${result.group}` : ""}
@@ -382,7 +393,7 @@ export function BadgeScanner({
                   {pending
                     ? "Contrôle du badge, de l'établissement et du cours en cours."
                     : training
-                      ? <>Présentez le QR Code de votre badge {cameraOn ? "devant la caméra" : "à la douchette"}. Formateur ou apprenant : le profil est reconnu automatiquement (entrée, sortie, retard).</>
+                      ? <>Présentez le QR Code de votre badge {cameraOn ? "devant la caméra" : "à la douchette"}. {university ? "Enseignant ou étudiant" : "Formateur ou apprenant"} : le profil est reconnu automatiquement (entrée, sortie, retard).</>
                       : <>Présentez le QR Code de votre badge {cameraOn ? "devant la caméra" : "à la douchette"}. L&apos;arrivée est enregistrée et le cours en cours est débloqué.</>}
                 </p>
               </div>

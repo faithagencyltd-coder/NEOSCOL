@@ -13,8 +13,9 @@ import { deleteTemplate } from "@/features/documents/actions";
 import { TemplateEditor } from "@/features/documents/components/template-editor";
 import { listTemplates } from "@/features/documents/queries";
 import { isStandardLayout, TEMPLATE_DEFAULTS } from "@/features/documents/templates";
-import { TEXT_DOCUMENT_KINDS, TRAINING_ONLY_DOCUMENT_KINDS } from "@/features/documents/types";
+import { availableTextKinds } from "@/features/documents/types";
 import { isTrainingOrg } from "@/features/training/config";
+import { isHigherOrg } from "@/features/university/config";
 import { getBranding } from "@/features/report-cards/queries";
 import { requireOrganization } from "@/lib/auth/guards";
 import { can, canAny } from "@/lib/auth/session";
@@ -49,7 +50,7 @@ export default async function DocumentStudioPage() {
     return { id: t.id, name: t.name, description: t.description ?? "", title: layout.title ?? d.title, body: layout.body ?? d.body, closing: layout.closing ?? d.closing };
   };
   const training = isTrainingOrg(context.organization.type);
-  const standard = TEXT_DOCUMENT_KINDS.filter((k) => k !== "custom" && (training || !TRAINING_ONLY_DOCUMENT_KINDS.includes(k)));
+  const standard = availableTextKinds({ training, university: isHigherOrg(context.organization.type) });
   const custom = templates.filter((t) => t.kind === "custom");
 
   return (

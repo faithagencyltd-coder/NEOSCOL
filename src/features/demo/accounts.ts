@@ -15,7 +15,11 @@ export type DemoAccountKey =
   | "universite"
   | "formation"
   | "formateur"
-  | "pointage-formation";
+  | "pointage-formation"
+  | "etudiant"
+  | "professeur"
+  | "scolarite"
+  | "pointage-universite";
 
 export type DemoAccount = {
   key: DemoAccountKey;
@@ -96,8 +100,8 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
     email: "universite@demo.neoscol.app",
     name: "Clarisse ADOU",
     role: "Université",
-    description: "Administratrice de l'Université Démo : étudiants, promotions, semestres.",
-    sees: ["Vocabulaire universitaire (étudiants, promotions)", "Unités d'enseignement et crédits ECTS", "Relevés du semestre 1"],
+    description: "Administratrice de l'Université Démo : structure, UE, résultats, jury, diplômes.",
+    sees: ["Facultés, départements, filières, parcours", "UE, crédits, rattrapage, délibérations", "Mémoires, soutenances, diplômes"],
   },
   {
     key: "formation",
@@ -122,6 +126,38 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
     role: "Tablette « Scanner votre badge »",
     description: "Borne du centre de formation : formateurs et apprenants.",
     sees: ["Détection automatique formateur / apprenant", "Entrée, sortie, retard"],
+  },
+  {
+    key: "scolarite",
+    email: "scolarite@demo.neoscol.app",
+    name: "Service de la scolarité",
+    role: "Scolarité (université)",
+    description: "Inscriptions administratives et pédagogiques, résultats, relevés, diplômes.",
+    sees: ["Inscription avec frais et UE du semestre", "Relevés de notes et attestations", "Délivrance des diplômes"],
+  },
+  {
+    key: "professeur",
+    email: "professeur@demo.neoscol.app",
+    name: "Clément KOUAKOU",
+    role: "Enseignant (université)",
+    description: "Maître de conférences, responsable de la Licence Informatique.",
+    sees: ["Mes enseignements et mon emploi du temps", "Saisie des notes de ses matières", "Appel après scan de son badge"],
+  },
+  {
+    key: "etudiant",
+    email: "etudiant@demo.neoscol.app",
+    name: "Kouamé KONAN",
+    role: "Étudiant",
+    description: "Étudiant en Licence 1 Informatique.",
+    sees: ["Résultats et crédits publiés", "Parcours universitaire", "Emploi du temps, présences, paiements"],
+  },
+  {
+    key: "pointage-universite",
+    email: "pointage.universite@demo.neoscol.app",
+    name: "Tablette de l'université",
+    role: "Tablette « Scanner votre badge »",
+    description: "Borne de l'université : enseignants et étudiants.",
+    sees: ["Détection automatique enseignant / étudiant", "Entrée, sortie, retard, sortie anticipée"],
   },
 ];
 

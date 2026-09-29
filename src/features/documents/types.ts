@@ -319,6 +319,8 @@ export type UniversityTranscriptSnapshot = {
   rank: number | null;
   population: number | null;
   decision: string | null;
+  /** Résultats publiés (délibération close) ; sinon document PROVISOIRE. */
+  published: boolean;
 };
 
 /** Université : procès-verbal de délibération du jury. */

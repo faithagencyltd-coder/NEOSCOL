@@ -1,4 +1,4 @@
-import { BookOpen, CalendarClock, ChevronRight, FileCheck2, LogOut, Megaphone, MessagesSquare, UserRound, Wallet, type LucideIcon } from "lucide-react";
+import { BookOpen, CalendarClock, ChevronRight, FileCheck2, LogOut, Megaphone, MessagesSquare, NotebookPen, Route, UserRound, Wallet, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { signOut } from "@/features/auth/actions";
 import { ResetPasswordForm } from "@/features/auth/components/reset-password-form";
 import { requirePortal } from "@/features/portal/context";
+import { isHigherOrg } from "@/features/university/config";
 import { getPortalSubjects } from "@/features/portal/queries";
 import { displayName } from "@/lib/auth/session";
 import { formatDate, formatNumber } from "@/lib/utils/format";
@@ -17,9 +18,16 @@ export const metadata: Metadata = { title: "Plus" };
 
 /** Profil, matières et enseignants, raccourcis, compte et déconnexion. */
 export default async function PortalMorePage() {
-  const { context, parent, students, student } = await requirePortal();
+  const { context, organization, parent, students, student } = await requirePortal();
   const subjects = student ? await getPortalSubjects(student.id) : [];
+  const university = !parent && isHigherOrg(organization.type);
   const links: { href: string; label: string; icon: LucideIcon }[] = [
+    ...(university
+      ? [
+          { href: "/portail/parcours", label: "Mon parcours universitaire", icon: Route },
+          { href: "/portail/notes", label: "Notes des évaluations", icon: NotebookPen },
+        ]
+      : []),
     ...(parent ? [{ href: "/portail/emploi-du-temps", label: "Emploi du temps", icon: CalendarClock }] : []),
     { href: "/portail/documents", label: "Documents officiels", icon: FileCheck2 },
     ...(parent ? [] : [{ href: "/portail/finances", label: "Situation financière", icon: Wallet }]),
@@ -48,7 +56,7 @@ export default async function PortalMorePage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BookOpen className="size-4 text-primary" aria-hidden /> Profil scolaire de {student.first_name}
+              <BookOpen className="size-4 text-primary" aria-hidden /> {isHigherOrg(organization.type) ? "Profil universitaire" : "Profil scolaire"} de {student.first_name}
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4">

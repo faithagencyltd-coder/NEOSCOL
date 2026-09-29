@@ -686,10 +686,15 @@ begin
               (array['cc', 'examen'])[k], date '2026-12-01' + (k - 1) * 60, k, 20, true)
       returning id into v_assessment;
       insert into public.grades (organization_id, assessment_id, student_id, score)
+      -- Notes déterministes (nom de l'étudiant, matière, épreuve) : mêmes résultats à chaque installation.
       select v_org, v_assessment, e.student_id,
-             least(19, greatest(4, round((5 + abs(hashtext(e.student_id::text)) % 10
-                   + (abs(hashtext(e.student_id::text || v_assessment::text)) % 60) / 10.0)::numeric * 2) / 2))
-      from public.enrollments e where e.class_id = v_class and e.status = 'validated';
+             least(19, greatest(4, round((5 + abs(hashtext(st.last_name)) % 10
+                   + (abs(hashtext(st.last_name || sub.code || k::text)) % 60) / 10.0)::numeric * 2) / 2))
+      from public.enrollments e
+      join public.students st on st.id = e.student_id
+      join public.class_subjects cs on cs.id = v_cs
+      join public.subjects sub on sub.id = cs.subject_id
+      where e.class_id = v_class and e.status = 'validated';
       update public.assessments set grades_status = 'validated', grades_validated_at = now() where id = v_assessment;
     end loop;
   end loop;

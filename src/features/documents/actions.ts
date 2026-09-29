@@ -47,7 +47,18 @@ export async function saveDossierOrder(_: ActionResult | null, formData: FormDat
   return { ok: true, message: "Ordre enregistré pour tout l'établissement." };
 }
 
-const TEMPLATE_KINDS = ["school_certificate", "attestation", "training_certificate", "convocation", "contract", "custom"] as const;
+const TEMPLATE_KINDS = [
+  "school_certificate",
+  "attestation",
+  "training_certificate",
+  "training_attestation",
+  "enrollment_certificate",
+  "success_certificate",
+  "internship_certificate",
+  "convocation",
+  "contract",
+  "custom",
+] as const;
 
 const templateSchema = z.object({
   kind: z.enum(TEMPLATE_KINDS, { error: "Type de document inconnu." }),

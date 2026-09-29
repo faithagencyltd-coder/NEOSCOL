@@ -67,7 +67,22 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/api/document
       .select("id, number, verification_code, issued_at, data")
       .eq("student_id", studentId)
       .eq("status", "valid")
-      .in("kind", ["school_certificate", "attestation", "training_certificate", "convocation", "contract", "custom", "transcript", "student_card"])
+      .in("kind", [
+        "school_certificate",
+        "attestation",
+        "training_certificate",
+        "training_attestation",
+        "enrollment_certificate",
+        "success_certificate",
+        "internship_certificate",
+        "convocation",
+        "contract",
+        "custom",
+        "transcript",
+        "university_transcript",
+        "diploma",
+        "student_card",
+      ])
       .order("issued_at"),
     supabase.from("absence_justifications").select("id").eq("student_id", studentId),
   ]);

@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarClock, ClipboardCheck, House, LayoutGrid, NotebookPen, Wallet, type LucideIcon } from "lucide-react";
+import { CalendarClock, ClipboardCheck, GraduationCap, House, LayoutGrid, NotebookPen, Wallet, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -14,8 +14,11 @@ const GRADES: Item = { href: "/portail/notes", label: "Notes", icon: NotebookPen
 const FINANCE: Item = { href: "/portail/finances", label: "Finances", icon: Wallet };
 const TIMETABLE: Item = { href: "/portail/emploi-du-temps", label: "Horaires", icon: CalendarClock };
 const MORE: Item = { href: "/portail/plus", label: "Plus", icon: LayoutGrid };
+/** Portail étudiant (université) : résultats, crédits et parcours à la place des notes. */
+const RESULTS: Item = { href: "/portail/resultats", label: "Résultats", icon: GraduationCap };
 
-export function portalItems(parent: boolean): Item[] {
+export function portalItems(parent: boolean, university = false): Item[] {
+  if (university && !parent) return [HOME, TIMETABLE, ATTENDANCE, RESULTS, MORE];
   return parent ? [HOME, ATTENDANCE, GRADES, FINANCE, MORE] : [HOME, TIMETABLE, ATTENDANCE, GRADES, MORE];
 }
 
@@ -24,9 +27,9 @@ function isActive(pathname: string, href: string) {
 }
 
 /** Navigation du portail : barre d'onglets en bas sur téléphone, onglets en haut sur écran large. */
-export function PortalNav({ parent }: { parent: boolean }) {
+export function PortalNav({ parent, university = false }: { parent: boolean; university?: boolean }) {
   const pathname = usePathname();
-  const items = portalItems(parent);
+  const items = portalItems(parent, university);
   return (
     <>
       <nav aria-label="Portail" className="hidden border-b border-border bg-surface md:block">

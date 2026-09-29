@@ -15,6 +15,7 @@ import type { Database, Json } from "@/types/database";
 import { InvoicePage, ReceiptPage } from "./pdf/finance";
 import { ReportCardPage } from "./pdf/report-card";
 import { CompetencySheetPage, TrainingTranscriptPage } from "./pdf/training";
+import { DeliberationMinutesPage, DiplomaPage, UniversityTranscriptPage } from "./pdf/university";
 import { CertificatePage, CommitmentPage, DossierCoverPage, EnrollmentFormPage, StudentCardPage, TranscriptPage } from "./pdf/student";
 import type { DocImages, DocOrganization, DocumentSnapshot, Verification } from "./types";
 
@@ -97,7 +98,7 @@ export async function issueDocument(
     snapshot: DocumentSnapshot;
     title: string;
     studentId: string | null;
-    subjectType: "payment" | "report_card" | "enrollment" | "student" | "invoice" | "dossier";
+    subjectType: "payment" | "report_card" | "enrollment" | "student" | "invoice" | "dossier" | "deliberation" | "diploma";
     subjectId: string | null;
     reuse: boolean;
   },
@@ -170,6 +171,9 @@ export function snapshotPages(snapshot: DocumentSnapshot, images: DocImages, ver
     case "attestation":
     case "training_certificate":
     case "training_attestation":
+    case "enrollment_certificate":
+    case "success_certificate":
+    case "internship_certificate":
     case "convocation":
     case "contract":
     case "custom":
@@ -188,6 +192,12 @@ export function snapshotPages(snapshot: DocumentSnapshot, images: DocImages, ver
       return <TrainingTranscriptPage snapshot={snapshot} images={images} verification={verification} issuedAt={issuedAt} />;
     case "competency_sheet":
       return <CompetencySheetPage snapshot={snapshot} images={images} verification={verification} issuedAt={issuedAt} />;
+    case "university_transcript":
+      return <UniversityTranscriptPage snapshot={snapshot} images={images} verification={verification} issuedAt={issuedAt} />;
+    case "deliberation_minutes":
+      return <DeliberationMinutesPage snapshot={snapshot} images={images} verification={verification} issuedAt={issuedAt} />;
+    case "diploma":
+      return <DiplomaPage snapshot={snapshot} images={images} verification={verification} issuedAt={issuedAt} />;
   }
 }
 
@@ -201,7 +211,7 @@ export async function renderPages(pages: ReactElement[], title: string): Promise
 
 /** Photo associée à l'instantané (élève), si présente. */
 export function snapshotPhoto(snapshot: DocumentSnapshot): string | null {
-  return "student" in snapshot ? (snapshot.student.photo_file_id ?? null) : null;
+  return "student" in snapshot && snapshot.student ? (snapshot.student.photo_file_id ?? null) : null;
 }
 
 export function pdfResponse(bytes: Uint8Array, fileName: string, download = false): Response {

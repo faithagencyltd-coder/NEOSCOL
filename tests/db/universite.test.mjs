@@ -203,6 +203,27 @@ describe("Université — mémoires, soutenances, diplômes", () => {
       assert.ok(await rejects(q("insert into student_diplomas (organization_id, student_id, kind, title, source) select $1, id, 'diploma', 'Faux', 'app' from students limit 1", [ORG_U])));
     });
   });
+
+  test("diplôme révoqué → document émis révoqué en cascade (vérification en ligne) ; aucune révocation hors diplôme sans documents.revoke", async () => {
+    await as(U.registrar, async (q) => {
+      assert.equal((await q("select app.has_permission($1, 'documents.revoke') ok", [ORG_U]))[0].ok, false, "scolarité sans documents.revoke");
+      const s = await studentByName(q, "YAPI");
+      const [dip] = await q("insert into student_diplomas (organization_id, student_id, kind, title, source) values ($1, $2, 'diploma', 'Licence en Informatique', 'app') returning id", [ORG_U, s.id]);
+      const insertDoc = (kind, subjectType, subjectId) =>
+        q(
+          "insert into issued_documents (organization_id, kind, title, student_id, subject_type, subject_id, data, content_hash) values ($1, $2, 'Test', $3, $4, $5, '{}'::jsonb, encode(sha256(random()::text::bytea), 'hex')) returning id, status",
+          [ORG_U, kind, s.id, subjectType, subjectId],
+        );
+      const [doc] = await insertDoc("diploma", "diploma", dip.id);
+      const [other] = await insertDoc("university_transcript", "student", s.id);
+      assert.equal(doc.status, "valid");
+      assert.match(await rejects(q("update issued_documents set status = 'revoked', revoked_reason = 'x' where id = $1", [other.id])), /documents\.revoke/);
+      await q("update student_diplomas set status = 'revoked', revoked_reason = 'Fraude constatée' where id = $1", [dip.id]);
+      const [after] = await q("select status, revoked_reason, revoked_at is not null as dated from issued_documents where id = $1", [doc.id]);
+      assert.deepEqual(after, { status: "revoked", revoked_reason: "Fraude constatée", dated: true });
+      assert.equal((await q("select status from issued_documents where id = $1", [other.id]))[0].status, "valid", "les autres documents ne sont pas touchés");
+    });
+  });
 });
 
 describe("Université — scan, isolation", () => {

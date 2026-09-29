@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { saveDossierOrder } from "@/features/documents/actions";
 import { DOSSIER_SECTIONS, type DossierSectionKey } from "@/features/documents/dossier";
 import { TEMPLATE_DEFAULTS } from "@/features/documents/templates";
-import { TEXT_DOCUMENT_KINDS, TRAINING_ONLY_DOCUMENT_KINDS, type TextDocumentKind } from "@/features/documents/types";
+import { availableTextKinds, type TextDocumentKind } from "@/features/documents/types";
 import { useFeedbackAction } from "@/components/motion/use-feedback-action";
 
 /**
@@ -27,14 +27,17 @@ export function WrittenDocumentDialog({
   customTemplates = [],
   trigger,
   training = false,
+  university = false,
 }: {
   studentId: string;
   customTemplates?: { id: string; name: string }[];
   trigger?: ReactNode;
   /** Centre de formation : documents de formation proposés en plus. */
   training?: boolean;
+  /** Enseignement supérieur : attestations universitaires (inscription, réussite, stage). */
+  university?: boolean;
 }) {
-  const kinds = TEXT_DOCUMENT_KINDS.filter((k) => k !== "custom" && (training || !TRAINING_ONLY_DOCUMENT_KINDS.includes(k)));
+  const kinds = availableTextKinds({ training, university });
   const [choice, setChoice] = useState<string>("attestation");
   const [content, setContent] = useState("");
   const [open, setOpen] = useState(false);

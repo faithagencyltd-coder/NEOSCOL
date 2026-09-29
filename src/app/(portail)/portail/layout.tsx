@@ -8,6 +8,7 @@ import { getRecentNotifications } from "@/features/notifications/queries";
 import { ChildSwitcher } from "@/features/portal/components/child-switcher";
 import { PortalNav } from "@/features/portal/components/portal-nav";
 import { requirePortal } from "@/features/portal/context";
+import { isHigherOrg } from "@/features/university/config";
 import { displayName } from "@/lib/auth/session";
 import { isDemoMode } from "@/lib/demo";
 import { vocabularyFor } from "@/lib/vocabulary";
@@ -54,7 +55,7 @@ export default async function PortalLayout({ children }: { children: React.React
           {parent && student && students.length > 1 ? <ChildSwitcher students={students} selectedId={student.id} /> : null}
         </div>
       </header>
-      <PortalNav parent={parent} />
+      <PortalNav parent={parent} university={isHigherOrg(organization.type)} />
       <main className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-5 px-4 py-5">{children}</main>
       <NotificationWatcher />
     </div>

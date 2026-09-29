@@ -10,6 +10,7 @@ import { z } from "zod";
 import { storeUpload } from "@/features/files/server";
 import { STAFF_FIELDS, staffSchema, type ScanResult } from "@/features/staff/schemas";
 import { isTrainingOrg } from "@/features/training/config";
+import { isHigherOrg } from "@/features/university/config";
 import { authorize } from "@/lib/auth/authorize";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -276,7 +277,8 @@ export async function scanBadge(code: string, roomId?: string | null): Promise<{
   const supabase = await createClient();
   const device = ((await headers()).get("user-agent") ?? "").slice(0, 120);
   const organizationId = auth.context.organization.id;
-  const { data, error } = isTrainingOrg(auth.context.organization.type)
+  // Formation professionnelle et université : scan unifié (apprenants / étudiants + enseignants), contexte vérifié en base.
+  const { data, error } = isTrainingOrg(auth.context.organization.type) || isHigherOrg(auth.context.organization.type)
     ? await supabase.rpc("scan_badge", { p_organization_id: organizationId, p_code: value, p_device: device, p_room_id: isUuid(roomId ?? "") ? roomId! : undefined })
     : await supabase.rpc("scan_staff_badge", { p_organization_id: organizationId, p_code: value, p_device: device });
   if (error || !data) return { ok: false, message: dbErrorMessage(error, "Le scan n'a pas pu être traité.") };

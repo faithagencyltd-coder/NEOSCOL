@@ -72,7 +72,7 @@ export async function existingDocument(req: DocumentRequest, kind: string, subje
   return data ?? null;
 }
 
-type Subject = { type: "payment" | "report_card" | "enrollment" | "student" | "invoice" | "dossier"; id: string | null };
+type Subject = { type: "payment" | "report_card" | "enrollment" | "student" | "invoice" | "dossier" | "deliberation" | "diploma"; id: string | null };
 
 /**
  * Prépare les pages PDF d'un instantané.
