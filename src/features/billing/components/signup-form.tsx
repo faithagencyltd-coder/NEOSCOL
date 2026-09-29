@@ -6,6 +6,7 @@ import { useActionState, useState } from "react";
 
 import { ActionForm } from "@/components/shared/action-form";
 import { SubmitButton } from "@/components/shared/submit-button";
+import { TurnstileWidget, type CaptchaConfig } from "@/features/auth/components/turnstile-widget";
 import { Alert } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormField } from "@/components/ui/form-field";
@@ -57,7 +58,9 @@ export function SignupForm({
   initialPlan,
   initialInterval,
   initialComponents = [],
+  captcha = null,
 }: {
+  captcha?: CaptchaConfig;
   plans: PlanWithFeatures[];
   initialPlan?: string;
   initialInterval: Interval;
@@ -259,6 +262,7 @@ export function SignupForm({
 
       <Checkbox name="terms" label="J'accepte les conditions d'utilisation de NéoScol et le traitement des données de l'établissement." required />
       {errors.terms ? <p className="-mt-3 text-xs font-medium text-danger">{errors.terms[0]}</p> : null}
+      {captcha ? <TurnstileWidget key={state ? JSON.stringify(state) : "init"} siteKey={captcha.siteKey} /> : null}
 
       <SubmitButton size="lg" pendingLabel="Création de votre établissement…" className="w-full uppercase tracking-wide">
         <Rocket aria-hidden /> Commencer mon essai gratuit

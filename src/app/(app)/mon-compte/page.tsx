@@ -1,8 +1,11 @@
+import { ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { PageHeader } from "@/components/shared/page-header";
 import { InstallAppButton } from "@/components/shared/pwa";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResetPasswordForm } from "@/features/auth/components/reset-password-form";
 import { requireOrganization } from "@/lib/auth/guards";
@@ -16,7 +19,17 @@ export default async function AccountPage() {
   const context = await requireOrganization();
   return (
     <div className="grid gap-6">
-      <PageHeader title="Mon compte" description="Informations de connexion et sécurité." />
+      <PageHeader
+        title="Mon compte"
+        description="Informations de connexion et sécurité."
+        actions={
+          <Button asChild variant="secondary">
+            <Link href="/securite">
+              <ShieldCheck aria-hidden /> Double authentification et appareils
+            </Link>
+          </Button>
+        }
+      />
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>

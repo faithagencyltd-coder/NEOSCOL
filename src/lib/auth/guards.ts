@@ -3,16 +3,25 @@ import "server-only";
 import { notFound, redirect } from "next/navigation";
 
 import type { Permission } from "@/config/permissions";
+import { mfaRequirement } from "@/lib/auth/security";
 import { can, getSessionContext, type OrganizationSummary, type SessionContext } from "@/lib/auth/session";
 
 export type OrgSessionContext = SessionContext & { organization: OrganizationSummary };
 
-/** Exige une session valide (sinon redirection vers la connexion). */
+/**
+ * Exige une session valide (sinon redirection vers la connexion). Double
+ * authentification : code attendu → vérification ; obligatoire mais non
+ * activée → page Sécurité. (La base refuse de toute façon tout droit à une
+ * session non vérifiée : ceci n'est que le parcours.)
+ */
 export async function requireSession(): Promise<SessionContext> {
   const context = await getSessionContext();
   if (!context) {
     redirect("/connexion");
   }
+  const mfa = await mfaRequirement();
+  if (mfa === "verify") redirect("/connexion/verification");
+  if (mfa === "enroll") redirect("/securite?obligatoire=1");
   return context;
 }
 

@@ -6,6 +6,7 @@ import { Alert } from "@/components/ui/alert";
 import { SignInTabs } from "@/features/auth/components/sign-in-tabs";
 import { DemoRolePicker } from "@/features/demo/components/demo-role-picker";
 import { isDemoMode } from "@/lib/demo";
+import { turnstileSettings } from "@/lib/messaging/server";
 
 export const metadata: Metadata = { title: "Connexion" };
 
@@ -14,6 +15,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/connexion
   const next = typeof params.suite === "string" ? params.suite : undefined;
   const expired = params.erreur === "lien-expire";
   const demo = isDemoMode();
+  const captcha = await turnstileSettings();
 
   return (
     <div className="grid gap-6">
@@ -28,8 +30,13 @@ export default async function SignInPage({ searchParams }: PageProps<"/connexion
           Ce lien n&apos;est plus valide. Demandez un nouveau lien de réinitialisation.
         </Alert>
       ) : null}
+      {params.erreur === "verification" ? (
+        <Alert tone="warning" title="Lien de vérification invalide ou expiré">
+          Connectez-vous : un nouveau lien d&apos;activation peut être demandé depuis le bandeau de votre établissement.
+        </Alert>
+      ) : null}
       {params.erreur === "demo" ? <Alert tone="danger">Connexion de démonstration impossible : rechargez les données de démonstration.</Alert> : null}
-      <SignInTabs next={next} />
+      <SignInTabs next={next} captcha={captcha} />
 
       <details className="group rounded-2xl border border-border/70 bg-white/60 text-sm dark:bg-slate-900/50">
         <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 font-medium text-primary">

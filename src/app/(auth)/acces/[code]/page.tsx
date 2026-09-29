@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { PortalGateway } from "@/features/auth/components/portal-gateway";
+import { turnstileSettings } from "@/lib/messaging/server";
 import { isPortalKind, normalizeOrgCode } from "@/features/auth/portals";
 import { getSessionContext } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
@@ -108,7 +109,7 @@ export default async function PortalLinkPage({ params, searchParams }: PageProps
         </Alert>
       ) : null}
 
-      <PortalGateway code={org.code} initial={portail} next={next} accent={org.primary_color} />
+      <PortalGateway code={org.code} initial={portail} next={next} accent={org.primary_color} captcha={await turnstileSettings()} />
 
       <div className="grid grid-cols-2 gap-3 border-t border-border/70 pt-5 text-xs">
         <p className="flex items-start gap-2.5">

@@ -646,6 +646,32 @@ export type Database = {
           
         ]
       }
+      auth_login_attempts: {
+        Row: {
+          created_at: string
+          id: number
+          identifier_hash: string
+          ip_hash: string | null
+          kind: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          identifier_hash: string
+          ip_hash?: string | null
+          kind: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          identifier_hash?: string
+          ip_hash?: string | null
+          kind?: string
+        }
+        Relationships: [
+          
+        ]
+      }
       badge_scans: {
         Row: {
           badge_id: string | null
@@ -1458,6 +1484,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "document_templates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      email_verification_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          organization_id: string
+          token_hash: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          organization_id: string
+          token_hash: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          organization_id?: string
+          token_hash?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_verification_tokens_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -3799,6 +3863,8 @@ export type Database = {
           created_at: string
           currency: string
           email: string | null
+          email_verification: string
+          email_verified_at: string | null
           id: string
           is_demo: boolean
           locale: string
@@ -3822,6 +3888,8 @@ export type Database = {
           created_at?: string
           currency?: string
           email?: string | null
+          email_verification?: string
+          email_verified_at?: string | null
           id?: string
           is_demo?: boolean
           locale?: string
@@ -3845,6 +3913,8 @@ export type Database = {
           created_at?: string
           currency?: string
           email?: string | null
+          email_verification?: string
+          email_verified_at?: string | null
           id?: string
           is_demo?: boolean
           locale?: string
@@ -4369,6 +4439,38 @@ export type Database = {
           secret_hint?: string | null
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: [
+          
+        ]
+      }
+      platform_security_settings: {
+        Row: {
+          captcha_after_failures: number
+          email_verification_required: boolean
+          id: number
+          lockout_minutes: number
+          lockout_threshold: number
+          mfa_required_sensitive: boolean
+          updated_at: string
+        }
+        Insert: {
+          captcha_after_failures?: number
+          email_verification_required?: boolean
+          id?: number
+          lockout_minutes?: number
+          lockout_threshold?: number
+          mfa_required_sensitive?: boolean
+          updated_at?: string
+        }
+        Update: {
+          captcha_after_failures?: number
+          email_verification_required?: boolean
+          id?: number
+          lockout_minutes?: number
+          lockout_threshold?: number
+          mfa_required_sensitive?: boolean
+          updated_at?: string
         }
         Relationships: [
           
@@ -7403,6 +7505,12 @@ export type Database = {
         }
         Returns: undefined
       }
+      email_verification_state: {
+        Args: {
+          p_org: string
+        }
+        Returns: Json
+      }
       enroll_learner: {
         Args: {
           p_organization_id: string
@@ -7526,6 +7634,21 @@ export type Database = {
         }
         Returns: undefined
       }
+      login_guard: {
+        Args: {
+          p_identifier_hash: string
+          p_ip_hash: string
+        }
+        Returns: Json
+      }
+      login_record: {
+        Args: {
+          p_identifier_hash: string
+          p_ip_hash: string
+          p_success: boolean
+        }
+        Returns: undefined
+      }
       mark_thread_read: {
         Args: {
           p_thread_id: string
@@ -7635,6 +7758,22 @@ export type Database = {
           p_org: string
         }
         Returns: string[]
+      }
+      my_security_state: {
+        Args: never
+        Returns: Json
+      }
+      my_sessions: {
+        Args: never
+        Returns: {
+          id: string
+          created_at: string
+          updated_at: string
+          user_agent: string
+          ip: string
+          aal: string
+          current: boolean
+        }[]
       }
       my_threads: {
         Args: {
@@ -7748,12 +7887,28 @@ export type Database = {
         }
         Returns: Json
       }
+      platform_revoke_user_sessions: {
+        Args: {
+          p_user: string
+        }
+        Returns: number
+      }
+      platform_security_overview: {
+        Args: never
+        Returns: Json
+      }
       platform_set_messaging_quota: {
         Args: {
           p_org: string
           p_email: number
           p_sms: number
           p_whatsapp: number
+        }
+        Returns: undefined
+      }
+      platform_unlock_account: {
+        Args: {
+          p_identifier_hash: string
         }
         Returns: undefined
       }
@@ -7792,6 +7947,16 @@ export type Database = {
           p_audience: string
           p_is_active: boolean
           p_features: Json
+        }
+        Returns: undefined
+      }
+      platform_update_security_settings: {
+        Args: {
+          p_lockout_threshold: number
+          p_lockout_minutes: number
+          p_captcha_after: number
+          p_mfa_required: boolean
+          p_email_verification: boolean
         }
         Returns: undefined
       }
@@ -7921,6 +8086,12 @@ export type Database = {
           p_comment?: string
         }
         Returns: number
+      }
+      revoke_my_session: {
+        Args: {
+          p_session: string
+        }
+        Returns: undefined
       }
       save_grades: {
         Args: {
@@ -8116,6 +8287,12 @@ export type Database = {
           organization_name: string
           organization_city: string
         }[]
+      }
+      verify_organization_email: {
+        Args: {
+          p_token_hash: string
+        }
+        Returns: Json
       }
     }
     Enums: {

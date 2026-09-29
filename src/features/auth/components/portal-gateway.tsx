@@ -1,5 +1,6 @@
 "use client";
 
+import type { CaptchaConfig } from "@/features/auth/components/turnstile-widget";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
@@ -17,7 +18,7 @@ const MAIN: PortalKind[] = ["parent", "enseignant", "eleve"];
  * pour pouvoir partager un lien direct ; l'établissement et le portail sont
  * revérifiés côté serveur à la connexion.
  */
-export function PortalGateway({ code, initial, next, accent }: { code: string; initial: PortalKind | null; next?: string; accent: string }) {
+export function PortalGateway({ code, initial, next, accent, captcha }: { code: string; initial: PortalKind | null; next?: string; accent: string; captcha?: CaptchaConfig }) {
   const [kind, setKind] = useState<PortalKind | null>(initial);
 
   const choose = (value: PortalKind | null) => {
@@ -94,9 +95,9 @@ export function PortalGateway({ code, initial, next, accent }: { code: string; i
       {kind === "parent" ? (
         <PhoneSignInForm next={next} portal={portal} />
       ) : kind === "eleve" ? (
-        <StudentSignInForm next={next} portal={portal} />
+        <StudentSignInForm next={next} portal={portal} captcha={captcha} />
       ) : (
-        <PasswordSignInForm next={next} portal={portal} />
+        <PasswordSignInForm next={next} portal={portal} captcha={captcha} />
       )}
     </div>
   );

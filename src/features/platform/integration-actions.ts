@@ -236,3 +236,54 @@ export async function saveWhatsappTemplate(_: ActionResult | null, formData: For
   refresh();
   return { ok: true, message: "Modèle WhatsApp enregistré. Il doit être approuvé chez Meta avec exactement ce nom et cette langue." };
 }
+
+// ---------------------------------------------------------------------------
+// Centre de sécurité
+// ---------------------------------------------------------------------------
+export async function saveSecuritySettings(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await requirePlatformAdmin();
+  if (!auth.ok) return auth;
+  const parsed = z
+    .object({
+      lockout_threshold: z.coerce.number().int().min(3).max(50),
+      lockout_minutes: z.coerce.number().int().min(1).max(1440),
+      captcha_after: z.coerce.number().int().min(1).max(50),
+    })
+    .safeParse({ lockout_threshold: formData.get("lockout_threshold"), lockout_minutes: formData.get("lockout_minutes"), captcha_after: formData.get("captcha_after") });
+  if (!parsed.success) return { ok: false, message: "Valeurs invalides (verrouillage : 3 à 50 échecs, 1 à 1440 minutes)." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("platform_update_security_settings", {
+    p_lockout_threshold: parsed.data.lockout_threshold,
+    p_lockout_minutes: parsed.data.lockout_minutes,
+    p_captcha_after: parsed.data.captcha_after,
+    p_mfa_required: formData.get("mfa_required") === "on",
+    p_email_verification: formData.get("email_verification") === "on",
+  });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  revalidatePath("/plateforme/securite");
+  return { ok: true, message: "Réglages de sécurité enregistrés." };
+}
+
+export async function unlockAccount(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await requirePlatformAdmin();
+  if (!auth.ok) return auth;
+  const hash = String(formData.get("identifier_hash") ?? "");
+  if (!/^[a-f0-9]{64}$/.test(hash)) return { ok: false, message: "Compte introuvable." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("platform_unlock_account", { p_identifier_hash: hash });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  revalidatePath("/plateforme/securite");
+  return { ok: true, message: "Compte déverrouillé." };
+}
+
+export async function revokeUserSessions(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await requirePlatformAdmin();
+  if (!auth.ok) return auth;
+  const user = String(formData.get("user_id") ?? "");
+  if (!isUuid(user)) return { ok: false, message: "Compte introuvable." };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("platform_revoke_user_sessions", { p_user: user });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  revalidatePath("/plateforme/securite");
+  return { ok: true, message: `${data ?? 0} session(s) fermée(s) : le compte devra se reconnecter.` };
+}

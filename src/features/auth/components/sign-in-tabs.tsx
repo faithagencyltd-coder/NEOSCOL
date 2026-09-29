@@ -4,6 +4,7 @@ import { GraduationCap, Presentation, ShieldCheck, Users, type LucideIcon } from
 import { useState } from "react";
 
 import { PasswordSignInForm } from "@/features/auth/components/password-sign-in-form";
+import type { CaptchaConfig } from "@/features/auth/components/turnstile-widget";
 import { PhoneSignInForm } from "@/features/auth/components/phone-sign-in-form";
 import { StudentSignInForm } from "@/features/auth/components/student-sign-in-form";
 import { cn } from "@/lib/utils/cn";
@@ -23,7 +24,7 @@ const PROFILES: { id: Profile; label: string; short?: string; sub?: string; icon
  * naissance + mot de passe ; personnel : e-mail ou matricule + mot de passe).
  * Les droits viennent des rôles attribués par l'établissement.
  */
-export function SignInTabs({ next }: { next?: string }) {
+export function SignInTabs({ next, captcha }: { next?: string; captcha?: CaptchaConfig }) {
   const [profile, setProfile] = useState<Profile>("staff");
 
   return (
@@ -63,7 +64,7 @@ export function SignInTabs({ next }: { next?: string }) {
       </div>
 
       <div key={profile} className="anim-fade-up">
-        {profile === "parent" ? <PhoneSignInForm next={next} /> : profile === "student" ? <StudentSignInForm next={next} /> : <PasswordSignInForm next={next} />}
+        {profile === "parent" ? <PhoneSignInForm next={next} /> : profile === "student" ? <StudentSignInForm next={next} captcha={captcha} /> : <PasswordSignInForm next={next} captcha={captcha} />}
       </div>
     </div>
   );

@@ -10,7 +10,8 @@ import type { Database } from "@/types/database";
 // /api/webhooks : notifications des fournisseurs de paiement (revérifiées auprès du fournisseur).
 // /tarifs, /pricing, /inscription : offre NéoScol et création d'un établissement (essai gratuit).
 const PUBLIC_PATHS = [
-  "/connexion", "/acces", "/mot-de-passe-oublie", "/auth", "/verifier", "/configuration", "/api/cron", "/api/webhooks",
+  "/connexion", "/acces", "/mot-de-passe-oublie", "/auth", "/verifier", "/configuration", "/api/cron", "/api/webhooks", "/api/hooks",
+  "/verification-email",
   "/demo", "/hors-ligne", "/tarifs", "/pricing", "/inscription",
 ];
 

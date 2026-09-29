@@ -9,6 +9,7 @@ import { z } from "zod";
 import { isPortalKind, normalizeOrgCode, PORTAL_PERSONAS, PORTALS, type PortalKind } from "@/features/auth/portals";
 import { emailSchema, newPasswordSchema, otpSchema, parentOtpSchema, phoneSchema, signInSchema, studentSignInSchema } from "@/features/auth/schemas";
 import { secureCookiesForRequest } from "@/lib/utils/cookie-security";
+import { checkLoginGate, recordLoginAttempt } from "@/lib/auth/security";
 import { ACTIVE_ORG_COOKIE, getSessionContext } from "@/lib/auth/session";
 import { publicEnv } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -60,6 +61,16 @@ async function portalScope(formData: FormData): Promise<PortalScope | null | "in
   return org ? { id: org.id, name: org.name, kind } : "invalid";
 }
 
+const captchaToken = (formData: FormData) => {
+  const value = formData.get("cf-turnstile-response");
+  return typeof value === "string" && value ? value : null;
+};
+
+/** Refus avant tentative : verrouillage ou anti-robot (champ « captcha » pour afficher la vérification). */
+function gateFailure(gate: { message: string; captcha?: boolean }): ActionResult {
+  return { ok: false, message: gate.message, ...(gate.captcha ? { fieldErrors: { captcha: [gate.message] } } : {}) };
+}
+
 const INVALID_PORTAL: ActionResult = { ok: false, message: "Lien d'accès invalide ou établissement inactif. Demandez le lien à votre établissement." };
 
 /**
@@ -106,6 +117,11 @@ async function completeSignIn(next: unknown, scope?: PortalScope | null): Promis
     });
     await supabase.from("profiles").update({ last_organization_id: scope.id }).eq("id", context.user.id);
   }
+  // Double authentification activée : code TOTP exigé avant tout accès (la base le contrôle aussi).
+  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (aal?.nextLevel === "aal2" && aal.currentLevel !== "aal2") {
+    redirect(`/connexion/verification?suite=${encodeURIComponent(safeRedirectPath(next))}`);
+  }
   await supabase.rpc("log_event", {
     p_organization_id: organizationId,
     p_action: "auth.login",
@@ -140,6 +156,8 @@ export async function signInWithPassword(_: ActionResult | null, formData: FormD
   }
   const scope = await portalScope(formData);
   if (scope === "invalid") return INVALID_PORTAL;
+  const gate = await checkLoginGate(parsed.data.email, captchaToken(formData));
+  if (!gate.ok) return gateFailure(gate);
   let email = parsed.data.email.toLowerCase();
   if (!email.includes("@")) {
     const admin = createAdminClient();
@@ -150,6 +168,7 @@ export async function signInWithPassword(_: ActionResult | null, formData: FormD
   }
   const supabase = await createClient();
   const { error } = email ? await supabase.auth.signInWithPassword({ email, password: parsed.data.password }) : { error: true };
+  await recordLoginAttempt(gate, !error);
   if (error) {
     await logFailedSignIn(parsed.data.email, "password", scope?.id);
     return { ok: false, message: "Identifiant ou mot de passe incorrect." };
@@ -172,6 +191,8 @@ export async function signInStudent(_: ActionResult | null, formData: FormData):
   }
   const scope = await portalScope(formData);
   if (scope === "invalid") return INVALID_PORTAL;
+  const gate = await checkLoginGate(`matricule:${parsed.data.matricule}`, captchaToken(formData));
+  if (!gate.ok) return gateFailure(gate);
   const admin = createAdminClient();
   let studentQuery = admin?.from("students").select("user_id, birth_date").eq("matricule", parsed.data.matricule);
   if (studentQuery && scope) studentQuery = studentQuery.eq("organization_id", scope.id);
@@ -179,6 +200,7 @@ export async function signInStudent(_: ActionResult | null, formData: FormData):
   const email = student && student.birth_date === parsed.data.birth_date ? await accountEmail(student.user_id) : null;
   const supabase = await createClient();
   const { error } = email ? await supabase.auth.signInWithPassword({ email, password: parsed.data.password }) : { error: true };
+  await recordLoginAttempt(gate, !error);
   if (error) {
     await logFailedSignIn(parsed.data.matricule, "password", scope?.id);
     return { ok: false, message: "Matricule, date de naissance ou mot de passe incorrect." };

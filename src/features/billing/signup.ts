@@ -10,7 +10,11 @@ import { LYCEE_TRACKS, SCHOOL_LEVELS } from "@/features/academic/school";
 import { MODULE4_COMPONENTS, MULTI_MODULES_PLAN } from "@/features/billing/constants";
 import { newPasswordSchema } from "@/features/auth/schemas";
 import { secureCookiesForRequest } from "@/lib/utils/cookie-security";
+import { sendVerificationEmail, verificationRequired } from "@/lib/auth/email-verification";
+import { clientIp } from "@/lib/auth/security";
 import { ACTIVE_ORG_COOKIE } from "@/lib/auth/session";
+import { verifyTurnstileToken } from "@/lib/messaging/server";
+import { publicBaseUrl } from "@/lib/site-url";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/utils/action-result";
@@ -100,6 +104,9 @@ export async function signUpOrganization(_: ActionResult | null, formData: FormD
   }
   const admin = createAdminClient();
   if (!admin) return { ok: false, message: "Inscription momentanément indisponible (configuration serveur)." };
+  // Anti-robot : vérifié côté serveur dès que Turnstile est actif sur la plateforme.
+  const captcha = await verifyTurnstileToken(String(formData.get("cf-turnstile-response") ?? "") || null, await clientIp());
+  if (!captcha.ok) return { ok: false, message: "Confirmez que vous n'êtes pas un robot, puis réessayez.", fieldErrors: { captcha: ["Vérification anti-robot requise."] } };
 
   const h = await headers();
   const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "inconnue";
@@ -166,6 +173,18 @@ export async function signUpOrganization(_: ActionResult | null, formData: FormD
     for (const component of components) {
       await supabase.rpc("create_component_space", { p_parent: organizationId, p_component: component });
     }
+  }
+  // Vérification de l'adresse e-mail : établissement en lecture seule jusqu'au clic sur le lien.
+  if (await verificationRequired()) {
+    await admin.from("organizations").update({ email_verification: "pending" }).eq("id", organizationId);
+    await sendVerificationEmail({
+      userId: created.user.id,
+      organizationId,
+      email: parsed.data.email,
+      firstName: parsed.data.first_name,
+      orgName: parsed.data.org_name,
+      baseUrl: await publicBaseUrl(),
+    });
   }
   (await cookies()).set(ACTIVE_ORG_COOKIE, organizationId, {
     httpOnly: true,

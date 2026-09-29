@@ -9,11 +9,14 @@ import { signInStudent } from "@/features/auth/actions";
 import { PortalFields } from "@/features/auth/components/portal-fields";
 import type { PortalTarget } from "@/features/auth/portals";
 import { AuthInput, AuthSubmit } from "@/features/auth/components/auth-input";
+import { TurnstileWidget, type CaptchaConfig } from "@/features/auth/components/turnstile-widget";
 
 /** Connexion élève / étudiant / apprenant : matricule + date de naissance + mot de passe. */
-export function StudentSignInForm({ next, portal }: { next?: string; portal?: PortalTarget }) {
+export function StudentSignInForm({ next, portal, captcha }: { next?: string; portal?: PortalTarget; captcha?: CaptchaConfig }) {
   const [state, action, pending] = useActionState(signInStudent, null);
-  const errors = state && !state.ok ? state.fieldErrors : undefined;
+  const captchaNeeded = Boolean(state && !state.ok && state.fieldErrors?.captcha);
+  const errors = state && !state.ok && !captchaNeeded ? state.fieldErrors : undefined;
+  const showCaptcha = Boolean(captcha && (captcha.mode === "always" || captchaNeeded));
   return (
     <ActionForm dispatch={action} pending={pending} className="stagger grid gap-4" noValidate>
       {state && !state.ok && !errors ? (
@@ -37,6 +40,7 @@ export function StudentSignInForm({ next, portal }: { next?: string; portal?: Po
       />
       <AuthInput id="birth_date" name="birth_date" type="date" icon={CalendarDays} label="Date de naissance" required error={errors?.birth_date?.[0]} hint="Date de naissance" />
       <AuthInput id="student_password" name="password" type="password" icon={Lock} label="Mot de passe" autoComplete="current-password" required error={errors?.password?.[0]} />
+      {showCaptcha && captcha ? <TurnstileWidget key={state ? JSON.stringify(state) : "init"} siteKey={captcha.siteKey} /> : null}
       <AuthSubmit pending={pending} pendingLabel="Connexion en cours…">
         Accéder à mon espace
       </AuthSubmit>

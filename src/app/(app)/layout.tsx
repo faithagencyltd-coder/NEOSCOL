@@ -10,6 +10,7 @@ import { UserMenu } from "@/components/layout/user-menu";
 import { visibleNavigation } from "@/config/navigation";
 import { schoolConfigOf } from "@/features/academic/school";
 import { universityConfigOf } from "@/features/university/config";
+import { EmailVerificationBanner } from "@/features/auth/components/email-verification-banner";
 import { Module4SpaceBar } from "@/features/billing/components/module4-space-bar";
 import { SubscriptionBanner } from "@/features/billing/components/subscription-banner";
 import { SIDEBAR_COOKIE } from "@/config/ui";
@@ -64,6 +65,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           />
         </header>
         <Module4SpaceBar organizationId={context.organization.id} />
+        <EmailVerificationBanner organizationId={context.organization.id} />
         <SubscriptionBanner organizationId={context.organization.id} canBill={can(context, "billing.read")} />
         <main className="mx-auto w-full max-w-[90rem] flex-1 px-4 py-6 sm:px-7 lg:py-7">{children}</main>
         <NotificationWatcher />

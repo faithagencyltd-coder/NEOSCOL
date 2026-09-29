@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { SignupForm } from "@/features/billing/components/signup-form";
+import { turnstileSettings } from "@/lib/messaging/server";
 import { listPlans } from "@/features/billing/queries";
 import { MODULE4_COMPONENTS, TRIAL_DAYS } from "@/features/billing/constants";
 
@@ -23,7 +24,7 @@ export default async function SignupPage({ searchParams }: PageProps<"/inscripti
         </h1>
         <p className="text-sm text-muted-foreground">Toutes les fonctionnalités de votre formule, sans paiement pendant {TRIAL_DAYS} jours.</p>
       </div>
-      <SignupForm plans={plans} initialPlan={formule} initialInterval={interval} initialComponents={components} />
+      <SignupForm plans={plans} initialPlan={formule} initialInterval={interval} initialComponents={components} captcha={await turnstileSettings()} />
     </div>
   );
 }
