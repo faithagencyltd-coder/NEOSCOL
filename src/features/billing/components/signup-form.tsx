@@ -50,7 +50,7 @@ function defaultLevels(type: string): SchoolLevel[] {
   return [...SCHOOL_LEVELS];
 }
 
-/** Création d'un établissement : 14 jours d'essai gratuit, sans paiement. */
+/** Création d'un établissement : essai gratuit (durée de la formule), sans paiement. */
 export function SignupForm({ plans, initialPlan, initialInterval }: { plans: PlanWithFeatures[]; initialPlan?: string; initialInterval: Interval }) {
   const [state, action, pending] = useActionState(signUpOrganization, null);
   const [planCode, setPlanCode] = useState(initialPlan && plans.some((p) => p.code === initialPlan) ? initialPlan : (plans[1]?.code ?? plans[0]?.code ?? ""));

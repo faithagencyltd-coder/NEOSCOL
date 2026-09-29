@@ -18,6 +18,7 @@ import { getAccessState, getSubscription, listEvents, listInvoices, listPlans, l
 import { requirePermission } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/utils/format";
+import { TRIAL_DAYS } from "@/features/billing/constants";
 
 export const metadata: Metadata = { title: "Mon abonnement" };
 
@@ -64,7 +65,7 @@ export default async function SubscriptionPage({ searchParams }: PageProps<"/abo
   const price = subscription.billing_interval === "YEARLY" ? subscription.annual_price : subscription.monthly_price;
   const endAt = trialing ? subscription.trial_end : (subscription.current_period_end ?? subscription.trial_end);
   const daysLeft = access?.days_left ?? 0;
-  const trialTotal = subscription.trial_start && subscription.trial_end ? Math.max(1, Math.round((+new Date(subscription.trial_end) - +new Date(subscription.trial_start)) / 86400000)) : 14;
+  const trialTotal = subscription.trial_start && subscription.trial_end ? Math.max(1, Math.round((+new Date(subscription.trial_end) - +new Date(subscription.trial_start)) / 86400000)) : TRIAL_DAYS;
   const pending = invoices.filter((i) => i.status === "PENDING");
   const payHref = `/abonnement/souscrire?formule=${plan?.code ?? ""}&periodicite=${subscription.billing_interval}`;
   const fmt = (d: string | null | undefined) => (d ? formatDate(d, "fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "—");
@@ -86,7 +87,7 @@ export default async function SubscriptionPage({ searchParams }: PageProps<"/abo
       {params.bienvenue ? (
         <Alert tone="success" title="Bienvenue sur NéoScol !">
           <span className="inline-flex items-center gap-2">
-            <PartyPopper className="size-4" aria-hidden /> Votre établissement est créé et votre essai gratuit de 14 jours a commencé. Aucun paiement n&apos;est demandé
+            <PartyPopper className="size-4" aria-hidden /> Votre établissement est créé et votre essai gratuit de {trialTotal} jours a commencé. Aucun paiement n&apos;est demandé
             pendant l&apos;essai.
           </span>
         </Alert>

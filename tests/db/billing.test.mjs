@@ -23,16 +23,16 @@ const confirm = (q, c, { amount = c.amount, mode = "test", currency = "XOF" } = 
   q("select public.billing_confirm_payment('simulation', $1, $2, $3, $4, $5) as r", [mode, `SIM-${c.reference}`, c.reference, amount, currency]).then((rows) => rows[0].r);
 
 describe("Abonnements NéoScol", () => {
-  test("formules proposées : Module Scolaire unique à 15 000, annuel -30 %, prix barré et économie exacts, essai 14 jours", async () => {
+  test("formules proposées : Module Scolaire unique à 15 000, annuel -30 %, prix barré et économie exacts, essai 20 jours", async () => {
     await as("anon", async (q) => {
       const plans = await q("select code, monthly_price, annual_price, annual_list_price, annual_savings, annual_discount_percent::int as d, currency, trial_days from subscription_plans order by sort_order");
       assert.deepEqual(
         plans.map((p) => [p.code, p.monthly_price, p.annual_price, p.annual_list_price, p.annual_savings, p.d, p.currency, p.trial_days]),
         [
-          ["MODULE_SCOLAIRE", 15000, 126000, 180000, 54000, 30, "XOF", 14],
-          ["CENTRE_FORMATION", 15000, 126000, 180000, 54000, 30, "XOF", 14],
-          ["UNIVERSITE", 20000, 168000, 240000, 72000, 30, "XOF", 14],
-          ["ENTERPRISE", 28000, 235200, 336000, 100800, 30, "XOF", 14],
+          ["MODULE_SCOLAIRE", 15000, 126000, 180000, 54000, 30, "XOF", 20],
+          ["CENTRE_FORMATION", 15000, 126000, 180000, 54000, 30, "XOF", 20],
+          ["UNIVERSITE", 20000, 168000, 240000, 72000, 30, "XOF", 20],
+          ["ENTERPRISE", 28000, 235200, 336000, 100800, 30, "XOF", 20],
         ],
       );
       assert.match(await rejects(q("select id from subscriptions")), /permission denied/);
@@ -44,17 +44,17 @@ describe("Abonnements NéoScol", () => {
     });
   });
 
-  test("création d'un établissement : essai TRIALING de 14 jours exactement + événement", async () => {
+  test("création d'un établissement : essai TRIALING de 20 jours exactement + événement", async () => {
     await as(USERS.superadmin, async (q) => {
       const [{ id }] = await q("select public.create_organization('École Essai Test', 'ESSAI1', 'ecole-essai-test', 'primary_school') as id");
       const [s] = await q("select s.status, p.code, s.billing_interval, s.trial_end - s.trial_start as len, s.monthly_price from subscriptions s join subscription_plans p on p.id = s.plan_id where s.organization_id = $1", [id]);
       assert.equal(s.status, "TRIALING");
       assert.equal(s.code, "MODULE_SCOLAIRE", "école primaire → Module Scolaire");
-      assert.equal(s.len.days, 14);
+      assert.equal(s.len.days, 20);
       assert.equal(s.monthly_price, 15000);
       assert.equal((await q("select count(*)::int n from subscription_events where organization_id = $1 and event_type = 'trial_started'", [id]))[0].n, 1);
       const [a] = await q("select public.billing_access_state($1) a", [id]);
-      assert.equal(a.a.days_left, 14);
+      assert.equal(a.a.days_left, 20);
       assert.equal(a.a.access, "full");
     });
   });

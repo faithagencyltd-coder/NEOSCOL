@@ -44,7 +44,7 @@ function codeBase(name: string): string {
 
 /**
  * Inscription d'un établissement : compte du responsable, établissement
- * provisionné (rôles, formulaires, modèles) et essai gratuit de 14 jours.
+ * provisionné (rôles, formulaires, modèles) et essai gratuit (durée de la formule, 20 jours).
  * Aucun paiement demandé. Protections : validation stricte, champ piège
  * anti-robot, limite de tentatives par adresse IP (hachée).
  */

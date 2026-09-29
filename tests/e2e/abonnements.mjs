@@ -53,7 +53,7 @@ console.log("\n=== 1. Page publique des tarifs ===");
   check(["MODULE SCOLAIRE", "FORMATION PROFESSIONNELLE", "UNIVERSITÉ", "ENTERPRISE"].every((n) => t.toUpperCase().includes(n)), "4 formules présentées (Module Scolaire unique)");
   check(!t.toUpperCase().includes("MATERNELLE & PRIMAIRE") && !/(^|[^\d])8 000 F CFA/.test(t), "ancienne formule Maternelle & Primaire retirée de l'offre");
   check(["15 000 F CFA", "20 000 F CFA", "28 000 F CFA"].every((p) => t.includes(p)), "prix mensuels officiels");
-  check((t.match(/Essai gratuit 14 jours/g) ?? []).length === 4, "« Essai gratuit 14 jours » sur les 4 cartes");
+  check((t.match(/Essai gratuit 20 jours/g) ?? []).length === 4, "« Essai gratuit 20 jours » sur les 4 cartes");
   await shot(page, "01-tarifs-mensuel");
   await page.getByRole("radio", { name: /Annuel/ }).click();
   t = await text(page);
@@ -67,7 +67,7 @@ console.log("\n=== 1. Page publique des tarifs ===");
   await context.close();
 }
 
-console.log("\n=== 2. Inscription d'un établissement : essai 14 jours ===");
+console.log("\n=== 2. Inscription d'un établissement : essai 20 jours ===");
 const stamp = Date.now();
 const orgName = `Collège Essai ${stamp}`;
 const email = `direction.${stamp}@essai.neoscol.app`;
@@ -90,9 +90,9 @@ await shot(page, "04-inscription");
 await page.getByRole("button", { name: /Commencer mon essai gratuit/i }).click();
 await page.waitForURL(/abonnement\?bienvenue=1/, { timeout: 60000 });
 let t = await text(page);
-check(t.includes("Bienvenue sur NéoScol") && t.includes("Il vous reste 14 jours d'essai"), "essai affiché : « Il vous reste 14 jours d'essai »");
+check(t.includes("Bienvenue sur NéoScol") && t.includes("Il vous reste 20 jours d'essai"), "essai affiché : « Il vous reste 20 jours d'essai »");
 const org = await q1("select o.id, o.code, s.status, p.code plan, s.billing_interval, extract(epoch from s.trial_end - s.trial_start)/86400 as days from organizations o join subscriptions s on s.organization_id = o.id join subscription_plans p on p.id = s.plan_id join memberships m on m.organization_id = o.id join auth.users u on u.id = m.user_id where u.email = $1", [email]);
-check(org?.status === "TRIALING" && Number(org.days) === 14, "base : TRIALING, trial_end = trial_start + 14 jours");
+check(org?.status === "TRIALING" && Number(org.days) === 20, "base : TRIALING, trial_end = trial_start + 20 jours");
 check(org?.plan === "MODULE_SCOLAIRE" && org.billing_interval === "YEARLY", "base : formule et périodicité choisies à l'inscription");
 await shot(page, "05-mon-abonnement-essai");
 

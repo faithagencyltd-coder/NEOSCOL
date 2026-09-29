@@ -1,5 +1,8 @@
 import type { Tone } from "@/lib/labels";
 
+/** Durée commerciale de l'essai gratuit (la valeur appliquée est celle de la formule en base : subscription_plans.trial_days). */
+export const TRIAL_DAYS = 20;
+
 /** Libellés des abonnements NéoScol (SYSTÈME A). Les valeurs sont fixées par la base. */
 export const SUBSCRIPTION_STATUS: Record<string, { label: string; tone: Tone; description: string }> = {
   TRIALING: { label: "Essai gratuit", tone: "info", description: "Toutes les fonctionnalités de la formule sont accessibles pendant l'essai." },
