@@ -82,11 +82,11 @@ export default async function UniversityAttendancePage({ searchParams }: PagePro
                 {teachers.map((t) => (
                   <TR key={`${t.name}-${t.first_start}`}>
                     <TD className="font-medium">{t.name}</TD>
-                    <TD className="tabular-nums">{t.first_start.slice(0, 5)}</TD>
+                    <TD className="tabular-nums">{t.first_start}</TD>
                     <TD>
                       {t.arrived_at ? (
                         <span className="flex flex-wrap items-center gap-1.5 tabular-nums">
-                          {time(t.arrived_at)}
+                          {t.arrived_at}
                           {t.minutes_late ? <Badge tone="warning">Retard {t.minutes_late} min</Badge> : <Badge tone="success">Enseignant présent</Badge>}
                         </span>
                       ) : (

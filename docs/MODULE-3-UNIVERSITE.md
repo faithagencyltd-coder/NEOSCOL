@@ -61,3 +61,56 @@ de scan, entrées/sorties, emploi du temps, groupes facultatifs, évaluations et
 | Contraintes élargies (types d'évaluation, catégories de frais, types de documents) | valeurs existantes conservées |
 | Menus | entrées universitaires réservées aux universités ; entrées scolaires masquées pour elles uniquement |
 | Relevés existants de DEMOU | conservés ; le relevé universitaire est un document supplémentaire |
+
+## 5. Réalisation
+
+### Écrans (`/universite/…`, identité visuelle propre, responsive)
+
+| Écran | Rôle |
+|---|---|
+| `/universite` | Tableau de bord universitaire (effectifs, réussite, crédits, présences du jour, bloc enseignant) |
+| `/universite/structure` | Facultés, départements (facultatifs), filières, parcours / spécialités, cycles et niveaux |
+| `/universite/filieres/[id]` | Fiche filière : responsable, diplôme préparé, conditions d'admission, promotions, programme d'études |
+| `/universite/annees` | Années académiques, semestres, sessions d'examen (normale, rattrapage) — historique conservé |
+| `/universite/ue` | UE et matières (ECUE) : crédits, coefficients, volumes CM/TD/TP, types d'enseignement, affectation promotion + enseignant |
+| `/universite/enseignants`, `/universite/salles` | Grades configurables, départements, spécialités ; salles (type, capacité, équipements, disponibilité) |
+| `/universite/inscription` | Inscription administrative (frais → facture en tranches) puis inscription pédagogique automatique aux UE |
+| `/universite/badges`, `/universite/presences` | Badges étudiants (remplacement d'un badge perdu, historique) ; journal entrées / sorties, retards, sorties anticipées, scans refusés, enseignants présents |
+| `/universite/resultats` | Moyennes matière / UE / semestre, crédits, compensation, onglet Rattrapage (note initiale conservée) |
+| `/universite/deliberations` + `[id]` | Jury : décisions proposées, décisions versionnées (historique), clôture = publication, réouverture motivée, procès-verbal |
+| `/universite/stages`, `/memoires`, `/soutenances`, `/diplomes` | Stages, mémoires / thèses, soutenances (jury, note, PV), diplômes numérotés (révocation motivée) |
+| `/universite/statistiques`, `/universite/parametres` | Pilotage ; fonctionnalités facultatives et règles de calcul configurables |
+| `/universite/mes-enseignements` | Portail enseignant : matières, promotions, emploi du temps, mémoires dirigés |
+| `/eleves/[id]` (onglets) | Dossier académique permanent, inscription pédagogique, résultats et crédits, assiduité, badge |
+| `/portail/resultats`, `/portail/parcours` | Portail étudiant : SES résultats publiés et son parcours (RLS) |
+| `/pointage` | Tablette « SCANNER VOTRE BADGE » : ÉTUDIANT / ENSEIGNANT reconnus automatiquement, ENSEIGNANT PRÉSENT, sortie anticipée |
+
+### Documents (numérotés, vérifiables par QR)
+
+Relevé de notes LMD par semestre (PROVISOIRE tant que la délibération n'est pas close), procès-verbal de délibération,
+diplôme (paysage ; révoquer le diplôme révoque ses documents émis — migration `20261002002300_universite_documents.sql`),
+certificat de scolarité, attestation d'inscription, attestation de réussite, attestation de stage, carte étudiant, badge étudiant.
+Les attestations universitaires ne sont proposées qu'aux établissements d'enseignement supérieur ; les documents de formation
+professionnelle n'y apparaissent pas.
+
+### Sécurité
+
+Chaque page exige l'établissement d'enseignement supérieur, la permission et, le cas échéant, la fonctionnalité activée (sinon 404) ;
+chaque action serveur revérifie la permission ; la base applique la RLS et les règles métier. Types d'évaluation universitaires
+(contrôle continu, soutenance, rattrapage) refusés côté serveur hors enseignement supérieur. Étudiants et tablette redirigés
+vers leur écran dédié.
+
+## 6. Tests
+
+| Suite | Résultat |
+|---|---|
+| Base de données (`npm run db:test`) | 140 / 140 (dont 12 tests Université : structure, inscriptions, résultats, rattrapage, délibération, portail, mémoires, diplômes, révocation en cascade, scan, isolation) |
+| Tests unitaires | 9 / 9 |
+| E2E Université (`tests/e2e/universite.mjs`) | 111 vérifications OK — parcours étudiant, enseignant, finance, académique, séparation des modules, sécurité, mobile ; rejouable |
+| E2E Formation professionnelle | 75 OK (non-régression Module 2) |
+| E2E Module Scolaire | 51 OK (non-régression Module 1) |
+| E2E Abonnements | 40 OK |
+| E2E 12 scénarios | 49 OK |
+
+Données de démonstration universitaires déterministes (notes calculées à partir du nom de l'étudiant et de la matière) :
+7 étudiants admis, 3 autorisés au rattrapage au semestre 1.
