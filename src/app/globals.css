@@ -481,3 +481,12 @@ h2,
 
 /* Barre latérale : largeur animée entre mode complet et mode réduit. */
 .app-shell { transition: grid-template-columns var(--dur-slow) var(--ease-out); }
+
+/* Badges et cartes 3D (P5) : légère lévitation ; coupée par prefers-reduced-motion (règle globale). */
+@keyframes badge3d-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -6px; }
+}
+.badge3d-float {
+  animation: badge3d-float 6s ease-in-out infinite;
+}

@@ -15,7 +15,7 @@ export function BadgePreviewDialog({ name, children, printHref }: { name: string
           <Eye aria-hidden /> Aperçu
         </Button>
       </DialogTrigger>
-      <DialogContent title={`Badge — ${name}`} description="Aperçu au format carte (54 × 86 mm), tel qu'il sera imprimé.">
+      <DialogContent title={`Badge — ${name}`} description="Aperçu 3D au format carte (54 × 86 mm) : touchez la carte pour voir le verso.">
         <div className="flex justify-center py-2 [&>div]:max-w-[320px]">{children}</div>
         {printHref ? (
           <Button asChild>

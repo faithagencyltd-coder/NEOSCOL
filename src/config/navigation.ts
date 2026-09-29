@@ -192,7 +192,10 @@ export const NAVIGATION: NavSection[] = [
   },
   {
     label: "Compte",
-    items: [{ href: "/mon-compte", label: "Mon compte", icon: "account", anyOf: [], keywords: "profil mot de passe" }],
+    items: [
+      { href: "/mon-compte", label: "Mon compte", icon: "account", anyOf: [], keywords: "profil mot de passe" },
+      { href: "/mon-badge", label: "Mon badge", icon: "badges", anyOf: [], keywords: "badge QR pointage carte plein écran" },
+    ],
   },
 ];
 
@@ -320,7 +323,10 @@ export const UNIVERSITY_NAVIGATION: NavSection[] = [
   },
   {
     label: "Compte",
-    items: [{ href: "/mon-compte", label: "Mon compte", icon: "account", anyOf: [], keywords: "profil mot de passe" }],
+    items: [
+      { href: "/mon-compte", label: "Mon compte", icon: "account", anyOf: [], keywords: "profil mot de passe" },
+      { href: "/mon-badge", label: "Mon badge", icon: "badges", anyOf: [], keywords: "badge QR pointage carte plein écran" },
+    ],
   },
 ];
 
@@ -355,7 +361,9 @@ export const GROUP_NAVIGATION: NavSection[] = [
   },
   {
     label: "Compte",
-    items: [{ href: "/mon-compte", label: "Mon compte", icon: "account", anyOf: [], keywords: "profil mot de passe" }],
+    items: [
+      { href: "/mon-compte", label: "Mon compte", icon: "account", anyOf: [], keywords: "profil mot de passe" },
+    ],
   },
 ];
 

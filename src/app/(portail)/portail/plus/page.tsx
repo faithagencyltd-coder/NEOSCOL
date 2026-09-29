@@ -1,4 +1,4 @@
-import { BookOpen, CalendarClock, ChevronRight, FileCheck2, LogOut, Megaphone, MessagesSquare, NotebookPen, Route, UserRound, Wallet, type LucideIcon } from "lucide-react";
+import { BookOpen, CalendarClock, IdCard, ChevronRight, FileCheck2, LogOut, Megaphone, MessagesSquare, NotebookPen, Route, UserRound, Wallet, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -29,6 +29,7 @@ export default async function PortalMorePage() {
         ]
       : []),
     ...(parent ? [{ href: "/portail/emploi-du-temps", label: "Emploi du temps", icon: CalendarClock }] : []),
+    ...(parent ? [] : [{ href: "/portail/badge", label: "Mon badge (QR de pointage)", icon: IdCard }]),
     { href: "/portail/documents", label: "Documents officiels", icon: FileCheck2 },
     ...(parent ? [] : [{ href: "/portail/finances", label: "Situation financière", icon: Wallet }]),
     { href: "/portail/annonces", label: "Annonces et notifications", icon: Megaphone },

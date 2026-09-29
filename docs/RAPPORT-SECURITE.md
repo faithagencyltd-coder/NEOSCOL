@@ -82,3 +82,15 @@ Le test E2E de sécurité vérifie notamment :
 - Définir `SEND_EMAIL_HOOK_SECRET` et activer `[auth.hook.send_email]` une fois Brevo testé.
 - Activer Turnstile (Intégrations), puis la double authentification obligatoire (Sécurité) une fois les responsables équipés.
 - Les limites de débit natives de Supabase Auth (`[auth.rate_limit]`) protègent aussi les appels directs à l'API d'authentification.
+
+## 10. « Mon badge » : QR code tournant (P5)
+
+- Le téléphone affiche `NEOSCOL-DYN:<S|E>:<badge>:<fenêtre>:<signature>`, renouvelé toutes les 30 secondes.
+  La signature (HMAC-SHA256) est calculée en base avec le jeton secret du badge, qui n'est **jamais envoyé** au téléphone.
+- La tablette vérifie la signature, une fenêtre de ±1 minute et un badge actif.
+  Chaque code est **à usage unique** : une capture d'écran réutilisée est refusée.
+  Le pointage existant s'applique ensuite sans aucune modification de ses règles.
+- Le badge imprimé (QR fixe) reste valable. Un badge désactivé rend tous ses codes invalides.
+- Pas de badge pour une session non vérifiée par la double authentification.
+- Les fonctions internes (`scan_*_core`, `app.resolve_badge_code`) ne sont pas appelables depuis le navigateur.
+- Tests : `tests/db/badges-dynamiques.test.mjs` (4) et `tests/e2e/mon-badge.mjs` (12).

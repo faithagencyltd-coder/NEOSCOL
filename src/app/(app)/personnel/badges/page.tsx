@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { getBranding } from "@/features/report-cards/queries";
 import { issueBadge } from "@/features/staff/actions";
 import { BadgeCard, type BadgeCardData } from "@/features/staff/components/badge-card";
+import { Badge3D } from "@/components/shared/badge-3d";
 import { BadgePreviewDialog } from "@/features/staff/components/badge-preview-dialog";
 import { requirePermission } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
@@ -71,7 +72,7 @@ export default async function StaffBadgesPage({ searchParams }: PageProps<"/pers
         qr: manage && badge?.token ? await qrDataUrl(`NEOSCOL-BADGE:${badge.token}`, "#0B1F3A") : null,
         isTeacher: s.is_teacher,
       };
-      return { id: s.id, data, hasBadge: Boolean(badge) };
+      return { id: s.id, data, hasBadge: Boolean(badge), first: s.first_name, last: s.last_name };
     }),
   );
   const withBadge = cards.filter((c) => c.hasBadge).length;
@@ -114,7 +115,29 @@ export default async function StaffBadgesPage({ searchParams }: PageProps<"/pers
               <BadgeCard data={card.data} className="transition-transform duration-300 hover:-translate-y-1 hover:rotate-[-1deg]" />
               <div className="flex flex-wrap justify-center gap-2">
                 <BadgePreviewDialog name={card.data.name} printHref={manage && card.hasBadge ? `/api/documents/badges/${card.id}` : undefined}>
-                  <BadgeCard data={card.data} />
+                  <Badge3D
+                    data={{
+                      role: card.data.isTeacher ? "ENSEIGNANT" : "PERSONNEL",
+                      first_name: card.first,
+                      last_name: card.last,
+                      subtitle: card.data.jobTitle,
+                      identifier: card.data.employeeNumber,
+                      number: card.data.badgeNumber ?? "Badge non émis",
+                      organization: { name: card.data.organization, color: branding?.primary_color ?? null, is_demo: context.organization.is_demo },
+                      photoUrl: card.data.photoId ? `/api/fichiers/${card.data.photoId}` : null,
+                    }}
+                    back={
+                      card.data.qr ? (
+                        <>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={card.data.qr} alt="QR code du badge imprimé" className="w-[78%] rounded-xl" />
+                          <p className="text-[11px] text-slate-500">QR fixe du badge imprimé · pointage uniquement</p>
+                        </>
+                      ) : (
+                        <p className="text-sm text-slate-500">{card.hasBadge ? "QR code visible par la gestion des badges uniquement." : "Badge non encore généré."}</p>
+                      )
+                    }
+                  />
                 </BadgePreviewDialog>
                 {manage && !card.hasBadge ? (
                   <ConfirmAction

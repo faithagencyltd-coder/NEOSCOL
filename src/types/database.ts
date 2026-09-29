@@ -672,6 +672,26 @@ export type Database = {
           
         ]
       }
+      badge_dynamic_uses: {
+        Row: {
+          badge_id: string
+          time_window: number
+          used_at: string
+        }
+        Insert: {
+          badge_id: string
+          time_window: number
+          used_at?: string
+        }
+        Update: {
+          badge_id?: string
+          time_window?: number
+          used_at?: string
+        }
+        Relationships: [
+          
+        ]
+      }
       badge_scans: {
         Row: {
           badge_id: string | null
@@ -7726,6 +7746,12 @@ export type Database = {
         }
         Returns: Json
       }
+      my_badge: {
+        Args: {
+          p_org: string
+        }
+        Returns: Json
+      }
       my_class_ids: {
         Args: {
           p_organization_id: string
@@ -8109,7 +8135,24 @@ export type Database = {
         }
         Returns: Json
       }
+      scan_badge_core: {
+        Args: {
+          p_organization_id: string
+          p_code: string
+          p_device?: string
+          p_room_id?: string
+        }
+        Returns: Json
+      }
       scan_staff_badge: {
+        Args: {
+          p_organization_id: string
+          p_code: string
+          p_device?: string
+        }
+        Returns: Json
+      }
+      scan_staff_badge_core: {
         Args: {
           p_organization_id: string
           p_code: string
