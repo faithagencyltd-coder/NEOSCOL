@@ -2,7 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 
-const person = (p: { first_name: string; last_name: string } | null | undefined) => (p ? `${p.first_name} ${p.last_name}` : null);
+const person = (p: { first_name: string | null; last_name: string | null } | null | undefined) => (p ? [p.first_name, p.last_name].filter(Boolean).join(" ") || null : null);
 export { person };
 
 /** Référentiel de structure : facultés, départements, filières, parcours, cycles, niveaux. */
@@ -215,7 +215,7 @@ export async function defensesList(organizationId: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("defenses")
-    .select("id, student_id, thesis_id, title, scheduled_at, status, grade, mention, decision, jury, minutes, room:rooms(name), student:students(matricule, first_name, last_name)")
+    .select("id, student_id, thesis_id, room_id, title, scheduled_at, status, grade, mention, decision, jury, minutes, room:rooms(name), student:students(matricule, first_name, last_name)")
     .eq("organization_id", organizationId)
     .order("scheduled_at", { ascending: true });
   return data ?? [];

@@ -57,6 +57,27 @@ export const ASSESSMENT_KINDS = {
   other: "Autre",
 } as const;
 
+/** Types d'évaluation de l'enseignement supérieur (contrôle continu, examen, TP, projet, oral, soutenance, rattrapage). */
+export const UNIVERSITY_ASSESSMENT_KINDS = {
+  continuous: "Contrôle continu",
+  test: "Devoir surveillé",
+  exam: "Examen",
+  practical: "Travaux pratiques",
+  project: "Projet",
+  oral: "Oral",
+  defense: "Soutenance",
+  retake: "Rattrapage",
+  other: "Autre",
+} as const;
+
+/** Libellés des types d'évaluation selon le type d'établissement. */
+export function assessmentKinds(higher: boolean): Record<string, string> {
+  return higher ? UNIVERSITY_ASSESSMENT_KINDS : ASSESSMENT_KINDS;
+}
+export function assessmentKindLabel(kind: string, higher = false): string {
+  return assessmentKinds(higher)[kind] ?? (UNIVERSITY_ASSESSMENT_KINDS as Record<string, string>)[kind] ?? kind;
+}
+
 export function options(record: Record<string, string>) {
   return Object.entries(record).map(([value, label]) => ({ value, label }));
 }

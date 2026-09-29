@@ -161,10 +161,34 @@ export type InvoiceSnapshot = {
 };
 
 /** Documents rédigés à partir d'un modèle de texte (Document Studio). */
-export const TEXT_DOCUMENT_KINDS = ["school_certificate", "attestation", "training_certificate", "training_attestation", "convocation", "contract", "custom"] as const;
+export const TEXT_DOCUMENT_KINDS = [
+  "school_certificate",
+  "attestation",
+  "training_certificate",
+  "training_attestation",
+  "enrollment_certificate",
+  "success_certificate",
+  "internship_certificate",
+  "convocation",
+  "contract",
+  "custom",
+] as const;
 export type TextDocumentKind = (typeof TEXT_DOCUMENT_KINDS)[number];
 /** Documents propres au Module Formation professionnelle (masqués pour les autres établissements). */
 export const TRAINING_ONLY_DOCUMENT_KINDS: readonly TextDocumentKind[] = ["training_attestation"];
+/** Documents propres au Module Université (masqués pour les autres établissements). */
+export const UNIVERSITY_ONLY_DOCUMENT_KINDS: readonly TextDocumentKind[] = ["enrollment_certificate", "success_certificate", "internship_certificate"];
+
+/** Documents rédigés proposés selon le type d'établissement (séparation des modules). */
+export function availableTextKinds(family: { training?: boolean; university?: boolean }): TextDocumentKind[] {
+  return TEXT_DOCUMENT_KINDS.filter((k) => {
+    if (k === "custom") return false;
+    if (TRAINING_ONLY_DOCUMENT_KINDS.includes(k)) return Boolean(family.training);
+    if (UNIVERSITY_ONLY_DOCUMENT_KINDS.includes(k)) return Boolean(family.university);
+    if (k === "training_certificate") return !family.university;
+    return true;
+  });
+}
 
 export type CertificateSnapshot = {
   kind: TextDocumentKind;
@@ -264,7 +288,79 @@ export type CompetencySheetSnapshot = {
   internships: { company: string; starts_on: string; ends_on: string; status: string; score: number | null }[];
 };
 
+/** Université : relevé de notes LMD d'un semestre (UE, matières, crédits, session, décision). */
+export type UniversityTranscriptSnapshot = {
+  kind: "university_transcript";
+  organization: DocOrganization;
+  student: DocStudent;
+  program: string | null;
+  degree: string | null;
+  level: string | null;
+  track: string | null;
+  year: string | null;
+  period: string;
+  pass_mark: number;
+  units: {
+    code: string;
+    name: string;
+    credits: number;
+    credits_earned: number;
+    session1: number | null;
+    retake: number | null;
+    average: number | null;
+    status: string;
+    subjects: { name: string; coefficient: number; session1: number | null; retake: number | null; average: number | null }[];
+  }[];
+  average: number | null;
+  credits_earned: number;
+  credits_total: number;
+  validated: boolean;
+  compensated: boolean;
+  rank: number | null;
+  population: number | null;
+  decision: string | null;
+};
+
+/** Université : procès-verbal de délibération du jury. */
+export type DeliberationMinutesSnapshot = {
+  kind: "deliberation_minutes";
+  organization: DocOrganization;
+  student: null;
+  title: string;
+  promotion: string;
+  program: string | null;
+  level: string | null;
+  period: string | null;
+  session: "normal" | "retake";
+  held_on: string | null;
+  president: string | null;
+  members: string | null;
+  status: string;
+  closed_at: string | null;
+  rows: { matricule: string; name: string; average: number | null; credits_earned: number | null; credits_total: number | null; decision: string | null; jury_credits: boolean }[];
+};
+
+/** Université : diplôme délivré (numéro, intitulé, mention). */
+export type DiplomaSnapshot = {
+  kind: "diploma";
+  organization: DocOrganization;
+  student: DocStudent;
+  title: string;
+  diploma_kind: string;
+  number: string | null;
+  program: string | null;
+  level: string | null;
+  year: string | null;
+  mention: string | null;
+  conferred_on: string | null;
+  issued_on: string | null;
+  status: string;
+};
+
 export type DocumentSnapshot =
+  | UniversityTranscriptSnapshot
+  | DeliberationMinutesSnapshot
+  | DiplomaSnapshot
   | TrainingTranscriptSnapshot
   | CompetencySheetSnapshot
   | ReportCardSnapshot
@@ -293,6 +389,12 @@ export const DOCUMENT_KIND_LABELS: Record<string, string> = {
   attestation: "Attestation",
   training_certificate: "Certificat de formation",
   training_attestation: "Attestation de formation",
+  enrollment_certificate: "Attestation d'inscription",
+  success_certificate: "Attestation de réussite",
+  internship_certificate: "Attestation de stage",
+  university_transcript: "Relevé de notes (LMD)",
+  deliberation_minutes: "Procès-verbal de délibération",
+  diploma: "Diplôme",
   training_transcript: "Relevé de notes de formation",
   competency_sheet: "Fiche de compétences",
   convocation: "Convocation",

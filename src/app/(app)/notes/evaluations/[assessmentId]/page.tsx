@@ -13,7 +13,7 @@ import { GradeSheet } from "@/features/grades/components/grade-sheet";
 import { getAssessmentSheet } from "@/features/grades/queries";
 import { requireOrganization } from "@/lib/auth/guards";
 import { can, canAny } from "@/lib/auth/session";
-import { ASSESSMENT_KINDS } from "@/lib/labels";
+import { assessmentKindLabel } from "@/lib/labels";
 import { formatDate } from "@/lib/utils/format";
 import { isUuid } from "@/lib/utils/search-params";
 
@@ -62,7 +62,7 @@ export default async function AssessmentPage({ params }: PageProps<"/notes/evalu
             )}
           </div>
           <p className="text-sm text-muted-foreground">
-            {ASSESSMENT_KINDS[assessment.kind as keyof typeof ASSESSMENT_KINDS] ?? assessment.kind} ·{" "}
+            {assessmentKindLabel(assessment.kind)} ·{" "}
             {formatDate(assessment.assessed_on, "fr-FR", { dateStyle: "long" })} · coefficient {assessment.coefficient} · noté sur{" "}
             {assessment.max_score} · {assessment.period?.name}
           </p>

@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { LockedFeature } from "@/features/portal/components/locked-feature";
 import { requirePortal } from "@/features/portal/context";
 import { getStudentGrades, getStudentReportCards } from "@/features/portal/queries";
-import { ASSESSMENT_KINDS } from "@/lib/labels";
+import { assessmentKindLabel } from "@/lib/labels";
 import { formatDate, formatNumber } from "@/lib/utils/format";
 import { param } from "@/lib/utils/search-params";
 
@@ -105,7 +105,7 @@ async function GradesList({ organizationId, studentId }: { organizationId: strin
                             <span className="grid min-w-0 flex-1">
                               <span className="truncate font-medium">{g.assessment.title}</span>
                               <span className="text-xs text-muted-foreground">
-                                {ASSESSMENT_KINDS[g.assessment.kind as keyof typeof ASSESSMENT_KINDS] ?? g.assessment.kind}
+                                {assessmentKindLabel(g.assessment.kind)}
                                 {g.assessment.assessed_on ? ` · ${formatDate(g.assessment.assessed_on)}` : ""} · coef. {formatNumber(Number(g.assessment.coefficient))}
                               </span>
                               {g.comment ? <span className="text-xs text-muted-foreground">« {g.comment} »</span> : null}

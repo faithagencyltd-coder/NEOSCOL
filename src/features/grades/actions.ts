@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { authorize } from "@/lib/auth/authorize";
-import { ASSESSMENT_KINDS } from "@/lib/labels";
+import { isHigherOrg } from "@/features/university/config";
+import { ASSESSMENT_KINDS, UNIVERSITY_ASSESSMENT_KINDS } from "@/lib/labels";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/utils/action-result";
 import { dbErrorMessage } from "@/lib/utils/db-error";
@@ -16,7 +17,7 @@ const assessmentSchema = z.object({
   class_subject_id: z.string().refine(isUuid, { error: "Matière invalide." }),
   academic_period_id: z.string({ error: "Choisissez la période." }).refine(isUuid, { error: "Choisissez la période." }),
   title: z.string({ error: "Titre requis." }).trim().min(1, { error: "Titre requis." }).max(120),
-  kind: z.enum(Object.keys(ASSESSMENT_KINDS) as [keyof typeof ASSESSMENT_KINDS], { error: "Type invalide." }),
+  kind: z.enum([...new Set([...Object.keys(ASSESSMENT_KINDS), ...Object.keys(UNIVERSITY_ASSESSMENT_KINDS)])] as [string, ...string[]], { error: "Type invalide." }),
   assessed_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { error: "Date invalide." }),
   coefficient: z.coerce.number().positive({ error: "Coefficient positif." }).max(100),
   max_score: z.coerce.number().positive({ error: "Barème positif." }).max(1000),
@@ -31,6 +32,11 @@ export async function createAssessment(_: ActionResult | null, formData: FormDat
   );
   if (!parsed.success) {
     return { ok: false, message: parsed.error.issues[0]?.message ?? "Champs invalides.", fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  }
+  // Contrôle continu, soutenance et rattrapage : réservés à l'enseignement supérieur.
+  const higher = isHigherOrg(auth.context.organization.type);
+  if (!(parsed.data.kind in (higher ? UNIVERSITY_ASSESSMENT_KINDS : ASSESSMENT_KINDS))) {
+    return { ok: false, message: "Type d'évaluation non disponible pour cet établissement.", fieldErrors: { kind: ["Type invalide."] } };
   }
   const supabase = await createClient();
   const { data: classSubject } = await supabase

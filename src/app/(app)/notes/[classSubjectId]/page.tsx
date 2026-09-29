@@ -16,7 +16,8 @@ import { getGradeBook, gradeStats } from "@/features/grades/queries";
 import { todayIn } from "@/lib/dates";
 import { requireOrganization } from "@/lib/auth/guards";
 import { canAny } from "@/lib/auth/session";
-import { ASSESSMENT_KINDS, options } from "@/lib/labels";
+import { isHigherOrg } from "@/features/university/config";
+import { assessmentKindLabel, assessmentKinds, options } from "@/lib/labels";
 import { getReportColumns } from "@/features/report-cards/queries";
 import { formatDate } from "@/lib/utils/format";
 import { isUuid, param } from "@/lib/utils/search-params";
@@ -46,6 +47,7 @@ export default async function GradeBookPage({ params, searchParams }: PageProps<
     .filter((a) => a.academic_period_id === current?.id)
     .sort((a, b) => (a.assessed_on < b.assessed_on ? 1 : -1));
   const title = `${book.subject?.name ?? "Matière"} · ${book.class.name}`;
+  const higher = isHigherOrg(context.organization.type);
 
   return (
     <div className="grid gap-5">
@@ -72,17 +74,22 @@ export default async function GradeBookPage({ params, searchParams }: PageProps<
             hidden={{ class_subject_id: book.id, academic_period_id: current.id }}
             fields={[
               { name: "title", label: "Intitulé", required: true, placeholder: "Devoir surveillé n°2", wide: true },
-              { name: "kind", label: "Type", type: "select", required: true, options: options(ASSESSMENT_KINDS), defaultValue: "test" },
+              { name: "kind", label: "Type", type: "select", required: true, options: options(assessmentKinds(higher)), defaultValue: higher ? "continuous" : "test" },
               { name: "assessed_on", label: "Date", type: "date", required: true, defaultValue: today },
               { name: "coefficient", label: "Coefficient", type: "number", required: true, min: 0.5, step: "0.5", defaultValue: "1" },
               { name: "max_score", label: "Noté sur", type: "number", required: true, min: 1, defaultValue: "20" },
-              {
-                name: "column_key",
-                label: "Colonne du bulletin",
-                type: "select",
-                options: columns.map((c) => ({ value: c.key, label: c.label })),
-                hint: "Vide : placée automatiquement selon le type (1re interrogation → INTERRO 1…).",
-              },
+              // Colonnes du bulletin : Module Scolaire uniquement.
+              ...(higher
+                ? []
+                : [
+                    {
+                      name: "column_key",
+                      label: "Colonne du bulletin",
+                      type: "select" as const,
+                      options: columns.map((c) => ({ value: c.key, label: c.label })),
+                      hint: "Vide : placée automatiquement selon le type (1re interrogation → INTERRO 1…).",
+                    },
+                  ]),
             ]}
           />
         ) : null}
@@ -136,7 +143,7 @@ export default async function GradeBookPage({ params, searchParams }: PageProps<
                         <TD>
                           <Link href={`/notes/evaluations/${a.id}`} className="grid font-semibold hover:text-primary">
                             {a.title}
-                            <span className="text-xs font-normal text-muted-foreground">{ASSESSMENT_KINDS[a.kind as keyof typeof ASSESSMENT_KINDS] ?? a.kind}</span>
+                            <span className="text-xs font-normal text-muted-foreground">{assessmentKindLabel(a.kind, higher)}</span>
                           </Link>
                         </TD>
                         <TD className="text-muted-foreground">{formatDate(a.assessed_on, "fr-FR", { dateStyle: "short" })}</TD>
