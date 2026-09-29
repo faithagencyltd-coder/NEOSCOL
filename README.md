@@ -228,3 +228,20 @@ Pour l'installer, ouvrir la console dans Chrome ou Edge sur l'ordinateur, puis c
 Le manifeste propre est servi par `src/app/console.webmanifest/route.ts` (`id` et portée `/plateforme`).
 
 Une alerte s'affiche tant que la double authentification n'est pas activée. Le centre de sécurité permet de la rendre obligatoire.
+
+## Pays, devises et moteur académique (P7)
+
+- **Pays et devises**. Ils sont gérés dans la console (`/plateforme/pays`) et enregistrés en base (`countries`, `currencies`).
+  - Chaque pays définit : ISO, indicatif, devise principale et devises acceptées, langues, fuseau, format de téléphone et de date, barème, périodes, libellé de l'identifiant national.
+  - Un nouvel établissement hérite de la devise, du fuseau et de la langue de son pays.
+  - L'inscription lit la liste en base : ajouter un pays ne demande aucune modification du code.
+- **Moteur académique**. Migration : `20261007003000_moteur_academique.sql`.
+  - **Règles versionnées** dans cet ordre : modèle de la plateforme (`/plateforme/regles`), puis modèle du pays, puis règles de l'établissement (`/parametres/regles-academiques`).
+  - **Cycle de vie** : brouillon, puis publication. Republier une ancienne version revient en arrière (action auditée).
+  - **Moyenne annuelle** : pondération des périodes, ou formule sûre validée et évaluée en base (T1…T8, `+ - * / ( )`, `min`, `max`, `round`, `abs`). Tout autre élément est refusé.
+  - **Décisions et mentions** par seuils.
+  - **Essai en direct**, et **simulateur** sur une classe réelle (rien n'est enregistré).
+  - **Résultats annuels** (`/resultats-annuels`) :
+    - calcul, puis rang ;
+    - décision du conseil, avec motif obligatoire si elle diffère de la proposition ;
+    - validation, qui fige les résultats avec la version et une copie des règles (résultats reproductibles).

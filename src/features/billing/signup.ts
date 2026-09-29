@@ -104,6 +104,8 @@ export async function signUpOrganization(_: ActionResult | null, formData: FormD
   }
   const admin = createAdminClient();
   if (!admin) return { ok: false, message: "Inscription momentanément indisponible (configuration serveur)." };
+  const { data: country } = await admin.from("countries").select("code").eq("code", parsed.data.country).eq("is_active", true).maybeSingle();
+  if (!country) return { ok: false, message: "Pays non disponible.", fieldErrors: { country: ["Choisissez un pays de la liste."] } };
   // Anti-robot : vérifié côté serveur dès que Turnstile est actif sur la plateforme.
   const captcha = await verifyTurnstileToken(String(formData.get("cf-turnstile-response") ?? "") || null, await clientIp());
   if (!captcha.ok) return { ok: false, message: "Confirmez que vous n'êtes pas un robot, puis réessayez.", fieldErrors: { captcha: ["Vérification anti-robot requise."] } };

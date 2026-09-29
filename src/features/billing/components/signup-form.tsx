@@ -38,10 +38,8 @@ const TYPES: [string, string, string][] = [
   ["school_group", "Plusieurs activités : école, formation, université (Module 4)", "MULTI_MODULES"],
 ];
 
-const COUNTRIES: [string, string][] = [
-  ["BJ", "Bénin"], ["CI", "Côte d'Ivoire"], ["SN", "Sénégal"], ["TG", "Togo"], ["BF", "Burkina Faso"], ["ML", "Mali"],
-  ["NE", "Niger"], ["GN", "Guinée"], ["CM", "Cameroun"], ["GA", "Gabon"], ["CG", "Congo"], ["CD", "RD Congo"],
-];
+/** Liste de secours si la liste des pays (gérée par le Super Admin) est indisponible. */
+const FALLBACK_COUNTRIES: [string, string][] = [["BJ", "Bénin"], ["CI", "Côte d'Ivoire"]];
 
 const NON_SCHOOL_TYPES = ["university", "institute", "vocational_center", "technical_center"];
 /** Niveaux proposés selon le type (même règle que app.default_school_levels). */
@@ -59,8 +57,11 @@ export function SignupForm({
   initialInterval,
   initialComponents = [],
   captcha = null,
+  countries = FALLBACK_COUNTRIES,
 }: {
   captcha?: CaptchaConfig;
+  /** Pays actifs (table countries, gérée par le Super Admin). */
+  countries?: [string, string][];
   plans: PlanWithFeatures[];
   initialPlan?: string;
   initialInterval: Interval;
@@ -126,7 +127,7 @@ export function SignupForm({
           </FormField>
           <FormField id="country" label="Pays *" errors={errors.country}>
             <Select id="country" name="country" defaultValue="BJ">
-              {COUNTRIES.map(([value, label]) => (
+              {countries.map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
                 </option>

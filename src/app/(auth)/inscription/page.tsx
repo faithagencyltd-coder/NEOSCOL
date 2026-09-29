@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { SignupForm } from "@/features/billing/components/signup-form";
 import { turnstileSettings } from "@/lib/messaging/server";
+import { createClient } from "@/lib/supabase/server";
 import { listPlans } from "@/features/billing/queries";
 import { MODULE4_COMPONENTS, TRIAL_DAYS } from "@/features/billing/constants";
 
@@ -15,6 +16,10 @@ export default async function SignupPage({ searchParams }: PageProps<"/inscripti
   const interval = params.periodicite === "YEARLY" ? "YEARLY" : "MONTHLY";
   const requested = typeof params.composantes === "string" ? params.composantes.split(",") : [];
   const components = MODULE4_COMPONENTS.map((c) => c.key).filter((k) => requested.includes(k));
+  // Pays actifs, gérés par le Super Admin (aucune liste codée en dur).
+  const supabase = await createClient();
+  const { data: countryRows } = await supabase.from("countries").select("code, name").eq("is_active", true).order("sort_order").order("name");
+  const countries = (countryRows ?? []).map((c) => [c.code, c.name] as [string, string]);
   return (
     <div className="grid gap-6">
       <div className="anim-fade-up grid gap-1.5">
@@ -24,7 +29,7 @@ export default async function SignupPage({ searchParams }: PageProps<"/inscripti
         </h1>
         <p className="text-sm text-muted-foreground">Toutes les fonctionnalités de votre formule, sans paiement pendant {TRIAL_DAYS} jours.</p>
       </div>
-      <SignupForm plans={plans} initialPlan={formule} initialInterval={interval} initialComponents={components} captcha={await turnstileSettings()} />
+      <SignupForm plans={plans} initialPlan={formule} initialInterval={interval} initialComponents={components} captcha={await turnstileSettings()} countries={countries.length ? countries : undefined} />
     </div>
   );
 }

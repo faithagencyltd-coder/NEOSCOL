@@ -208,6 +208,79 @@ export type Database = {
           }
         ]
       }
+      academic_rule_sets: {
+        Row: {
+          based_on_id: string | null
+          country_code: string | null
+          created_at: string
+          created_by: string | null
+          education_type: string
+          id: string
+          name: string
+          notes: string | null
+          organization_id: string | null
+          published_at: string | null
+          published_by: string | null
+          rules: Json
+          status: string
+          version: number
+        }
+        Insert: {
+          based_on_id?: string | null
+          country_code?: string | null
+          created_at?: string
+          created_by?: string | null
+          education_type?: string
+          id?: string
+          name: string
+          notes?: string | null
+          organization_id?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          rules: Json
+          status?: string
+          version: number
+        }
+        Update: {
+          based_on_id?: string | null
+          country_code?: string | null
+          created_at?: string
+          created_by?: string | null
+          education_type?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          organization_id?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          rules?: Json
+          status?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academic_rule_sets_based_on_id_fkey"
+            columns: ["based_on_id"]
+            isOneToOne: false
+            referencedRelation: "academic_rule_sets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "academic_rule_sets_country_code_fkey"
+            columns: ["country_code"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "academic_rule_sets_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       academic_years: {
         Row: {
           created_at: string
@@ -314,6 +387,114 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      annual_results: {
+        Row: {
+          academic_year_id: string
+          average: number | null
+          class_id: string
+          computed_at: string
+          decision_code: string | null
+          decision_label: string | null
+          decision_reason: string | null
+          id: string
+          inputs: Json
+          mention: string | null
+          organization_id: string
+          proposed_code: string | null
+          proposed_label: string | null
+          rank: number | null
+          rule_set_id: string | null
+          rule_version: number
+          rules_snapshot: Json
+          status: string
+          student_id: string
+          validated_at: string | null
+          validated_by: string | null
+        }
+        Insert: {
+          academic_year_id: string
+          average?: number | null
+          class_id: string
+          computed_at?: string
+          decision_code?: string | null
+          decision_label?: string | null
+          decision_reason?: string | null
+          id?: string
+          inputs: Json
+          mention?: string | null
+          organization_id: string
+          proposed_code?: string | null
+          proposed_label?: string | null
+          rank?: number | null
+          rule_set_id?: string | null
+          rule_version?: number
+          rules_snapshot: Json
+          status?: string
+          student_id: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          academic_year_id?: string
+          average?: number | null
+          class_id?: string
+          computed_at?: string
+          decision_code?: string | null
+          decision_label?: string | null
+          decision_reason?: string | null
+          id?: string
+          inputs?: Json
+          mention?: string | null
+          organization_id?: string
+          proposed_code?: string | null
+          proposed_label?: string | null
+          rank?: number | null
+          rule_set_id?: string | null
+          rule_version?: number
+          rules_snapshot?: Json
+          status?: string
+          student_id?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "annual_results_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "annual_results_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "annual_results_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "annual_results_rule_set_id_fkey"
+            columns: ["rule_set_id"]
+            isOneToOne: false
+            referencedRelation: "academic_rule_sets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "annual_results_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           }
         ]
@@ -1017,6 +1198,71 @@ export type Database = {
           }
         ]
       }
+      countries: {
+        Row: {
+          code: string
+          currencies: string[]
+          date_format: string
+          default_currency: string
+          default_language: string
+          dial_code: string
+          is_active: boolean
+          languages: string[]
+          name: string
+          name_en: string | null
+          phone_pattern: string
+          settings: Json
+          sort_order: number
+          timezone: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          code: string
+          currencies?: string[]
+          date_format?: string
+          default_currency: string
+          default_language?: string
+          dial_code: string
+          is_active?: boolean
+          languages?: string[]
+          name: string
+          name_en?: string | null
+          phone_pattern?: string
+          settings?: Json
+          sort_order?: number
+          timezone?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          code?: string
+          currencies?: string[]
+          date_format?: string
+          default_currency?: string
+          default_language?: string
+          dial_code?: string
+          is_active?: boolean
+          languages?: string[]
+          name?: string
+          name_en?: string | null
+          phone_pattern?: string
+          settings?: Json
+          sort_order?: number
+          timezone?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "countries_default_currency_fkey"
+            columns: ["default_currency"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["code"]
+          }
+        ]
+      }
       course_registrations: {
         Row: {
           academic_period_id: string
@@ -1100,6 +1346,35 @@ export type Database = {
             referencedRelation: "teaching_units"
             referencedColumns: ["organization_id", "id"]
           }
+        ]
+      }
+      currencies: {
+        Row: {
+          code: string
+          decimals: number
+          is_active: boolean
+          name: string
+          symbol: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          decimals?: number
+          is_active?: boolean
+          name: string
+          symbol: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          decimals?: number
+          is_active?: boolean
+          name?: string
+          symbol?: string
+          updated_at?: string
+        }
+        Relationships: [
+          
         ]
       }
       defenses: {
@@ -3951,6 +4226,20 @@ export type Database = {
           website?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "organizations_country_fkey"
+            columns: ["country"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "organizations_currency_fkey"
+            columns: ["currency"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["code"]
+          },
           {
             foreignKeyName: "organizations_parent_id_fkey"
             columns: ["parent_id"]
@@ -7321,6 +7610,13 @@ export type Database = {
         }
         Returns: string
       }
+      adopt_academic_template: {
+        Args: {
+          p_org: string
+          p_template: string
+        }
+        Returns: string
+      }
       billing_access_state: {
         Args: {
           p_org: string
@@ -7404,6 +7700,12 @@ export type Database = {
         }
         Returns: undefined
       }
+      compute_annual_results: {
+        Args: {
+          p_class_id: string
+        }
+        Returns: number
+      }
       compute_report_cards: {
         Args: {
           p_class_id: string
@@ -7476,6 +7778,12 @@ export type Database = {
         }
         Returns: Json
       }
+      delete_academic_rule_draft: {
+        Args: {
+          p_id: string
+        }
+        Returns: undefined
+      }
       delete_staff_member: {
         Args: {
           p_staff_id: string
@@ -7524,6 +7832,12 @@ export type Database = {
           p_reason: string
         }
         Returns: undefined
+      }
+      effective_academic_rules: {
+        Args: {
+          p_org: string
+        }
+        Returns: Json
       }
       email_verification_state: {
         Args: {
@@ -7852,6 +8166,14 @@ export type Database = {
         Args: never
         Returns: Json
       }
+      platform_country_overview: {
+        Args: never
+        Returns: {
+          code: string
+          organizations: number
+          active_subscriptions: number
+        }[]
+      }
       platform_issue_invoice: {
         Args: {
           p_org: string
@@ -7986,6 +8308,22 @@ export type Database = {
         }
         Returns: undefined
       }
+      platform_upsert_country: {
+        Args: {
+          p_country: Json
+        }
+        Returns: string
+      }
+      platform_upsert_currency: {
+        Args: {
+          p_code: string
+          p_name: string
+          p_symbol: string
+          p_decimals: number
+          p_active: boolean
+        }
+        Returns: undefined
+      }
       platform_upsert_whatsapp_template: {
         Args: {
           p_name: string
@@ -8073,6 +8411,12 @@ export type Database = {
           data: Json
         }[]
       }
+      publish_academic_rule_set: {
+        Args: {
+          p_id: string
+        }
+        Returns: undefined
+      }
       record_attendance: {
         Args: {
           p_class_id: string
@@ -8118,6 +8462,18 @@ export type Database = {
           p_session: string
         }
         Returns: undefined
+      }
+      save_academic_rule_draft: {
+        Args: {
+          p_org: string
+          p_country: string
+          p_education_type: string
+          p_name: string
+          p_rules: Json
+          p_notes?: string
+          p_based_on?: string
+        }
+        Returns: string
       }
       save_grades: {
         Args: {
@@ -8172,6 +8528,14 @@ export type Database = {
         }
         Returns: Json
       }
+      set_annual_decision: {
+        Args: {
+          p_result: string
+          p_code: string
+          p_reason: string
+        }
+        Returns: undefined
+      }
       set_portal_account_status: {
         Args: {
           p_kind: string
@@ -8223,6 +8587,19 @@ export type Database = {
           p_interval: string
         }
         Returns: Json
+      }
+      simulate_academic_rules: {
+        Args: {
+          p_class_id: string
+          p_rules: Json
+        }
+        Returns: {
+          student_id: string
+          student_name: string
+          inputs: Json
+          current_result: Json
+          simulated_result: Json
+        }[]
       }
       start_thread: {
         Args: {
@@ -8286,6 +8663,13 @@ export type Database = {
         }
         Returns: Json
       }
+      try_academic_rules: {
+        Args: {
+          p_rules: Json
+          p_values: number[]
+        }
+        Returns: Json
+      }
       university_statistics: {
         Args: {
           p_organization_id: string
@@ -8301,6 +8685,12 @@ export type Database = {
           p_reason: string
         }
         Returns: string
+      }
+      validate_annual_results: {
+        Args: {
+          p_class_id: string
+        }
+        Returns: number
       }
       validate_attendance_session: {
         Args: {

@@ -64,8 +64,8 @@ export default async function PlatformSecurityPage() {
               { name: "lockout_threshold", label: "Verrouillage après (échecs)", type: "number", required: true, min: 3, max: 50, defaultValue: String(settings?.lockout_threshold ?? 5) },
               { name: "lockout_minutes", label: "Durée du verrouillage (minutes)", type: "number", required: true, min: 1, max: 1440, defaultValue: String(settings?.lockout_minutes ?? 15) },
               { name: "captcha_after", label: "Anti-robot après (échecs)", type: "number", required: true, min: 1, max: 50, defaultValue: String(settings?.captcha_after_failures ?? 3) },
-              { name: "mfa_required", label: "Double authentification obligatoire (Super Admin, direction, comptabilité)", type: "checkbox", wide: true, defaultValue: settings?.mfa_required_sensitive ? "on" : "" },
-              { name: "email_verification", label: "Vérifier l'adresse e-mail des nouveaux établissements", type: "checkbox", wide: true, defaultValue: settings?.email_verification_required ? "on" : "" },
+              { name: "mfa_required", label: "Double authentification obligatoire (Super Admin, direction, comptabilité)", type: "checkbox", wide: true, defaultValue: settings?.mfa_required_sensitive ? "true" : "false" },
+              { name: "email_verification", label: "Vérifier l'adresse e-mail des nouveaux établissements", type: "checkbox", wide: true, defaultValue: settings?.email_verification_required ? "true" : "false" },
             ]}
           />
         </div>
