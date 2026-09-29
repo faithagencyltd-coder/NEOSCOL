@@ -3,9 +3,10 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 
 import { ASSISTANT_TOOLS, runTool, type ToolContext } from "@/features/assistant/tools";
+import { anthropicClient, ASSISTANT_MODEL } from "@/lib/ai/anthropic";
 
 export type AssistantTurn = { role: "user" | "assistant"; content: string };
-export type AssistantAnswer = { answer: string; tools: string[]; provider: "claude" | "local" };
+export type AssistantAnswer = { answer: string; tools: string[]; provider: "claude" | "local"; usage?: { input: number; output: number } };
 
 const SYSTEM = `Tu es l'assistant de NéoScol, logiciel de gestion scolaire. Tu réponds en français, de façon concise et factuelle.
 Tu n'as accès aux données QUE par les outils fournis ; ils s'exécutent avec les droits de l'utilisateur connecté.
@@ -31,6 +32,13 @@ async function localAnswer(ctx: ToolContext, question: string): Promise<Assistan
   if (/resultat|moyenne|note|reussite|performance/.test(q)) calls.push({ name: "statistiques", input: { section: "resultats" } });
   if (/finance|encaiss|recette|depense|chiffre|argent/.test(q)) calls.push({ name: "statistiques", input: { section: "finances" } });
   if (/formation|session/.test(q)) calls.push({ name: "statistiques", input: { section: "formations" } });
+  const matricule = question.match(/\b[A-Z0-9]{2,10}-\d{2}-\d{3,6}\b/i)?.[0];
+  if (matricule || /fiche|dossier de l.eleve|situation de/.test(q)) {
+    const who = matricule ?? question.replace(/^.*?(fiche|dossier de l.élève|dossier de l.eleve|situation de)\s*(de\s+)?/i, "").trim();
+    if (who.length >= 2) calls.push({ name: "fiche_eleve", input: { eleve: who.slice(0, 100) } });
+  }
+  if (/passage|annee suivante|reinscri|cloture/.test(q)) calls.push({ name: "passage_annee", input: {} });
+  if (/envoi|sms|campagne|whatsapp|e-mail groupe/.test(q)) calls.push({ name: "envois", input: { limite: 5 } });
   if (!calls.length) {
     const term = question.replace(/^(cherche|trouve|recherche|qui est|ou est|montre(-moi)?)\s*/i, "").trim();
     if (term.length >= 2) calls.push({ name: "rechercher", input: { texte: term.slice(0, 100) } });
@@ -47,8 +55,7 @@ async function localAnswer(ctx: ToolContext, question: string): Promise<Assistan
 }
 
 /** Réponse via Claude (outils identiques, exécutés côté serveur avec les droits de l'utilisateur). */
-async function claudeAnswer(ctx: ToolContext, history: AssistantTurn[]): Promise<AssistantAnswer> {
-  const client = new Anthropic();
+async function claudeAnswer(client: Anthropic, ctx: ToolContext, history: AssistantTurn[]): Promise<AssistantAnswer> {
   const tools: Anthropic.Beta.BetaTool[] = ASSISTANT_TOOLS.map((t) => ({
     name: t.name,
     description: t.description,
@@ -56,9 +63,10 @@ async function claudeAnswer(ctx: ToolContext, history: AssistantTurn[]): Promise
   }));
   const messages: Anthropic.Beta.BetaMessageParam[] = history.map((m) => ({ role: m.role, content: m.content }));
   const used: string[] = [];
+  const usage = { input: 0, output: 0 };
   for (let step = 0; step < 6; step += 1) {
     const response = await client.beta.messages.create({
-      model: "claude-opus-5",
+      model: ASSISTANT_MODEL,
       max_tokens: 16000,
       thinking: { type: "adaptive" },
       output_config: { effort: "medium" },
@@ -68,8 +76,10 @@ async function claudeAnswer(ctx: ToolContext, history: AssistantTurn[]): Promise
       tools,
       messages,
     });
+    usage.input += response.usage.input_tokens;
+    usage.output += response.usage.output_tokens;
     if (response.stop_reason === "refusal") {
-      return { provider: "claude", tools: used, answer: "Je ne peux pas répondre à cette demande." };
+      return { provider: "claude", tools: used, usage, answer: "Je ne peux pas répondre à cette demande." };
     }
     if (response.stop_reason === "pause_turn") {
       messages.push({ role: "assistant", content: response.content });
@@ -78,7 +88,7 @@ async function claudeAnswer(ctx: ToolContext, history: AssistantTurn[]): Promise
     const toolUses = response.content.filter((b): b is Anthropic.Beta.BetaToolUseBlock => b.type === "tool_use");
     if (response.stop_reason !== "tool_use" || !toolUses.length) {
       const text = response.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("\n").trim();
-      return { provider: "claude", tools: used, answer: text || "Aucune réponse." };
+      return { provider: "claude", tools: used, usage, answer: text || "Aucune réponse." };
     }
     messages.push({ role: "assistant", content: response.content });
     const results = await Promise.all(
@@ -89,15 +99,26 @@ async function claudeAnswer(ctx: ToolContext, history: AssistantTurn[]): Promise
     );
     messages.push({ role: "user", content: results });
   }
-  return { provider: "claude", tools: used, answer: "La question demande trop d'étapes : précisez-la." };
+  return { provider: "claude", tools: used, usage, answer: "La question demande trop d'étapes : précisez-la." };
 }
 
-/** Fournisseur : Claude si une clé est configurée (ANTHROPIC_API_KEY), sinon aiguillage local. */
+/**
+ * Fournisseur : Claude si la clé est configurée par le Super Admin (ou en
+ * variable d'environnement) et si le quota mensuel de l'établissement le
+ * permet ; sinon aiguillage local (mêmes outils, mêmes droits, gratuit).
+ */
 export async function answer(ctx: ToolContext, history: AssistantTurn[]): Promise<AssistantAnswer> {
   const last = history.at(-1)?.content ?? "";
-  if (process.env.ANTHROPIC_API_KEY) {
+  const client = await anthropicClient();
+  if (client) {
+    const { data: quota } = await ctx.supabase.rpc("assistant_quota", { p_org: ctx.organizationId });
+    const q = quota as { used: number; limit: number } | null;
+    if (q && q.used >= q.limit) {
+      const fallback = await localAnswer(ctx, last);
+      return { ...fallback, answer: `${fallback.answer}\n\n(Quota mensuel de l'assistant IA atteint pour l'établissement : réponse calculée localement.)` };
+    }
     try {
-      return await claudeAnswer(ctx, history);
+      return await claudeAnswer(client, ctx, history);
     } catch (error) {
       if (error instanceof Anthropic.APIError) {
         const fallback = await localAnswer(ctx, last);

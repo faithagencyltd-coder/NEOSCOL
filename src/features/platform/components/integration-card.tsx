@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, KeyRound, Mail, MessageCircle, MessageSquare, PlugZap, ShieldCheck, XCircle } from "lucide-react";
+import { CheckCircle2, KeyRound, Mail, MessageCircle, MessageSquare, PlugZap, ShieldCheck, Sparkles, XCircle } from "lucide-react";
 import { useActionState } from "react";
 
 import { notifyResult } from "@/components/motion/animated-toast";
@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils/cn";
 export type IntegrationView = {
   code: string;
   label: string;
-  channel: "email" | "sms" | "whatsapp" | "antibot";
+  channel: "email" | "sms" | "whatsapp" | "antibot" | "ai";
   description: string;
   docs: string;
   fields: { key: string; label: string; hint?: string; required?: boolean; placeholder?: string }[];
@@ -28,12 +28,13 @@ export type IntegrationView = {
   lastTest: { at: string; ok: boolean; message: string | null } | null;
 };
 
-const ICONS = { email: Mail, sms: MessageSquare, whatsapp: MessageCircle, antibot: ShieldCheck } as const;
+const ICONS = { email: Mail, sms: MessageSquare, whatsapp: MessageCircle, antibot: ShieldCheck, ai: Sparkles } as const;
 const RECIPIENT: Record<string, { label: string; placeholder: string } | null> = {
   email: { label: "Envoyer un e-mail de test à (facultatif)", placeholder: "Votre adresse par défaut" },
   sms: { label: "Envoyer un SMS de test au (facultatif)", placeholder: "+229 97 00 00 00" },
   whatsapp: { label: "Envoyer le modèle « hello_world » au (facultatif)", placeholder: "+229 97 00 00 00" },
   antibot: null,
+  ai: null,
 };
 
 function useNotifiedAction(action: (s: ActionResult | null, f: FormData) => Promise<ActionResult>) {

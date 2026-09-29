@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { PageHeader } from "@/components/shared/page-header";
 import { AssistantChat } from "@/features/assistant/components/assistant-chat";
+import { aiAvailable } from "@/lib/ai/anthropic";
 import { requirePermission } from "@/lib/auth/guards";
 
 export const metadata: Metadata = { title: "Assistant" };
@@ -12,7 +13,7 @@ export default async function AssistantPage() {
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-5">
       <PageHeader title="Assistant NéoScol" description="Recherchez, résumez les statistiques, repérez les anomalies. Chaque question est journalisée." />
-      <AssistantChat llm={Boolean(process.env.ANTHROPIC_API_KEY)} />
+      <AssistantChat llm={await aiAvailable()} />
     </div>
   );
 }

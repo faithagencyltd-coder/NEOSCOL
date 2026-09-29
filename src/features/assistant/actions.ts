@@ -21,6 +21,13 @@ export async function askAssistant(history: unknown): Promise<{ ok: true; data: 
   const supabase = await createClient();
   const org = auth.context.organization;
   const result = await answer({ supabase, organizationId: org.id, timezone: org.timezone, today: todayIn(org.timezone) }, parsed.data);
+  await supabase.rpc("record_assistant_usage", {
+    p_org: org.id,
+    p_provider: result.provider,
+    p_tools: result.tools,
+    p_input_tokens: result.usage?.input ?? 0,
+    p_output_tokens: result.usage?.output ?? 0,
+  });
   await supabase.rpc("log_event", {
     p_organization_id: org.id,
     p_action: "assistant.question",

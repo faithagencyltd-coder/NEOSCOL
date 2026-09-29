@@ -23,6 +23,7 @@ import {
 } from "@/lib/messaging/providers";
 import { loadIntegration } from "@/lib/messaging/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { anthropicCheck } from "@/lib/ai/anthropic";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/utils/action-result";
 import { dbErrorMessage } from "@/lib/utils/db-error";
@@ -159,6 +160,9 @@ export async function testIntegration(_: ActionResult | null, formData: FormData
     case "turnstile":
       result = await turnstileCheck(secret);
       break;
+    case "anthropic":
+      result = await anthropicCheck(secret);
+      break;
     default:
       return { ok: false, message: "Intégration inconnue." };
   }
@@ -210,6 +214,22 @@ export async function saveOrganizationQuota(_: ActionResult | null, formData: Fo
   if (error) return { ok: false, message: dbErrorMessage(error) };
   refresh();
   return { ok: true, message: "Quota de l'établissement enregistré." };
+}
+
+/** Quota mensuel de questions traitées par Claude : par défaut (sans établissement) ou dérogation (vide = défaut). */
+export async function saveAiQuota(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await requirePlatformAdmin();
+  if (!auth.ok) return auth;
+  const org = String(formData.get("organization_id") ?? "");
+  const raw = String(formData.get("ai_limit") ?? "").trim();
+  const parsed = raw ? limit.safeParse(raw) : null;
+  if (parsed && !parsed.success) return { ok: false, message: "Quota invalide (nombre entier positif)." };
+  if (!isUuid(org) && !parsed) return { ok: false, message: "Quota par défaut obligatoire." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("platform_set_ai_quota", { p_org: (isUuid(org) ? org : null) as string, p_limit: (parsed?.data ?? null) as number });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  refresh();
+  return { ok: true, message: isUuid(org) ? "Quota IA de l'établissement enregistré." : "Quota IA mensuel par défaut enregistré." };
 }
 
 export async function saveWhatsappTemplate(_: ActionResult | null, formData: FormData): Promise<ActionResult> {

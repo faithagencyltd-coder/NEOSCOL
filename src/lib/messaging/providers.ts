@@ -20,13 +20,13 @@ export const GRAPH_API = "https://graph.facebook.com";
 export const TURNSTILE_VERIFY = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 export const DEFAULT_GRAPH_VERSION = "v21.0";
 
-export type IntegrationProvider = "brevo_email" | "brevo_sms" | "twilio_sms" | "whatsapp_meta" | "turnstile";
+export type IntegrationProvider = "brevo_email" | "brevo_sms" | "twilio_sms" | "whatsapp_meta" | "turnstile" | "anthropic";
 
 type Field = { key: string; label: string; hint?: string; required?: boolean; pattern?: RegExp; placeholder?: string };
 export type ProviderDefinition = {
   code: IntegrationProvider;
   label: string;
-  channel: "email" | "sms" | "whatsapp" | "antibot";
+  channel: "email" | "sms" | "whatsapp" | "antibot" | "ai";
   description: string;
   docs: string;
   fields: Field[];
@@ -91,6 +91,15 @@ export const PROVIDERS: ProviderDefinition[] = [
       { key: "mode", label: "Déclenchement", hint: "progressive : après des échecs ; always : à chaque inscription/connexion.", pattern: /^(progressive|always)$/, placeholder: "progressive" },
     ],
     secret: { label: "Clé secrète Turnstile", hint: "Jamais affichée dans le navigateur." },
+  },
+  {
+    code: "anthropic",
+    label: "Claude (Anthropic) — assistant IA",
+    channel: "ai",
+    description: "Réponses de l'assistant rédigées par Claude. Les données restent consultées avec les droits de chaque utilisateur ; sans clé, l'assistant répond localement.",
+    docs: "Console Anthropic → API Keys → Create Key. Le quota mensuel de questions par établissement se règle plus bas.",
+    fields: [],
+    secret: { label: "Clé API Claude", hint: "Commence par « sk-ant- ». Jamais affichée dans le navigateur." },
   },
 ];
 

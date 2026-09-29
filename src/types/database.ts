@@ -614,6 +614,47 @@ export type Database = {
           }
         ]
       }
+      assistant_usage: {
+        Row: {
+          created_at: string
+          id: string
+          input_tokens: number
+          organization_id: string
+          output_tokens: number
+          provider: string
+          tools: string[]
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          input_tokens?: number
+          organization_id: string
+          output_tokens?: number
+          provider: string
+          tools?: string[]
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          input_tokens?: number
+          organization_id?: string
+          output_tokens?: number
+          provider?: string
+          tools?: string[]
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_usage_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       attendance_records: {
         Row: {
           arrived_at: string | null
@@ -4098,6 +4139,7 @@ export type Database = {
       }
       messaging_quotas: {
         Row: {
+          ai_limit: number | null
           email_limit: number | null
           organization_id: string
           sms_limit: number | null
@@ -4106,6 +4148,7 @@ export type Database = {
           whatsapp_limit: number | null
         }
         Insert: {
+          ai_limit?: number | null
           email_limit?: number | null
           organization_id: string
           sms_limit?: number | null
@@ -4114,6 +4157,7 @@ export type Database = {
           whatsapp_limit?: number | null
         }
         Update: {
+          ai_limit?: number | null
           email_limit?: number | null
           organization_id?: string
           sms_limit?: number | null
@@ -4133,6 +4177,7 @@ export type Database = {
       }
       messaging_settings: {
         Row: {
+          default_ai_limit: number
           default_email_limit: number
           default_sms_limit: number
           default_whatsapp_limit: number
@@ -4140,6 +4185,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          default_ai_limit?: number
           default_email_limit?: number
           default_sms_limit?: number
           default_whatsapp_limit?: number
@@ -4147,6 +4193,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          default_ai_limit?: number
           default_email_limit?: number
           default_sms_limit?: number
           default_whatsapp_limit?: number
@@ -8059,6 +8106,12 @@ export type Database = {
         }
         Returns: string
       }
+      assistant_quota: {
+        Args: {
+          p_org: string
+        }
+        Returns: Json
+      }
       billing_access_state: {
         Args: {
           p_org: string
@@ -8691,6 +8744,20 @@ export type Database = {
         }
         Returns: undefined
       }
+      platform_ai_usage: {
+        Args: never
+        Returns: {
+          organization_id: string
+          name: string
+          code: string
+          used: number
+          local_answers: number
+          input_tokens: number
+          output_tokens: number
+          ai_limit: number
+          override: number
+        }[]
+      }
       platform_billing_overview: {
         Args: never
         Returns: Json
@@ -8773,6 +8840,13 @@ export type Database = {
       platform_security_overview: {
         Args: never
         Returns: Json
+      }
+      platform_set_ai_quota: {
+        Args: {
+          p_org: string
+          p_limit: number
+        }
+        Returns: undefined
       }
       platform_set_messaging_quota: {
         Args: {
@@ -8957,6 +9031,16 @@ export type Database = {
       publish_academic_rule_set: {
         Args: {
           p_id: string
+        }
+        Returns: undefined
+      }
+      record_assistant_usage: {
+        Args: {
+          p_org: string
+          p_provider: string
+          p_tools: string[]
+          p_input_tokens: number
+          p_output_tokens: number
         }
         Returns: undefined
       }

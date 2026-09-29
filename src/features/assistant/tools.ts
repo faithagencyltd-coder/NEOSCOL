@@ -137,6 +137,88 @@ export const ASSISTANT_TOOLS = [
       return lines.length ? lines.map((l) => `- ${l}`).join("\n") : "Aucune anomalie détectée dans les données auxquelles vous avez accès.";
     },
   }),
+  tool({
+    name: "fiche_eleve",
+    description: "Synthèse d'un élève par matricule (ou nom) : classe, absences, moyennes des bulletins publiés, solde dû. Chaque rubrique n'apparaît que si l'utilisateur a le droit de la consulter.",
+    schema: z.object({ eleve: z.string().min(2).max(100) }),
+    inputSchema: { type: "object", properties: { eleve: { type: "string", description: "Matricule ou nom de l'élève" } }, required: ["eleve"], additionalProperties: false },
+    run: async (ctx, input) => {
+      const term = input.eleve.trim();
+      const byMatricule = await ctx.supabase.from("students").select("id, first_name, last_name, matricule, status").eq("organization_id", ctx.organizationId).ilike("matricule", term).limit(1);
+      let student = byMatricule.data?.[0];
+      if (!student) {
+        const { data: found } = await ctx.supabase.rpc("global_search", { p_organization_id: ctx.organizationId, p_query: term, p_limit: 5 });
+        const hit = (found ?? []).find((r) => r.entity_type === "student");
+        if (hit) {
+          const { data } = await ctx.supabase.from("students").select("id, first_name, last_name, matricule, status").eq("id", hit.entity_id).maybeSingle();
+          student = data ?? undefined;
+        }
+      }
+      if (!student) return `Aucun élève accessible pour « ${term} ».`;
+      const [enrollment, absences, cards, balance] = await Promise.all([
+        ctx.supabase.from("enrollments").select("class:classes(name, academic_year:academic_years!inner(is_current))").eq("student_id", student.id).eq("status", "validated").eq("class.academic_year.is_current", true).limit(1),
+        ctx.supabase.from("attendance_records").select("status, is_justified").eq("student_id", student.id).in("status", ["absent", "late", "excused"]),
+        ctx.supabase.from("report_cards").select("average, rank, period:academic_periods(name, sequence)").eq("student_id", student.id).eq("status", "published"),
+        ctx.supabase.from("student_balances").select("balance, has_overdue").eq("student_id", student.id),
+      ]);
+      const cls = enrollment.data?.find((e) => e.class)?.class?.name;
+      const lines = [`${student.last_name} ${student.first_name} (${student.matricule}) — statut : ${student.status}${cls ? `, classe ${cls}` : ""}`];
+      if (!absences.error) {
+        const rows = absences.data ?? [];
+        const unjustified = rows.filter((r) => r.status === "absent" && !r.is_justified).length;
+        lines.push(`- Absences : ${rows.filter((r) => r.status !== "late").length} dont ${unjustified} non justifiée(s) ; retards : ${rows.filter((r) => r.status === "late").length}`);
+      }
+      if (!cards.error && cards.data?.length) {
+        const sorted = [...cards.data].sort((a, b) => (a.period?.sequence ?? 0) - (b.period?.sequence ?? 0));
+        lines.push(`- Bulletins publiés : ${sorted.map((c) => `${c.period?.name ?? "Période"} ${c.average ?? "—"}${c.rank ? ` (rang ${c.rank})` : ""}`).join(" · ")}`);
+      }
+      if (!balance.error && balance.data?.length) {
+        const due = balance.data.reduce((sum, b) => sum + Number(b.balance ?? 0), 0);
+        lines.push(`- Solde dû : ${due}${balance.data.some((b) => b.has_overdue) ? " (échéance dépassée)" : ""}`);
+      }
+      return lines.join("\n");
+    },
+  }),
+  tool({
+    name: "passage_annee",
+    description: "État du passage à l'année suivante : année suivante préparée ou non, élèves par décision (passage, redoublement, départ, fin de cycle, à décider) et réinscriptions déjà créées. Réservé à la direction.",
+    schema: z.object({}),
+    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    run: async (ctx) => {
+      const { data, error } = await ctx.supabase.rpc("year_transition_proposals", { p_org: ctx.organizationId });
+      if (error) return `Accès refusé : ${error.message}`;
+      if (!data?.length) return "Aucun élève inscrit dans l'année en cours.";
+      const count = (a: string) => data.filter((p) => p.action === a).length;
+      const done = data.filter((p) => p.next_enrollment).length;
+      const noTarget = data.filter((p) => !p.next_enrollment && (p.action === "promote" || p.action === "repeat") && !p.target_class_id).length;
+      return [
+        `${data.length} élève(s) inscrit(s) cette année ; ${done} déjà réinscrit(s) pour l'année suivante.`,
+        `- Passage : ${count("promote")} · Redoublement : ${count("repeat")} · Départ : ${count("leave")} · Fin de cycle : ${count("graduate")} · À décider : ${count("undecided")}`,
+        noTarget ? `- ${noTarget} élève(s) admis ou redoublant(s) sans classe disponible dans l'année suivante (préparez l'année ou créez la classe).` : null,
+      ]
+        .filter(Boolean)
+        .join("\n");
+    },
+  }),
+  tool({
+    name: "envois",
+    description: "Derniers envois groupés (SMS, e-mail, WhatsApp) : public, date, envoyés, échecs. Réservé aux utilisateurs autorisés à envoyer.",
+    schema: z.object({ limite: z.number().int().min(1).max(20).default(5) }),
+    inputSchema: { type: "object", properties: { limite: { type: "integer", minimum: 1, maximum: 20 } }, additionalProperties: false },
+    run: async (ctx, input) => {
+      const { data, error } = await ctx.supabase
+        .from("message_campaigns")
+        .select("name, channel, status, total, sent, failed, skipped, created_at")
+        .eq("organization_id", ctx.organizationId)
+        .order("created_at", { ascending: false })
+        .limit(input.limite);
+      if (error) return "Envois indisponibles.";
+      if (!data?.length) return "Aucun envoi groupé visible avec vos droits.";
+      return data
+        .map((c) => `- ${c.name} (${c.channel}, ${c.created_at.slice(0, 10)}) : ${c.sent}/${c.total} envoyé(s), ${c.failed} échec(s), ${c.skipped} sans coordonnée — ${c.status}`)
+        .join("\n");
+    },
+  }),
 ];
 
 export type AssistantToolName = (typeof ASSISTANT_TOOLS)[number]["name"];

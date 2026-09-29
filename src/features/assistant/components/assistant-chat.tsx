@@ -15,6 +15,7 @@ const SUGGESTIONS = [
   "Effectifs par classe",
   "Résultats et moyennes par matière",
   "Cherche BAMBA",
+  "Où en est le passage à l'année suivante ?",
 ];
 
 const TOOL_LABELS: Record<string, string> = {
@@ -23,6 +24,9 @@ const TOOL_LABELS: Record<string, string> = {
   impayes: "Impayés",
   absences: "Présences",
   anomalies: "Anomalies",
+  fiche_eleve: "Fiche élève",
+  passage_annee: "Passage d'année",
+  envois: "Envois groupés",
 };
 
 type Message = AssistantTurn & { meta?: Pick<AssistantAnswer, "tools" | "provider"> };
@@ -54,7 +58,7 @@ export function AssistantChat({ llm }: { llm: boolean }) {
         <ShieldCheck className="mt-0.5 size-4 shrink-0" aria-hidden />
         <span>
           L&apos;assistant consulte les données avec VOS droits (mêmes règles de sécurité que l&apos;application) et ne modifie rien.{" "}
-          {llm ? "Moteur : Claude (Anthropic)." : "Moteur local : questions guidées (configurez ANTHROPIC_API_KEY pour le langage naturel complet)."}
+          {llm ? "Moteur : Claude (Anthropic)." : "Moteur local : questions guidées (le langage naturel complet s'active quand l'administration de la plateforme configure Claude)."}
         </span>
       </div>
       <div className="grid min-h-80 content-start gap-3 rounded-2xl border border-border bg-surface p-4" aria-live="polite">
@@ -74,7 +78,7 @@ export function AssistantChat({ llm }: { llm: boolean }) {
           </div>
         ) : (
           messages.map((m, i) => (
-            <div key={i} className={cn("rise flex gap-3", m.role === "user" && "flex-row-reverse")}>
+            <div key={i} data-role={m.role} className={cn("rise flex gap-3", m.role === "user" && "flex-row-reverse")}>
               <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-full", m.role === "user" ? "bg-primary text-primary-foreground" : "bg-primary-soft text-primary")}>
                 {m.role === "user" ? <User className="size-4" aria-hidden /> : <Bot className="size-4" aria-hidden />}
               </span>

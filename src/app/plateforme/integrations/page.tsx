@@ -1,4 +1,4 @@
-import { History, MessageCircle, Plus, Send } from "lucide-react";
+import { History, MessageCircle, Pencil, Plus, Send } from "lucide-react";
 import type { Metadata } from "next";
 
 import { EmptyState } from "@/components/shared/empty-state";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { IntegrationCard, type IntegrationView } from "@/features/platform/components/integration-card";
-import { saveMessagingDefaults, saveOrganizationQuota, saveWhatsappTemplate } from "@/features/platform/integration-actions";
+import { saveAiQuota, saveMessagingDefaults, saveOrganizationQuota, saveWhatsappTemplate } from "@/features/platform/integration-actions";
 import { encryptionKeyFrom } from "@/lib/messaging/crypto";
 import { PROVIDERS } from "@/lib/messaging/providers";
 import { createClient } from "@/lib/supabase/server";
@@ -32,7 +32,7 @@ const nf = new Intl.NumberFormat("fr-FR");
  */
 export default async function PlatformIntegrationsPage() {
   const supabase = await createClient();
-  const [{ data: rows }, { data: settings }, { data: usage }, { data: templates }, { data: deliveries }] = await Promise.all([
+  const [{ data: rows }, { data: settings }, { data: usage }, { data: templates }, { data: deliveries }, { data: aiUsage }] = await Promise.all([
     supabase.from("platform_integrations").select("provider, enabled, config, secret_hint, last_test_at, last_test_ok, last_test_message"),
     supabase.from("messaging_settings").select("*").eq("id", 1).maybeSingle(),
     supabase.rpc("platform_messaging_usage"),
@@ -42,6 +42,7 @@ export default async function PlatformIntegrationsPage() {
       .select("id, channel, provider, recipient_masked, purpose, status, error, created_at, organization:organizations(name)")
       .order("created_at", { ascending: false })
       .limit(40),
+    supabase.rpc("platform_ai_usage"),
   ]);
   const encryptionReady = encryptionKeyFrom(process.env) !== null;
   const dedicatedKey = Boolean(process.env.INTEGRATIONS_ENCRYPTION_KEY);
@@ -172,6 +173,66 @@ export default async function PlatformIntegrationsPage() {
             </tbody>
           </Table>
         )}
+      </Card>
+
+      <Card className="overflow-hidden">
+        <CardHeader className="flex-row flex-wrap items-center justify-between gap-3">
+          <div className="grid gap-1">
+            <CardTitle>Assistant IA — consommation du mois</CardTitle>
+            <CardDescription>
+              Questions traitées par Claude (quota par défaut : {nf.format(settings?.default_ai_limit ?? 300)} par établissement). Au-delà, l&apos;assistant répond localement, sans coût. Le contenu des questions n&apos;est pas conservé ici.
+            </CardDescription>
+          </div>
+          <QuickFormDialog
+            title="Quota IA mensuel par défaut"
+            triggerLabel="Quota par défaut"
+            action={saveAiQuota}
+            fields={[{ name: "ai_limit", label: "Questions Claude par établissement et par mois", type: "number", required: true, min: 0, defaultValue: String(settings?.default_ai_limit ?? 300) }]}
+          />
+        </CardHeader>
+        <div className="overflow-x-auto">
+          <Table>
+            <THead>
+              <tr className="border-t border-border">
+                <TH>Établissement</TH>
+                <TH className="text-right">Claude</TH>
+                <TH className="text-right">Réponses locales</TH>
+                <TH className="hidden text-right md:table-cell">Jetons (entrée / sortie)</TH>
+                <TH />
+              </tr>
+            </THead>
+            <tbody>
+              {(aiUsage ?? []).slice(0, 30).map((u) => (
+                <TR key={u.organization_id}>
+                  <TD>
+                    <span className="font-medium">{u.name}</span> <span className="font-mono text-xs text-muted-foreground">{u.code}</span>
+                  </TD>
+                  <TD className="text-right tabular-nums">
+                    {nf.format(u.used)} / {nf.format(u.ai_limit)}
+                    {u.override !== null ? <Badge className="ml-2">Dérogation</Badge> : null}
+                  </TD>
+                  <TD className="text-right tabular-nums">{nf.format(u.local_answers)}</TD>
+                  <TD className="hidden text-right tabular-nums md:table-cell">
+                    {nf.format(Number(u.input_tokens))} / {nf.format(Number(u.output_tokens))}
+                  </TD>
+                  <TD>
+                    <QuickFormDialog
+                      title={`Quota IA — ${u.name}`}
+                      trigger={
+                        <Button size="sm" variant="ghost" aria-label={`Quota IA de ${u.name}`}>
+                          <Pencil aria-hidden />
+                        </Button>
+                      }
+                      action={saveAiQuota}
+                      hidden={{ organization_id: u.organization_id }}
+                      fields={[{ name: "ai_limit", label: "Questions Claude par mois (vide = valeur par défaut)", type: "number", min: 0, defaultValue: u.override !== null ? String(u.override) : "" }]}
+                    />
+                  </TD>
+                </TR>
+              ))}
+            </tbody>
+          </Table>
+        </div>
       </Card>
 
       <Card className="overflow-hidden">
