@@ -3218,6 +3218,56 @@ export type Database = {
           }
         ]
       }
+      message_deliveries: {
+        Row: {
+          channel: string
+          created_at: string
+          created_by: string | null
+          error: string | null
+          id: string
+          organization_id: string | null
+          provider: string | null
+          provider_message_id: string | null
+          purpose: string
+          recipient_masked: string
+          status: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          organization_id?: string | null
+          provider?: string | null
+          provider_message_id?: string | null
+          purpose?: string
+          recipient_masked: string
+          status: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          organization_id?: string | null
+          provider?: string | null
+          provider_message_id?: string | null
+          purpose?: string
+          recipient_masked?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_deliveries_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       message_threads: {
         Row: {
           created_at: string
@@ -3300,6 +3350,67 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           }
+        ]
+      }
+      messaging_quotas: {
+        Row: {
+          email_limit: number | null
+          organization_id: string
+          sms_limit: number | null
+          updated_at: string
+          updated_by: string | null
+          whatsapp_limit: number | null
+        }
+        Insert: {
+          email_limit?: number | null
+          organization_id: string
+          sms_limit?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          whatsapp_limit?: number | null
+        }
+        Update: {
+          email_limit?: number | null
+          organization_id?: string
+          sms_limit?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          whatsapp_limit?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messaging_quotas_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      messaging_settings: {
+        Row: {
+          default_email_limit: number
+          default_sms_limit: number
+          default_whatsapp_limit: number
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          default_email_limit?: number
+          default_sms_limit?: number
+          default_whatsapp_limit?: number
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          default_email_limit?: number
+          default_sms_limit?: number
+          default_whatsapp_limit?: number
+          id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          
         ]
       }
       migration_batches: {
@@ -4220,6 +4331,47 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           }
+        ]
+      }
+      platform_integrations: {
+        Row: {
+          config: Json
+          enabled: boolean
+          last_test_at: string | null
+          last_test_message: string | null
+          last_test_ok: boolean | null
+          provider: string
+          secret_ciphertext: string | null
+          secret_hint: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          config?: Json
+          enabled?: boolean
+          last_test_at?: string | null
+          last_test_message?: string | null
+          last_test_ok?: boolean | null
+          provider: string
+          secret_ciphertext?: string | null
+          secret_hint?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          config?: Json
+          enabled?: boolean
+          last_test_at?: string | null
+          last_test_message?: string | null
+          last_test_ok?: boolean | null
+          provider?: string
+          secret_ciphertext?: string | null
+          secret_hint?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          
         ]
       }
       portal_access_overrides: {
@@ -6972,6 +7124,38 @@ export type Database = {
           }
         ]
       }
+      whatsapp_templates: {
+        Row: {
+          created_at: string
+          description: string | null
+          enabled: boolean
+          id: string
+          language: string
+          name: string
+          variables_count: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          language?: string
+          name: string
+          variables_count?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          language?: string
+          name?: string
+          variables_count?: number
+        }
+        Relationships: [
+          
+        ]
+      }
     }
     Views: {
       invoice_balances: {
@@ -7359,6 +7543,13 @@ export type Database = {
           detail: string
         }[]
       }
+      messaging_quota_state: {
+        Args: {
+          p_org: string
+          p_channel: string
+        }
+        Returns: Json
+      }
       migration_analyze: {
         Args: {
           p_batch_id: string
@@ -7504,6 +7695,24 @@ export type Database = {
         }
         Returns: string
       }
+      platform_messaging_usage: {
+        Args: never
+        Returns: {
+          organization_id: string
+          name: string
+          code: string
+          email_used: number
+          sms_used: number
+          whatsapp_used: number
+          email_limit: number
+          sms_limit: number
+          whatsapp_limit: number
+          custom: boolean
+          email_override: number
+          sms_override: number
+          whatsapp_override: number
+        }[]
+      }
       platform_overview: {
         Args: never
         Returns: {
@@ -7521,6 +7730,14 @@ export type Database = {
           admins: number
         }[]
       }
+      platform_record_integration_test: {
+        Args: {
+          p_provider: string
+          p_ok: boolean
+          p_message: string
+        }
+        Returns: undefined
+      }
       platform_record_manual_payment: {
         Args: {
           p_invoice: string
@@ -7531,12 +7748,40 @@ export type Database = {
         }
         Returns: Json
       }
+      platform_set_messaging_quota: {
+        Args: {
+          p_org: string
+          p_email: number
+          p_sms: number
+          p_whatsapp: number
+        }
+        Returns: undefined
+      }
       platform_update_billing_settings: {
         Args: {
           p_past_due: number
           p_restrict: number
           p_expire: number
           p_renewal_notice: number
+        }
+        Returns: undefined
+      }
+      platform_update_integration: {
+        Args: {
+          p_provider: string
+          p_enabled: boolean
+          p_config: Json
+          p_secret_ciphertext?: string
+          p_secret_hint?: string
+          p_clear_secret?: boolean
+        }
+        Returns: undefined
+      }
+      platform_update_messaging_settings: {
+        Args: {
+          p_email: number
+          p_sms: number
+          p_whatsapp: number
         }
         Returns: undefined
       }
@@ -7549,6 +7794,16 @@ export type Database = {
           p_features: Json
         }
         Returns: undefined
+      }
+      platform_upsert_whatsapp_template: {
+        Args: {
+          p_name: string
+          p_language: string
+          p_description: string
+          p_variables: number
+          p_enabled: boolean
+        }
+        Returns: string
       }
       portal_account: {
         Args: {

@@ -287,6 +287,14 @@ max_frequency = "1s"
 # enabled = true
 # uri = "pg-functions://<database>/<schema>/<hook_name>"
 
+# NéoScol : e-mails d'authentification envoyés par l'intégration e-mail de la plateforme
+# (Super Admin → Intégrations → Brevo). À activer une fois Brevo configuré et testé ;
+# le même secret doit être défini côté application (SEND_EMAIL_HOOK_SECRET).
+# [auth.hook.send_email]
+# enabled = true
+# uri = "https://votre-domaine/api/hooks/auth-email"
+# secrets = "env(SEND_EMAIL_HOOK_SECRET)"
+
 # Configure one of the supported SMS providers: `twilio`, `twilio_verify`, `messagebird`, `textlocal`, `vonage`.
 [auth.sms.twilio]
 # Fournisseur fictif pour la démonstration locale (les numéros de test ci-dessus

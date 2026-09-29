@@ -159,6 +159,23 @@ l'établissement (scolarité, reçus, dépenses), qui ne partagent ni table ni p
   Domaine retiré : espace en lecture seule, aucune donnée supprimée. Tout est contrôlé en base
   (`set_subscription_components`, `create_component_space`, `module4_overview`, `app.org_billing_access`).
 - **Essai gratuit de 20 jours** à la création de chaque établissement (`/inscription` ou console plateforme).
+
+## Intégrations de la plateforme (Super Admin → Intégrations)
+
+`/plateforme/integrations` : Brevo (e-mail, SMS), Twilio (SMS de secours), WhatsApp Business Platform
+(API Cloud officielle de Meta, modèles approuvés uniquement) et Cloudflare Turnstile. Configurées une fois,
+utilisées par tous les établissements (migration `20261004002600_integrations.sql`).
+
+- **Clés** saisies dans la console, chiffrées par le serveur (AES-256-GCM, `src/lib/messaging/crypto.ts`) avant
+  d'arriver en base ; la colonne chiffrée n'est lisible par aucun rôle navigateur ; seul un indice « ••1234 »
+  est réaffiché. Clé de chiffrement : `INTEGRATIONS_ENCRYPTION_KEY` (32 octets base64, recommandé) ou, à
+  défaut, dérivée de la clé de service. Jamais de clé dans le journal d'audit.
+- **Bouton « Tester »** : vérification des identifiants auprès du fournisseur, envoi réel facultatif.
+- **Quotas mensuels** par établissement (défaut + dérogations) et **journal des envois** (destinataire masqué).
+- **Envoi** : `sendEmail`, `sendSms` (Brevo puis Twilio), `sendWhatsApp`, `verifyTurnstileToken`
+  (`src/lib/messaging/server.ts`) ; sans intégration active : aucun envoi, résultat explicite, rien ne casse.
+- **E-mails d'authentification** : route `/api/hooks/auth-email` (Send Email Hook de Supabase, signature
+  Standard Webhooks vérifiée avec `SEND_EMAIL_HOOK_SECRET`) ; activation dans `supabase/config.toml`.
 - **Pages** : `/tarifs` (alias `/pricing`), `/inscription`, `/abonnement` (Mon abonnement), `/abonnement/souscrire`
   (paiement en 5 étapes), factures PDF `/api/abonnement/factures/[id]`, console `/plateforme`
   (Établissements, Abonnements, Paiements, Formules).

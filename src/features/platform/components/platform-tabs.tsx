@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, CreditCard, Gem, Layers } from "lucide-react";
+import { Building2, CreditCard, Gem, Layers, PlugZap } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -11,6 +11,7 @@ const TABS = [
   { href: "/plateforme/abonnements", label: "Abonnements", icon: Gem },
   { href: "/plateforme/paiements", label: "Paiements", icon: CreditCard },
   { href: "/plateforme/formules", label: "Formules", icon: Layers },
+  { href: "/plateforme/integrations", label: "Intégrations", icon: PlugZap },
 ];
 
 export function PlatformTabs() {
