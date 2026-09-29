@@ -17,7 +17,7 @@ export function ServiceWorkerRegistration() {
 }
 
 /** « Installer l'application » : invite native (Chromium) ou instructions (iOS). */
-export function InstallAppButton() {
+export function InstallAppButton({ label = "Installer l'application", appName = "NéoScol" }: { label?: string; appName?: string } = {}) {
   const [event, setEvent] = useState<InstallEvent | null>(null);
   const [accepted, setAccepted] = useState(false);
   const standalone = useSyncExternalStore(
@@ -51,16 +51,16 @@ export function InstallAppButton() {
           setEvent(null);
         }}
       >
-        <Download aria-hidden /> Installer l&apos;application
+        <Download aria-hidden /> {label}
       </Button>
     );
   }
   if (ios) {
     return (
       <p className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Share className="size-4" aria-hidden /> Pour installer NéoScol : bouton Partager, puis « Sur l&apos;écran d&apos;accueil ».
+        <Share className="size-4" aria-hidden /> Pour installer {appName} : bouton Partager, puis « Sur l&apos;écran d&apos;accueil ».
       </p>
     );
   }
-  return <p className="text-sm text-muted-foreground">NéoScol s&apos;installe depuis le menu du navigateur (« Installer l&apos;application »).</p>;
+  return <p className="text-sm text-muted-foreground">{appName} s&apos;installe depuis le menu du navigateur (« Installer l&apos;application »).</p>;
 }

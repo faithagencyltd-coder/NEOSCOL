@@ -215,3 +215,16 @@ désactivée ; les abonnements déjà payés la conservent au même prix.
   niveaux existants ; désactiver un niveau masque ses éléments sans rien supprimer ; centres de formation et
   universités inchangés ; présences et pointage tablette non modifiés.
 - **Tests** : `tests/db/module-scolaire.test.mjs` (12), `tests/e2e/module-scolaire.mjs` (51 contrôles).
+
+## NéoScol Console (Super Admin installable)
+
+La console `/plateforme` s'installe comme une application distincte, avec :
+- sa propre icône et sa propre fenêtre ;
+- le nom « NéoScol Console » ;
+- des raccourcis : Établissements, Abonnements, Intégrations, Sécurité.
+
+Pour l'installer, ouvrir la console dans Chrome ou Edge sur l'ordinateur, puis cliquer sur « Installer NéoScol Console » (en-tête de la console ou menu du navigateur). La mise à jour est automatique, car l'application est le site lui-même. Aucune donnée n'est stockée sur l'ordinateur : les pages ne sont jamais mises en cache.
+
+Le manifeste propre est servi par `src/app/console.webmanifest/route.ts` (`id` et portée `/plateforme`).
+
+Une alerte s'affiche tant que la double authentification n'est pas activée. Le centre de sécurité permet de la rendre obligatoire.

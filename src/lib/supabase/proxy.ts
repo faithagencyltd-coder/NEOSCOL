@@ -11,7 +11,7 @@ import type { Database } from "@/types/database";
 // /tarifs, /pricing, /inscription : offre NéoScol et création d'un établissement (essai gratuit).
 const PUBLIC_PATHS = [
   "/connexion", "/acces", "/mot-de-passe-oublie", "/auth", "/verifier", "/configuration", "/api/cron", "/api/webhooks", "/api/hooks",
-  "/verification-email",
+  "/verification-email", "/console.webmanifest",
   "/demo", "/hors-ligne", "/tarifs", "/pricing", "/inscription",
 ];
 
