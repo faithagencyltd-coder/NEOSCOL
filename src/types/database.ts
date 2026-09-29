@@ -7985,6 +7985,25 @@ export type Database = {
       }
     }
     Functions: {
+      academic_year_archive: {
+        Args: {
+          p_org: string
+          p_year: string
+        }
+        Returns: {
+          matricule: string
+          last_name: string
+          first_name: string
+          birth_date: string
+          class_name: string
+          average: number
+          rank: number
+          mention: string
+          decision: string
+          result_status: string
+          enrollment: string
+        }[]
+      }
       add_student_guardian: {
         Args: {
           p_student_id: string
@@ -8087,6 +8106,13 @@ export type Database = {
           p_reason: string
         }
         Returns: undefined
+      }
+      close_academic_year: {
+        Args: {
+          p_org: string
+          p_mark_graduates?: boolean
+        }
+        Returns: Json
       }
       communication_channels: {
         Args: {
@@ -8193,6 +8219,13 @@ export type Database = {
           p_to: number
         }
         Returns: number
+      }
+      create_reenrollments: {
+        Args: {
+          p_org: string
+          p_items: Json
+        }
+        Returns: Json
       }
       create_student_record: {
         Args: {
@@ -8853,6 +8886,12 @@ export type Database = {
           room: string
         }[]
       }
+      prepare_next_academic_year: {
+        Args: {
+          p_org: string
+        }
+        Returns: Json
+      }
       preview_message_audience: {
         Args: {
           p_org: string
@@ -9228,6 +9267,25 @@ export type Database = {
           p_token_hash: string
         }
         Returns: Json
+      }
+      year_transition_proposals: {
+        Args: {
+          p_org: string
+        }
+        Returns: {
+          student_id: string
+          student_name: string
+          matricule: string
+          from_class_id: string
+          from_class: string
+          decision_code: string
+          decision_label: string
+          result_status: string
+          average: number
+          action: string
+          target_class_id: string
+          next_enrollment: string
+        }[]
       }
     }
     Enums: {

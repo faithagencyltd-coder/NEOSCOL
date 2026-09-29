@@ -136,6 +136,7 @@ export const NAVIGATION: NavSection[] = [
       { href: "/bulletins", label: "Bulletins", icon: "reportCards", anyOf: ["report_cards.manage", "grades.read"], keywords: "moyennes rangs appréciations" },
       { href: "/bulletins/apercu", label: "Aperçu des bulletins", icon: "reportCards", anyOf: ["grades.enter"], keywords: "aperçu moyennes classe" },
       { href: "/resultats-annuels", label: "Résultats annuels", icon: "reportCards", anyOf: ["report_cards.manage"], keywords: "moyenne annuelle décision passage redoublement conseil de classe" },
+      { href: "/passage-annee", label: "Passage d'année", icon: "history", anyOf: ["academic.manage"], keywords: "réinscription groupée année suivante clôture archive passage redoublement fin d'année" },
       { href: "/documents", label: "Documents", icon: "documents", anyOf: ["documents.read", "documents.generate", "documents.dossier"], keywords: "certificats attestations reçus cartes dossier complet PDF" },
       { href: "/documents/modeles", label: "Document Studio", icon: "templates", anyOf: ["documents.templates.manage"], keywords: "modèles certificats convocation contrat personnalisation" },
     ],
