@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 import { PageHeader } from "@/components/shared/page-header";
 import { CheckoutWizard } from "@/features/billing/components/checkout-wizard";
+import { MULTI_MODULES_PLAN } from "@/features/billing/constants";
 import { getSubscription, listPlans } from "@/features/billing/queries";
 import { requirePermission } from "@/lib/auth/guards";
 import { activePaymentSetup } from "@/lib/payments/config";
@@ -20,8 +22,12 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/abonnem
     getSubscription(context.organization.id),
     supabase.from("organizations").select("name, type, city, country, email, phone, code").eq("id", context.organization.id).single(),
   ]);
+  // Espace Module 4 : couvert par l'abonnement de l'établissement principal, rien à payer ici.
+  if (!subscription) redirect("/abonnement");
   const setup = activePaymentSetup(await publicBaseUrl());
-  const active = plans.filter((p) => p.is_active);
+  // Module 4 réservé aux établissements principaux (et réciproquement) : contrôlé en base, reflété ici.
+  const isGroup = (org?.type ?? context.organization.type) === "school_group";
+  const active = plans.filter((p) => p.is_active && (p.code === MULTI_MODULES_PLAN) === isGroup);
   const trialing = subscription?.status === "TRIALING";
   return (
     <div className="grid gap-6">

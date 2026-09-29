@@ -6338,6 +6338,7 @@ export type Database = {
           cancel_at_period_end: boolean
           cancellation_reason: string | null
           cancelled_at: string | null
+          components: string[]
           created_at: string
           currency: string
           current_period_end: string | null
@@ -6360,6 +6361,7 @@ export type Database = {
           cancel_at_period_end?: boolean
           cancellation_reason?: string | null
           cancelled_at?: string | null
+          components?: string[]
           created_at?: string
           currency?: string
           current_period_end?: string | null
@@ -6382,6 +6384,7 @@ export type Database = {
           cancel_at_period_end?: boolean
           cancellation_reason?: string | null
           cancelled_at?: string | null
+          components?: string[]
           created_at?: string
           currency?: string
           current_period_end?: string | null
@@ -7109,6 +7112,14 @@ export type Database = {
         }
         Returns: number
       }
+      create_component_space: {
+        Args: {
+          p_parent: string
+          p_component: string
+          p_name?: string
+        }
+        Returns: string
+      }
       create_enrollment_application: {
         Args: {
           p_organization_id: string
@@ -7394,6 +7405,12 @@ export type Database = {
           p_resolution: string
         }
         Returns: number
+      }
+      module4_overview: {
+        Args: {
+          p_org: string
+        }
+        Returns: Json
       }
       my_class_ids: {
         Args: {
@@ -7701,6 +7718,13 @@ export type Database = {
           p_tracks: string[]
         }
         Returns: Json
+      }
+      set_subscription_components: {
+        Args: {
+          p_org: string
+          p_components: string[]
+        }
+        Returns: string[]
       }
       set_training_config: {
         Args: {

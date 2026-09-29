@@ -73,6 +73,8 @@ export const EVENT_LABELS: Record<string, string> = {
   plan_changed: "Changement de formule",
   manual_payment: "Paiement manuel validé",
   notification_sent: "Notification envoyée",
+  components_changed: "Domaines du Module 4 modifiés",
+  space_created: "Espace créé (Module 4)",
 };
 
 export const FEATURE_LABELS: Record<string, string> = {
@@ -89,8 +91,17 @@ export const FEATURE_LABELS: Record<string, string> = {
   assistant: "Assistant intelligent",
   communication: "Annonces et messagerie",
   pwa: "Application mobile (PWA)",
-  multi_establishment: "Multi-établissements (vue groupe)",
+  multi_establishment: "Plusieurs espaces : école, formation, université",
 };
+
+/** Module 4 : domaines sélectionnables (1, 2 ou 3) — déterminent les espaces accessibles, jamais le prix. */
+export const MODULE4_COMPONENTS = [
+  { key: "school", label: "École scolaire", hint: "Maternelle, primaire, collège, lycée (Module 1)" },
+  { key: "training", label: "Centre de formation professionnelle", hint: "Formations, sessions, apprenants (Module 2)" },
+  { key: "university", label: "Université / Enseignement supérieur", hint: "Facultés, filières, UE, crédits (Module 3)" },
+] as const;
+export type Module4Component = (typeof MODULE4_COMPONENTS)[number]["key"];
+export const MULTI_MODULES_PLAN = "MULTI_MODULES";
 
 export const PLAN_ACCENTS: Record<string, string> = {
   MODULE_SCOLAIRE: "from-blue-600 to-sky-500",
@@ -99,4 +110,5 @@ export const PLAN_ACCENTS: Record<string, string> = {
   CENTRE_FORMATION: "from-emerald-500 to-teal-400",
   UNIVERSITE: "from-indigo-600 to-blue-500",
   ENTERPRISE: "from-[#0b2559] to-[#1d63ed]",
+  MULTI_MODULES: "from-[#0b2559] via-[#4f46e5] to-[#0ea5e9]",
 };

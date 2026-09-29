@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarClock, CalendarRange, CreditCard, FileText, Gift, History, PartyPopper, RotateCcw, XCircle } from "lucide-react";
+import { ArrowRight, CalendarClock, CalendarRange, CheckCircle2, CreditCard, FileText, Gift, History, PartyPopper, RotateCcw, XCircle } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -18,7 +18,9 @@ import { getAccessState, getSubscription, listEvents, listInvoices, listPlans, l
 import { requirePermission } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/utils/format";
-import { TRIAL_DAYS } from "@/features/billing/constants";
+import { MODULE4_COMPONENTS, MULTI_MODULES_PLAN, TRIAL_DAYS, type Module4Component } from "@/features/billing/constants";
+import { Module4ComponentsForm } from "@/features/billing/components/module4-forms";
+import { module4Overview } from "@/features/billing/module4";
 
 export const metadata: Metadata = { title: "Mon abonnement" };
 
@@ -56,8 +58,46 @@ export default async function SubscriptionPage({ searchParams }: PageProps<"/abo
   ]);
   const manage = can(context, "billing.manage");
   if (!subscription) {
+    // Module 4 : un espace est couvert par l'abonnement de son établissement principal.
+    const m4 = await module4Overview(orgId);
+    if (m4 && m4.group.id !== orgId) {
+      const space = m4.spaces.find((s) => s.id === orgId);
+      const covered = space?.access !== "read_only";
+      return (
+        <div className="grid gap-6">
+          <PageHeader title="Mon abonnement" description="Cet espace fait partie d'un établissement Module 4 (multi-modules)." />
+          <Card className="anim-fade-up overflow-hidden">
+            <div className="bg-gradient-to-br from-[#07142b] via-[#0b2559] to-[#4f46e5] p-5 text-white sm:p-6">
+              <p className="text-xs font-semibold uppercase tracking-widest text-cyan-300">Couvert par</p>
+              <h2 className="text-2xl font-bold">Module 4 — Multi-modules</h2>
+              <p className="text-sm text-white/80">Abonnement de « {m4.group.name} ».</p>
+            </div>
+            <CardContent className="grid gap-4 pt-5">
+              <div className="flex flex-wrap items-center gap-2">
+                <StatusBadge value={m4.status} map={SUBSCRIPTION_STATUS} />
+                {covered ? <Badge tone="success">Domaine inclus</Badge> : <Badge tone="danger">Domaine non inclus : lecture seule</Badge>}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {covered
+                  ? "Aucune facture propre à cet espace : l'abonnement, les paiements et les domaines se gèrent depuis l'établissement principal."
+                  : "Ce domaine n'est pas inclus dans l'abonnement. Toutes les données sont conservées et consultables ; la direction de l'établissement principal peut le réactiver."}
+              </p>
+              <div>
+                <Button asChild variant="secondary">
+                  <Link href="/espaces">
+                    Mes espaces <ArrowRight aria-hidden />
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
     return <EmptyState icon={CreditCard} title="Aucun abonnement" description="Contactez l'administration NéoScol." />;
   }
+  const isModule4 = subscription.plan?.code === MULTI_MODULES_PLAN;
+  const components = ((subscription as { components?: string[] }).components ?? []) as Module4Component[];
   const status = SUBSCRIPTION_STATUS[subscription.status] ?? SUBSCRIPTION_STATUS.ACTIVE!;
   const plan = subscription.plan;
   const trialing = subscription.status === "TRIALING";
@@ -186,6 +226,39 @@ export default async function SubscriptionPage({ searchParams }: PageProps<"/abo
           )}
         </CardContent>
       </Card>
+
+      {isModule4 ? (
+        <Card className="anim-fade-up" style={{ "--delay": "40ms" } as React.CSSProperties}>
+          <CardHeader>
+            <CardTitle>Domaines du Module 4</CardTitle>
+            <CardDescription>Un seul abonnement pour 1, 2 ou 3 domaines : le tarif ne change pas. Chaque domaine inclus dispose de son espace.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <ul className="grid gap-2 sm:grid-cols-3">
+              {MODULE4_COMPONENTS.map((c) => {
+                const included = components.includes(c.key);
+                return (
+                  <li key={c.key} className="flex items-start gap-2 rounded-2xl border border-border p-3 text-sm">
+                    {included ? <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-success" aria-hidden /> : <XCircle className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />}
+                    <span className="grid">
+                      <span className="font-medium">{c.label}</span>
+                      <span className="text-xs text-muted-foreground">{included ? "Inclus" : "Non inclus"}</span>
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+            {manage ? <Module4ComponentsForm components={components} /> : null}
+            <div>
+              <Button asChild variant="secondary">
+                <Link href="/espaces">
+                  Mes espaces <ArrowRight aria-hidden />
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       {pending.length > 0 && manage ? (
         <Card className="anim-fade-up border-warning/50">
@@ -326,7 +399,9 @@ export default async function SubscriptionPage({ searchParams }: PageProps<"/abo
                 : "Le changement prend effet au paiement de la nouvelle formule ; l'historique est conservé."}
             </p>
           </div>
-          <PricingGrid plans={plans.filter((p) => p.is_active)} mode="app" currentPlanCode={plan?.code} initialInterval={subscription.billing_interval === "YEARLY" ? "YEARLY" : "MONTHLY"} />
+          <PricingGrid
+            plans={plans.filter((p) => p.is_active && (p.code === MULTI_MODULES_PLAN) === (context.organization.type === "school_group"))}
+            mode="app" currentPlanCode={plan?.code} initialInterval={subscription.billing_interval === "YEARLY" ? "YEARLY" : "MONTHLY"} />
         </section>
       ) : null}
 

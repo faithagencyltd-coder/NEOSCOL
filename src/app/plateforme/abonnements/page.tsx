@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
-import { INTERVAL_LABELS, SUBSCRIPTION_STATUS } from "@/features/billing/constants";
+import { INTERVAL_LABELS, MODULE4_COMPONENTS, MULTI_MODULES_PLAN, SUBSCRIPTION_STATUS } from "@/features/billing/constants";
 import { listPlans } from "@/features/billing/queries";
 import { StatCard } from "@/features/dashboard/components/stat-card";
 import { issuePlatformInvoice, runBillingLifecycle, updateBillingSettings } from "@/features/platform/billing-actions";
@@ -29,7 +29,7 @@ export default async function PlatformSubscriptionsPage({ searchParams }: PagePr
   const supabase = await createClient();
   let query = supabase
     .from("subscriptions")
-    .select("id, organization_id, status, billing_interval, monthly_price, annual_price, currency, trial_end, current_period_end, cancel_at_period_end, is_demo, organization:organizations(name, code, city), plan:subscription_plans(name, code)")
+    .select("id, organization_id, status, billing_interval, monthly_price, annual_price, currency, trial_end, current_period_end, cancel_at_period_end, is_demo, components, organization:organizations(name, code, city), plan:subscription_plans(name, code)")
     .order("updated_at", { ascending: false });
   if (filter) query = query.eq("status", filter);
   const [{ data: overview }, { data: subs }, { data: settings }, plans] = await Promise.all([
@@ -114,6 +114,11 @@ export default async function PlatformSubscriptionsPage({ searchParams }: PagePr
                         <span className="text-xs text-muted-foreground">
                           {INTERVAL_LABELS[s.billing_interval]?.label} · {new Intl.NumberFormat("fr-FR").format(s.billing_interval === "YEARLY" ? s.annual_price : s.monthly_price)} F CFA
                         </span>
+                        {s.plan?.code === MULTI_MODULES_PLAN ? (
+                          <span className="text-xs text-muted-foreground">
+                            Domaines : {MODULE4_COMPONENTS.filter((c) => s.components.includes(c.key)).map((c) => c.label).join(", ") || "aucun"}
+                          </span>
+                        ) : null}
                       </span>
                     </TD>
                     <TD>

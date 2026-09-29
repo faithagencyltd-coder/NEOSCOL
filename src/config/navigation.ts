@@ -324,6 +324,41 @@ export const UNIVERSITY_NAVIGATION: NavSection[] = [
   },
 ];
 
+/**
+ * Module 4 — établissement principal (plusieurs activités) : pilotage des espaces
+ * (École, Formation professionnelle, Université), abonnement unique, sécurité.
+ * Chaque espace garde ensuite le menu de son propre module.
+ */
+export const GROUP_NAVIGATION: NavSection[] = [
+  {
+    label: "Pilotage",
+    items: [
+      { href: "/espaces", label: "Mes espaces", icon: "structure", anyOf: [], keywords: "école formation université basculer espace module 4" },
+      { href: "/notifications", label: "Notifications", icon: "notifications", anyOf: [], keywords: "alertes messages" },
+    ],
+  },
+  {
+    label: "Abonnement",
+    items: [{ href: "/abonnement", label: "Mon abonnement", icon: "subscription", anyOf: ["billing.read"], keywords: "module 4 multi-modules domaines facture paiement" }],
+  },
+  {
+    label: "Sécurité",
+    items: [
+      { href: "/utilisateurs", label: "Utilisateurs", icon: "users", anyOf: ["users.read"], keywords: "comptes" },
+      { href: "/roles", label: "Rôles et permissions", icon: "roles", anyOf: ["users.read", "roles.manage"], keywords: "rôles" },
+      { href: "/audit", label: "Journal d'audit", icon: "audit", anyOf: ["audit.read"], keywords: "historique" },
+    ],
+  },
+  {
+    label: "Paramètres",
+    items: [{ href: "/parametres/etablissement", label: "Établissement", icon: "school", anyOf: ["settings.manage"], keywords: "logo cachet signature coordonnées" }],
+  },
+  {
+    label: "Compte",
+    items: [{ href: "/mon-compte", label: "Mon compte", icon: "account", anyOf: [], keywords: "profil mot de passe" }],
+  },
+];
+
 /** Entrée « Mode démonstration », ajoutée uniquement lorsque NEOSCOL_DEMO_MODE est actif. */
 export const DEMO_NAV_ITEM: NavItem = { href: "/demo", label: "Mode démonstration", icon: "demo", anyOf: [], keywords: "démo rôles scénarios" };
 
@@ -339,7 +374,7 @@ export function visibleNavigation(
   options: { demo?: boolean; organizationType?: string | null; school?: SchoolConfig | null; university?: UniversityConfig | null } = {},
 ): NavSection[] {
   const v = vocabularyFor(options.organizationType);
-  const base = v.family === "higher" ? UNIVERSITY_NAVIGATION : NAVIGATION;
+  const base = options.organizationType === "school_group" ? GROUP_NAVIGATION : v.family === "higher" ? UNIVERSITY_NAVIGATION : NAVIGATION;
   const sections = options.demo
     ? base.map((section) => (section.label === "Portails" ? { ...section, items: [...section.items, DEMO_NAV_ITEM] } : section))
     : base;

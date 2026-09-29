@@ -61,6 +61,8 @@ export default async function DashboardPage() {
   if (isPortalOnly(context)) redirect("/portail");
   // Module 3 : les établissements d'enseignement supérieur ont leur tableau de bord universitaire.
   if (isHigherOrg(context.organization.type)) redirect("/universite");
+  // Module 4 : l'établissement principal ouvre sur ses espaces (école, formation, université).
+  if (context.organization.type === "school_group") redirect("/espaces");
   const organization = context.organization;
   const isTeacher = context.personas.has("teacher");
   const canFinance = can(context, "finance.read");

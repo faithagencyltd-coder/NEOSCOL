@@ -8,7 +8,7 @@ import { TRIAL_DAYS } from "@/features/billing/constants";
 
 export const metadata: Metadata = {
   title: "Tarifs",
-  description: `Formules NéoScol : maternelle et primaire, collège et lycée, centre de formation, université, Enterprise. Essai gratuit de ${TRIAL_DAYS} jours, -30 % en annuel.`,
+  description: `Formules NéoScol : maternelle et primaire, collège et lycée, centre de formation, université, Module 4 multi-modules. Essai gratuit de ${TRIAL_DAYS} jours, -30 % en annuel.`,
 };
 
 const FAQ = [

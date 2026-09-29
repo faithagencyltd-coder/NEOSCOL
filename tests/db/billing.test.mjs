@@ -32,7 +32,7 @@ describe("Abonnements NéoScol", () => {
           ["MODULE_SCOLAIRE", 15000, 126000, 180000, 54000, 30, "XOF", 20],
           ["CENTRE_FORMATION", 15000, 126000, 180000, 54000, 30, "XOF", 20],
           ["UNIVERSITE", 20000, 168000, 240000, 72000, 30, "XOF", 20],
-          ["ENTERPRISE", 28000, 235200, 336000, 100800, 30, "XOF", 20],
+          ["MULTI_MODULES", 30000, 252000, 360000, 108000, 30, "XOF", 20],
         ],
       );
       assert.match(await rejects(q("select id from subscriptions")), /permission denied/);
@@ -219,7 +219,7 @@ describe("Abonnements NéoScol", () => {
       await switchTo(q, null);
       await q("update subscriptions set status = 'ACTIVE' where organization_id = $1", [ORG_DEMO]);
       await switchTo(q, USERS.admin);
-      assert.match(await rejects(q("select public.billing_change_trial_plan($1, 'ENTERPRISE', 'MONTHLY')", [ORG_DEMO])), /Hors période d'essai/);
+      assert.match(await rejects(q("select public.billing_change_trial_plan($1, 'MODULE_SCOLAIRE', 'MONTHLY')", [ORG_DEMO])), /Hors période d'essai/);
     });
   });
 
@@ -227,15 +227,15 @@ describe("Abonnements NéoScol", () => {
     await as(USERS.superadmin, async (q) => {
       await realTrial(q);
       await switchTo(q, USERS.superadmin);
-      const [{ id }] = await q("select public.platform_issue_invoice($1, 'ENTERPRISE', 'MONTHLY') id", [ORG_DEMO]);
+      const [{ id }] = await q("select public.platform_issue_invoice($1, 'UNIVERSITE', 'MONTHLY') id", [ORG_DEMO]);
       assert.match(await rejects(q("select public.platform_record_manual_payment($1, 'VIR-1', 1000, 'virement')", [id])), /Montant différent/);
-      const [{ r }] = await q("select public.platform_record_manual_payment($1, 'VIR-TEST-1', 28000, 'virement', 'ok') r", [id]);
+      const [{ r }] = await q("select public.platform_record_manual_payment($1, 'VIR-TEST-1', 20000, 'virement', 'ok') r", [id]);
       assert.equal(r.result, "confirmed");
       const [tx] = await q("select status, provider, confirmed_by from payment_transactions where id = $1", [r.transaction_id]);
       assert.deepEqual([tx.status, tx.provider, tx.confirmed_by], ["SUCCESS", "manual", USERS.superadmin]);
       assert.equal((await q("select status from subscriptions where organization_id = $1", [ORG_DEMO]))[0].status, "ACTIVE");
-      const [{ id: other }] = await q("select public.platform_issue_invoice($1, 'ENTERPRISE', 'MONTHLY') id", [ORG_DEMO]);
-      assert.match(await rejects(q("select public.platform_record_manual_payment($1, 'VIR-TEST-1', 28000, 'virement')", [other])), /déjà été enregistrée/);
+      const [{ id: other }] = await q("select public.platform_issue_invoice($1, 'UNIVERSITE', 'MONTHLY') id", [ORG_DEMO]);
+      assert.match(await rejects(q("select public.platform_record_manual_payment($1, 'VIR-TEST-1', 20000, 'virement')", [other])), /déjà été enregistrée/);
     });
   });
 });

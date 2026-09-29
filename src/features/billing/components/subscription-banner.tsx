@@ -18,7 +18,11 @@ export async function SubscriptionBanner({ organizationId, canBill }: { organiza
   let tone: "info" | "warning" | "danger";
   let icon = Gift;
   let text: string;
-  if (state.access === "read_only") {
+  if (state.access === "read_only" && state.covered_by && state.covered === false) {
+    tone = "danger";
+    icon = Lock;
+    text = `Espace en lecture seule : ce domaine n'est pas inclus dans l'abonnement Module 4 de ${state.covered_by}. Toutes les données sont conservées et consultables.`;
+  } else if (state.access === "read_only") {
     tone = "danger";
     icon = Lock;
     text = "Établissement en lecture seule : l'abonnement NéoScol est à régler. Toutes vos données sont conservées et consultables.";

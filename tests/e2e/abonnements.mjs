@@ -50,15 +50,16 @@ console.log("\n=== 1. Page publique des tarifs ===");
   await page.goto(`${base}/pricing`);
   check(page.url().endsWith("/tarifs"), "/pricing redirige vers /tarifs");
   let t = await text(page);
-  check(["MODULE SCOLAIRE", "FORMATION PROFESSIONNELLE", "UNIVERSITÉ", "ENTERPRISE"].every((n) => t.toUpperCase().includes(n)), "4 formules présentées (Module Scolaire unique)");
+  check(["MODULE SCOLAIRE", "FORMATION PROFESSIONNELLE", "UNIVERSITÉ", "MODULE 4 — MULTI-MODULES"].every((n) => t.toUpperCase().includes(n)), "4 formules présentées (Module Scolaire unique, Module 4)");
+  check(!t.toUpperCase().includes("ENTERPRISE") && !t.includes("28 000 F CFA"), "ancienne formule Enterprise remplacée par le Module 4");
   check(!t.toUpperCase().includes("MATERNELLE & PRIMAIRE") && !/(^|[^\d])8 000 F CFA/.test(t), "ancienne formule Maternelle & Primaire retirée de l'offre");
-  check(["15 000 F CFA", "20 000 F CFA", "28 000 F CFA"].every((p) => t.includes(p)), "prix mensuels officiels");
+  check(["15 000 F CFA", "20 000 F CFA", "30 000 F CFA"].every((p) => t.includes(p)), "prix mensuels officiels");
   check((t.match(/Essai gratuit 20 jours/g) ?? []).length === 4, "« Essai gratuit 20 jours » sur les 4 cartes");
   await shot(page, "01-tarifs-mensuel");
   await page.getByRole("radio", { name: /Annuel/ }).click();
   t = await text(page);
-  check(["126 000 F CFA", "168 000 F CFA", "235 200 F CFA"].every((p) => t.includes(p)), "prix annuels officiels");
-  check(t.includes("180 000 F CFA") && t.includes("Économisez 54 000 F CFA") && t.includes("Économisez 100 800 F CFA"), "prix barré et économie exacts");
+  check(["126 000 F CFA", "168 000 F CFA", "252 000 F CFA"].every((p) => t.includes(p)), "prix annuels officiels");
+  check(t.includes("180 000 F CFA") && t.includes("360 000 F CFA") && t.includes("Économisez 54 000 F CFA") && t.includes("Économisez 108 000 F CFA"), "prix barré et économie exacts");
   check(t.includes("Économisez 30 %"), "« Économisez 30 % » affiché");
   await shot(page, "02-tarifs-annuel");
   const m = await (await browser.newContext(mobile)).newPage();
@@ -160,10 +161,10 @@ check((await page.goto(`${base}/eleves/nouveau`)).status() === 200, "écriture r
 check((await q1("select count(*)::int n from subscription_events where organization_id = $1 and event_type = 'subscription_reactivated'", [org.id])).n === 1, "événement subscription_reactivated");
 
 console.log("\n=== 6. Changement de formule, annulation, reprise ===");
-await page.goto(`${base}/abonnement/souscrire?formule=ENTERPRISE&periodicite=MONTHLY`);
+await page.goto(`${base}/abonnement/souscrire?formule=UNIVERSITE&periodicite=MONTHLY`);
 await payThroughWizard(page, "Simuler un paiement réussi");
 s = await q1("select p.code, s.monthly_price from subscriptions s join subscription_plans p on p.id = s.plan_id where s.organization_id = $1", [org.id]);
-check(s.code === "ENTERPRISE" && s.monthly_price === 28000, "changement de formule → ENTERPRISE à 28 000");
+check(s.code === "UNIVERSITE" && s.monthly_price === 20000, "changement de formule → UNIVERSITE à 20 000");
 check((await q1("select count(*)::int n from subscription_events where organization_id = $1 and event_type = 'plan_changed'", [org.id])).n >= 1, "événement plan_changed (historique conservé)");
 await page.goto(`${base}/abonnement`);
 await page.getByRole("button", { name: "Annuler l'abonnement" }).click();
@@ -217,6 +218,110 @@ check(manual?.status === "SUCCESS" && manual.by_sa, "paiement manuel validé, id
 await shot(sa, "14-plateforme-paiements");
 await sa.goto(`${base}/plateforme/formules`);
 await shot(sa, "15-plateforme-formules");
+
+console.log("\n=== 9. Module 4 — multi-modules : domaines, espaces, bascule, lecture seule ===");
+{
+  const name4 = `Complexe Multi ${stamp}`;
+  const email4 = `direction.m4.${stamp}@essai.neoscol.app`;
+  const ctx4 = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "fr-FR", extraHTTPHeaders: { "x-forwarded-for": `203.0.113.${stamp % 250}` } });
+  const p4 = await ctx4.newPage();
+  p4.on("pageerror", (e) => problems.push(`[module 4] pageerror: ${e.message}`));
+  await p4.goto(`${base}/tarifs`);
+  const card = p4.getByRole("listitem").filter({ hasText: "Domaines de votre établissement" });
+  await card.getByRole("link", { name: /Continuer/ }).click();
+  check(await card.getByText("Veuillez sélectionner au moins un domaine.").isVisible(), "tarifs : aucun domaine → « Veuillez sélectionner au moins un domaine. »");
+  check(p4.url().endsWith("/tarifs"), "tarifs : pas de passage à l'inscription sans domaine");
+  await card.getByLabel(/École scolaire/).check();
+  await card.getByLabel(/Université \/ Enseignement supérieur/).check();
+  await card.getByRole("link", { name: /Continuer/ }).click();
+  await p4.waitForURL(/inscription\?formule=MULTI_MODULES/);
+  check(p4.url().includes("composantes=school,university"), "tarifs → inscription : domaines transmis");
+  check(
+    (await p4.getByLabel(/École scolaire/).isChecked()) && (await p4.getByLabel(/Université \/ Enseignement supérieur/).isChecked()) && !(await p4.getByLabel(/Centre de formation professionnelle/).isChecked()),
+    "inscription : domaines repris (école + université)",
+  );
+  check((await p4.getByLabel("Type *").inputValue()) === "school_group", "inscription : type « Plusieurs activités » imposé par le Module 4");
+  await p4.getByLabel("Nom de l'établissement *").fill(name4);
+  await p4.getByLabel("Prénom *").fill("Awa");
+  await p4.getByLabel("Nom *", { exact: true }).fill("DOSSOU");
+  await p4.getByLabel("Adresse e-mail *").fill(email4);
+  await p4.getByLabel("Mot de passe *").fill("Essai-Module4-2026");
+  await p4.getByLabel("Confirmation *").fill("Essai-Module4-2026");
+  await p4.getByLabel(/J'accepte les conditions/).check();
+  await p4.getByRole("button", { name: /Commencer mon essai gratuit/i }).click();
+  await p4.waitForURL(/abonnement\?bienvenue=1/, { timeout: 60000 });
+  let t4 = await text(p4);
+  check(t4.includes("Module 4 — Multi-modules") && t4.includes("30 000 F CFA") && t4.includes("Il vous reste 20 jours d'essai"), "Mon abonnement : Module 4, 30 000 F CFA, essai 20 jours");
+  check(t4.includes("Domaines du Module 4") && !t4.includes("MODULE SCOLAIRE"), "Mon abonnement : domaines ; seule la formule Module 4 est proposée");
+  const g = await q1(
+    "select o.id, o.type, s.components, p.code, s.status, s.monthly_price from organizations o join subscriptions s on s.organization_id = o.id join subscription_plans p on p.id = s.plan_id where o.name = $1",
+    [name4],
+  );
+  check(g?.type === "school_group" && g.code === "MULTI_MODULES" && g.status === "TRIALING" && g.monthly_price === 30000, "base : établissement principal, Module 4, essai, 30 000");
+  check(JSON.stringify(g?.components) === JSON.stringify(["school", "university"]), "base : domaines school + university");
+  const spaces = (await db.query("select o.id, o.type, (select count(*)::int from subscriptions s where s.organization_id = o.id) subs from organizations o where o.parent_id = $1 order by o.type", [g.id])).rows;
+  check(spaces.length === 2 && spaces.map((x) => x.type).join() === "school_complex,university" && spaces.every((x) => x.subs === 0), "base : 2 espaces créés (école, université), sans abonnement propre");
+  await shot(p4, "16-module4-abonnement");
+
+  await p4.goto(`${base}/tableau-de-bord`);
+  await p4.waitForURL(/\/espaces/);
+  t4 = await text(p4);
+  check(t4.includes("Mes espaces") && t4.includes("Non inclus") && (await p4.getByRole("button", { name: /Ouvrir l'espace/ }).count()) === 2, "Mes espaces : 2 espaces ouvrables, formation non incluse");
+  const bar = p4.getByRole("navigation", { name: "Mes espaces" });
+  check((await bar.getByRole("button").count()) === 3, "barre de bascule : principal + 2 espaces");
+  await shot(p4, "17-module4-espaces");
+  await p4.locator("main li").filter({ hasText: "Université / Enseignement supérieur" }).getByRole("button", { name: /Ouvrir l'espace/ }).click();
+  await p4.waitForURL(/\/universite/);
+  check((await text(p4)).includes("Université"), "bascule vers l'espace université");
+  await shot(p4, "18-module4-espace-universite");
+  await bar.getByRole("button", { name: new RegExp(name4) }).first().click();
+  await p4.waitForURL(/\/espaces/);
+  check(true, "retour à l'établissement principal par la barre de bascule");
+
+  // Retrait d'un domaine : espace en lecture seule, rien n'est supprimé ; le prix ne change pas.
+  const domains = p4.locator("#domaines");
+  await domains.getByLabel(/Université \/ Enseignement supérieur/).uncheck();
+  await domains.getByLabel(/École scolaire/).uncheck();
+  check(await domains.getByText("Veuillez sélectionner au moins un domaine.").isVisible(), "domaines : au moins un exigé");
+  await domains.getByLabel(/École scolaire/).check();
+  await domains.getByRole("button", { name: "Enregistrer les domaines" }).click();
+  await p4.getByText("Domaines du Module 4 enregistrés.").first().waitFor();
+  const uni = spaces.find((x) => x.type === "university");
+  check((await q1("select app.org_billing_access($1) a", [uni.id])).a === "read_only", "domaine retiré : espace université en lecture seule");
+  check((await q1("select count(*)::int n from organizations where parent_id = $1", [g.id])).n === 2, "domaine retiré : espace conservé");
+  check((await q1("select monthly_price from subscriptions where organization_id = $1", [g.id])).monthly_price === 30000, "prix inchangé (30 000) avec 1 domaine");
+  await p4.goto(`${base}/espaces`);
+  await p4.locator("main li").filter({ hasText: "Université / Enseignement supérieur" }).getByRole("button", { name: /Ouvrir l'espace/ }).click();
+  await p4.waitForURL(/\/universite/);
+  check((await text(p4)).includes("ce domaine n'est pas inclus dans l'abonnement Module 4"), "espace université : bandeau « lecture seule » explicite");
+  await p4.goto(`${base}/abonnement`);
+  t4 = await text(p4);
+  check(t4.toUpperCase().includes("COUVERT PAR") && t4.includes(`Abonnement de « ${name4} »`) && t4.includes("Domaine non inclus"),"Mon abonnement de l'espace : couvert par le principal, domaine non inclus");
+  await bar.getByRole("button", { name: new RegExp(name4) }).first().click();
+  await p4.waitForURL(/\/espaces/);
+
+  // Ajout d'un domaine puis création de son espace.
+  await domains.getByLabel(/Centre de formation professionnelle/).check();
+  await domains.getByRole("button", { name: "Enregistrer les domaines" }).click();
+  await p4.getByText("Domaines du Module 4 enregistrés.").first().waitFor();
+  await p4.goto(`${base}/espaces`);
+  await p4.locator("main li").filter({ hasText: "Centre de formation professionnelle" }).getByRole("button", { name: /Créer l'espace/ }).click();
+  await p4.getByRole("dialog").getByRole("button", { name: "Créer l'espace" }).click();
+  await p4.getByRole("dialog").waitFor({ state: "detached" });
+  const training = await q1("select o.id from organizations o where o.parent_id = $1 and o.type = 'vocational_center'", [g.id]);
+  check(Boolean(training) && (await q1("select app.org_billing_access($1) a", [training.id])).a === "full", "espace formation créé, accès complet");
+  const m4Events = (await db.query("select event_type from subscription_events where organization_id = $1", [g.id])).rows.map((r) => r.event_type);
+  check(m4Events.includes("components_changed") && m4Events.filter((e) => e === "space_created").length === 3, "historique : domaines modifiés, 3 espaces créés");
+  const mob = await (await browser.newContext({ ...mobile, storageState: await ctx4.storageState() })).newPage();
+  await mob.goto(`${base}/espaces`);
+  await shot(mob, "19-module4-espaces-mobile");
+
+  // Isolation : un autre établissement ne voit ni le groupe ni ses espaces.
+  const demo = await login("admin@demo.neoscol.app");
+  await demo.goto(`${base}/espaces`);
+  check(!(await text(demo)).includes(name4), "isolation : l'administrateur d'un autre établissement ne voit pas le Module 4");
+  await ctx4.close();
+}
 
 console.log(problems.length ? `\nPROBLÈMES (${problems.length}) :\n- ${problems.join("\n- ")}` : "\nABONNEMENTS E2E : TOUT EST OK");
 await browser.close();

@@ -4,7 +4,7 @@ import { ArrowRight, Check, Gift, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
-import { FEATURE_LABELS, PLAN_ACCENTS } from "@/features/billing/constants";
+import { FEATURE_LABELS, MODULE4_COMPONENTS, MULTI_MODULES_PLAN, PLAN_ACCENTS, type Module4Component } from "@/features/billing/constants";
 import type { PlanWithFeatures } from "@/features/billing/queries";
 import { formatMoney } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
@@ -76,13 +76,17 @@ export function PricingGrid({
   mode,
   initialInterval = "MONTHLY",
   currentPlanCode,
+  initialComponents = [],
 }: {
   plans: PlanWithFeatures[];
   mode: "public" | "app";
   initialInterval?: Interval;
   currentPlanCode?: string | null;
+  initialComponents?: Module4Component[];
 }) {
   const [interval, setBillingInterval] = useState<Interval>(initialInterval);
+  const [components, setComponents] = useState<Module4Component[]>(initialComponents);
+  const [componentsError, setComponentsError] = useState(false);
   const discount = plans[0]?.annual_discount_percent ?? 30;
   return (
     <div className="grid gap-8">
@@ -94,12 +98,15 @@ export function PricingGrid({
       </div>
       <ul className={cn("stagger grid gap-4 sm:grid-cols-2", mode === "public" ? "xl:grid-cols-5" : "lg:grid-cols-3 2xl:grid-cols-5")}>
         {plans.map((plan) => {
-          const enterprise = plan.code === "ENTERPRISE";
+          const enterprise = plan.code === MULTI_MODULES_PLAN;
           const current = currentPlanCode === plan.code;
+          // Choix des domaines à l'inscription ; dans l'application, ils se gèrent sur « Mon abonnement ».
+          const chooseComponents = enterprise && mode === "public";
+          const extra = chooseComponents ? `&composantes=${components.join(",")}` : "";
           const href =
             mode === "public"
-              ? `/inscription?formule=${plan.code}&periodicite=${interval}`
-              : `/abonnement/souscrire?formule=${plan.code}&periodicite=${interval}`;
+              ? `/inscription?formule=${plan.code}&periodicite=${interval}${extra}`
+              : `/abonnement/souscrire?formule=${plan.code}&periodicite=${interval}${extra}`;
           const features = plan.features.filter((f) => f.enabled).sort((a, b) => Object.keys(FEATURE_LABELS).indexOf(a.feature_code) - Object.keys(FEATURE_LABELS).indexOf(b.feature_code));
           return (
             <li
@@ -116,7 +123,7 @@ export function PricingGrid({
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-base font-bold uppercase tracking-wide text-[#0b1f4d] dark:text-white">{plan.name}</h3>
                     {current ? <span className="rounded-full bg-success-soft px-2 py-0.5 text-[11px] font-semibold text-success">Formule actuelle</span> : null}
-                    {enterprise ? <span className="rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-primary">Multi-établissements</span> : null}
+                    {enterprise ? <span className="rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-primary">Multi-modules</span> : null}
                   </div>
                   <p className="min-h-10 text-xs text-muted-foreground">{plan.audience ?? plan.description}</p>
                 </div>
@@ -132,8 +139,42 @@ export function PricingGrid({
                     </li>
                   ))}
                 </ul>
+                {chooseComponents ? (
+                  <fieldset className="grid gap-1.5 rounded-2xl border border-primary/20 bg-primary-soft/30 p-3" aria-describedby={componentsError ? `m4-error-${mode}` : undefined}>
+                    <legend className="px-1 text-xs font-semibold text-[#0b1f4d] dark:text-white">Domaines de votre établissement</legend>
+                    {MODULE4_COMPONENTS.map((c) => (
+                      <label key={c.key} className="flex cursor-pointer items-start gap-2 text-xs">
+                        <input
+                          type="checkbox"
+                          name={`composante_${c.key}`}
+                          checked={components.includes(c.key)}
+                          onChange={(e) => {
+                            setComponentsError(false);
+                            setComponents((prev) => (e.target.checked ? [...prev, c.key] : prev.filter((k) => k !== c.key)));
+                          }}
+                          className="mt-0.5 size-4 accent-[var(--primary)]"
+                        />
+                        <span className="grid">
+                          <span className="font-medium">{c.label}</span>
+                          <span className="text-muted-foreground">{c.hint}</span>
+                        </span>
+                      </label>
+                    ))}
+                    {componentsError ? (
+                      <p id={`m4-error-${mode}`} role="alert" className="text-xs font-semibold text-danger">
+                        Veuillez sélectionner au moins un domaine.
+                      </p>
+                    ) : null}
+                  </fieldset>
+                ) : null}
                 <Link
                   href={href}
+                  onClick={(e) => {
+                    if (chooseComponents && components.length === 0) {
+                      e.preventDefault();
+                      setComponentsError(true);
+                    }
+                  }}
                   className={cn(
                     "group mt-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
                     enterprise
@@ -141,7 +182,7 @@ export function PricingGrid({
                       : "bg-primary text-primary-foreground hover:bg-primary-hover",
                   )}
                 >
-                  {mode === "public" ? "Commencer mon essai gratuit" : current ? "Renouveler / payer" : "Choisir cette formule"}
+                  {chooseComponents ? "Continuer" : mode === "public" ? "Commencer mon essai gratuit" : current ? "Renouveler / payer" : "Choisir cette formule"}
                   <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden />
                 </Link>
               </div>

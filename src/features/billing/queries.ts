@@ -83,6 +83,10 @@ export type AccessState = {
   days_left?: number;
   cancel_at_period_end?: boolean;
   is_demo?: boolean;
+  /** Module 4 : espace couvert par l'abonnement de cet établissement principal. */
+  covered_by?: string | null;
+  /** Module 4 : domaine de l'espace inclus dans l'abonnement. */
+  covered?: boolean;
 };
 
 /** État d'accès (bandeaux) — tout membre de l'établissement. */

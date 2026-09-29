@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { LYCEE_TRACKS, SCHOOL_LEVELS } from "@/features/academic/school";
+import { MODULE4_COMPONENTS, MULTI_MODULES_PLAN } from "@/features/billing/constants";
 import { newPasswordSchema } from "@/features/auth/schemas";
 import { secureCookiesForRequest } from "@/lib/utils/cookie-security";
 import { ACTIVE_ORG_COOKIE } from "@/lib/auth/session";
@@ -67,7 +68,18 @@ export async function signUpOrganization(_: ActionResult | null, formData: FormD
   });
   const password = newPasswordSchema.safeParse({ password: formData.get("password"), confirmation: formData.get("confirmation") });
   // Module Scolaire : niveaux cochés (établissements scolaires uniquement).
-  const schoolType = parsed.success && !["university", "institute", "vocational_center", "technical_center"].includes(parsed.data.org_type);
+  const schoolType = parsed.success && !["university", "institute", "vocational_center", "technical_center", "school_group"].includes(parsed.data.org_type);
+  // Module 4 : un établissement « plusieurs activités » ⇔ formule multi-modules, au moins un domaine.
+  const components = MODULE4_COMPONENTS.map((c) => c.key).filter((k) => formData.get(`component_${k}`) === "on");
+  if (parsed.success) {
+    const multi = parsed.data.plan === MULTI_MODULES_PLAN;
+    if (multi !== (parsed.data.org_type === "school_group")) {
+      return { ok: false, message: "Le Module 4 correspond au type « Plusieurs activités » (et inversement).", fieldErrors: { plan: ["Formule incompatible avec le type choisi."] } };
+    }
+    if (multi && components.length === 0) {
+      return { ok: false, message: "Veuillez sélectionner au moins un domaine.", fieldErrors: { components: ["Veuillez sélectionner au moins un domaine."] } };
+    }
+  }
   const levels = SCHOOL_LEVELS.filter((l) => formData.get(`level_${l}`) === "on");
   const tracks = LYCEE_TRACKS.filter((t) => formData.get(`track_${t}`) === "on");
   if (schoolType && levels.length === 0) {
@@ -147,6 +159,13 @@ export async function signUpOrganization(_: ActionResult | null, formData: FormD
   if (schoolType) {
     // Par le compte du responsable (settings.manage) : même contrôle que dans les paramètres.
     await supabase.rpc("set_school_config", { p_org: organizationId, p_levels: levels, p_tracks: tracks });
+  }
+  if (parsed.data.plan === MULTI_MODULES_PLAN) {
+    // Module 4 : domaines souscrits puis un espace par domaine (contrôles en base, par le compte du responsable).
+    await supabase.rpc("set_subscription_components", { p_org: organizationId, p_components: components });
+    for (const component of components) {
+      await supabase.rpc("create_component_space", { p_parent: organizationId, p_component: component });
+    }
   }
   (await cookies()).set(ACTIVE_ORG_COOKIE, organizationId, {
     httpOnly: true,

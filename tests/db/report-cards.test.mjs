@@ -90,8 +90,10 @@ describe("Bulletin configurable", () => {
       const devoir = colAvg("homework");
       const expected = (interro * 1 + devoir * 3) / 4;
       const maths = kofi.data.subjects.find((s) => s.subject === "Mathématiques");
-      assert.equal(maths.average, Math.round(expected * 100) / 100);
-      assert.equal(maths.columns.interro1, Math.round(interro * 100) / 100);
+      // Arrondi au centième : la base arrondit en décimal exact (14,775 → 14,78), JS en flottant.
+      const near = (actual, value) => Math.abs(actual - value) <= 0.005 + 1e-9;
+      assert.ok(near(maths.average, expected), `${maths.average} ≈ ${expected}`);
+      assert.ok(near(maths.columns.interro1, interro), `${maths.columns.interro1} ≈ ${interro}`);
       assert.ok(typeof maths.mention === "string");
       assert.ok(kofi.data.proposed_decision);
     });

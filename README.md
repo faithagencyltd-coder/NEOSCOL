@@ -150,10 +150,15 @@ Menu **Établissement › Données historiques** (permission `students.import`) 
 Paiement de l'abonnement **par l'établissement à NéoScol** — totalement distinct des finances de
 l'établissement (scolarité, reçus, dépenses), qui ne partagent ni table ni permission.
 
-- **Formules officielles** (XOF) : Maternelle & Primaire 8 000/mois (67 200/an), Collège & Lycée et
-  Centre de formation 15 000/mois (126 000/an), Université 20 000/mois (168 000/an), Enterprise
-  28 000/mois (235 200/an). Annuel = -30 % ; prix barré et économie exacts, jamais recalculés.
-- **Essai gratuit de 14 jours** à la création de chaque établissement (`/inscription` ou console plateforme).
+- **Formules officielles** (XOF) : Module Scolaire et Centre de formation 15 000/mois (126 000/an),
+  Université 20 000/mois (168 000/an), **Module 4 — Multi-modules** 30 000/mois (252 000/an, remplace
+  l'ancienne formule Enterprise). Annuel = -30 % ; prix barré et économie exacts, jamais recalculés.
+- **Module 4** (migration `20261003002500_module4_multi_modules.sql`) : un établissement principal
+  (`school_group`), 1 à 3 domaines (école, formation, université) au même prix, un **espace** rattaché par
+  domaine (`parent_id`), un seul abonnement, bascule entre espaces (`/espaces` + barre en haut de l'application).
+  Domaine retiré : espace en lecture seule, aucune donnée supprimée. Tout est contrôlé en base
+  (`set_subscription_components`, `create_component_space`, `module4_overview`, `app.org_billing_access`).
+- **Essai gratuit de 20 jours** à la création de chaque établissement (`/inscription` ou console plateforme).
 - **Pages** : `/tarifs` (alias `/pricing`), `/inscription`, `/abonnement` (Mon abonnement), `/abonnement/souscrire`
   (paiement en 5 étapes), factures PDF `/api/abonnement/factures/[id]`, console `/plateforme`
   (Établissements, Abonnements, Paiements, Formules).

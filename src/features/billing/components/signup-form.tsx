@@ -20,6 +20,7 @@ import {
   type SchoolLevel,
 } from "@/features/academic/school";
 import { IntervalToggle, PlanPrice, type Interval } from "@/features/billing/components/pricing-grid";
+import { MODULE4_COMPONENTS, MULTI_MODULES_PLAN, type Module4Component } from "@/features/billing/constants";
 import type { PlanWithFeatures } from "@/features/billing/queries";
 import { signUpOrganization } from "@/features/billing/signup";
 
@@ -33,7 +34,7 @@ const TYPES: [string, string, string][] = [
   ["university", "Université", "UNIVERSITE"],
   ["institute", "Institut / école supérieure", "UNIVERSITE"],
   ["school_complex", "Groupe scolaire (maternelle → lycée)", "MODULE_SCOLAIRE"],
-  ["school_group", "Réseau / groupe d'établissements", "ENTERPRISE"],
+  ["school_group", "Plusieurs activités : école, formation, université (Module 4)", "MULTI_MODULES"],
 ];
 
 const COUNTRIES: [string, string][] = [
@@ -51,17 +52,29 @@ function defaultLevels(type: string): SchoolLevel[] {
 }
 
 /** Création d'un établissement : essai gratuit (durée de la formule), sans paiement. */
-export function SignupForm({ plans, initialPlan, initialInterval }: { plans: PlanWithFeatures[]; initialPlan?: string; initialInterval: Interval }) {
+export function SignupForm({
+  plans,
+  initialPlan,
+  initialInterval,
+  initialComponents = [],
+}: {
+  plans: PlanWithFeatures[];
+  initialPlan?: string;
+  initialInterval: Interval;
+  initialComponents?: Module4Component[];
+}) {
   const [state, action, pending] = useActionState(signUpOrganization, null);
   const [planCode, setPlanCode] = useState(initialPlan && plans.some((p) => p.code === initialPlan) ? initialPlan : (plans[1]?.code ?? plans[0]?.code ?? ""));
   const [interval, setBillingInterval] = useState<Interval>(initialInterval);
   const [planTouched, setPlanTouched] = useState(Boolean(initialPlan));
-  const [orgType, setOrgType] = useState("");
+  const [orgType, setOrgType] = useState(initialPlan === MULTI_MODULES_PLAN ? "school_group" : "");
+  const [components, setComponents] = useState<Module4Component[]>(initialComponents);
   const [levels, setLevels] = useState<SchoolLevel[]>([]);
   const [tracks, setTracks] = useState<LyceeTrack[]>(["general"]);
   const schoolType = orgType !== "" && !NON_SCHOOL_TYPES.includes(orgType);
   const errors = state && !state.ok ? (state.fieldErrors ?? {}) : {};
   const plan = plans.find((p) => p.code === planCode);
+  const multi = planCode === MULTI_MODULES_PLAN;
 
   return (
     <ActionForm dispatch={action} pending={pending} className="grid gap-5" noValidate>
@@ -89,10 +102,11 @@ export function SignupForm({ plans, initialPlan, initialInterval }: { plans: Pla
               id="org_type"
               name="org_type"
               required
-              defaultValue=""
+              value={orgType}
               onChange={(e) => {
                 const suggested = TYPES.find(([value]) => value === e.target.value)?.[2];
-                if (suggested && !planTouched) setPlanCode(suggested);
+                // Module 4 ⇔ « plusieurs activités » : la formule suit toujours ce choix.
+                if (suggested && (!planTouched || e.target.value === "school_group" || multi)) setPlanCode(suggested);
                 setOrgType(e.target.value);
                 setLevels(defaultLevels(e.target.value));
               }}
@@ -125,7 +139,32 @@ export function SignupForm({ plans, initialPlan, initialInterval }: { plans: Pla
         </div>
       </fieldset>
 
-      {schoolType ? (
+      {multi ? (
+        <fieldset className="anim-fade-up grid gap-2 rounded-2xl border border-primary/30 bg-primary-soft/30 p-4">
+          <legend className="px-1 text-sm font-semibold text-primary">Domaines de votre établissement (Module 4)</legend>
+          <p className="text-xs text-muted-foreground">Un seul abonnement ; un espace est créé pour chaque domaine coché (modifiable ensuite).</p>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {MODULE4_COMPONENTS.map((c) => (
+              <label key={c.key} className="flex min-h-11 cursor-pointer items-start gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm has-[:checked]:border-primary has-[:checked]:bg-primary-soft/60">
+                <input
+                  type="checkbox"
+                  name={`component_${c.key}`}
+                  checked={components.includes(c.key)}
+                  onChange={() => setComponents((l) => (l.includes(c.key) ? l.filter((x) => x !== c.key) : [...l, c.key]))}
+                  className="mt-0.5 size-4 accent-[var(--primary)]"
+                />
+                <span className="grid">
+                  <span className="font-medium">{c.label}</span>
+                  <span className="text-xs text-muted-foreground">{c.hint}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+          {errors.components ? <p className="text-xs font-medium text-danger">{errors.components[0]}</p> : null}
+        </fieldset>
+      ) : null}
+
+      {schoolType && !multi ? (
         <fieldset className="anim-fade-up grid gap-2 rounded-2xl border border-border bg-surface/70 p-4">
           <legend className="px-1 text-sm font-semibold text-primary">Niveaux de votre établissement (Module Scolaire)</legend>
           <p className="text-xs text-muted-foreground">Cochez ce que vous possédez réellement ; modifiable à tout moment.</p>
@@ -195,6 +234,9 @@ export function SignupForm({ plans, initialPlan, initialInterval }: { plans: Pla
             onChange={(e) => {
               setPlanCode(e.target.value);
               setPlanTouched(true);
+              // Le Module 4 correspond au type « plusieurs activités » (et inversement).
+              if (e.target.value === MULTI_MODULES_PLAN) setOrgType("school_group");
+              else if (orgType === "school_group") setOrgType("");
             }}
           >
             {plans.map((p) => (

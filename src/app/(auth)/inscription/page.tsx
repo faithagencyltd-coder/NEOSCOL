@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { SignupForm } from "@/features/billing/components/signup-form";
 import { listPlans } from "@/features/billing/queries";
-import { TRIAL_DAYS } from "@/features/billing/constants";
+import { MODULE4_COMPONENTS, TRIAL_DAYS } from "@/features/billing/constants";
 
 export const metadata: Metadata = { title: "Créer mon établissement — essai gratuit" };
 
@@ -12,6 +12,8 @@ export default async function SignupPage({ searchParams }: PageProps<"/inscripti
   const plans = (await listPlans()).filter((p) => p.is_active);
   const formule = typeof params.formule === "string" ? params.formule : undefined;
   const interval = params.periodicite === "YEARLY" ? "YEARLY" : "MONTHLY";
+  const requested = typeof params.composantes === "string" ? params.composantes.split(",") : [];
+  const components = MODULE4_COMPONENTS.map((c) => c.key).filter((k) => requested.includes(k));
   return (
     <div className="grid gap-6">
       <div className="anim-fade-up grid gap-1.5">
@@ -21,7 +23,7 @@ export default async function SignupPage({ searchParams }: PageProps<"/inscripti
         </h1>
         <p className="text-sm text-muted-foreground">Toutes les fonctionnalités de votre formule, sans paiement pendant {TRIAL_DAYS} jours.</p>
       </div>
-      <SignupForm plans={plans} initialPlan={formule} initialInterval={interval} />
+      <SignupForm plans={plans} initialPlan={formule} initialInterval={interval} initialComponents={components} />
     </div>
   );
 }
