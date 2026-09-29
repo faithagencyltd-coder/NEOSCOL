@@ -80,6 +80,7 @@ export async function saveCountry(_: ActionResult | null, formData: FormData): P
         school_periods: d.school_periods,
         national_id_label: d.national_id_label ?? null,
         national_id_pattern: d.national_id_pattern ?? null,
+        voice_checkin_enabled: formData.get("voice_checkin_enabled") === "on",
       },
       is_active: formData.get("is_active") === "on",
       sort_order: d.sort_order,

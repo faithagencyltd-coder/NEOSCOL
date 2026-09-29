@@ -192,6 +192,7 @@ export const NAVIGATION: NavSection[] = [
       { href: "/abonnement", label: "Mon abonnement", icon: "subscription", anyOf: ["billing.read"], keywords: "abonnement NéoScol formule facture paiement essai renouveler tarif" },
       { href: "/parametres", label: "Configuration", icon: "settings", anyOf: ["settings.manage"], keywords: "impayés restrictions rappels pointage notes verrouillage" },
       { href: "/bulletins/configuration", label: "Modèle de bulletin", icon: "templates", anyOf: ["report_cards.manage"], keywords: "bulletin colonnes coefficients modèle" },
+      { href: "/parametres/messages-vocaux", label: "Messages vocaux", icon: "settings", anyOf: ["voice_checkin.manage"], keywords: "voice check-in voix annonce arrivée pointage tablette synthèse vocale" },
       { href: "/parametres/regles-academiques", label: "Règles de calcul", icon: "settings", anyOf: ["academic.manage"], keywords: "formule moyenne annuelle pondération trimestre décisions simulateur versions" },
       { href: "/formulaires", label: "Formulaires", icon: "forms", anyOf: ["forms.manage"], keywords: "champs personnalisés pièces" },
     ],

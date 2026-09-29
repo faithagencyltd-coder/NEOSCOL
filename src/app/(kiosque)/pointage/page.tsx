@@ -9,6 +9,8 @@ import { signOut } from "@/features/auth/actions";
 import { requireOrganization } from "@/lib/auth/guards";
 import { can, displayName } from "@/lib/auth/session";
 import { todayIn } from "@/lib/dates";
+import { createClient } from "@/lib/supabase/server";
+import type { VoiceConfig } from "@/features/voice-checkin/messages";
 
 export const metadata: Metadata = { title: "Scanner votre badge" };
 
@@ -19,9 +21,11 @@ export default async function KioskPage() {
   // Formation professionnelle et université : scan unifié (enseignants + apprenants / étudiants).
   const university = isHigherOrg(organization.type);
   const training = isTrainingOrg(organization.type) || university;
-  const [scans, rooms] = await Promise.all([
+  const supabase = await createClient();
+  const [scans, rooms, { data: voice }] = await Promise.all([
     listBadgeScans(organization.id, { from: today, to: today }, 12),
     training ? getRooms(organization.id) : Promise.resolve([]),
+    supabase.rpc("voice_checkin_config", { p_org: organization.id }),
   ]);
   return (
     <BadgeScanner
@@ -33,6 +37,7 @@ export default async function KioskPage() {
       training={training ? { rooms: rooms.map((r) => ({ id: r.id, name: r.name })) } : null}
       university={university}
       offline={training ? undefined : { userId: context.user.id, organizationId: organization.id }}
+      voice={(voice as unknown as VoiceConfig | null) ?? null}
       initialScans={scans.map((s) => ({
         id: s.id,
         at: s.scanned_at,

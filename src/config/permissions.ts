@@ -69,6 +69,7 @@ export const PERMISSIONS = [
   "portal.parent",
   "portal.student",
   "assistant.use",
+  "voice_checkin.manage",
   "billing.read",
   "billing.manage",
   "deliberations.read",

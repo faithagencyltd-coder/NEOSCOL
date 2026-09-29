@@ -24,7 +24,7 @@ type Country = {
   timezone: string;
   phone_pattern: string;
   date_format: string;
-  settings: { grading_scale?: number; school_periods?: string; national_id_label?: string | null; national_id_pattern?: string | null };
+  settings: { grading_scale?: number; school_periods?: string; national_id_label?: string | null; national_id_pattern?: string | null; voice_checkin_enabled?: boolean };
   is_active: boolean;
   sort_order: number;
 };
@@ -47,6 +47,7 @@ function countryFields(c: Country | null, currencies: { value: string; label: st
     { name: "school_periods", label: "Périodes scolaires", type: "select", options: [{ value: "trimester", label: "Trimestres" }, { value: "semester", label: "Semestres" }], defaultValue: c?.settings.school_periods ?? "trimester" },
     { name: "national_id_label", label: "Libellé de l'identifiant national de l'élève (facultatif)", defaultValue: c?.settings.national_id_label ?? "", wide: true },
     { name: "national_id_pattern", label: "Format de l'identifiant national (expression régulière, facultatif)", defaultValue: c?.settings.national_id_pattern ?? "", placeholder: "^[0-9]{12}$", hint: "Vérifié à chaque saisie et à chaque import Country Connect.", wide: true },
+    { name: "voice_checkin_enabled", label: "Messages vocaux à l'arrivée (Voice Check-in) disponibles", type: "checkbox", wide: true, defaultValue: c?.settings.voice_checkin_enabled === false ? "false" : "true" },
     { name: "sort_order", label: "Ordre d'affichage", type: "number", min: 0, defaultValue: String(c?.sort_order ?? 100) },
     { name: "is_active", label: "Actif (proposé aux établissements)", type: "checkbox", defaultValue: !c || c.is_active ? "true" : "false" },
   ];

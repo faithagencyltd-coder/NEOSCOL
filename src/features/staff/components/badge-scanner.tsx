@@ -1,7 +1,7 @@
 "use client";
 
 import jsQR from "jsqr";
-import { Camera, CameraOff, Check, CheckCircle2, CloudOff, Keyboard, LogOut, Maximize, ScanLine, XCircle } from "lucide-react";
+import { Camera, CameraOff, Check, CheckCircle2, CloudOff, Keyboard, LogOut, Maximize, ScanLine, Volume2, VolumeX, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
@@ -10,6 +10,8 @@ import { OfflineStatus } from "@/features/offline/components/offline-status";
 import { scanBadge } from "@/features/staff/actions";
 import type { ScanResult } from "@/features/staff/schemas";
 import { SCAN_REJECTIONS } from "@/features/training/config";
+import { messageFor, renderVoice, voiceEvent, voiceVariables, type VoiceConfig } from "@/features/voice-checkin/messages";
+import { speak } from "@/features/voice-checkin/speak";
 import { enqueue, isNetworkError } from "@/lib/offline/outbox";
 import { cn } from "@/lib/utils/cn";
 
@@ -24,6 +26,7 @@ declare global {
 
 const RESET_AFTER_MS = 6000;
 const ROOM_KEY = "neoscol:kiosque:salle";
+const VOICE_MUTE_KEY = "neoscol:kiosque:voix-coupee";
 
 const PROFILE_LABELS: Record<string, string> = { learner: "APPRENANT", trainer: "FORMATEUR", staff: "PERSONNEL" };
 /** Enseignement supérieur : même moteur de scan, vocabulaire universitaire. */
@@ -106,6 +109,7 @@ export function BadgeScanner({
   training = null,
   university = false,
   offline,
+  voice = null,
 }: {
   organizationName: string;
   operator: string;
@@ -119,6 +123,8 @@ export function BadgeScanner({
   university?: boolean;
   /** Pointage du personnel (établissement scolaire) : scans gardés sur la tablette sans réseau, envoyés ensuite à leur heure réelle. */
   offline?: { userId: string; organizationId: string };
+  /** Voice Check-in : message vocal à chaque scan (réglages de l'établissement). */
+  voice?: VoiceConfig | null;
 }) {
   const profileLabels = university ? UNIVERSITY_PROFILE_LABELS : PROFILE_LABELS;
   const [roomId, setRoomId] = useState<string>("");
@@ -137,6 +143,29 @@ export function BadgeScanner({
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [queued, setQueued] = useState(false);
+  const voiceOn = Boolean(voice?.available && voice.enabled);
+  const [muted, setMuted] = useState(false);
+  useEffect(() => {
+    try {
+      setMuted(window.localStorage.getItem(VOICE_MUTE_KEY) === "1"); // eslint-disable-line react-hooks/set-state-in-effect -- préférence locale de la tablette, lue une fois
+    } catch {
+      // Stockage indisponible : voix active par défaut.
+    }
+  }, []);
+  const voiceRef = useRef({ voice, muted });
+  useEffect(() => {
+    voiceRef.current = { voice, muted };
+  }, [voice, muted]);
+  /** Annonce vocale du résultat (jamais de nom pour un refus). */
+  const announce = useCallback((scan: ScanResult | null, queued = false) => {
+    const { voice: cfg, muted: off } = voiceRef.current;
+    if (!cfg?.available || !cfg.enabled || off) return;
+    const event = voiceEvent(scan, queued);
+    if (!event) return;
+    const text = renderVoice(messageFor(cfg, event), voiceVariables(scan, cfg.organization), cfg.announce_names);
+    speak(text, { language: cfg.language, rate: cfg.rate, volume: cfg.volume });
+    document.documentElement.dataset.lastVoice = text;
+  }, []);
   const offlineRef = useRef(offline);
   useEffect(() => {
     offlineRef.current = offline;
@@ -188,6 +217,7 @@ export function BadgeScanner({
         setResult(null);
         setError(null);
         setQueued(true);
+        announce(null, true);
         if (resetTimer.current) clearTimeout(resetTimer.current);
         resetTimer.current = setTimeout(() => {
           setQueued(false);
@@ -213,6 +243,7 @@ export function BadgeScanner({
       } else {
         setError(null);
         setResult(response.result);
+        announce(response.result);
         setRecent((current) =>
           [
             {
@@ -233,7 +264,7 @@ export function BadgeScanner({
       }, RESET_AFTER_MS);
       wedgeRef.current?.focus();
     });
-  }, []);
+  }, [announce]);
 
   // Caméra : lecture continue du QR.
   useEffect(() => {
@@ -457,6 +488,25 @@ export function BadgeScanner({
               {cameraOn ? <CameraOff className="size-5" aria-hidden /> : <Camera className="size-5" aria-hidden />}
               {cameraOn ? "Arrêter la caméra" : "Utiliser la caméra"}
             </button>
+            {voiceOn ? (
+              <button
+                type="button"
+                aria-pressed={!muted}
+                onClick={() => {
+                  const next = !muted;
+                  setMuted(next);
+                  try {
+                    window.localStorage.setItem(VOICE_MUTE_KEY, next ? "1" : "0");
+                  } catch {
+                    // Préférence non mémorisée (navigation privée).
+                  }
+                }}
+                className="flex h-12 items-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-5 font-semibold backdrop-blur hover:bg-white/15"
+              >
+                {muted ? <VolumeX className="size-5" aria-hidden /> : <Volume2 className="size-5" aria-hidden />}
+                {muted ? "Voix coupée" : "Voix activée"}
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={() => void document.documentElement.requestFullscreen?.()}

@@ -8005,6 +8005,50 @@ export type Database = {
           }
         ]
       }
+      voice_checkin_settings: {
+        Row: {
+          announce_names: boolean
+          enabled: boolean
+          language: string | null
+          messages: Json
+          organization_id: string
+          rate: number
+          updated_at: string
+          updated_by: string | null
+          volume: number
+        }
+        Insert: {
+          announce_names?: boolean
+          enabled?: boolean
+          language?: string | null
+          messages?: Json
+          organization_id: string
+          rate?: number
+          updated_at?: string
+          updated_by?: string | null
+          volume?: number
+        }
+        Update: {
+          announce_names?: boolean
+          enabled?: boolean
+          language?: string | null
+          messages?: Json
+          organization_id?: string
+          rate?: number
+          updated_at?: string
+          updated_by?: string | null
+          volume?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_checkin_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       whatsapp_templates: {
         Row: {
           created_at: string
@@ -9148,6 +9192,18 @@ export type Database = {
         }
         Returns: string
       }
+      save_voice_checkin_settings: {
+        Args: {
+          p_org: string
+          p_enabled: boolean
+          p_language: string
+          p_rate: number
+          p_volume: number
+          p_announce_names: boolean
+          p_messages: Json
+        }
+        Returns: undefined
+      }
       scan_badge: {
         Args: {
           p_organization_id: string
@@ -9413,6 +9469,12 @@ export type Database = {
       verify_organization_email: {
         Args: {
           p_token_hash: string
+        }
+        Returns: Json
+      }
+      voice_checkin_config: {
+        Args: {
+          p_org: string
         }
         Returns: Json
       }
