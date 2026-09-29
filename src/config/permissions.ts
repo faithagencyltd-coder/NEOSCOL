@@ -62,6 +62,7 @@ export const PERMISSIONS = [
   "documents.dossier",
   "communication.announce",
   "communication.message",
+  "communication.send",
   "reports.read",
   "reports.finance",
   "reports.export",

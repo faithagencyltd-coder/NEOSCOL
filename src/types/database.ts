@@ -1147,6 +1147,54 @@ export type Database = {
           }
         ]
       }
+      communication_automations: {
+        Row: {
+          enabled: boolean
+          interval_days: number
+          kind: string
+          last_run_at: string | null
+          organization_id: string
+          template_id: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          interval_days?: number
+          kind: string
+          last_run_at?: string | null
+          organization_id: string
+          template_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          interval_days?: number
+          kind?: string
+          last_run_at?: string | null
+          organization_id?: string
+          template_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_automations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_automations_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "message_templates"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       conduct_records: {
         Row: {
           created_at: string
@@ -3703,6 +3751,157 @@ export type Database = {
           }
         ]
       }
+      message_campaign_recipients: {
+        Row: {
+          campaign_id: string
+          contact_masked: string | null
+          display_name: string
+          error: string | null
+          id: string
+          organization_id: string
+          recipient_id: string
+          recipient_type: string
+          sent_at: string | null
+          status: string
+          student_id: string | null
+          variables: Json
+        }
+        Insert: {
+          campaign_id: string
+          contact_masked?: string | null
+          display_name: string
+          error?: string | null
+          id?: string
+          organization_id: string
+          recipient_id: string
+          recipient_type: string
+          sent_at?: string | null
+          status?: string
+          student_id?: string | null
+          variables?: Json
+        }
+        Update: {
+          campaign_id?: string
+          contact_masked?: string | null
+          display_name?: string
+          error?: string | null
+          id?: string
+          organization_id?: string
+          recipient_id?: string
+          recipient_type?: string
+          sent_at?: string | null
+          status?: string
+          student_id?: string | null
+          variables?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_campaign_recipients_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "message_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_campaign_recipients_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_campaign_recipients_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      message_campaigns: {
+        Row: {
+          audience: Json
+          body: string
+          channel: string
+          created_at: string
+          created_by: string | null
+          failed: number
+          finished_at: string | null
+          id: string
+          name: string
+          organization_id: string
+          sent: number
+          skipped: number
+          source: string
+          status: string
+          subject: string | null
+          template_id: string | null
+          total: number
+          whatsapp_language: string | null
+          whatsapp_template_name: string | null
+          whatsapp_variables: string[]
+        }
+        Insert: {
+          audience: Json
+          body: string
+          channel: string
+          created_at?: string
+          created_by?: string | null
+          failed?: number
+          finished_at?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          sent?: number
+          skipped?: number
+          source?: string
+          status?: string
+          subject?: string | null
+          template_id?: string | null
+          total?: number
+          whatsapp_language?: string | null
+          whatsapp_template_name?: string | null
+          whatsapp_variables?: string[]
+        }
+        Update: {
+          audience?: Json
+          body?: string
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          failed?: number
+          finished_at?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          sent?: number
+          skipped?: number
+          source?: string
+          status?: string
+          subject?: string | null
+          template_id?: string | null
+          total?: number
+          whatsapp_language?: string | null
+          whatsapp_template_name?: string | null
+          whatsapp_variables?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_campaigns_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_campaigns_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "message_templates"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       message_deliveries: {
         Row: {
           channel: string
@@ -3749,6 +3948,63 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      message_templates: {
+        Row: {
+          body: string
+          channel: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          name: string
+          organization_id: string
+          subject: string | null
+          updated_at: string
+          whatsapp_template_id: string | null
+          whatsapp_variables: string[]
+        }
+        Insert: {
+          body: string
+          channel: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          organization_id: string
+          subject?: string | null
+          updated_at?: string
+          whatsapp_template_id?: string | null
+          whatsapp_variables?: string[]
+        }
+        Update: {
+          body?: string
+          channel?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          organization_id?: string
+          subject?: string | null
+          updated_at?: string
+          whatsapp_template_id?: string | null
+          whatsapp_variables?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_templates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_templates_whatsapp_template_id_fkey"
+            columns: ["whatsapp_template_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_templates"
             referencedColumns: ["id"]
           }
         ]
@@ -7818,6 +8074,12 @@ export type Database = {
         }
         Returns: Json
       }
+      cancel_message_campaign: {
+        Args: {
+          p_campaign: string
+        }
+        Returns: undefined
+      }
       change_student_status: {
         Args: {
           p_student_id: string
@@ -7825,6 +8087,12 @@ export type Database = {
           p_reason: string
         }
         Returns: undefined
+      }
+      communication_channels: {
+        Args: {
+          p_org: string
+        }
+        Returns: Json
       }
       compute_annual_results: {
         Args: {
@@ -7892,6 +8160,16 @@ export type Database = {
           p_student: Json
           p_history?: Json
           p_diploma?: Json
+        }
+        Returns: string
+      }
+      create_message_campaign: {
+        Args: {
+          p_org: string
+          p_template: string
+          p_name: string
+          p_audience: Json
+          p_source?: string
         }
         Returns: string
       }
@@ -7983,6 +8261,14 @@ export type Database = {
           p_reason: string
         }
         Returns: undefined
+      }
+      due_communication_automations: {
+        Args: never
+        Returns: {
+          organization_id: string
+          kind: string
+          template_id: string
+        }[]
       }
       effective_academic_rules: {
         Args: {
@@ -8139,6 +8425,24 @@ export type Database = {
           p_thread_id: string
         }
         Returns: undefined
+      }
+      message_campaign_batch: {
+        Args: {
+          p_campaign: string
+          p_limit?: number
+        }
+        Returns: {
+          recipient_id: string
+          contact: string
+          variables: Json
+        }[]
+      }
+      message_campaign_record: {
+        Args: {
+          p_campaign: string
+          p_results: Json
+        }
+        Returns: Json
       }
       message_contacts: {
         Args: {
@@ -8549,6 +8853,14 @@ export type Database = {
           room: string
         }[]
       }
+      preview_message_audience: {
+        Args: {
+          p_org: string
+          p_audience: Json
+          p_channel: string
+        }
+        Returns: Json
+      }
       preview_report_cards: {
         Args: {
           p_class_id: string
@@ -8626,6 +8938,16 @@ export type Database = {
         }
         Returns: string
       }
+      save_communication_automation: {
+        Args: {
+          p_org: string
+          p_kind: string
+          p_template: string
+          p_enabled: boolean
+          p_interval: number
+        }
+        Returns: undefined
+      }
       save_country_connect_mapping: {
         Args: {
           p_org: string
@@ -8647,6 +8969,20 @@ export type Database = {
           p_grades: Json
         }
         Returns: number
+      }
+      save_message_template: {
+        Args: {
+          p_org: string
+          p_id: string
+          p_name: string
+          p_channel: string
+          p_subject: string
+          p_body: string
+          p_whatsapp_template?: string
+          p_whatsapp_variables?: string[]
+          p_active?: boolean
+        }
+        Returns: string
       }
       scan_badge: {
         Args: {

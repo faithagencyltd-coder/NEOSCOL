@@ -145,6 +145,7 @@ export const NAVIGATION: NavSection[] = [
     items: [
       { href: "/communication", label: "Annonces", icon: "communication", anyOf: [], keywords: "annonces information publication familles" },
       { href: "/messages", label: "Messagerie", icon: "communication", anyOf: [], keywords: "messages conversation parents enseignants" },
+      { href: "/communication/envois", label: "Centre d'envois", icon: "communication", anyOf: ["communication.send"], keywords: "sms e-mail email whatsapp envoi groupé relance impayés modèles parents personnel" },
     ],
   },
   {
@@ -299,6 +300,7 @@ export const UNIVERSITY_NAVIGATION: NavSection[] = [
     items: [
       { href: "/communication", label: "Annonces", icon: "communication", anyOf: [], keywords: "annonces" },
       { href: "/messages", label: "Messagerie", icon: "communication", anyOf: [], keywords: "messages" },
+      { href: "/communication/envois", label: "Centre d'envois", icon: "communication", anyOf: ["communication.send"], keywords: "sms e-mail whatsapp envoi groupé relance" },
     ],
   },
   {

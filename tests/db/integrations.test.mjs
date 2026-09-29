@@ -99,11 +99,13 @@ describe("Intégrations de la plateforme", () => {
   test("modèles WhatsApp : Super Admin uniquement, nom au format Meta", async () => {
     await as(USERS.superadmin, async (q) => {
       await q("select platform_upsert_whatsapp_template('rappel_paiement', 'fr', 'Rappel', 2, true)");
+      await q("select platform_upsert_whatsapp_template('ancien_modele', 'fr', 'Désactivé', 0, false)");
       assert.match(await rejects(q("select platform_upsert_whatsapp_template('Rappel Paiement!', 'fr', '', 0, true)")), /check|violates/);
       assert.equal((await q("select variables_count from whatsapp_templates where name = 'rappel_paiement'"))[0].variables_count, 2);
       await switchTo(q, USERS.admin);
       assert.match(await rejects(q("select platform_upsert_whatsapp_template('x', 'fr', '', 0, true)")), /Réservé/);
-      assert.equal((await q("select count(*)::int n from whatsapp_templates"))[0].n, 0);
+      // Établissements : seuls les modèles actifs sont lisibles (choix d'un modèle approuvé, aucun secret).
+      assert.deepEqual((await q("select name from whatsapp_templates order by name")).map((r) => r.name), ["rappel_paiement"]);
     });
   });
 });
