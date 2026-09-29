@@ -9,6 +9,7 @@ import { NotificationsMenu } from "@/components/layout/notifications-menu";
 import { UserMenu } from "@/components/layout/user-menu";
 import { visibleNavigation } from "@/config/navigation";
 import { schoolConfigOf } from "@/features/academic/school";
+import { universityConfigOf } from "@/features/university/config";
 import { SubscriptionBanner } from "@/features/billing/components/subscription-banner";
 import { SIDEBAR_COOKIE } from "@/config/ui";
 import { getRecentNotifications } from "@/features/notifications/queries";
@@ -24,6 +25,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     demo,
     organizationType: context.organization.type,
     school: schoolConfigOf(context.organization.settings),
+    university: universityConfigOf(context.organization.type, context.organization.settings),
   });
   const notifications = await getRecentNotifications(context.organization.id);
   const name = displayName(context);

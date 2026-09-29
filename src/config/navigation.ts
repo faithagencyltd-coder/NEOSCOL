@@ -1,4 +1,5 @@
 import type { SchoolConfig, SchoolLevel } from "@/features/academic/school";
+import type { UniversityConfig, UniversityFeature } from "@/features/university/config";
 import type { Permission } from "@/config/permissions";
 import { vocabularyFor, type Vocabulary } from "@/lib/vocabulary";
 
@@ -48,7 +49,23 @@ export type NavIcon =
   | "trainingSessions"
   | "enrollLearner"
   | "learnerAttendance"
-  | "stats";
+  | "stats"
+  | "university"
+  | "faculty"
+  | "department"
+  | "program"
+  | "track"
+  | "cycle"
+  | "teachingUnit"
+  | "room"
+  | "results"
+  | "retake"
+  | "jury"
+  | "internship"
+  | "thesis"
+  | "defense"
+  | "diploma"
+  | "teacherPortal";
 
 export type NavItem = {
   href: string;
@@ -61,6 +78,8 @@ export type NavItem = {
   schoolLevel?: SchoolLevel;
   /** Module Formation professionnelle : entrée réservée aux centres de formation. */
   family?: Vocabulary["family"];
+  /** Module Université : entrée affichée seulement si la fonctionnalité est activée. */
+  feature?: UniversityFeature;
 };
 
 export type NavSection = { label: string; items: NavItem[] };
@@ -177,6 +196,134 @@ export const NAVIGATION: NavSection[] = [
   },
 ];
 
+/**
+ * Navigation du Module 3 — Université / Enseignement supérieur : uniquement des
+ * menus universitaires (aucune entrée scolaire ni formation professionnelle),
+ * adaptés aux fonctionnalités activées par l'établissement.
+ */
+export const UNIVERSITY_NAVIGATION: NavSection[] = [
+  {
+    label: "Pilotage",
+    items: [
+      { href: "/universite", label: "Tableau de bord universitaire", icon: "university", anyOf: [], keywords: "accueil université statistiques du jour" },
+      { href: "/notifications", label: "Notifications", icon: "notifications", anyOf: [], keywords: "alertes messages" },
+      { href: "/universite/statistiques", label: "Statistiques", icon: "stats", anyOf: ["reports.read", "deliberations.read", "academic.manage"], keywords: "taux réussite crédits paiements reliquats présences" },
+      { href: "/rapports", label: "Rapports", icon: "reports", anyOf: ["reports.read"], keywords: "exports effectifs résultats finances" },
+      { href: "/assistant", label: "Assistant", icon: "assistant", anyOf: ["assistant.use"], keywords: "intelligence artificielle questions" },
+    ],
+  },
+  {
+    label: "Structure universitaire",
+    items: [
+      { href: "/universite/structure", label: "Structure universitaire", icon: "structure", anyOf: ["academic.read"], keywords: "organigramme établissement facultés départements filières" },
+      { href: "/universite/structure?onglet=facultes", label: "Facultés / Écoles", icon: "faculty", anyOf: ["academic.read"], feature: "faculties", keywords: "faculté école institut doyen" },
+      { href: "/universite/structure?onglet=departements", label: "Départements", icon: "department", anyOf: ["academic.read"], feature: "departments", keywords: "département chef" },
+      { href: "/universite/structure?onglet=filieres", label: "Filières", icon: "program", anyOf: ["academic.read"], keywords: "filière licence master diplôme préparé responsable" },
+      { href: "/universite/structure?onglet=parcours", label: "Parcours et spécialités", icon: "track", anyOf: ["academic.read"], keywords: "parcours spécialité option" },
+      { href: "/universite/structure?onglet=cycles", label: "Cycles et niveaux", icon: "cycle", anyOf: ["academic.read"], keywords: "licence master doctorat L1 L2 L3 M1 M2 crédits requis" },
+      { href: "/universite/annees", label: "Années académiques", icon: "year", anyOf: ["academic.read"], keywords: "année semestre sessions examens inscriptions rattrapage" },
+      { href: "/universite/ue", label: "UE / Matières", icon: "teachingUnit", anyOf: ["academic.read"], keywords: "unité d'enseignement UE matière crédits coefficient volume horaire CM TD TP" },
+      { href: "/universite/salles", label: "Salles", icon: "room", anyOf: ["academic.read"], keywords: "amphithéâtre laboratoire salle informatique capacité équipements" },
+    ],
+  },
+  {
+    label: "Scolarité",
+    items: [
+      { href: "/eleves", label: "Étudiants", icon: "students", anyOf: ["students.read"], keywords: "étudiant matricule dossier académique" },
+      { href: "/universite/inscription", label: "Inscription administrative", icon: "enrollLearner", anyOf: ["enrollments.manage"], keywords: "inscription réinscription frais filière parcours niveau" },
+      { href: "/inscriptions", label: "Inscriptions", icon: "enrollments", anyOf: ["enrollments.read"], keywords: "dossiers inscription validation" },
+      { href: "/classes", label: "Promotions", icon: "classes", anyOf: ["academic.read"], keywords: "promotion groupe effectif" },
+      { href: "/universite/enseignants", label: "Enseignants", icon: "staff", anyOf: ["staff.read"], keywords: "professeur maître de conférences chargé de cours vacataire grade" },
+      { href: "/emploi-du-temps", label: "Emploi du temps", icon: "timetable", anyOf: ["timetable.read", "timetable.manage"], keywords: "cours CM TD TP salles horaires" },
+    ],
+  },
+  {
+    label: "Présences",
+    items: [
+      { href: "/universite/presences", label: "Présences / Scan", icon: "learnerAttendance", anyOf: ["attendance.read"], keywords: "entrées sorties retards absences scan" },
+      { href: "/pointage", label: "Tablette de scan", icon: "kiosk", anyOf: ["staff_attendance.scan"], feature: "scan", keywords: "scanner badge QR borne" },
+      { href: "/universite/badges", label: "Badges étudiants", icon: "badges", anyOf: ["students.badges.manage"], feature: "badges", keywords: "badge carte QR remplacer perdu" },
+      { href: "/personnel/badges", label: "Badges enseignants", icon: "badges", anyOf: ["staff.read"], feature: "badges", keywords: "badge enseignant QR" },
+      { href: "/personnel/pointage", label: "Présence des enseignants", icon: "staffAttendance", anyOf: ["staff_attendance.read"], keywords: "arrivées enseignants retards" },
+    ],
+  },
+  {
+    label: "Évaluations et résultats",
+    items: [
+      { href: "/notes", label: "Évaluations et notes", icon: "grades", anyOf: ["grades.read", "grades.enter", "grades.manage"], keywords: "contrôle continu examen TP projet oral saisie des notes" },
+      { href: "/universite/resultats", label: "Résultats et crédits", icon: "results", anyOf: ["deliberations.read", "grades.manage"], keywords: "moyennes UE semestre crédits compensation classement" },
+      { href: "/universite/resultats?onglet=rattrapage", label: "Rattrapages", icon: "retake", anyOf: ["deliberations.read", "grades.manage"], keywords: "session de rattrapage note initiale" },
+      { href: "/universite/deliberations", label: "Délibérations", icon: "jury", anyOf: ["deliberations.read"], keywords: "jury décision procès-verbal PV" },
+    ],
+  },
+  {
+    label: "Stages, mémoires, diplômes",
+    items: [
+      { href: "/universite/stages", label: "Stages", icon: "internship", anyOf: ["students.read", "theses.manage"], feature: "internships", keywords: "entreprise convention tuteur encadreur rapport" },
+      { href: "/universite/memoires", label: "Mémoires / thèses", icon: "thesis", anyOf: ["students.read", "theses.manage"], feature: "theses", keywords: "sujet directeur mémoire thèse" },
+      { href: "/universite/soutenances", label: "Soutenances", icon: "defense", anyOf: ["students.read", "theses.manage"], feature: "defenses", keywords: "soutenance jury date salle note" },
+      { href: "/universite/diplomes", label: "Diplômes", icon: "diploma", anyOf: ["diplomas.manage"], keywords: "diplôme numéro délivrance" },
+    ],
+  },
+  {
+    label: "Enseignant",
+    items: [
+      { href: "/universite/mes-enseignements", label: "Mes enseignements", icon: "teacherPortal", anyOf: ["attendance.take", "grades.enter"], feature: "teacher_portal", keywords: "mes cours étudiants groupes présences notes" },
+      { href: "/mes-cours", label: "Mes cours du jour", icon: "lessons", anyOf: ["attendance.take"], keywords: "appel cours" },
+    ],
+  },
+  {
+    label: "Finances",
+    items: [
+      { href: "/finances", label: "Paiements universitaires", icon: "finance", anyOf: ["finance.read"], feature: "payments", keywords: "frais inscription scolarité examen soutenance diplôme" },
+      { href: "/finances?onglet=impayes", label: "Reliquats", icon: "overdue", anyOf: ["finance.read"], feature: "payments", keywords: "reste à payer tranches échéances" },
+      { href: "/finances?onglet=tarifs", label: "Frais universitaires", icon: "templates", anyOf: ["finance.read"], feature: "payments", keywords: "tarifs tranches échéancier" },
+    ],
+  },
+  {
+    label: "Documents",
+    items: [
+      { href: "/documents", label: "Documents universitaires", icon: "documents", anyOf: ["documents.read", "documents.generate"], feature: "documents", keywords: "certificat de scolarité attestation relevé de notes carte étudiant" },
+      { href: "/documents/modeles", label: "Modèles de documents", icon: "templates", anyOf: ["documents.templates.manage"], feature: "documents", keywords: "Document Studio modèles" },
+    ],
+  },
+  {
+    label: "Communication",
+    items: [
+      { href: "/communication", label: "Annonces", icon: "communication", anyOf: [], keywords: "annonces" },
+      { href: "/messages", label: "Messagerie", icon: "communication", anyOf: [], keywords: "messages" },
+    ],
+  },
+  {
+    label: "Portails",
+    items: [
+      { href: "/portail", label: "Espace étudiant", icon: "portal", anyOf: ["portal.student"], feature: "student_portal", keywords: "portail étudiant" },
+      { href: "/parametres/portails", label: "Lien des portails", icon: "portalLink", anyOf: ["settings.manage"], keywords: "lien connexion étudiants enseignants" },
+    ],
+  },
+  {
+    label: "Sécurité",
+    items: [
+      { href: "/utilisateurs", label: "Utilisateurs", icon: "users", anyOf: ["users.read"], keywords: "comptes" },
+      { href: "/roles", label: "Rôles et permissions", icon: "roles", anyOf: ["users.read", "roles.manage"], keywords: "scolarité comptabilité jury responsable de filière" },
+      { href: "/audit", label: "Journal d'audit", icon: "audit", anyOf: ["audit.read"], keywords: "historique" },
+    ],
+  },
+  {
+    label: "Paramètres",
+    items: [
+      { href: "/universite/parametres", label: "Paramètres universitaires", icon: "settings", anyOf: ["settings.manage"], keywords: "fonctionnalités règles calcul compensation rattrapage crédits classement" },
+      { href: "/parametres/etablissement", label: "Établissement", icon: "school", anyOf: ["settings.manage"], keywords: "logo cachet signature coordonnées site web" },
+      { href: "/abonnement", label: "Mon abonnement", icon: "subscription", anyOf: ["billing.read"], keywords: "abonnement" },
+      { href: "/formulaires", label: "Formulaires", icon: "forms", anyOf: ["forms.manage"], keywords: "champs personnalisés pièces" },
+    ],
+  },
+  {
+    label: "Compte",
+    items: [{ href: "/mon-compte", label: "Mon compte", icon: "account", anyOf: [], keywords: "profil mot de passe" }],
+  },
+];
+
 /** Entrée « Mode démonstration », ajoutée uniquement lorsque NEOSCOL_DEMO_MODE est actif. */
 export const DEMO_NAV_ITEM: NavItem = { href: "/demo", label: "Mode démonstration", icon: "demo", anyOf: [], keywords: "démo rôles scénarios" };
 
@@ -189,12 +336,13 @@ function localizedLabel(item: NavItem, v: Vocabulary): string {
 
 export function visibleNavigation(
   permissions: ReadonlySet<Permission>,
-  options: { demo?: boolean; organizationType?: string | null; school?: SchoolConfig | null } = {},
+  options: { demo?: boolean; organizationType?: string | null; school?: SchoolConfig | null; university?: UniversityConfig | null } = {},
 ): NavSection[] {
   const v = vocabularyFor(options.organizationType);
+  const base = v.family === "higher" ? UNIVERSITY_NAVIGATION : NAVIGATION;
   const sections = options.demo
-    ? NAVIGATION.map((section) => (section.label === "Portails" ? { ...section, items: [...section.items, DEMO_NAV_ITEM] } : section))
-    : NAVIGATION;
+    ? base.map((section) => (section.label === "Portails" ? { ...section, items: [...section.items, DEMO_NAV_ITEM] } : section))
+    : base;
   return sections.map((section) => ({
     ...section,
     items: section.items
@@ -202,6 +350,7 @@ export function visibleNavigation(
       // Entrées propres à un niveau : uniquement si l'établissement l'a activé.
       .filter((item) => !item.schoolLevel || Boolean(options.school?.levels.includes(item.schoolLevel)))
       .filter((item) => !item.family || item.family === v.family)
+      .filter((item) => !item.feature || Boolean(options.university?.features[item.feature]))
       .map((item) => ({ ...item, label: localizedLabel(item, v) })),
   })).filter((section) => section.items.length > 0);
 }

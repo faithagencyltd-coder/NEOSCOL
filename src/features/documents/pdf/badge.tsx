@@ -55,6 +55,8 @@ export type LearnerBadgeData = {
   group: string | null;
   badge: { number: string; status: string };
   qr: string;
+  /** Profil imprimé sous le nom de l'établissement (APPRENANT, ÉTUDIANT). */
+  role?: string;
 };
 
 /** Badge de l'apprenant (CR80, portrait) : logo, photo, identité, matricule, formation, session, groupe, QR personnel. */
@@ -65,7 +67,7 @@ export function LearnerBadgePage({ data, images }: { data: LearnerBadgeData; ima
       <View style={{ backgroundColor: org.primary_color || COLORS.navy, paddingTop: 7, paddingBottom: 16, alignItems: "center", gap: 2 }}>
         <OrgMark organization={org} images={images} size={20} />
         <Text style={{ color: "#FFFFFF", fontFamily: "Helvetica-Bold", fontSize: 7, textAlign: "center", paddingHorizontal: 6 }}>{pdfText(org.name)}</Text>
-        <Text style={{ color: "#FFFFFF", fontSize: 5.5, letterSpacing: 1 }}>APPRENANT</Text>
+        <Text style={{ color: "#FFFFFF", fontSize: 5.5, letterSpacing: 1 }}>{data.role ?? "APPRENANT"}</Text>
         {badge.status !== "active" || org.is_demo ? (
           <Text style={{ fontSize: 5.5, color: "#FCA5A5", fontFamily: "Helvetica-Bold" }}>{badge.status !== "active" ? "BADGE DÉSACTIVÉ" : "DÉMONSTRATION"}</Text>
         ) : null}

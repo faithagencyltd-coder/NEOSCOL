@@ -523,22 +523,32 @@ export function CompetenciesTab({ studentId, training, canEvaluate }: { studentI
 }
 
 /** Onglet « Badge » : QR personnel, impression, remplacement (badge perdu), désactivation, historique. */
+/**
+ * Onglet « Badge » (apprenant ou étudiant) : badge actif + QR, impression,
+ * remplacement (badge perdu), désactivation et historique complet.
+ */
 export function BadgeTab({
   studentId,
-  training,
+  badges,
   qr,
   canManage,
   active: studentActive,
   timezone,
+  who = "L'apprenant",
+  issueAction = issueLearnerBadge,
+  revokeAction = revokeLearnerBadge,
 }: {
   studentId: string;
-  training: Training;
+  badges: Training["badges"];
   qr: string | null;
   canManage: boolean;
   active: boolean;
   timezone: string;
+  who?: string;
+  issueAction?: typeof issueLearnerBadge;
+  revokeAction?: typeof revokeLearnerBadge;
 }) {
-  const current = training.badges.find((b) => b.status === "active");
+  const current = badges.find((b) => b.status === "active");
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,22rem)_1fr]">
       <Card className="grid justify-items-center gap-4 p-6 text-center">
@@ -570,7 +580,7 @@ export function BadgeTab({
                     title="Remplacer le badge ?"
                     description="L'ancien badge est désactivé immédiatement et ne scanne plus. Un nouveau QR est créé ; l'historique est conservé."
                     confirmLabel="Désactiver et remplacer"
-                    action={issueLearnerBadge}
+                    action={issueAction}
                     fields={{ student_id: studentId }}
                     reason={{ label: "Motif", required: true }}
                   />
@@ -583,7 +593,7 @@ export function BadgeTab({
                     title="Désactiver le badge ?"
                     confirmLabel="Désactiver"
                     tone="danger"
-                    action={revokeLearnerBadge}
+                    action={revokeAction}
                     fields={{ student_id: studentId }}
                     reason={{ label: "Motif", required: true }}
                   />
@@ -595,7 +605,7 @@ export function BadgeTab({
           <EmptyState
             icon={IdCard}
             title="Aucun badge actif"
-            description={studentActive ? "Générez le badge pour que l'apprenant puisse pointer." : "L'apprenant n'est pas actif : aucun badge ne peut être émis."}
+            description={studentActive ? `Générez le badge pour que ${who.toLowerCase()} puisse scanner.` : `${who} n'est pas actif : aucun badge ne peut être émis.`}
             action={
               canManage && studentActive ? (
                 <ConfirmAction
@@ -606,7 +616,7 @@ export function BadgeTab({
                   }
                   title="Générer le badge ?"
                   confirmLabel="Générer"
-                  action={issueLearnerBadge}
+                  action={issueAction}
                   fields={{ student_id: studentId }}
                 />
               ) : null
@@ -629,14 +639,14 @@ export function BadgeTab({
             </tr>
           </THead>
           <tbody>
-            {training.badges.length === 0 ? (
+            {badges.length === 0 ? (
               <TR>
                 <TD colSpan={4} className="text-muted-foreground">
                   Aucun badge émis.
                 </TD>
               </TR>
             ) : (
-              training.badges.map((b) => (
+              badges.map((b) => (
                 <TR key={b.id}>
                   <TD className="font-mono text-sm">{b.number}</TD>
                   <TD>

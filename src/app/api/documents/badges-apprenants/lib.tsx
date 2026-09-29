@@ -2,11 +2,17 @@ import "server-only";
 
 import type { DocumentRequest } from "@/features/documents/generate";
 import { LearnerBadgePage } from "@/features/documents/pdf/badge";
+import { isHigherOrg } from "@/features/university/config";
 import { loadImages } from "@/features/documents/server";
 import { qrDataUrl } from "@/lib/pdf/qr";
 
-/** Pages des badges actifs des apprenants demandés (le QR contient le jeton du badge ACTIF). */
+/**
+ * Pages des badges actifs des apprenants (formation) ou des étudiants
+ * (enseignement supérieur : filière, niveau, année académique) demandés.
+ * Le QR contient le jeton du badge ACTIF.
+ */
 export async function learnerBadgePages(req: DocumentRequest, studentIds: string[]) {
+  const university = isHigherOrg(req.context.organization.type);
   const { data: badges } = await req.supabase
     .from("student_badges")
     .select("id, number, token, status, printed_count, student:students(id, first_name, last_name, matricule, photo_path)")
@@ -15,10 +21,10 @@ export async function learnerBadgePages(req: DocumentRequest, studentIds: string
     .in("student_id", studentIds);
   const { data: enrollments } = await req.supabase
     .from("enrollments")
-    .select("student_id, created_at, group:training_groups(name), class:classes!inner(name, kind, program:programs(name))")
+    .select("student_id, created_at, group:training_groups(name), class:classes!inner(name, kind, program:programs(name), level:levels(name), academic_year:academic_years(name))")
     .eq("organization_id", req.organization.id)
     .eq("status", "validated")
-    .eq("class.kind", "training_session")
+    .eq("class.kind", university ? "class" : "training_session")
     .in("student_id", studentIds)
     .order("created_at", { ascending: false });
   const pages = [];
@@ -34,7 +40,10 @@ export async function learnerBadgePages(req: DocumentRequest, studentIds: string
           organization: req.organization,
           learner: { first_name: badge.student.first_name, last_name: badge.student.last_name, matricule: badge.student.matricule },
           formation: enrollment?.class?.program?.name ?? null,
-          session: enrollment?.class?.name ?? null,
+          session: university
+            ? [enrollment?.class?.level?.name, enrollment?.class?.academic_year?.name].filter(Boolean).join(" · ") || null
+            : (enrollment?.class?.name ?? null),
+          role: university ? "ÉTUDIANT" : "APPRENANT",
           group: enrollment?.group?.name ?? null,
           badge: { number: badge.number, status: badge.status },
           qr: await qrDataUrl(`NEOSCOL-BADGE:${badge.token}`, "#000000"),

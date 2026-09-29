@@ -37,6 +37,7 @@ import { can, displayName, isPortalOnly } from "@/lib/auth/session";
 import { cn } from "@/lib/utils/cn";
 import { formatDate, formatDateTime, formatMoney, formatNumber } from "@/lib/utils/format";
 import { vocabularyFor } from "@/lib/vocabulary";
+import { isHigherOrg } from "@/features/university/config";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
 
@@ -58,6 +59,8 @@ export default async function DashboardPage() {
   if (context.permissions.size === 1 && can(context, "staff_attendance.scan")) redirect("/pointage");
   // Parents et élèves : portail mobile dédié.
   if (isPortalOnly(context)) redirect("/portail");
+  // Module 3 : les établissements d'enseignement supérieur ont leur tableau de bord universitaire.
+  if (isHigherOrg(context.organization.type)) redirect("/universite");
   const organization = context.organization;
   const isTeacher = context.personas.has("teacher");
   const canFinance = can(context, "finance.read");

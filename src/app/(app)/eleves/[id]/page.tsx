@@ -53,6 +53,10 @@ import { PastRecordsTab } from "@/features/migration/components/past-records";
 import { AssiduityTab, BadgeTab, CompetenciesTab, TrainingTab } from "@/features/training/components/learner-tabs";
 import { isTrainingOrg } from "@/features/training/config";
 import { learnerAttendanceSummary, learnerTraining } from "@/features/training/queries";
+import { issueStudentBadge, revokeStudentBadge } from "@/features/university/actions";
+import { AcademicRecordTab, PedagogicalTab, ResultsTab } from "@/features/university/components/student-tabs";
+import { universityConfigOf, type UniversityConfig } from "@/features/university/config";
+import { studentAcademicRecord } from "@/features/university/queries";
 import { qrDataUrl } from "@/lib/pdf/qr";
 import { getStudentPastRecords } from "@/features/migration/queries";
 
@@ -87,14 +91,26 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
         { key: "badge", label: "Badge", href: "?onglet=badge" },
       ]
     : [];
+  // Module Université : dossier académique permanent, inscription pédagogique, résultats et crédits.
+  const university = universityConfigOf(organization.type, organization.settings);
+  const universityTabs: TabLink[] = university
+    ? [
+        { key: "universite", label: "Dossier académique", href: "?onglet=universite" },
+        { key: "pedagogique", label: "Inscription pédagogique", href: "?onglet=pedagogique" },
+        ...(canGrades || can(context, "deliberations.read") ? [{ key: "resultats", label: "Résultats et crédits", href: "?onglet=resultats" }] : []),
+        ...(canAttendance ? [{ key: "assiduite", label: "Assiduité", href: "?onglet=assiduite" }] : []),
+        ...(university.features.badges ? [{ key: "badge", label: "Badge", href: "?onglet=badge" }] : []),
+      ]
+    : [];
   const tabs: TabLink[] = [
     { key: "informations", label: "Informations", href: "?onglet=informations" },
     ...trainingTabs,
+    ...universityTabs,
     { key: "parents", label: "Parents", href: "?onglet=parents", count: student.student_guardians.length },
     { key: "scolarite", label: "Scolarité", href: "?onglet=scolarite", count: student.enrollments.length },
     { key: "parcours", label: "Parcours antérieur", href: "?onglet=parcours" },
     ...(canGrades ? [{ key: "notes", label: "Notes", href: "?onglet=notes" }] : []),
-    ...(canReportCards ? [{ key: "bulletins", label: "Bulletins", href: "?onglet=bulletins" }] : []),
+    ...(canReportCards && !university ? [{ key: "bulletins", label: "Bulletins", href: "?onglet=bulletins" }] : []),
     ...(canAttendance ? [{ key: "presences", label: "Présences", href: "?onglet=presences" }] : []),
     ...(canConduct ? [{ key: "discipline", label: "Discipline", href: "?onglet=discipline" }] : []),
     ...(canFinance ? [{ key: "finance", label: "Finance", href: "?onglet=finance" }] : []),
@@ -159,7 +175,11 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
         <div className="flex flex-wrap gap-2">
           {can(context, "enrollments.manage") && !archived ? (
             <Button asChild variant="secondary">
-              <Link href={training ? `/formation/inscription?apprenant=${student.id}` : `/inscriptions/nouvelle?eleve=${student.id}`}>
+              <Link
+                href={
+                  training ? `/formation/inscription?apprenant=${student.id}` : university ? `/universite/inscription?etudiant=${student.id}` : `/inscriptions/nouvelle?eleve=${student.id}`
+                }
+              >
                 <ClipboardPlus aria-hidden /> Inscrire
               </Link>
             </Button>
@@ -223,6 +243,21 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
               finance: canFinance,
               evaluate: (can(context, "grades.enter") || can(context, "grades.manage")) && !archived,
               badges: can(context, "students.badges.manage") && !archived,
+            }}
+          />
+        ) : null}
+        {university && ["universite", "pedagogique", "resultats", "badge"].includes(active) ? (
+          <UniversitySections
+            active={active}
+            studentId={student.id}
+            organizationId={organization.id}
+            timezone={organization.timezone}
+            config={university}
+            studentActive={student.status === "active" && !archived}
+            can={{
+              enroll: can(context, "enrollments.manage") && !archived,
+              badges: can(context, "students.badges.manage") && !archived,
+              transcript: can(context, "documents.generate"),
             }}
           />
         ) : null}
@@ -306,7 +341,7 @@ async function TrainingSections({
     return (
       <BadgeTab
         studentId={studentId}
-        training={training}
+        badges={training.badges}
         qr={token ? await qrDataUrl(`NEOSCOL-BADGE:${token.token}`, "#000000") : null}
         canManage={allowed.badges}
         active={studentActive}
@@ -334,6 +369,64 @@ async function TrainingSections({
       currency={organization.currency}
       today={todayIn(organization.timezone)}
       can={{ documents: allowed.documents, update: allowed.update, enroll: allowed.enroll, finance: allowed.finance }}
+    />
+  );
+}
+
+async function UniversitySections({
+  active,
+  studentId,
+  organizationId,
+  timezone,
+  config,
+  studentActive,
+  can: allowed,
+}: {
+  active: string;
+  studentId: string;
+  organizationId: string;
+  timezone: string;
+  config: UniversityConfig;
+  studentActive: boolean;
+  can: { enroll: boolean; badges: boolean; transcript: boolean };
+}) {
+  const record = await studentAcademicRecord(organizationId, studentId);
+  if (active === "universite") return <AcademicRecordTab record={record} config={config} />;
+  if (active === "resultats") return <ResultsTab record={record} showRank={config.features.ranking} />;
+  if (active === "badge") {
+    const supabase = await createClient();
+    const { data: token } = await supabase.from("student_badges").select("token").eq("student_id", studentId).eq("status", "active").maybeSingle();
+    return (
+      <BadgeTab
+        studentId={studentId}
+        badges={record.badges}
+        qr={token ? await qrDataUrl(`NEOSCOL-BADGE:${token.token}`, "#000000") : null}
+        canManage={allowed.badges}
+        active={studentActive}
+        timezone={timezone}
+        who="L'étudiant"
+        issueAction={issueStudentBadge}
+        revokeAction={revokeStudentBadge}
+      />
+    );
+  }
+  const supabase = await createClient();
+  const yearIds = [...new Set(record.enrollments.map((e) => e.academic_year?.id).filter((v): v is string => Boolean(v)))];
+  const programIds = [...new Set(record.enrollments.map((e) => e.program_id).filter((v): v is string => Boolean(v)))];
+  const [{ data: periods }, { data: units }] = await Promise.all([
+    yearIds.length ? supabase.from("academic_periods").select("id, name, academic_year_id, sequence").in("academic_year_id", yearIds) : Promise.resolve({ data: [] }),
+    programIds.length
+      ? supabase.from("teaching_units").select("id, code, name, credits, semester_no, program_id, level_id, is_optional").in("program_id", programIds).eq("is_active", true).order("code")
+      : Promise.resolve({ data: [] }),
+  ]);
+  return (
+    <PedagogicalTab
+      studentId={studentId}
+      record={record}
+      periods={periods ?? []}
+      units={(units ?? []).map((u) => ({ ...u, credits: Number(u.credits) }))}
+      canManage={allowed.enroll}
+      semesterLabel={config.features.semesters ? "Semestre" : "Période"}
     />
   );
 }
