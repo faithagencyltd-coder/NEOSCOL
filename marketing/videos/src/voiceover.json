@@ -1,0 +1,41 @@
+{
+  "scolaire": [
+    { "id": "intro", "text": "Une rentrée. Des centaines d'élèves. Et une seule question : comment tout suivre, sans rien perdre ?" },
+    { "id": "probleme", "text": "Registres papier, tableurs dispersés, reçus perdus, parents qui appellent pour une note ou un reliquat… La gestion scolaire prend le temps qui devrait aller aux élèves." },
+    { "id": "dashboard", "text": "Avec NeoScool, tout votre établissement tient sur un seul écran : effectifs, encaissements, impayés, absences. En temps réel." },
+    { "id": "inscription", "text": "L'inscription se fait en quelques clics, avec vos propres formulaires. Le dossier de l'élève est créé, la facture aussi, et sa carte scolaire avec QR code est prête à imprimer." },
+    { "id": "pointage", "text": "À son arrivée, l'enseignant scanne son badge. La tablette l'accueille à voix haute, et l'appel de son cours s'ouvre à l'heure prévue. Absences et retards sont enregistrés, même sans connexion." },
+    { "id": "notes", "text": "Les notes se saisissent en grille, ou s'importent directement depuis Excel, avec un contrôle ligne par ligne. Moyennes, rangs et bulletins sont calculés automatiquement, selon vos propres règles." },
+    { "id": "finances", "text": "Frais, échéanciers, reçus, remises : la comptabilité devient limpide. Les reliquats sont suivis élève par élève, et les rappels partent automatiquement par SMS, e-mail ou WhatsApp." },
+    { "id": "parents", "text": "Les parents suivent tout depuis leur téléphone : notes, absences, bulletins, paiements et documents. Une absence, un paiement ? Ils sont prévenus immédiatement." },
+    { "id": "plus", "text": "Documents officiels vérifiables par QR code, assistant intelligent, journal d'audit, passage d'année en un geste : NeoScool pense aussi à demain." },
+    { "id": "benefices", "text": "Pour la direction, une vision claire et des finances maîtrisées. Pour les enseignants, moins de papier et plus de pédagogie. Pour les parents, la sérénité. Pour les élèves, un parcours suivi." },
+    { "id": "cta", "text": "NeoScool. Plus qu'un logiciel, une vision pour l'éducation. Essayez-le gratuitement pendant vingt jours, sur neoscool point com." }
+  ],
+  "formation": [
+    { "id": "intro", "text": "Former, c'est transmettre un métier. Encore faut-il pouvoir tout suivre." },
+    { "id": "probleme", "text": "Sessions qui se chevauchent, émargements papier, paiements échelonnés difficiles à suivre, certificats faits à la main… Un centre de formation mérite mieux." },
+    { "id": "formations", "text": "Avec NeoScool, créez librement vos formations, puis vos sessions : dates, capacité, salle, modules et formateurs. Des groupes si vous en avez besoin ; sinon, rien à configurer." },
+    { "id": "inscription", "text": "L'inscription crée en une seule fois le dossier, la facture, l'échéancier et le premier versement. Le reste à payer est toujours à jour, et la capacité de la session est contrôlée." },
+    { "id": "pointage", "text": "Chaque apprenant a son badge. À l'entrée comme à la sortie, un scan suffit : présence, retard et durée sont calculés. La tablette reconnaît aussi les formateurs, et leur indique leur cours et leur salle." },
+    { "id": "planning", "text": "L'emploi du temps s'organise par session, par groupe, par formateur ou par salle, sans conflit." },
+    { "id": "competences", "text": "Évaluations, travaux pratiques et compétences : suivez la progression réelle de chaque apprenant, jusqu'au stage en entreprise, avec son tuteur et son évaluation." },
+    { "id": "documents", "text": "À la fin du parcours, attestations, relevés et fiches de compétences sont produits automatiquement, numérotés et vérifiables par QR code." },
+    { "id": "stats", "text": "Et chaque jour, vous savez qui est présent, qui est en retard, ce qui a été encaissé, et ce qui reste dû." },
+    { "id": "benefices", "text": "La direction pilote son activité et sa trésorerie. Les formateurs se concentrent sur la transmission. Les apprenants suivent leur parcours, leurs paiements et leurs documents depuis leur téléphone." },
+    { "id": "cta", "text": "NeoScool Formation professionnelle. Donnez à votre centre les outils de son ambition. Essai gratuit de vingt jours, sur neoscool point com." }
+  ],
+  "universite": [
+    { "id": "intro", "text": "Des milliers d'étudiants. Des centaines d'unités d'enseignement. Et un diplôme au bout du chemin." },
+    { "id": "probleme", "text": "Maquettes complexes, crédits calculés à la main, délibérations interminables, relevés à refaire, diplômes difficiles à authentifier… L'enseignement supérieur a besoin d'un outil à sa mesure." },
+    { "id": "structure", "text": "Avec NeoScool, modélisez votre université telle qu'elle est : facultés, départements, filières, parcours et cycles LMD. Chaque unité d'enseignement porte ses crédits, ses coefficients et ses volumes horaires." },
+    { "id": "inscription", "text": "L'inscription administrative génère les frais et leurs tranches. L'inscription pédagogique suit automatiquement : l'étudiant est inscrit à toutes les unités d'enseignement de sa promotion." },
+    { "id": "presences", "text": "Carte étudiant et badge enseignant se scannent sur la même tablette. Présences, retards et sorties anticipées sont enregistrés, et vous savez quels enseignants sont présents." },
+    { "id": "resultats", "text": "Les moyennes par matière, par unité et par semestre se calculent seules, crédits et compensation compris, selon vos règles. En rattrapage, la note initiale est conservée." },
+    { "id": "jury", "text": "Le jury délibère sur des propositions déjà calculées. Chaque décision est versionnée, la clôture publie les résultats, et le procès-verbal est généré." },
+    { "id": "portail", "text": "Les étudiants consultent leurs résultats dès leur publication, leurs crédits et leur parcours, depuis leur téléphone." },
+    { "id": "diplomes", "text": "Stages, mémoires, soutenances : tout est suivi jusqu'au diplôme, numéroté et vérifiable par QR code. Relevés LMD et attestations sont produits en un clic." },
+    { "id": "benefices", "text": "La scolarité gagne des semaines. Les enseignants saisissent et publient simplement. Les jurys décident en confiance. Et les étudiants savent toujours où ils en sont." },
+    { "id": "cta", "text": "NeoScool Université. L'excellence académique mérite une gestion à sa hauteur. Essayez-le gratuitement pendant vingt jours, sur neoscool point com." }
+  ]
+}

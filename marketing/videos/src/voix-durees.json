@@ -1,0 +1,140 @@
+{
+  "scolaire": [
+    {
+      "id": "intro",
+      "seconds": 5.291
+    },
+    {
+      "id": "probleme",
+      "seconds": 9.045
+    },
+    {
+      "id": "dashboard",
+      "seconds": 7.317
+    },
+    {
+      "id": "inscription",
+      "seconds": 10.261
+    },
+    {
+      "id": "pointage",
+      "seconds": 10.539
+    },
+    {
+      "id": "notes",
+      "seconds": 11.157
+    },
+    {
+      "id": "finances",
+      "seconds": 11.072
+    },
+    {
+      "id": "parents",
+      "seconds": 8.192
+    },
+    {
+      "id": "plus",
+      "seconds": 9.003
+    },
+    {
+      "id": "benefices",
+      "seconds": 10.603
+    },
+    {
+      "id": "cta",
+      "seconds": 7.915
+    }
+  ],
+  "formation": [
+    {
+      "id": "intro",
+      "seconds": 3.904
+    },
+    {
+      "id": "probleme",
+      "seconds": 8.789
+    },
+    {
+      "id": "formations",
+      "seconds": 10.475
+    },
+    {
+      "id": "inscription",
+      "seconds": 10.581
+    },
+    {
+      "id": "pointage",
+      "seconds": 12.352
+    },
+    {
+      "id": "planning",
+      "seconds": 5.227
+    },
+    {
+      "id": "competences",
+      "seconds": 9.621
+    },
+    {
+      "id": "documents",
+      "seconds": 8.491
+    },
+    {
+      "id": "stats",
+      "seconds": 5.632
+    },
+    {
+      "id": "benefices",
+      "seconds": 11.413
+    },
+    {
+      "id": "cta",
+      "seconds": 8.576
+    }
+  ],
+  "universite": [
+    {
+      "id": "intro",
+      "seconds": 4.949
+    },
+    {
+      "id": "probleme",
+      "seconds": 12.139
+    },
+    {
+      "id": "structure",
+      "seconds": 12.416
+    },
+    {
+      "id": "inscription",
+      "seconds": 10.965
+    },
+    {
+      "id": "presences",
+      "seconds": 9.813
+    },
+    {
+      "id": "resultats",
+      "seconds": 10.133
+    },
+    {
+      "id": "jury",
+      "seconds": 9.92
+    },
+    {
+      "id": "portail",
+      "seconds": 6.528
+    },
+    {
+      "id": "diplomes",
+      "seconds": 9.792
+    },
+    {
+      "id": "benefices",
+      "seconds": 9.749
+    },
+    {
+      "id": "cta",
+      "seconds": 9.387
+    }
+  ]
+}

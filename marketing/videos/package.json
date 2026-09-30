@@ -1,0 +1,24 @@
+{
+  "name": "neoscool-videos",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Vidéos Motion Design NeoScool (Remotion) : module scolaire, formation professionnelle, université.",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "node scripts/render-all.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.530",
+    "@remotion/fonts": "^4.0.530",
+    "@remotion/media-utils": "^4.0.530",
+    "@remotion/transitions": "^4.0.530",
+    "lucide-react": "^1.49.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "remotion": "^4.0.530"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "typescript": "^7.0.2"
+  }
+}
