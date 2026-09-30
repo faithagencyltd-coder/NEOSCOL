@@ -5625,6 +5625,68 @@ export type Database = {
           
         ]
       }
+      platform_site_settings: {
+        Row: {
+          address: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          faq: Json
+          id: number
+          logo_path: string | null
+          primary_color: string | null
+          privacy: string | null
+          privacy_updated_at: string | null
+          support_hours: string | null
+          terms: string | null
+          terms_updated_at: string | null
+          updated_at: string
+          updated_by: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          faq?: Json
+          id?: number
+          logo_path?: string | null
+          primary_color?: string | null
+          privacy?: string | null
+          privacy_updated_at?: string | null
+          support_hours?: string | null
+          terms?: string | null
+          terms_updated_at?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          faq?: Json
+          id?: number
+          logo_path?: string | null
+          primary_color?: string | null
+          privacy?: string | null
+          privacy_updated_at?: string | null
+          support_hours?: string | null
+          terms?: string | null
+          terms_updated_at?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_site_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       platform_teacher_access_settings: {
         Row: {
           currency: string
@@ -10024,6 +10086,36 @@ export type Database = {
         }
         Returns: string
       }
+      platform_save_site_brand: {
+        Args: {
+          p_primary_color: string
+          p_logo_path: string
+        }
+        Returns: undefined
+      }
+      platform_save_site_contacts: {
+        Args: {
+          p_email: string
+          p_phone: string
+          p_whatsapp: string
+          p_address: string
+          p_hours: string
+        }
+        Returns: undefined
+      }
+      platform_save_site_faq: {
+        Args: {
+          p_faq: Json
+        }
+        Returns: undefined
+      }
+      platform_save_site_legal: {
+        Args: {
+          p_terms: string
+          p_privacy: string
+        }
+        Returns: undefined
+      }
       platform_save_teacher_access_settings: {
         Args: {
           p_enabled: boolean
@@ -10616,6 +10708,10 @@ export type Database = {
           current_result: Json
           simulated_result: Json
         }[]
+      }
+      site_settings: {
+        Args: never
+        Returns: Json
       }
       start_thread: {
         Args: {

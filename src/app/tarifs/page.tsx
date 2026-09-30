@@ -5,6 +5,8 @@ import { PricingGrid } from "@/features/billing/components/pricing-grid";
 import { PublicShell } from "@/features/billing/components/public-shell";
 import { listPlans } from "@/features/billing/queries";
 import { TRIAL_DAYS } from "@/features/billing/constants";
+import { defaultFaq } from "@/features/site/faq";
+import { getSiteSettings } from "@/lib/site-settings";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, formatMoney } from "@/lib/utils/format";
 
@@ -13,12 +15,6 @@ export const metadata: Metadata = {
   description: `Formules NeoScool : maternelle et primaire, collège et lycée, centre de formation, université, Module 4 multi-modules. Essai gratuit de ${TRIAL_DAYS} jours, -30 % en annuel.`,
 };
 
-const FAQ = [
-  { q: `Que se passe-t-il après les ${TRIAL_DAYS} jours d'essai ?`, a: "Vous choisissez votre formule et payez en ligne. Sans paiement, l'établissement passe progressivement en lecture seule : aucune donnée n'est jamais supprimée, et tout est rétabli dès le paiement confirmé." },
-  { q: "Comment payer ?", a: "Par mobile money (dont MTN, Moov et Celtiis Cash au Bénin) ou carte, via notre prestataire de paiement sécurisé. Chaque paiement donne lieu à une facture PDF." },
-  { q: "Puis-je changer de formule ou annuler ?", a: "Oui, depuis « Mon abonnement ». En cas d'annulation, l'accès reste complet jusqu'à la fin de la période déjà payée." },
-  { q: "Mes données sont-elles séparées des autres établissements ?", a: "Oui : chaque établissement est isolé au niveau de la base de données. Les finances de votre établissement (scolarité, reçus) sont distinctes de votre abonnement NeoScool." },
-];
 
 /** Page publique des tarifs : 5 formules officielles, mensuel ou annuel -30 %. */
 export default async function PricingPage() {
@@ -26,6 +22,8 @@ export default async function PricingPage() {
   const { data: offers } = await (await createClient()).rpc("active_offers");
   // Durée d'essai réglée par le Super Admin (la plus fréquente des formules proposées).
   const trialDays = plans.length ? Math.max(...plans.filter((p) => p.is_active).map((p) => p.trial_days)) : TRIAL_DAYS;
+  const site = await getSiteSettings();
+  const faq = site.faq.length ? site.faq : defaultFaq(trialDays);
   return (
     <PublicShell>
       <section className="relative -mt-px bg-gradient-to-br from-[#0b2559] via-[#0e3a82] to-[#0e4a9a] pb-10 pt-6 text-center text-white">
@@ -80,7 +78,7 @@ export default async function PricingPage() {
 
         <section aria-labelledby="faq" className="mx-auto grid w-full max-w-3xl gap-3">
           <h2 id="faq" className="text-center text-xl font-bold">Questions fréquentes</h2>
-          {FAQ.map((item) => (
+          {faq.map((item) => (
             <details key={item.q} className="group rounded-2xl border border-border bg-surface px-4 py-3">
               <summary className="cursor-pointer list-none font-semibold marker:hidden">{item.q}</summary>
               <p className="anim-fade-up mt-2 text-sm text-muted-foreground">{item.a}</p>

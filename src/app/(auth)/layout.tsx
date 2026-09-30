@@ -1,5 +1,7 @@
 import { Building2, CheckCircle2, GraduationCap, Landmark, School, ShieldCheck, Wallet, Wrench } from "lucide-react";
 
+import Link from "next/link";
+
 import { BrandName, LogoMark } from "@/components/shared/logo";
 
 const SECTORS = [
@@ -122,6 +124,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="glass anim-fade-up w-full max-w-lg rounded-[2rem] p-6 shadow-[0_30px_80px_-30px_rgba(11,31,77,0.45)] sm:p-9 dark:border-white/10">
           {children}
         </div>
+        <nav aria-label="Informations" className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs font-medium text-muted-foreground">
+          <Link href="/aide" className="hover:text-foreground hover:underline">Aide et contact</Link>
+          <Link href="/tarifs" className="hover:text-foreground hover:underline">Tarifs</Link>
+          <Link href="/conditions" className="hover:text-foreground hover:underline">Conditions générales</Link>
+          <Link href="/confidentialite" className="hover:text-foreground hover:underline">Confidentialité</Link>
+        </nav>
       </main>
     </div>
   );

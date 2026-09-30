@@ -3,6 +3,8 @@ import { DM_Sans, Poppins } from "next/font/google";
 
 import { AnimatedToaster } from "@/components/motion/animated-toast";
 import { ServiceWorkerRegistration } from "@/components/shared/pwa";
+import { brandCss } from "@/features/platform/brand";
+import { getSiteSettings } from "@/lib/site-settings";
 
 import "./globals.css";
 
@@ -24,9 +26,17 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  // Couleur principale et logo réglés par le Super Admin (valeurs validées en base).
+  const site = await getSiteSettings();
+  const css = brandCss(site.primary_color, site.logo_url);
   return (
     <html lang="fr" className={`${body.variable} ${heading.variable}`}>
+      {css ? (
+        <head>
+          <style id="neoscool-brand">{css}</style>
+        </head>
+      ) : null}
       <body className="min-h-dvh">
         {children}
         <AnimatedToaster />

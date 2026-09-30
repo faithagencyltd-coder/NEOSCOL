@@ -2,9 +2,12 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { Logo } from "@/components/shared/logo";
+import { SiteContacts } from "@/features/site/components/site-contacts";
+import { getSiteSettings } from "@/lib/site-settings";
 
-/** Enveloppe des pages publiques de l'offre NeoScool (tarifs, inscription). */
-export function PublicShell({ children }: { children: ReactNode }) {
+/** Enveloppe des pages publiques de l'offre NeoScool (tarifs, aide, conditions). */
+export async function PublicShell({ children }: { children: ReactNode }) {
+  const site = await getSiteSettings();
   return (
     <div className="min-h-dvh bg-background">
       <header className="relative overflow-hidden bg-gradient-to-br from-[#07142b] via-[#0b2559] to-[#0e4a9a] text-white">
@@ -27,8 +30,17 @@ export function PublicShell({ children }: { children: ReactNode }) {
         </nav>
       </header>
       {children}
-      <footer className="border-t border-border py-8 text-center text-xs text-muted-foreground">
-        NeoScool — Plus qu&apos;un logiciel, une vision pour l&apos;éducation · Prix en F CFA (XOF), hors frais éventuels du moyen de paiement.
+      <footer className="border-t border-border px-4 py-8 text-xs text-muted-foreground">
+        <div className="mx-auto grid max-w-5xl gap-4 text-center">
+          <SiteContacts site={site} className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-foreground" />
+          <nav aria-label="Informations" className="flex flex-wrap justify-center gap-x-4 gap-y-1 font-medium">
+            <Link href="/tarifs" className="hover:underline">Tarifs</Link>
+            <Link href="/aide" className="hover:underline">Aide et contact</Link>
+            <Link href="/conditions" className="hover:underline">Conditions générales</Link>
+            <Link href="/confidentialite" className="hover:underline">Confidentialité</Link>
+          </nav>
+          <p>NeoScool — Plus qu&apos;un logiciel, une vision pour l&apos;éducation · Prix en F CFA (XOF), hors frais éventuels du moyen de paiement.</p>
+        </div>
       </footer>
     </div>
   );

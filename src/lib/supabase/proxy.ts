@@ -13,6 +13,8 @@ const PUBLIC_PATHS = [
   "/connexion", "/acces", "/mot-de-passe-oublie", "/auth", "/verifier", "/configuration", "/api/cron", "/api/webhooks", "/api/hooks",
   "/verification-email", "/console.webmanifest",
   "/demo", "/hors-ligne", "/tarifs", "/pricing", "/inscription",
+  // Pages publiques réglées par le Super Admin : aide, conditions générales, confidentialité.
+  "/aide", "/conditions", "/confidentialite",
 ];
 
 function isPublicPath(pathname: string): boolean {

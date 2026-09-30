@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 import { cn } from "@/lib/utils/cn";
 
 /** Emblème officiel (extrait du logo NeoScool fourni) : toque, « N », carrés numériques, livre ouvert. */
@@ -12,16 +10,12 @@ export const LOGO_FULL_SRC = "/assets/neoscool/logo/neoscool-logo.webp";
  * bleu nuit lisible.
  */
 export function LogoMark({ className, inverted = false }: { className?: string; inverted?: boolean }) {
+  // Le logo peut être remplacé par le Super Admin (variable CSS --brand-logo, logo d'origine par défaut).
   return (
-    <Image
-      src={LOGO_MARK_SRC}
-      alt=""
+    <span
       aria-hidden
-      width={512}
-      height={512}
-      priority
       className={cn(
-        "size-10 shrink-0 object-contain",
+        "block size-10 shrink-0 bg-contain bg-center bg-no-repeat [background-image:var(--brand-logo)]",
         inverted && "[filter:drop-shadow(0_0_0.6px_rgba(255,255,255,0.95))_drop-shadow(0_0_6px_rgba(56,189,248,0.35))]",
         className,
       )}
