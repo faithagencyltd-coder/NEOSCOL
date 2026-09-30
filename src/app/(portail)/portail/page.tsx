@@ -8,11 +8,13 @@ import { Avatar } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getVisibleAnnouncements } from "@/features/dashboard/queries";
 import { requirePortal } from "@/features/portal/context";
-import { getPortalTimetable, getStudentAttendance, getStudentGrades } from "@/features/portal/queries";
+import { currentPlacement } from "@/features/portal/components/school-record";
+import { getPortalSchoolRecord, getPortalTimetable, getStudentAttendance, getStudentGrades } from "@/features/portal/queries";
 import { isoWeekday, todayIn } from "@/lib/dates";
 import { ATTENDANCE_STATUS } from "@/lib/labels";
 import { cn } from "@/lib/utils/cn";
 import { formatDate, formatMoney } from "@/lib/utils/format";
+import { vocabularyFor } from "@/lib/vocabulary";
 import { AnimatedCounter, AnimatedMoney } from "@/components/motion/animated-counter";
 
 export const metadata: Metadata = { title: "Portail" };
@@ -32,12 +34,14 @@ export default async function PortalHomePage() {
   }
   const today = todayIn(organization.timezone);
   const currency = organization.currency;
-  const [attendance, grades, slots, announcements] = await Promise.all([
+  const [attendance, grades, slots, announcements, record] = await Promise.all([
     getStudentAttendance(organization.id, student.id, 300),
     getStudentGrades(organization.id, student.id),
     getPortalTimetable(student.id),
     getVisibleAnnouncements(organization.id),
+    getPortalSchoolRecord(student.id),
   ]);
+  const vocabulary = vocabularyFor(organization.type);
   const since = new Date(Date.parse(`${today}T00:00:00Z`) - 30 * 86_400_000).toISOString().slice(0, 10);
   const recent = attendance.filter((a) => a.date >= since);
   const absences = recent.filter((a) => a.status === "absent").length;
@@ -54,7 +58,7 @@ export default async function PortalHomePage() {
         <div className="grid min-w-0 flex-1 gap-0.5">
           <h1 className="truncate text-lg font-bold">{student.is_self ? `Bonjour ${student.first_name}` : name}</h1>
           <p className="text-sm text-muted-foreground">
-            {student.class_name ?? "Classe non affectée"} · {student.matricule}
+            {record ? currentPlacement(record, vocabulary) : (student.class_name ?? `${vocabulary.klass} non affectée`)} · {student.matricule}
           </p>
         </div>
       </Card>

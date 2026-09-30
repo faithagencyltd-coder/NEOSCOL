@@ -1,5 +1,6 @@
-import { FlaskConical } from "lucide-react";
+import { FlaskConical, Landmark } from "lucide-react";
 import { cookies } from "next/headers";
+import Link from "next/link";
 
 import { CommandPalette } from "@/components/layout/command-palette";
 import { AppShell } from "@/components/layout/app-shell";
@@ -61,9 +62,22 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             roleLabel={roleLabel}
             organizations={context.organizations}
             activeOrganizationId={context.organization.id}
+            establishmentsHref="/mes-etablissements"
+            pendingAccess={context.accessNotices.invitations + context.accessNotices.restricted}
             demo={demo}
           />
         </header>
+        {context.accessNotices.invitations + context.accessNotices.restricted > 0 ? (
+          <div role="status" className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-info-soft px-4 py-2 text-center text-sm font-medium text-info">
+            <Landmark className="size-4" aria-hidden />
+            {context.accessNotices.invitations > 0
+              ? `${context.accessNotices.invitations} invitation(s) d'un autre établissement Neoscool à accepter avec votre compte actuel.`
+              : `${context.accessNotices.restricted} établissement(s) en attente d'abonnement supplémentaire.`}
+            <Link href="/mes-etablissements" className="font-semibold underline-offset-4 hover:underline">
+              Voir mes établissements
+            </Link>
+          </div>
+        ) : null}
         <Module4SpaceBar organizationId={context.organization.id} />
         <EmailVerificationBanner organizationId={context.organization.id} />
         <SubscriptionBanner organizationId={context.organization.id} canBill={can(context, "billing.read")} />

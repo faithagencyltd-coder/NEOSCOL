@@ -196,10 +196,12 @@ function temporaryPassword(): string {
  * Le compte d'authentification est créé avec le client « service role » APRÈS
  * contrôle de users.manage ; l'adhésion et le rôle passent par la RLS.
  */
+export type StaffAccountResult = { login: string; password?: string; linked?: "invited" | "linked" };
+
 export async function createStaffAccount(
-  _: ActionResult<{ password: string; login: string }> | null,
+  _: ActionResult<StaffAccountResult> | null,
   formData: FormData,
-): Promise<ActionResult<{ password: string; login: string }>> {
+): Promise<ActionResult<StaffAccountResult>> {
   const auth = await authorize("users.manage");
   if (!auth.ok) return auth;
   const staffId = String(formData.get("staff_id") ?? "");
@@ -217,6 +219,21 @@ export async function createStaffAccount(
   if (staff.user_id) return { ok: false, message: "Un compte de connexion existe déjà." };
   if (staff.status !== "active" || staff.archived_at) return { ok: false, message: "Réactivez d'abord ce membre du personnel." };
   if (!staff.email) return { ok: false, message: "Renseignez d'abord l'adresse e-mail du membre du personnel." };
+  // Compte unique : si cette adresse a déjà un compte Neoscool (autre établissement),
+  // aucun second compte n'est créé — invitation à accepter avec les identifiants habituels.
+  const { data: link, error: linkLookupError } = await supabase.rpc("link_existing_staff_account", { p_staff_id: staffId, p_role_id: roleId });
+  if (linkLookupError) return { ok: false, message: dbErrorMessage(linkLookupError, "Rattachement du compte impossible.") };
+  const linked = (link as { result: string } | null)?.result;
+  if (linked === "invited" || linked === "linked") {
+    return {
+      ok: true,
+      message:
+        linked === "invited"
+          ? `${staff.first_name} ${staff.last_name} a déjà un compte Neoscool : aucun nouveau compte n'est créé. Une invitation l'attend dans « Mes établissements » ; après acceptation, il accède à votre établissement avec ses identifiants habituels et le rôle choisi.`
+          : `${staff.first_name} ${staff.last_name} était déjà membre de votre établissement : son compte existant est rattaché à cette fiche avec le rôle choisi.`,
+      data: { login: staff.email, linked },
+    };
+  }
   const admin = createAdminClient();
   if (!admin) return { ok: false, message: "Configuration serveur incomplète (clé de service Supabase absente)." };
 

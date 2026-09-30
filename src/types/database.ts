@@ -5255,6 +5255,88 @@ export type Database = {
           
         ]
       }
+      platform_teacher_access_settings: {
+        Row: {
+          currency: string
+          enabled: boolean
+          grace_days: number
+          id: number
+          period_months: number
+          price: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          currency?: string
+          enabled?: boolean
+          grace_days?: number
+          id?: number
+          period_months?: number
+          price?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          currency?: string
+          enabled?: boolean
+          grace_days?: number
+          id?: number
+          period_months?: number
+          price?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_teacher_access_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      platform_teacher_access_settings_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          currency: string
+          enabled: boolean
+          grace_days: number
+          id: number
+          period_months: number
+          price: number
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          currency: string
+          enabled: boolean
+          grace_days: number
+          id?: number
+          period_months: number
+          price: number
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          currency?: string
+          enabled?: boolean
+          grace_days?: number
+          id?: number
+          period_months?: number
+          price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_teacher_access_settings_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       portal_access_overrides: {
         Row: {
           created_at: string
@@ -7454,6 +7536,194 @@ export type Database = {
           }
         ]
       }
+      teacher_access_payments: {
+        Row: {
+          access_id: string
+          amount: number
+          checkout_url: string | null
+          confirmed_by: string | null
+          covers_from: string | null
+          covers_to: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          failure_reason: string | null
+          id: string
+          internal_reference: string
+          mode: string
+          note: string | null
+          organization_id: string
+          paid_at: string | null
+          payment_method: string | null
+          period_months: number
+          provider: string
+          provider_response: Json
+          provider_transaction_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_id: string
+          amount: number
+          checkout_url?: string | null
+          confirmed_by?: string | null
+          covers_from?: string | null
+          covers_to?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency: string
+          failure_reason?: string | null
+          id?: string
+          internal_reference: string
+          mode: string
+          note?: string | null
+          organization_id: string
+          paid_at?: string | null
+          payment_method?: string | null
+          period_months: number
+          provider: string
+          provider_response?: Json
+          provider_transaction_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_id?: string
+          amount?: number
+          checkout_url?: string | null
+          confirmed_by?: string | null
+          covers_from?: string | null
+          covers_to?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          failure_reason?: string | null
+          id?: string
+          internal_reference?: string
+          mode?: string
+          note?: string | null
+          organization_id?: string
+          paid_at?: string | null
+          payment_method?: string | null
+          period_months?: number
+          provider?: string
+          provider_response?: Json
+          provider_transaction_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_access_payments_access_id_fkey"
+            columns: ["access_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_extra_accesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_access_payments_confirmed_by_fkey"
+            columns: ["confirmed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_access_payments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_access_payments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_access_payments_provider_fkey"
+            columns: ["provider"]
+            isOneToOne: false
+            referencedRelation: "payment_providers"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "teacher_access_payments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      teacher_extra_accesses: {
+        Row: {
+          created_at: string
+          id: string
+          last_payment_at: string | null
+          organization_id: string
+          period_end: string | null
+          period_start: string | null
+          status: string
+          status_reason: string | null
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_payment_at?: string | null
+          organization_id: string
+          period_end?: string | null
+          period_start?: string | null
+          status?: string
+          status_reason?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_payment_at?: string | null
+          organization_id?: string
+          period_end?: string | null
+          period_start?: string | null
+          status?: string
+          status_reason?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_extra_accesses_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_extra_accesses_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_extra_accesses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       teaching_units: {
         Row: {
           category: string | null
@@ -8567,6 +8837,13 @@ export type Database = {
         }
         Returns: Json
       }
+      link_existing_staff_account: {
+        Args: {
+          p_staff_id: string
+          p_role_id: string
+        }
+        Returns: Json
+      }
       log_event: {
         Args: {
           p_action: string
@@ -8721,6 +8998,10 @@ export type Database = {
           unlock_method: string
           session_id: string
         }[]
+      }
+      my_organization_accesses: {
+        Args: never
+        Returns: Json
       }
       my_permissions: {
         Args: {
@@ -8884,6 +9165,16 @@ export type Database = {
         }
         Returns: number
       }
+      platform_save_teacher_access_settings: {
+        Args: {
+          p_enabled: boolean
+          p_price: number
+          p_currency: string
+          p_period_months: number
+          p_grace_days: number
+        }
+        Returns: Json
+      }
       platform_security_overview: {
         Args: never
         Returns: Json
@@ -8903,6 +9194,36 @@ export type Database = {
           p_whatsapp: number
         }
         Returns: undefined
+      }
+      platform_teacher_access_payments: {
+        Args: {
+          p_limit?: number
+        }
+        Returns: Json
+      }
+      platform_teacher_access_record_payment: {
+        Args: {
+          p_user: string
+          p_org: string
+          p_amount: number
+          p_reference: string
+          p_method: string
+          p_note?: string
+        }
+        Returns: Json
+      }
+      platform_teacher_access_set_status: {
+        Args: {
+          p_user: string
+          p_org: string
+          p_action: string
+          p_reason: string
+        }
+        Returns: Json
+      }
+      platform_teacher_accesses: {
+        Args: never
+        Returns: Json
       }
       platform_unlock_account: {
         Args: {
@@ -9008,6 +9329,12 @@ export type Database = {
           teacher: string
           is_head_teacher: boolean
         }[]
+      }
+      portal_school_record: {
+        Args: {
+          p_student_id: string
+        }
+        Returns: Json
       }
       portal_status: {
         Args: {
@@ -9120,6 +9447,13 @@ export type Database = {
         Args: {
           p_organization_id: string
           p_section: string
+        }
+        Returns: Json
+      }
+      respond_membership_invitation: {
+        Args: {
+          p_membership_id: string
+          p_accept: boolean
         }
         Returns: Json
       }
@@ -9390,6 +9724,48 @@ export type Database = {
           p_validate?: boolean
         }
         Returns: string
+      }
+      teacher_access_attach_checkout: {
+        Args: {
+          p_payment: string
+          p_provider_tx: string
+          p_checkout_url: string
+          p_response?: Json
+        }
+        Returns: undefined
+      }
+      teacher_access_confirm_payment: {
+        Args: {
+          p_provider: string
+          p_mode: string
+          p_provider_tx: string
+          p_reference: string
+          p_amount: number
+          p_currency: string
+          p_method?: string
+          p_response?: Json
+        }
+        Returns: Json
+      }
+      teacher_access_fail_payment: {
+        Args: {
+          p_provider: string
+          p_mode: string
+          p_provider_tx: string
+          p_reference: string
+          p_status: string
+          p_reason: string
+          p_response?: Json
+        }
+        Returns: Json
+      }
+      teacher_access_start_checkout: {
+        Args: {
+          p_org: string
+          p_provider: string
+          p_mode: string
+        }
+        Returns: Json
       }
       thread_messages: {
         Args: {

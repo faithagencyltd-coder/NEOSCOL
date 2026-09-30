@@ -25,6 +25,11 @@ export type SessionContext = {
   personas: ReadonlySet<Persona>;
   /** Libellés des rôles dans l'établissement actif (ex. « Direction »). */
   roleNames: string[];
+  /**
+   * Compte multi-établissements : invitations à accepter et adhésions actives
+   * sans accès (abonnement supplémentaire d'enseignant requis ou suspendu).
+   */
+  accessNotices: { invitations: number; restricted: number };
 };
 
 /**
@@ -47,12 +52,17 @@ export const getSessionContext = cache(async (): Promise<SessionContext | null> 
         "status, organization:organizations(id, name, short_name, code, type, currency, locale, timezone, is_demo, settings), membership_roles(role:roles(persona, name))",
       )
       .eq("user_id", user.id)
-      .eq("status", "active"),
+      .in("status", ["active", "invited"]),
   ]);
 
+  // Un établissement dont l'accès est bloqué (ou une invitation) n'est pas lisible : organisation nulle.
   const active = (memberships ?? []).filter(
-    (m): m is typeof m & { organization: OrganizationSummary } => m.organization !== null,
+    (m): m is typeof m & { organization: OrganizationSummary } => m.status === "active" && m.organization !== null,
   );
+  const accessNotices = {
+    invitations: (memberships ?? []).filter((m) => m.status === "invited").length,
+    restricted: (memberships ?? []).filter((m) => m.status === "active" && m.organization === null).length,
+  };
   const organizations = active.map((m) => m.organization).sort((a, b) => a.name.localeCompare(b.name, "fr"));
 
   const cookieStore = await cookies();
@@ -85,6 +95,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext | null> 
     permissions,
     personas,
     roleNames,
+    accessNotices,
   };
 });
 

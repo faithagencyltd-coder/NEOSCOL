@@ -25,7 +25,10 @@ export class SimulationProvider implements PaymentProvider {
   async createCheckout(request: CheckoutRequest): Promise<CheckoutSession> {
     return {
       providerTransactionId: `SIM-${request.reference}`,
-      checkoutUrl: `${this.baseUrl}/abonnement/paiement-simule/${encodeURIComponent(request.reference)}`,
+      checkoutUrl:
+        request.customData.kind === "teacher_access"
+          ? `${this.baseUrl}/mes-etablissements/paiement-simule/${encodeURIComponent(request.reference)}`
+          : `${this.baseUrl}/abonnement/paiement-simule/${encodeURIComponent(request.reference)}`,
       raw: { simulated: true },
     };
   }

@@ -208,3 +208,67 @@ export async function getPortalAccount(kind: "guardian" | "student", recordId: s
   if (error || !data) return null;
   return data as { has_account: boolean; status?: string; last_sign_in_at?: string | null; login?: string | null };
 }
+
+export type PortalSchoolRecord = {
+  organization: {
+    name: string;
+    short_name: string | null;
+    type: string;
+    address: string | null;
+    city: string | null;
+    country: string | null;
+    phone: string | null;
+    email: string | null;
+    website: string | null;
+    current_year: string | null;
+  };
+  student: {
+    first_name: string;
+    last_name: string;
+    other_names: string | null;
+    matricule: string;
+    sex: string | null;
+    birth_date: string | null;
+    birth_place: string | null;
+    nationality: string | null;
+    email: string | null;
+    phone: string | null;
+    status: string;
+    entry_year: number | null;
+    first_enrolled_on: string | null;
+  };
+  years: {
+    academic_year: string;
+    starts_on: string;
+    is_current: boolean;
+    enrollment_type: string;
+    enrollment_status: string;
+    decided_at: string | null;
+    class: string | null;
+    level: string | null;
+    program: string | null;
+    track: string | null;
+    group: string | null;
+    result: { average: number | null; rank: number | null; mention: string | null; decision: string | null } | null;
+    report_cards: number;
+  }[];
+  history: {
+    year_label: string;
+    class: string | null;
+    level: string | null;
+    program: string | null;
+    average: number | null;
+    rank: number | null;
+    decision: string | null;
+    absences: number | null;
+    absences_justified: number | null;
+  }[];
+};
+
+/** Établissement, classe / formation et historique scolaire (toutes années) — borné au dossier du compte. */
+export const getPortalSchoolRecord = cache(async (studentId: string): Promise<PortalSchoolRecord | null> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("portal_school_record", { p_student_id: studentId });
+  if (error || !data) return null;
+  return data as unknown as PortalSchoolRecord;
+});

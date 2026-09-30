@@ -8,26 +8,30 @@ import { Avatar } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { signOut } from "@/features/auth/actions";
 import { ResetPasswordForm } from "@/features/auth/components/reset-password-form";
+import { currentPlacement, OrganizationCard } from "@/features/portal/components/school-record";
 import { requirePortal } from "@/features/portal/context";
+import { getPortalSchoolRecord, getPortalSubjects } from "@/features/portal/queries";
 import { isHigherOrg } from "@/features/university/config";
-import { getPortalSubjects } from "@/features/portal/queries";
 import { displayName } from "@/lib/auth/session";
+import { SEX } from "@/lib/labels";
 import { formatDate, formatNumber } from "@/lib/utils/format";
+import { vocabularyFor } from "@/lib/vocabulary";
 
 export const metadata: Metadata = { title: "Plus" };
 
 /** Profil, matières et enseignants, raccourcis, compte et déconnexion. */
 export default async function PortalMorePage() {
   const { context, organization, parent, students, student } = await requirePortal();
-  const subjects = student ? await getPortalSubjects(student.id) : [];
+  const [subjects, record] = student ? await Promise.all([getPortalSubjects(student.id), getPortalSchoolRecord(student.id)]) : [[], null];
   const university = !parent && isHigherOrg(organization.type);
+  const vocabulary = vocabularyFor(organization.type);
   const links: { href: string; label: string; icon: LucideIcon }[] = [
     ...(university
       ? [
           { href: "/portail/parcours", label: "Mon parcours universitaire", icon: Route },
           { href: "/portail/notes", label: "Notes des évaluations", icon: NotebookPen },
         ]
-      : []),
+      : [{ href: "/portail/parcours", label: parent ? "Parcours scolaire" : vocabulary.family === "training" ? "Mon parcours de formation" : "Mon parcours scolaire", icon: Route }]),
     ...(parent ? [{ href: "/portail/emploi-du-temps", label: "Emploi du temps", icon: CalendarClock }] : []),
     ...(parent ? [] : [{ href: "/portail/badge", label: "Mon badge (QR de pointage)", icon: IdCard }]),
     { href: "/portail/documents", label: "Documents officiels", icon: FileCheck2 },
@@ -68,13 +72,32 @@ export default async function PortalMorePage() {
                 <dd className="font-semibold">
                   {student.last_name} {student.first_name}
                 </dd>
-                <dt className="sr-only">Classe et matricule</dt>
+                <dt className="sr-only">{vocabulary.family === "training" ? "Formation" : vocabulary.klass} et matricule</dt>
                 <dd className="text-muted-foreground">
-                  {student.class_name ?? "Classe non affectée"} · matricule {student.matricule}
+                  {record ? currentPlacement(record, vocabulary) : (student.class_name ?? `${vocabulary.klass} non affectée`)} · matricule {student.matricule}
                   {student.birth_date ? ` · né(e) le ${formatDate(student.birth_date)}` : ""}
                 </dd>
               </dl>
             </div>
+            {record ? (
+              <dl className="grid grid-cols-1 gap-x-4 gap-y-2 text-sm sm:grid-cols-2">
+                {[
+                  ["Sexe", record.student.sex ? (SEX[record.student.sex] ?? record.student.sex) : null],
+                  ["Lieu de naissance", record.student.birth_place],
+                  ["Nationalité", record.student.nationality],
+                  ["Téléphone", record.student.phone],
+                  ["E-mail", record.student.email],
+                  ["Inscrit(e) depuis", record.student.first_enrolled_on ? formatDate(record.student.first_enrolled_on) : null],
+                ]
+                  .filter((entry): entry is [string, string] => Boolean(entry[1]))
+                  .map(([label, value]) => (
+                    <div key={label} className="grid gap-0.5">
+                      <dt className="text-xs text-muted-foreground">{label}</dt>
+                      <dd className="break-words font-medium">{value}</dd>
+                    </div>
+                  ))}
+              </dl>
+            ) : null}
             {subjects.length === 0 ? (
               <p className="text-sm text-muted-foreground">Aucune matière affectée à la classe.</p>
             ) : (
@@ -96,6 +119,8 @@ export default async function PortalMorePage() {
           </CardContent>
         </Card>
       ) : null}
+
+      {record ? <OrganizationCard record={record} /> : null}
 
       <Card>
         <CardHeader>

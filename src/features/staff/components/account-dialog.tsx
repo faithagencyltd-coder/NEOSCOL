@@ -29,8 +29,16 @@ export function CreateAccountDialog({ staffId, roles, defaultRoleId }: { staffId
           <KeyRound aria-hidden /> Créer le compte de connexion
         </Button>
       </DialogTrigger>
-      <DialogContent title="Compte de connexion" description="Connexion par e-mail ou par matricule + mot de passe. Le QR du badge ne sert qu'au pointage.">
-        {created ? (
+      <DialogContent title="Compte de connexion" description="Connexion par e-mail ou par matricule + mot de passe. Si l'adresse e-mail a déjà un compte Neoscool (autre établissement), ce compte est réutilisé : une invitation lui est envoyée. Le QR du badge ne sert qu'au pointage.">
+        {created?.linked ? (
+          <div className="grid gap-3">
+            <Alert tone="success">{state?.message}</Alert>
+            <p className="text-sm text-muted-foreground">Identifiant : {created.login}. Aucun mot de passe n&apos;est généré : l&apos;enseignant garde un seul compte pour tous ses établissements.</p>
+            <DialogClose asChild>
+              <Button>Terminé</Button>
+            </DialogClose>
+          </div>
+        ) : created ? (
           <div className="grid gap-3">
             <Alert tone="success">{state?.message}</Alert>
             <dl className="grid gap-2 rounded-xl bg-muted/50 p-4 text-sm">

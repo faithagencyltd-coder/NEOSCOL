@@ -318,6 +318,11 @@ export default async function StaffMemberPage({ params, searchParams }: PageProp
                       {staff.account?.email ?? staff.email} · {staff.employee_number}
                     </dd>
                   </div>
+                  {account?.status === "invited" ? (
+                    <div className="rounded-xl bg-warning-soft px-3 py-2 text-warning">
+                      Invitation envoyée au compte Neoscool existant : en attente d&apos;acceptation par l&apos;enseignant (aucun second compte créé).
+                    </div>
+                  ) : null}
                   {account ? (
                     <div className="flex justify-between gap-3">
                       <dt className="text-muted-foreground">Rôle(s)</dt>

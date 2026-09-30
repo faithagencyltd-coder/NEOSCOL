@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, Check, ChevronDown, LogOut, PlayCircle, UserRound } from "lucide-react";
+import { Building2, Check, ChevronDown, Landmark, LogOut, PlayCircle, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useTransition } from "react";
 
@@ -23,6 +23,8 @@ export function UserMenu({
   organizations,
   activeOrganizationId,
   accountHref = "/mon-compte",
+  establishmentsHref,
+  pendingAccess = 0,
   demo = false,
 }: {
   name: string;
@@ -31,6 +33,10 @@ export function UserMenu({
   organizations: OrganizationSummary[];
   activeOrganizationId: string;
   accountHref?: string;
+  /** Page « Mes établissements » (compte multi-établissements : invitations, accès supplémentaires). */
+  establishmentsHref?: string;
+  /** Invitations à accepter + établissements en attente d'abonnement. */
+  pendingAccess?: number;
   demo?: boolean;
 }) {
   const [pending, startTransition] = useTransition();
@@ -73,6 +79,14 @@ export function UserMenu({
             ))}
             <DropdownMenuSeparator />
           </>
+        ) : null}
+        {establishmentsHref ? (
+          <DropdownMenuItem asChild>
+            <Link href={establishmentsHref}>
+              <Landmark aria-hidden /> <span className="flex-1">Mes établissements</span>
+              {pendingAccess > 0 ? <span className="rounded-full bg-warning px-1.5 text-xs font-semibold text-white">{pendingAccess}</span> : null}
+            </Link>
+          </DropdownMenuItem>
         ) : null}
         <DropdownMenuItem asChild>
           <Link href={accountHref}>

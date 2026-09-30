@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftRight, Building2, CreditCard, Gem, Globe2, Layers, PlugZap, ShieldCheck, Sigma } from "lucide-react";
+import { ArrowLeftRight, Building2, CreditCard, Gem, Globe2, Layers, PlugZap, ShieldCheck, Sigma, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -11,6 +11,7 @@ const TABS = [
   { href: "/plateforme/abonnements", label: "Abonnements", icon: Gem },
   { href: "/plateforme/paiements", label: "Paiements", icon: CreditCard },
   { href: "/plateforme/formules", label: "Formules", icon: Layers },
+  { href: "/plateforme/enseignants", label: "Enseignants multi-établissements", icon: Users },
   { href: "/plateforme/pays", label: "Pays", icon: Globe2 },
   { href: "/plateforme/regles", label: "Règles académiques", icon: Sigma },
   { href: "/plateforme/country-connect", label: "Country Connect", icon: ArrowLeftRight },
