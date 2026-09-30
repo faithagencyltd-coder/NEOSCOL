@@ -58,9 +58,39 @@ import { AcademicRecordTab, PedagogicalTab, ResultsTab } from "@/features/univer
 import { universityConfigOf, type UniversityConfig } from "@/features/university/config";
 import { studentAcademicRecord } from "@/features/university/queries";
 import { qrDataUrl } from "@/lib/pdf/qr";
+import { BadgePanel } from "@/features/cards/components/badge-panel";
+import { loadStudentCard } from "@/features/cards/server";
 import { getStudentPastRecords } from "@/features/migration/queries";
 
 export const metadata: Metadata = { title: "Dossier élève" };
+
+/** Onglet « Badge & QR » : carte 3D, impression, PDF, image, validité (les trois modules). */
+async function StudentCardSection(props: {
+  studentId: string;
+  organizationId: string;
+  timezone: string;
+  holder: string;
+  active: boolean;
+  canManage: boolean;
+  canEdit: boolean;
+}) {
+  const supabase = await createClient();
+  const loaded = await loadStudentCard(supabase, props.organizationId, props.studentId);
+  if (!loaded) return null;
+  return (
+    <BadgePanel
+      studentId={props.studentId}
+      card={loaded.card}
+      design={loaded.design}
+      badge={loaded.badge}
+      holder={props.holder}
+      canManage={props.canManage}
+      canEdit={props.canEdit}
+      active={props.active}
+      timezone={props.timezone}
+    />
+  );
+}
 
 export default async function StudentPage({ params, searchParams }: PageProps<"/eleves/[id]">) {
   const context = await requirePermission("students.read");
@@ -88,7 +118,6 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
         { key: "formation", label: "Formation", href: "?onglet=formation" },
         { key: "assiduite", label: "Assiduité", href: "?onglet=assiduite" },
         { key: "competences", label: "Compétences", href: "?onglet=competences" },
-        { key: "badge", label: "Badge", href: "?onglet=badge" },
       ]
     : [];
   // Module Université : dossier académique permanent, inscription pédagogique, résultats et crédits.
@@ -99,13 +128,14 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
         { key: "pedagogique", label: "Inscription pédagogique", href: "?onglet=pedagogique" },
         ...(canGrades || can(context, "deliberations.read") ? [{ key: "resultats", label: "Résultats et crédits", href: "?onglet=resultats" }] : []),
         ...(canAttendance ? [{ key: "assiduite", label: "Assiduité", href: "?onglet=assiduite" }] : []),
-        ...(university.features.badges ? [{ key: "badge", label: "Badge", href: "?onglet=badge" }] : []),
       ]
     : [];
   const tabs: TabLink[] = [
     { key: "informations", label: "Informations", href: "?onglet=informations" },
     ...trainingTabs,
     ...universityTabs,
+    // Carte (badge + QR) : les trois modules ; université selon sa configuration.
+    ...(!university || university.features.badges ? [{ key: "badge", label: "Badge & QR", href: "?onglet=badge" }] : []),
     { key: "parents", label: "Parents", href: "?onglet=parents", count: student.student_guardians.length },
     { key: "scolarite", label: "Scolarité", href: "?onglet=scolarite", count: student.enrollments.length },
     { key: "parcours", label: "Parcours antérieur", href: "?onglet=parcours" },
@@ -230,7 +260,18 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
             canEditMedical={can(context, "students.medical.manage")}
           />
         ) : null}
-        {training && ["formation", "competences", "badge"].includes(active) ? (
+        {active === "badge" ? (
+          <StudentCardSection
+            studentId={student.id}
+            organizationId={organization.id}
+            timezone={organization.timezone}
+            holder={v.theStudent}
+            active={student.status === "active" && !archived}
+            canManage={can(context, "students.badges.manage") && !archived}
+            canEdit={can(context, "students.update") && !archived}
+          />
+        ) : null}
+        {training && ["formation", "competences"].includes(active) ? (
           <TrainingSections
             active={active}
             studentId={student.id}
@@ -246,7 +287,7 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
             }}
           />
         ) : null}
-        {university && ["universite", "pedagogique", "resultats", "badge"].includes(active) ? (
+        {university && ["universite", "pedagogique", "resultats"].includes(active) ? (
           <UniversitySections
             active={active}
             studentId={student.id}

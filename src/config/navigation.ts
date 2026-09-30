@@ -119,6 +119,7 @@ export const NAVIGATION: NavSection[] = [
       { href: "/donnees-historiques", label: "Données historiques", icon: "history", anyOf: ["students.import"], keywords: "migration import anciens élèves diplômés transférés excel csv archives années" },
       { href: "/parametres/country-connect", label: "Country Connect", icon: "countryConnect", anyOf: ["students.import", "settings.manage"], keywords: "identifiant national ine educmaster ministère export import fichier officiel pays" },
       { href: "/inscriptions", label: "Inscriptions", icon: "enrollments", anyOf: ["enrollments.read"], keywords: "réinscription validation" },
+      { href: "/eleves/cartes", label: "Cartes scolaires", icon: "badges", anyOf: ["students.badges.manage"], family: "school", keywords: "carte scolaire badge QR élèves imprimer 3D remplacer perdue" },
       { href: "/parents", label: "Parents et tuteurs", icon: "guardians", anyOf: ["guardians.read"], keywords: "famille tuteur" },
       { href: "/personnel", label: "Personnel", icon: "staff", anyOf: ["staff.read"], keywords: "enseignants formateurs administratif badges comptes matricule" },
       { href: "/classes", label: "Classes", icon: "classes", anyOf: ["academic.read"], keywords: "effectif session filière" },
@@ -192,6 +193,7 @@ export const NAVIGATION: NavSection[] = [
       { href: "/abonnement", label: "Mon abonnement", icon: "subscription", anyOf: ["billing.read"], keywords: "abonnement NeoScool formule facture paiement essai renouveler tarif" },
       { href: "/parametres", label: "Configuration", icon: "settings", anyOf: ["settings.manage"], keywords: "impayés restrictions rappels pointage notes verrouillage" },
       { href: "/bulletins/configuration", label: "Modèle de bulletin", icon: "templates", anyOf: ["report_cards.manage"], keywords: "bulletin colonnes coefficients modèle" },
+      { href: "/parametres/cartes", label: "Cartes et badges", icon: "badges", anyOf: ["settings.manage"], keywords: "carte scolaire carte apprenant carte étudiant badge design modèle couleurs verso 3D" },
       { href: "/parametres/messages-vocaux", label: "Messages vocaux", icon: "settings", anyOf: ["voice_checkin.manage"], keywords: "voice check-in voix annonce arrivée pointage tablette synthèse vocale" },
       { href: "/parametres/regles-academiques", label: "Règles de calcul", icon: "settings", anyOf: ["academic.manage"], keywords: "formule moyenne annuelle pondération trimestre décisions simulateur versions" },
       { href: "/formulaires", label: "Formulaires", icon: "forms", anyOf: ["forms.manage"], keywords: "champs personnalisés pièces" },
@@ -324,6 +326,7 @@ export const UNIVERSITY_NAVIGATION: NavSection[] = [
     label: "Paramètres",
     items: [
       { href: "/universite/parametres", label: "Paramètres universitaires", icon: "settings", anyOf: ["settings.manage"], keywords: "fonctionnalités règles calcul compensation rattrapage crédits classement" },
+      { href: "/parametres/cartes", label: "Cartes et badges", icon: "badges", anyOf: ["settings.manage"], keywords: "carte étudiant badge design modèle couleurs verso 3D" },
       { href: "/parametres/etablissement", label: "Établissement", icon: "school", anyOf: ["settings.manage"], keywords: "logo cachet signature coordonnées site web" },
       { href: "/abonnement", label: "Mon abonnement", icon: "subscription", anyOf: ["billing.read"], keywords: "abonnement" },
       { href: "/formulaires", label: "Formulaires", icon: "forms", anyOf: ["forms.manage"], keywords: "champs personnalisés pièces" },

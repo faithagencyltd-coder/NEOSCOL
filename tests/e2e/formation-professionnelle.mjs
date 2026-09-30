@@ -163,12 +163,13 @@ await admin.goto(`${base}/eleves/${learner.id}?onglet=formation`);
 check(await admin.getByText(`Soudure industrielle ${run}`).first().isVisible(), "onglet Formation : formation et session");
 check(await admin.getByText("Reste à payer").isVisible(), "situation financière (payé / reste)");
 await admin.goto(`${base}/eleves/${learner.id}?onglet=badge`);
-await admin.getByRole("button", { name: "Générer le badge" }).click();
-await dialog(admin).getByRole("button", { name: "Générer" }).click();
-check(await toast(admin, /Badge généré/), "badge apprenant généré");
+await admin.getByRole("button", { name: "Générer la carte" }).click();
+check(await toast(admin, /Carte générée/), "carte apprenant générée");
 await admin.reload();
-check(await admin.getByRole("img", { name: /QR code du badge APP-DEMOF/ }).isVisible(), "QR personnel visible dans le dossier");
-check(await pdfOk(admin, `${base}/api/documents/badges-apprenants/${learner.id}`), "badge imprimable (PDF)");
+const cardText = await admin.locator("main").innerText();
+check(cardText.includes("CARTE APPRENANT") && cardText.includes("Actif à la tablette") && /APP-DEMOF-\d{2}-\d{5}/.test(cardText), "carte 3D apprenant et QR actif dans le dossier (onglet Badge & QR)");
+check(await pdfOk(admin, `${base}/api/cartes/${learner.id}/pdf`), "carte imprimable (PDF recto / verso)");
+check(await pdfOk(admin, `${base}/api/documents/badges-apprenants/${learner.id}`), "badge imprimable depuis la liste (PDF)");
 await shot(admin, "03-dossier-badge");
 const firstToken = (await q1("select token from student_badges where student_id = $1 and status = 'active'", [learner.id])).token;
 

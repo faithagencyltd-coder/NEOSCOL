@@ -176,12 +176,13 @@ check(await admin.getByText(`Réseaux fondamentaux ${run}`).first().isVisible(),
 await admin.goto(`${base}/eleves/${student.id}?onglet=universite`);
 check(await admin.getByText(`Licence Réseaux ${run}`).first().isVisible(), "dossier académique permanent : filière de l'année");
 await admin.goto(`${base}/eleves/${student.id}?onglet=badge`);
-await admin.getByRole("button", { name: "Générer le badge" }).click();
-await dialog(admin).getByRole("button", { name: "Générer" }).click();
-check(await toast(admin, /Badge étudiant généré/), "badge étudiant généré");
+await admin.getByRole("button", { name: "Générer la carte" }).click();
+check(await toast(admin, /Carte générée/), "carte étudiant générée");
 await admin.reload();
-check(await admin.getByRole("img", { name: /QR code du badge/ }).isVisible(), "QR personnel visible dans le dossier");
-check(await pdfOk(admin, `${base}/api/documents/badges-apprenants/${student.id}`), "badge étudiant imprimable (PDF)");
+const cardText = await admin.locator("main").innerText();
+check(cardText.includes("CARTE ÉTUDIANT") && cardText.includes("Actif à la tablette") && /ETU-DEMOU-\d{2}-\d{5}/.test(cardText), "carte 3D étudiant et QR actif dans le dossier (onglet Badge & QR)");
+check(await pdfOk(admin, `${base}/api/cartes/${student.id}/pdf`), "carte étudiant imprimable (PDF recto / verso)");
+check(await pdfOk(admin, `${base}/api/documents/badges-apprenants/${student.id}`), "badge étudiant imprimable depuis la liste (PDF)");
 const token = (await q1("select token from student_badges where student_id = $1 and status = 'active'", [student.id])).token;
 
 console.log("\n=== Tablette « SCANNER VOTRE BADGE » ===");

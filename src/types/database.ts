@@ -6177,6 +6177,7 @@ export type Database = {
           status: string
           student_id: string
           token: string
+          valid_until: string | null
         }
         Insert: {
           id?: string
@@ -6193,6 +6194,7 @@ export type Database = {
           status?: string
           student_id: string
           token?: string
+          valid_until?: string | null
         }
         Update: {
           id?: string
@@ -6209,6 +6211,7 @@ export type Database = {
           status?: string
           student_id?: string
           token?: string
+          valid_until?: string | null
         }
         Relationships: [
           {
@@ -9145,6 +9148,13 @@ export type Database = {
           p_based_on?: string
         }
         Returns: string
+      }
+      save_card_design: {
+        Args: {
+          p_organization_id: string
+          p_design: Json
+        }
+        Returns: Json
       }
       save_communication_automation: {
         Args: {
