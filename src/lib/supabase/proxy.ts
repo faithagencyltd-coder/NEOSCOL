@@ -15,10 +15,12 @@ const PUBLIC_PATHS = [
   "/demo", "/hors-ligne", "/tarifs", "/pricing", "/inscription",
   // Pages publiques réglées par le Super Admin : aide, conditions générales, confidentialité.
   "/aide", "/conditions", "/confidentialite",
+  // Site officiel : accueil (« / » exact), version anglaise, secteurs, pays, contact.
+  "/en", "/secteurs", "/pays", "/contact",
 ];
 
 function isPublicPath(pathname: string): boolean {
-  return PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+  return pathname === "/" || PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 }
 
 /** Rafraîchit la session Supabase et redirige les visiteurs non connectés. */

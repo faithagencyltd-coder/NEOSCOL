@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "NeoScool",
     description: "Plus qu'un logiciel, une vision pour l'éducation.",
     lang: "fr",
-    start_url: "/",
+    start_url: "/tableau-de-bord",
     scope: "/",
     display: "standalone",
     orientation: "any",

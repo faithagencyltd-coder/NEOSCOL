@@ -23,7 +23,7 @@ export default function OfflinePage() {
       </div>
       {/* Rechargement complet volontaire : la navigation client échouerait hors ligne. */}
       {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-      <a href="/" className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">
+      <a href="/tableau-de-bord" className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">
         Réessayer
       </a>
     </main>

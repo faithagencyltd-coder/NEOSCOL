@@ -491,3 +491,28 @@ h2,
 .badge3d-float {
   animation: badge3d-float 6s ease-in-out infinite;
 }
+
+/* ---------------------------------------------------------------------------
+   Site officiel NeoScool : apparitions au défilement, lignes de liaison,
+   flux de données. Tout est coupé par prefers-reduced-motion (règle globale
+   + contenu visible d'emblée ci-dessous).
+   --------------------------------------------------------------------------- */
+.site-reveal { opacity: 0; transform: translateY(28px); transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out); transition-delay: var(--delay, 0ms); }
+.site-reveal[data-visible="true"] { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .site-reveal { opacity: 1; transform: none; }
+}
+@keyframes site-dash { to { stroke-dashoffset: -24; } }
+.site-dash { stroke-dasharray: 6 6; animation: site-dash 1.2s linear infinite; }
+@keyframes site-pulse { 0%, 100% { transform: scale(1); opacity: 0.55; } 50% { transform: scale(1.35); opacity: 0; } }
+.site-pulse { animation: site-pulse 2.6s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+@keyframes site-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -10px; } }
+.site-float { animation: site-float 7s ease-in-out infinite; }
+@keyframes site-travel { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+@keyframes site-flag-in { from { opacity: 0; transform: translateY(12px) scale(0.96); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+.site-flag-in { animation: site-flag-in 700ms var(--ease-out) both; }
+@keyframes site-progress { from { width: 0%; } to { width: 100%; } }
+.site-grid-bg {
+  background-image: linear-gradient(rgba(11, 37, 89, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(11, 37, 89, 0.05) 1px, transparent 1px);
+  background-size: 56px 56px;
+}

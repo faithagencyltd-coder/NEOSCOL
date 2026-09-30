@@ -5631,51 +5631,78 @@ export type Database = {
           contact_email: string | null
           contact_phone: string | null
           faq: Json
+          home_sections: Json
           id: number
           logo_path: string | null
           primary_color: string | null
           privacy: string | null
           privacy_updated_at: string | null
+          seo_description: string | null
+          seo_description_en: string | null
+          slogan: string | null
+          slogan_en: string | null
           support_hours: string | null
           terms: string | null
           terms_updated_at: string | null
           updated_at: string
           updated_by: string | null
           whatsapp: string | null
+          whatsapp_enabled: boolean
+          whatsapp_label: string | null
+          whatsapp_message: string | null
+          whatsapp_position: string
         }
         Insert: {
           address?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           faq?: Json
+          home_sections?: Json
           id?: number
           logo_path?: string | null
           primary_color?: string | null
           privacy?: string | null
           privacy_updated_at?: string | null
+          seo_description?: string | null
+          seo_description_en?: string | null
+          slogan?: string | null
+          slogan_en?: string | null
           support_hours?: string | null
           terms?: string | null
           terms_updated_at?: string | null
           updated_at?: string
           updated_by?: string | null
           whatsapp?: string | null
+          whatsapp_enabled?: boolean
+          whatsapp_label?: string | null
+          whatsapp_message?: string | null
+          whatsapp_position?: string
         }
         Update: {
           address?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           faq?: Json
+          home_sections?: Json
           id?: number
           logo_path?: string | null
           primary_color?: string | null
           privacy?: string | null
           privacy_updated_at?: string | null
+          seo_description?: string | null
+          seo_description_en?: string | null
+          slogan?: string | null
+          slogan_en?: string | null
           support_hours?: string | null
           terms?: string | null
           terms_updated_at?: string | null
           updated_at?: string
           updated_by?: string | null
           whatsapp?: string | null
+          whatsapp_enabled?: boolean
+          whatsapp_label?: string | null
+          whatsapp_message?: string | null
+          whatsapp_position?: string
         }
         Relationships: [
           {
@@ -6581,6 +6608,235 @@ export type Database = {
             referencedRelation: "students"
             referencedColumns: ["organization_id", "id"]
           }
+        ]
+      }
+      site_country_profiles: {
+        Row: {
+          academic_structure: string | null
+          academic_structure_en: string | null
+          availability: string
+          country_code: string
+          education_context: string | null
+          education_context_en: string | null
+          institutional_systems: Json
+          is_displayed: boolean
+          marketing_text: string | null
+          marketing_text_en: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          academic_structure?: string | null
+          academic_structure_en?: string | null
+          availability?: string
+          country_code: string
+          education_context?: string | null
+          education_context_en?: string | null
+          institutional_systems?: Json
+          is_displayed?: boolean
+          marketing_text?: string | null
+          marketing_text_en?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          academic_structure?: string | null
+          academic_structure_en?: string | null
+          availability?: string
+          country_code?: string
+          education_context?: string | null
+          education_context_en?: string | null
+          institutional_systems?: Json
+          is_displayed?: boolean
+          marketing_text?: string | null
+          marketing_text_en?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_country_profiles_country_code_fkey"
+            columns: ["country_code"]
+            isOneToOne: true
+            referencedRelation: "countries"
+            referencedColumns: ["code"]
+          }
+        ]
+      }
+      site_leads: {
+        Row: {
+          admin_note: string | null
+          country: string | null
+          created_at: string
+          email: string
+          full_name: string
+          handled_at: string | null
+          handled_by: string | null
+          id: string
+          kind: string
+          locale: string
+          message: string | null
+          organization: string | null
+          organization_type: string | null
+          phone: string | null
+          status: string
+        }
+        Insert: {
+          admin_note?: string | null
+          country?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          kind: string
+          locale?: string
+          message?: string | null
+          organization?: string | null
+          organization_type?: string | null
+          phone?: string | null
+          status?: string
+        }
+        Update: {
+          admin_note?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          kind?: string
+          locale?: string
+          message?: string | null
+          organization?: string | null
+          organization_type?: string | null
+          phone?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_leads_handled_by_fkey"
+            columns: ["handled_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      site_social_links: {
+        Row: {
+          id: string
+          is_active: boolean
+          label: string
+          network: string
+          sort_order: number
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          id?: string
+          is_active?: boolean
+          label: string
+          network: string
+          sort_order?: number
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          id?: string
+          is_active?: boolean
+          label?: string
+          network?: string
+          sort_order?: number
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          
+        ]
+      }
+      site_testimonials: {
+        Row: {
+          author_name: string
+          author_role: string | null
+          consent_confirmed: boolean
+          id: string
+          is_published: boolean
+          organization: string | null
+          photo_url: string | null
+          quote: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          author_name: string
+          author_role?: string | null
+          consent_confirmed?: boolean
+          id?: string
+          is_published?: boolean
+          organization?: string | null
+          photo_url?: string | null
+          quote: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          author_name?: string
+          author_role?: string | null
+          consent_confirmed?: boolean
+          id?: string
+          is_published?: boolean
+          organization?: string | null
+          photo_url?: string | null
+          quote?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          
+        ]
+      }
+      site_videos: {
+        Row: {
+          description: string | null
+          id: string
+          is_published: boolean
+          poster_url: string | null
+          sort_order: number
+          title: string
+          title_en: string | null
+          topic: string
+          updated_at: string
+          video_url: string
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          poster_url?: string | null
+          sort_order?: number
+          title: string
+          title_en?: string | null
+          topic: string
+          updated_at?: string
+          video_url: string
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          poster_url?: string | null
+          sort_order?: number
+          title?: string
+          title_en?: string | null
+          topic?: string
+          updated_at?: string
+          video_url?: string
+        }
+        Relationships: [
+          
         ]
       }
       staff_attendance: {
@@ -10059,6 +10315,22 @@ export type Database = {
         }
         Returns: Json
       }
+      platform_save_country_profile: {
+        Args: {
+          p_code: string
+          p_displayed: boolean
+          p_availability: string
+          p_context: string
+          p_context_en: string
+          p_structure: string
+          p_structure_en: string
+          p_systems: Json
+          p_marketing: string
+          p_marketing_en: string
+          p_sort: number
+        }
+        Returns: undefined
+      }
       platform_save_message_template: {
         Args: {
           p_code: string
@@ -10116,6 +10388,45 @@ export type Database = {
         }
         Returns: undefined
       }
+      platform_save_site_video: {
+        Args: {
+          p_id: string
+          p_topic: string
+          p_title: string
+          p_title_en: string
+          p_description: string
+          p_video_url: string
+          p_poster_url: string
+          p_published: boolean
+          p_sort: number
+        }
+        Returns: string
+      }
+      platform_save_site_web: {
+        Args: {
+          p_slogan: string
+          p_slogan_en: string
+          p_seo: string
+          p_seo_en: string
+          p_whatsapp_enabled: boolean
+          p_whatsapp_message: string
+          p_whatsapp_label: string
+          p_whatsapp_position: string
+          p_home_sections: Json
+        }
+        Returns: undefined
+      }
+      platform_save_social_link: {
+        Args: {
+          p_id: string
+          p_network: string
+          p_label: string
+          p_url: string
+          p_active: boolean
+          p_sort: number
+        }
+        Returns: string
+      }
       platform_save_teacher_access_settings: {
         Args: {
           p_enabled: boolean
@@ -10125,6 +10436,20 @@ export type Database = {
           p_grace_days: number
         }
         Returns: Json
+      }
+      platform_save_testimonial: {
+        Args: {
+          p_id: string
+          p_name: string
+          p_role: string
+          p_organization: string
+          p_quote: string
+          p_photo_url: string
+          p_consent: boolean
+          p_published: boolean
+          p_sort: number
+        }
+        Returns: string
       }
       platform_security_overview: {
         Args: never
@@ -10230,6 +10555,14 @@ export type Database = {
           p_secret_ciphertext?: string
           p_secret_hint?: string
           p_clear_secret?: boolean
+        }
+        Returns: undefined
+      }
+      platform_update_lead: {
+        Args: {
+          p_id: string
+          p_status: string
+          p_note: string
         }
         Returns: undefined
       }
@@ -10709,6 +11042,10 @@ export type Database = {
           simulated_result: Json
         }[]
       }
+      site_public_content: {
+        Args: never
+        Returns: Json
+      }
       site_settings: {
         Args: never
         Returns: Json
@@ -10736,6 +11073,20 @@ export type Database = {
           p_reason: string
           p_file_id?: string
           p_justification_id?: string
+        }
+        Returns: string
+      }
+      submit_site_lead: {
+        Args: {
+          p_kind: string
+          p_full_name: string
+          p_email: string
+          p_phone: string
+          p_organization: string
+          p_organization_type: string
+          p_country: string
+          p_message: string
+          p_locale?: string
         }
         Returns: string
       }
