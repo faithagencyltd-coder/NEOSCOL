@@ -6,6 +6,7 @@ import { useState, useSyncExternalStore } from "react";
 import { notify } from "@/components/motion/animated-toast";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
+import { portalsFor } from "@/features/auth/portals";
 
 async function copyText(text: string): Promise<boolean> {
   try {
@@ -56,7 +57,8 @@ const noopSubscribe = () => () => undefined;
  * Partage du lien des portails : copie, WhatsApp, SMS, e-mail, partage natif
  * du téléphone, QR code téléchargeable.
  */
-export function PortalLinkShare({ url, organizationName, qr, fileCode }: { url: string; organizationName: string; qr: string; fileCode: string }) {
+export function PortalLinkShare({ url, organizationName, qr, fileCode, organizationType }: { url: string; organizationName: string; qr: string; fileCode: string; organizationType?: string | null }) {
+  const portals = portalsFor(organizationType);
   // Partage natif (téléphones) : détecté côté navigateur uniquement.
   const canShare = useSyncExternalStore(
     noopSubscribe,
@@ -64,7 +66,7 @@ export function PortalLinkShare({ url, organizationName, qr, fileCode }: { url: 
     () => false,
   );
 
-  const message = `${organizationName} — Connectez-vous à votre portail (Parent, Enseignant / Formateur, Élève / Étudiant) avec vos identifiants personnels : ${url}`;
+  const message = `${organizationName} — Connectez-vous à votre portail (Parent, ${portals.enseignant.label.replace("Portail ", "")}, ${portals.eleve.label.replace("Portail ", "")}) avec vos identifiants personnels : ${url}`;
   const links = [
     { label: "WhatsApp", icon: MessageCircle, href: `https://wa.me/?text=${encodeURIComponent(message)}`, tone: "hover:border-[#25D366] hover:text-[#128C7E]" },
     { label: "SMS", icon: MessageSquareText, href: `sms:?&body=${encodeURIComponent(message)}`, tone: "hover:border-primary hover:text-primary" },

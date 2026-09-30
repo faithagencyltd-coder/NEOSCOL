@@ -23,6 +23,7 @@ import { requirePermission } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
 import { ENROLLMENT_STATUS, ENROLLMENT_TYPE } from "@/lib/labels";
 import { formatDate } from "@/lib/utils/format";
+import { vocabularyFor } from "@/lib/vocabulary";
 import { isUuid, pageParam, param } from "@/lib/utils/search-params";
 
 export const metadata: Metadata = { title: "Inscriptions" };
@@ -30,6 +31,7 @@ export const metadata: Metadata = { title: "Inscriptions" };
 export default async function EnrollmentsPage({ searchParams }: PageProps<"/inscriptions">) {
   const context = await requirePermission("enrollments.read");
   const organizationId = context.organization.id;
+  const family = vocabularyFor(context.organization.type).family;
   const params = await searchParams;
   const year = await getCurrentYear(organizationId);
   const [classes, counts] = await Promise.all([
@@ -62,14 +64,15 @@ export default async function EnrollmentsPage({ searchParams }: PageProps<"/insc
     <div className="grid gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="grid gap-1">
-          <p className="text-sm text-muted-foreground">Scolarité</p>
+          <p className="text-sm text-muted-foreground">{family === "training" ? "Formation" : "Scolarité"}</p>
           <h1 className="text-2xl font-semibold sm:text-[26px]">Inscriptions</h1>
-          <p className="text-sm text-muted-foreground">{year ? `Année ${year.name}` : "Aucune année scolaire"}</p>
+          <p className="text-sm text-muted-foreground">{year ? `Année ${year.name}` : `Aucune ${vocabularyFor(context.organization.type).year.toLowerCase()}`}</p>
         </div>
         {can(context, "enrollments.manage") ? (
           <Button asChild>
-            <Link href="/inscriptions/nouvelle">
-              <Plus aria-hidden /> Nouvelle inscription
+            {/* Chaque module a son propre parcours d'inscription. */}
+            <Link href={family === "training" ? "/formation/inscription" : family === "higher" ? "/universite/inscription" : "/inscriptions/nouvelle"}>
+              <Plus aria-hidden /> {family === "training" ? "Inscrire un apprenant" : family === "higher" ? "Inscription administrative" : "Nouvelle inscription"}
             </Link>
           </Button>
         ) : null}

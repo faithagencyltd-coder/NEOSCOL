@@ -36,6 +36,8 @@ import { can } from "@/lib/auth/session";
 import { qrDataUrl } from "@/lib/pdf/qr";
 import { formatDate, formatDateTime } from "@/lib/utils/format";
 import { isUuid } from "@/lib/utils/search-params";
+import { roleInModule } from "@/lib/modules";
+import { vocabularyFor } from "@/lib/vocabulary";
 
 export const metadata: Metadata = { title: "Fiche du personnel" };
 
@@ -57,7 +59,7 @@ export default async function StaffMemberPage({ params, searchParams }: PageProp
     getStaffAssignments(staff.id),
     canAttendance ? listStaffAttendance(organization.id, { from: monthAgo, to: today, staffId: staff.id }) : Promise.resolve([]),
     canAttendance ? listLessonUnlocks(organization.id, { from: monthAgo, to: today, staffId: staff.id }) : Promise.resolve([]),
-    can(context, "users.manage") ? getStaffRoles(organization.id) : Promise.resolve([]),
+    can(context, "users.manage") ? getStaffRoles(organization.id).then((list) => list.filter((r) => roleInModule(r.key, vocabularyFor(organization.type).family))) : Promise.resolve([]),
     staff.user_id && can(context, "users.read") ? getAccountRoles(organization.id, staff.user_id) : Promise.resolve(null),
   ]);
   const badges = [...staff.staff_badges].sort((a, b) => b.issued_at.localeCompare(a.issued_at));

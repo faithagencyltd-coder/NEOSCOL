@@ -4,6 +4,7 @@ import { pdfText } from "@/lib/pdf/format";
 
 import type { DocImages, DocOrganization } from "../types";
 import { COLORS, DemoMark, OrgMark } from "./common";
+import { adaptWording, vocabularyFor } from "@/lib/vocabulary";
 
 type Portal = { label: string; sub: string; method: string };
 
@@ -34,7 +35,7 @@ export function PortalPosterPage({
       <View style={{ marginTop: 22, borderRadius: 14, backgroundColor: color, paddingVertical: 14, paddingHorizontal: 18 }}>
         <Text style={{ color: "#FFFFFF", fontFamily: "Helvetica-Bold", fontSize: 20, textAlign: "center" }}>Connectez-vous à votre portail</Text>
         <Text style={{ color: "#FFFFFF", fontSize: 11, textAlign: "center", marginTop: 4, opacity: 0.9 }}>
-          Parents, enseignants, formateurs, élèves et étudiants : un seul lien, chacun avec ses identifiants personnels.
+          {pdfText(adaptWording("Parents, enseignants, formateurs, élèves et étudiants : un seul lien, chacun avec ses identifiants personnels.", vocabularyFor(organization.type)))}
         </Text>
       </View>
 

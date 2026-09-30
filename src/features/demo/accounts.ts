@@ -164,3 +164,10 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
 export function demoAccount(key: string): DemoAccount | undefined {
   return DEMO_ACCOUNTS.find((a) => a.key === key);
 }
+
+/** Module de chaque compte de démonstration (séparation des modules dans un établissement ouvert). */
+export function demoAccountFamily(key: DemoAccountKey): "school" | "training" | "higher" {
+  if (key === "formation" || key === "formateur" || key === "pointage-formation") return "training";
+  if (key === "universite" || key === "etudiant" || key === "professeur" || key === "scolarite" || key === "pointage-universite") return "higher";
+  return "school";
+}

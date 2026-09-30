@@ -1,5 +1,7 @@
 import { GraduationCap, Presentation, ShieldCheck, Users, type LucideIcon } from "lucide-react";
 
+import { vocabularyFor } from "@/lib/vocabulary";
+
 /**
  * Portails d'un établissement, accessibles par un lien unique partageable
  * (/acces/CODE). Le portail choisit la méthode de connexion et le type de
@@ -25,6 +27,32 @@ export const PORTALS: Record<PortalKind, { label: string; sub: string; icon: Luc
   eleve: { label: "Portail Élève / Étudiant", sub: "Élèves, étudiants, apprenants", icon: GraduationCap, method: "Matricule, date de naissance et mot de passe" },
   personnel: { label: "Portail Administration", sub: "Direction, secrétariat, comptabilité", icon: ShieldCheck, method: "E-mail ou matricule et mot de passe" },
 };
+
+type PortalInfo = { label: string; sub: string; icon: LucideIcon; method: string };
+
+/**
+ * Portails nommés selon le module de l'établissement (séparation des modules) :
+ * « Portail Enseignant » + « Portail Élève » (école), « Portail Formateur » +
+ * « Portail Apprenant » (formation), « Portail Enseignant » + « Portail
+ * Étudiant » (université). Sans établissement connu : libellés généraux.
+ */
+export function portalsFor(organizationType: string | null | undefined): Record<PortalKind, PortalInfo> {
+  if (!organizationType) return PORTALS;
+  const v = vocabularyFor(organizationType);
+  const teacher =
+    v.family === "training"
+      ? { label: "Portail Formateur", sub: "Formateurs et formatrices" }
+      : v.family === "higher"
+        ? { label: "Portail Enseignant", sub: "Enseignants et chargés de cours" }
+        : { label: "Portail Enseignant", sub: "Enseignants et professeurs" };
+  const student =
+    v.family === "training"
+      ? { label: "Portail Apprenant", sub: "Apprenants" }
+      : v.family === "higher"
+        ? { label: "Portail Étudiant", sub: "Étudiants" }
+        : { label: "Portail Élève", sub: "Élèves" };
+  return { ...PORTALS, enseignant: { ...PORTALS.enseignant, ...teacher }, eleve: { ...PORTALS.eleve, ...student } };
+}
 
 export function isPortalKind(value: unknown): value is PortalKind {
   return typeof value === "string" && (PORTAL_KINDS as readonly string[]).includes(value);

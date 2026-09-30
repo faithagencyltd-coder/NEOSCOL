@@ -1,5 +1,6 @@
 import { CalendarRange, Layers, Library, Lock, LockOpen, School, Star } from "lucide-react";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 import { ConfirmAction } from "@/components/shared/confirm-action";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -41,6 +42,7 @@ import { options, PERIOD_TYPE, PROGRAM_KIND } from "@/lib/labels";
 import { formatDate } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
 import { param } from "@/lib/utils/search-params";
+import { vocabularyFor } from "@/lib/vocabulary";
 
 export const metadata: Metadata = { title: "Structure académique" };
 
@@ -57,13 +59,22 @@ const short = (d: string) => formatDate(d, "fr-FR", { dateStyle: "medium" });
 export default async function StructurePage({ searchParams }: PageProps<"/structure">) {
   const context = await requirePermission("academic.read");
   const organizationId = context.organization.id;
-  const school = schoolConfigOf(context.organization.settings);
+  const family = vocabularyFor(context.organization.type).family;
+  // Université : structure propre (facultés, filières, UE) — la structure scolaire n'existe pas.
+  if (family === "higher") notFound();
+  const school = family === "school" ? schoolConfigOf(context.organization.settings) : null;
   // Module Scolaire : l'onglet des séries n'existe que si le lycée est activé.
-  const tabs = school
-    ? TABS.filter((t) => t.key !== "filieres" || school.levels.includes("lycee")).map((t) =>
-        t.key === "filieres" ? { ...t, label: "Séries et filières (lycée)" } : t.key === "matieres" ? { ...t, label: "Matières" } : t,
-      )
-    : TABS;
+  // Centre de formation : années de formation, modules et salles (ni niveaux ni séries scolaires).
+  const tabs =
+    family === "training"
+      ? TABS.filter((t) => ["annees", "matieres", "salles"].includes(t.key)).map((t) =>
+          t.key === "annees" ? { ...t, label: "Années de formation et périodes" } : t.key === "matieres" ? { ...t, label: "Modules" } : t,
+        )
+      : school
+        ? TABS.filter((t) => t.key !== "filieres" || school.levels.includes("lycee")).map((t) =>
+            t.key === "filieres" ? { ...t, label: "Séries et filières (lycée)" } : t.key === "matieres" ? { ...t, label: "Matières" } : t,
+          )
+        : TABS;
   const params = await searchParams;
   const requested = param(params, "onglet");
   const active = tabs.some((t) => t.key === requested) ? requested! : "annees";
@@ -72,10 +83,12 @@ export default async function StructurePage({ searchParams }: PageProps<"/struct
   return (
     <div className="grid gap-5">
       <div className="grid gap-1">
-        <p className="text-sm text-muted-foreground">Scolarité</p>
-        <h1 className="text-2xl font-semibold sm:text-[26px]">Structure académique</h1>
+        <p className="text-sm text-muted-foreground">{family === "training" ? "Formation" : "Scolarité"}</p>
+        <h1 className="text-2xl font-semibold sm:text-[26px]">{family === "training" ? "Année de formation" : "Structure académique"}</h1>
         <p className="text-sm text-muted-foreground">
-          Années scolaires, périodes d&apos;évaluation, niveaux, filières, formations, matières et salles.
+          {family === "training"
+            ? "Années de formation, périodes, modules et salles. Les formations et sessions se gèrent dans le menu Formation professionnelle."
+            : "Années scolaires, périodes d'évaluation, niveaux, filières, formations, matières et salles."}
         </p>
       </div>
       <TabNav tabs={tabs} active={active} label="Rubriques de la structure" />

@@ -37,6 +37,7 @@ import { can, canAny } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateTime } from "@/lib/utils/format";
 import { param } from "@/lib/utils/search-params";
+import { vocabularyFor } from "@/lib/vocabulary";
 
 export const metadata: Metadata = { title: "Documents" };
 
@@ -90,19 +91,22 @@ export default async function DocumentsPage({ searchParams }: PageProps<"/docume
   const lastPayment = payments?.at(-1);
   const card = reportCards?.[0];
 
-  const types: DocType[] = student
+  const family = vocabularyFor(org.type).family;
+  const allTypes: DocType[] = student
     ? [
         { key: "fiche", title: "Fiche d'inscription", description: "Identité, scolarité, parents, pièces fournies.", icon: FileText, href: `/api/documents/inscriptions/${student.enrollmentId}`, allowed: generate },
         { key: "engagement", title: "Fiche d'engagement", description: "Engagement du parent / tuteur, signatures.", icon: FileSignature, href: `/api/documents/inscriptions/${student.enrollmentId}?type=engagement`, allowed: generate },
         { key: "recu-inscription", title: "Reçu d'inscription", description: "Premier versement (inscription + 1re tranche).", icon: ReceiptText, href: firstPayment ? `/api/documents/recus/${firstPayment.id}` : null, allowed: finance, missing: "Aucun paiement enregistré" },
         { key: "recu", title: "Reçu de paiement", description: "Dernier paiement, solde restant, QR de vérification.", icon: Receipt, href: lastPayment ? `/api/documents/recus/${lastPayment.id}` : null, allowed: finance, missing: "Aucun paiement enregistré" },
         { key: "facture", title: "Facture", description: "Lignes de frais, remises, échéancier.", icon: ScrollText, href: invoices?.[0] ? `/api/documents/factures/${invoices[0].id}` : null, allowed: finance, missing: "Aucune facture émise" },
-        { key: "certificat", title: "Certificat de scolarité", description: "Modèle officiel, cachet et signature.", icon: FileBadge, href: `/api/documents/certificats/${student.id}`, allowed: generate },
+        { key: "certificat", title: family === "training" ? "Attestation d'inscription" : "Certificat de scolarité", description: "Modèle officiel, cachet et signature.", icon: FileBadge, href: `/api/documents/certificats/${student.id}`, allowed: generate },
         { key: "bulletin", title: "Bulletin", description: "Notes, moyennes, rang, appréciations.", icon: FileCheck2, href: card ? `/api/documents/bulletins/${card.id}` : null, allowed: reports, missing: "Bulletin non calculé" },
         { key: "releve", title: "Relevé de notes", description: "Moyennes de l'année par matière et par période.", icon: FileSpreadsheet, href: card ? `/api/documents/releves/${student.id}` : null, allowed: reports, missing: "Aucun bulletin" },
-        { key: "carte", title: "Carte scolaire", description: "Format carte CR80 avec photo et QR.", icon: CreditCard, href: `/api/documents/cartes/${student.id}`, allowed: generate },
+        { key: "carte", title: family === "training" ? "Carte apprenant" : family === "higher" ? "Carte étudiant" : "Carte scolaire", description: "Format carte CR80 avec photo et QR.", icon: CreditCard, href: `/api/documents/cartes/${student.id}`, allowed: generate },
       ]
     : [];
+  // Séparation des modules : le bulletin et son relevé n'existent que dans le module scolaire.
+  const types = family === "school" ? allTypes : allTypes.filter((t) => t.key !== "bulletin" && t.key !== "releve");
 
   return (
     <div className="grid gap-6">

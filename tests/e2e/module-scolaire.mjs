@@ -188,7 +188,7 @@ console.log("\n=== Centre de formation et université inchangés ===");
 const formation = await login("formation@demo.neoscol.app");
 await formation.goto(`${base}/structure?onglet=filieres`);
 t = await formation.locator("main").innerText();
-check(t.includes("Filières et formations") && !t.includes("Séries et filières du lycée"), "centre de formation : écran des formations inchangé");
+check(t.includes("Année de formation") && !t.includes("Séries et filières du lycée") && !t.includes("Niveaux"), "centre de formation : année de formation, sans niveaux ni séries scolaires");
 await formation.goto(`${base}/parametres/etablissement`);
 check(!(await formation.getByText("Module scolaire").count()), "centre de formation : pas de carte Module scolaire");
 

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { PageHeader } from "@/components/shared/page-header";
 import { CheckoutWizard } from "@/features/billing/components/checkout-wizard";
-import { MULTI_MODULES_PLAN } from "@/features/billing/constants";
+import { plansForOrganization } from "@/features/billing/constants";
 import { getSubscription, listPlans } from "@/features/billing/queries";
 import { requirePermission } from "@/lib/auth/guards";
 import { activePaymentSetup } from "@/lib/payments/config";
@@ -26,8 +26,8 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/abonnem
   if (!subscription) redirect("/abonnement");
   const setup = activePaymentSetup(await publicBaseUrl());
   // Module 4 réservé aux établissements principaux (et réciproquement) : contrôlé en base, reflété ici.
-  const isGroup = (org?.type ?? context.organization.type) === "school_group";
-  const active = plans.filter((p) => p.is_active && (p.code === MULTI_MODULES_PLAN) === isGroup);
+  // Séparation des modules : la formule du module (et la formule actuelle), Module 4 pour un établissement principal.
+  const active = plansForOrganization(plans, org?.type ?? context.organization.type, subscription.plan?.code);
   const trialing = subscription?.status === "TRIALING";
   return (
     <div className="grid gap-6">

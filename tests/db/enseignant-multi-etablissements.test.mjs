@@ -159,7 +159,7 @@ describe("Abonnement supplémentaire (Super Admin)", () => {
       assert.equal(ok.result, "confirmed");
       const [{ r: dup }] = await q("select public.teacher_access_confirm_payment('simulation', 'test', $1, $2, 5000, 'XOF') as r", [`SIM-${c.reference}`, c.reference]);
       assert.equal(dup.result, "duplicate", "notification répétée sans effet");
-      const [acc] = await q("select status, period_start::text, period_end::text, (period_end - period_start + 1) as days from teacher_extra_accesses where user_id = $1 and organization_id = $2", [TEACHER, ORG_DEMOF]);
+      const [acc] = await q("select status, period_start::text, period_end::text, (period_end - period_start + 1) as days from teacher_subscriptions where user_id = $1", [TEACHER]);
       assert.equal(acc.status, "active");
       assert.ok(acc.days >= 28 && acc.days <= 31, `un mois payé (${acc.days} jours)`);
 
@@ -178,11 +178,11 @@ describe("Abonnement supplémentaire (Super Admin)", () => {
       await acceptAsTeacher(q);
       await enableRule(q, { price: 5000, period: 1, grace: 3 });
       await switchTo(q, null);
-      await q("insert into teacher_extra_accesses (user_id, organization_id, status, period_start, period_end) values ($1, $2, 'active', current_date - 40, current_date - 2) on conflict (user_id, organization_id) do update set status = 'active', period_start = excluded.period_start, period_end = excluded.period_end", [TEACHER, ORG_DEMOF]);
+      await q("insert into teacher_subscriptions (user_id, status, period_start, period_end) values ($1, 'active', current_date - 40, current_date - 2) on conflict (user_id) do update set status = 'active', period_start = excluded.period_start, period_end = excluded.period_end", [TEACHER]);
       await switchTo(q, TEACHER);
       assert.ok((await orgs(q)).includes(ORG_DEMOF), "délai de grâce (3 jours) : accès maintenu");
       await switchTo(q, null);
-      await q("update teacher_extra_accesses set period_end = current_date - 5 where user_id = $1 and organization_id = $2", [TEACHER, ORG_DEMOF]);
+      await q("update teacher_subscriptions set period_end = current_date - 5 where user_id = $1", [TEACHER]);
       await switchTo(q, TEACHER);
       assert.ok(!(await orgs(q)).includes(ORG_DEMOF), "abonnement expiré : accès supplémentaire suspendu");
       const [{ a }] = await q("select public.my_organization_accesses() as a");
@@ -193,7 +193,7 @@ describe("Abonnement supplémentaire (Super Admin)", () => {
       assert.equal((await q("select count(*)::int as n from memberships where user_id = $1 and status = 'active'", [TEACHER]))[0].n, 2, "adhésions conservées");
 
       // Renouvellement anticipé : la période suit la période en cours.
-      await q("update teacher_extra_accesses set period_end = current_date + 10 where user_id = $1 and organization_id = $2", [TEACHER, ORG_DEMOF]);
+      await q("update teacher_subscriptions set period_end = current_date + 10 where user_id = $1", [TEACHER]);
       await switchTo(q, TEACHER);
       const [{ c }] = await q("select public.teacher_access_start_checkout($1, 'simulation', 'test') as c", [ORG_DEMOF]);
       await switchTo(q, null);
@@ -211,11 +211,12 @@ describe("Abonnement supplémentaire (Super Admin)", () => {
       await enableRule(q, { price: 5000, period: 1 });
       await switchTo(q, USERS.superadmin);
       const [{ list }] = await q("select public.platform_teacher_accesses() as list");
-      const row = list.find((r) => r.user_id === TEACHER && r.organization_id === ORG_DEMOF);
-      assert.ok(row, "enseignant concerné listé");
+      const row = list.find((r) => r.user_id === TEACHER);
+      assert.ok(row, "enseignant concerné listé (une seule ligne par enseignant)");
+      assert.equal(list.filter((r) => r.user_id === TEACHER).length, 1);
       assert.equal(row.access_state, "pending");
-      assert.ok(row.other_organizations.length >= 1, "autres établissements affichés");
-      assert.ok(!list.some((r) => r.user_id === TEACHER && r.organization_id === ORG_DEMO), "premier établissement non concerné");
+      assert.ok(row.primary_organization, "premier établissement (gratuit) affiché");
+      assert.deepEqual(row.extra_organizations.map((o) => o.id), [ORG_DEMOF], "établissements couverts par l'abonnement");
 
       assert.match(await rejects(q("select public.platform_teacher_access_record_payment($1, $2, 5000, '', 'espèces')", [TEACHER, ORG_DEMOF])), /Référence/);
       await q("select public.platform_teacher_access_record_payment($1, $2, 5000, 'RECU-001', 'espèces', 'Payé au bureau')", [TEACHER, ORG_DEMOF]);
@@ -238,7 +239,7 @@ describe("Abonnement supplémentaire (Super Admin)", () => {
       assert.deepEqual([s.status, s.state], ["active", "active"], "rétabli selon la période payée");
       await q("select public.platform_teacher_access_set_status($1, $2, 'exempt', 'Partenariat')", [TEACHER, ORG_DEMOF]);
       await switchTo(q, null);
-      await q("update teacher_extra_accesses set period_start = current_date - 60, period_end = current_date - 30 where user_id = $1 and organization_id = $2", [TEACHER, ORG_DEMOF]);
+      await q("update teacher_subscriptions set period_start = current_date - 60, period_end = current_date - 30 where user_id = $1", [TEACHER]);
       await switchTo(q, TEACHER);
       assert.ok((await orgs(q)).includes(ORG_DEMOF), "accès offert : sans paiement");
       await switchTo(q, USERS.superadmin);
@@ -259,13 +260,55 @@ describe("Abonnement supplémentaire (Super Admin)", () => {
       await enableRule(q);
       await q("select public.platform_teacher_access_record_payment($1, $2, 5000, 'RECU-XYZ', 'virement')", [TEACHER, ORG_DEMOF]);
       await switchTo(q, ADMIN_B);
-      assert.equal((await q("select count(*)::int as n from teacher_extra_accesses where user_id = $1", [TEACHER]))[0].n, 1);
+      assert.equal((await q("select count(*)::int as n from teacher_subscriptions where user_id = $1", [TEACHER]))[0].n, 1);
       assert.equal((await q("select count(*)::int as n from teacher_access_payments"))[0].n, 0);
       await switchTo(q, USERS.secretary);
-      assert.equal((await q("select count(*)::int as n from teacher_extra_accesses where organization_id = $1", [ORG_DEMOF]))[0].n, 0);
+      assert.equal((await q("select count(*)::int as n from teacher_subscriptions where user_id = $1", [TEACHER]))[0].n, 0);
       await switchTo(q, USERS.teacher2);
       assert.equal((await q("select count(*)::int as n from teacher_access_payments"))[0].n, 0);
-      assert.match(await rejects(q("insert into teacher_extra_accesses (user_id, organization_id, status) values ($1, $2, 'exempt')", [USERS.teacher2, ORG_DEMOF])), /permission denied|row-level security/);
+      assert.match(await rejects(q("insert into teacher_subscriptions (user_id, status) values ($1, 'exempt')", [USERS.teacher2])), /permission denied|row-level security/);
+    });
+  });
+
+  test("UN SEUL abonnement : A gratuit, B payé une fois, C couvert sans nouveau paiement", async () => {
+    await as(null, async (q) => {
+      const ORG_DEMOU = "10000000-0000-4000-a000-000000000003";
+      await inviteTeacherInB(q);
+      await acceptAsTeacher(q);
+      await enableRule(q, { price: 5000, period: 1 });
+      // Paiement unique depuis B.
+      await switchTo(q, TEACHER);
+      const [{ c }] = await q("select public.teacher_access_start_checkout($1, 'simulation', 'test') as c", [ORG_DEMOF]);
+      await switchTo(q, null);
+      await q("select public.teacher_access_attach_checkout($1, $2, 'https://pay.test', '{}')", [c.payment_id, `SIM-${c.reference}`]);
+      await q("select public.teacher_access_confirm_payment('simulation', 'test', $1, $2, 5000, 'XOF')", [`SIM-${c.reference}`, c.reference]);
+      // L'université (C) rattache ensuite le même compte.
+      const [{ id: adminU }] = await q("select user_id as id from memberships m join membership_roles mr on mr.membership_id = m.id join roles r on r.id = mr.role_id where m.organization_id = $1 and r.key = 'org_admin' limit 1", [ORG_DEMOU]);
+      await switchTo(q, adminU);
+      const [{ id: staffC }] = await q("insert into staff_members (organization_id, first_name, last_name, email, is_teacher) values ($1, 'Koffi', 'Mensah', 'enseignant@demo.neoscol.app', true) returning id", [ORG_DEMOU]);
+      const [{ id: roleC }] = await q("select id from roles where organization_id = $1 and key = 'teacher'", [ORG_DEMOU]);
+      assert.equal((await q("select public.link_existing_staff_account($1, $2) as r", [staffC, roleC]))[0].r.result, "invited");
+      await switchTo(q, TEACHER);
+      const [{ a }] = await q("select public.my_organization_accesses() as a");
+      const invC = a.memberships.find((m) => m.organization_id === ORG_DEMOU && m.status === "invited");
+      const [{ r }] = await q("select public.respond_membership_invitation($1, true) as r", [invC.membership_id]);
+      assert.equal(r.access_state, "active", "C couvert par l'abonnement déjà payé");
+      assert.equal(r.payment_required, false);
+      const ids = await orgs(q);
+      assert.ok([ORG_DEMO, ORG_DEMOF, ORG_DEMOU].every((o) => ids.includes(o)), "A, B et C accessibles avec un seul paiement");
+      assert.match(await rejects(q("select public.teacher_access_start_checkout($1, 'simulation', 'test')", [ORG_DEMO])), /ne demande pas/, "A reste gratuit");
+      await switchTo(q, null);
+      assert.equal((await q("select count(*)::int as n from teacher_access_payments where user_id = $1 and status = 'SUCCESS'", [TEACHER]))[0].n, 1, "un seul paiement");
+      assert.equal((await q("select count(*)::int as n from teacher_subscriptions where user_id = $1", [TEACHER]))[0].n, 1, "un seul abonnement");
+      // Expiration ou suspension : B et C coupés ensemble, A jamais.
+      await q("update teacher_subscriptions set period_start = current_date - 60, period_end = current_date - 30 where user_id = $1", [TEACHER]);
+      await switchTo(q, TEACHER);
+      const after = await orgs(q);
+      assert.ok(after.includes(ORG_DEMO) && !after.includes(ORG_DEMOF) && !after.includes(ORG_DEMOU), "abonnement expiré : B et C suspendus, A intact");
+      await switchTo(q, USERS.superadmin);
+      const [{ list }] = await q("select public.platform_teacher_accesses() as list");
+      const row = list.find((x) => x.user_id === TEACHER);
+      assert.equal(row.extra_organizations.length, 2, "Super Admin : B et C couverts par le même abonnement");
     });
   });
 });

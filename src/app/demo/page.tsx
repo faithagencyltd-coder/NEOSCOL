@@ -20,6 +20,7 @@ import { demoSignIn } from "@/features/demo/actions";
 import { DemoRolePicker } from "@/features/demo/components/demo-role-picker";
 import { getSessionContext } from "@/lib/auth/session";
 import { isDemoMode } from "@/lib/demo";
+import { vocabularyFor } from "@/lib/vocabulary";
 
 export const metadata: Metadata = { title: "Mode démonstration" };
 
@@ -105,6 +106,8 @@ export default async function DemoPage() {
   const context = await getSessionContext();
   const current = context?.user.email ?? null;
   const currentAccount = DEMO_ACCOUNTS.find((a) => a.email === current);
+  // Dans un établissement ouvert : seulement les profils et scénarios de son module.
+  const family = context?.organization ? vocabularyFor(context.organization.type).family : undefined;
 
   return (
     <div className="min-h-dvh bg-background">
@@ -140,8 +143,9 @@ export default async function DemoPage() {
           <h2 id="roles-title" className="text-lg font-semibold">
             Changer de rôle
           </h2>
-          <DemoRolePicker current={current} />
+          <DemoRolePicker current={current} family={family} />
         </section>
+        {!family || family === "school" ? (
         <section className="grid gap-3" aria-labelledby="scenarios-title">
           <h2 id="scenarios-title" className="text-lg font-semibold">
             Scénarios guidés
@@ -171,6 +175,7 @@ export default async function DemoPage() {
             ))}
           </div>
         </section>
+        ) : null}
       </main>
     </div>
   );

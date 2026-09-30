@@ -1,5 +1,6 @@
 import type { ComponentProps } from "react";
 
+import { worded } from "@/components/shared/wording-children";
 import { cn } from "@/lib/utils/cn";
 
 /** Carte du design system ; `interactive` ajoute l'élévation au survol (AnimatedCard). */
@@ -16,12 +17,20 @@ export function CardHeader({ className, ...props }: ComponentProps<"div">) {
   return <div className={cn("flex flex-col gap-1 p-5 pb-3", className)} {...props} />;
 }
 
-export function CardTitle({ className, ...props }: ComponentProps<"h2">) {
-  return <h2 className={cn("text-base font-semibold text-foreground", className)} {...props} />;
+export function CardTitle({ className, children, ...props }: ComponentProps<"h2">) {
+  return (
+    <h2 className={cn("text-base font-semibold text-foreground", className)} {...props}>
+      {worded(children)}
+    </h2>
+  );
 }
 
-export function CardDescription({ className, ...props }: ComponentProps<"p">) {
-  return <p className={cn("text-sm text-muted-foreground", className)} {...props} />;
+export function CardDescription({ className, children, ...props }: ComponentProps<"p">) {
+  return (
+    <p className={cn("text-sm text-muted-foreground", className)} {...props}>
+      {worded(children)}
+    </p>
+  );
 }
 
 export function CardContent({ className, ...props }: ComponentProps<"div">) {

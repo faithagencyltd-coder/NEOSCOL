@@ -8,6 +8,7 @@ import { MobileNav } from "@/components/layout/mobile-nav";
 import { NotificationWatcher } from "@/components/layout/notification-watcher";
 import { NotificationsMenu } from "@/components/layout/notifications-menu";
 import { UserMenu } from "@/components/layout/user-menu";
+import { WordingProvider } from "@/components/shared/wording";
 import { visibleNavigation } from "@/config/navigation";
 import { schoolConfigOf } from "@/features/academic/school";
 import { universityConfigOf } from "@/features/university/config";
@@ -39,6 +40,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const collapsed = (await cookies()).get(SIDEBAR_COOKIE)?.value === "collapsed";
 
   return (
+    <WordingProvider organizationType={context.organization.type}>
     <AppShell sections={sections} initialCollapsed={collapsed} organization={{ name: context.organization.name, isDemo: context.organization.is_demo }}>
         {context.organization.is_demo ? (
           <div className="flex items-center justify-center gap-2 bg-warning-soft px-4 py-1.5 text-center text-xs font-medium text-warning lg:hidden">
@@ -72,7 +74,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <Landmark className="size-4" aria-hidden />
             {context.accessNotices.invitations > 0
               ? `${context.accessNotices.invitations} invitation(s) d'un autre établissement Neoscool à accepter avec votre compte actuel.`
-              : `${context.accessNotices.restricted} établissement(s) en attente d'abonnement supplémentaire.`}
+              : `${context.accessNotices.restricted} établissement(s) en attente de l'abonnement multi-établissements.`}
             <Link href="/mes-etablissements" className="font-semibold underline-offset-4 hover:underline">
               Voir mes établissements
             </Link>
@@ -84,5 +86,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <main className="mx-auto w-full max-w-[90rem] flex-1 px-4 py-6 sm:px-7 lg:py-7">{children}</main>
         <NotificationWatcher />
     </AppShell>
+    </WordingProvider>
   );
 }

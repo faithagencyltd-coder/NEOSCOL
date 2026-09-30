@@ -1,5 +1,6 @@
 import type { ComponentProps } from "react";
 
+import { worded } from "@/components/shared/wording-children";
 import { cn } from "@/lib/utils/cn";
 
 export function Table({ className, ...props }: ComponentProps<"table">) {
@@ -14,8 +15,12 @@ export function THead({ className, ...props }: ComponentProps<"thead">) {
   return <thead className={cn("text-left text-xs uppercase tracking-wide text-muted-foreground", className)} {...props} />;
 }
 
-export function TH({ className, ...props }: ComponentProps<"th">) {
-  return <th className={cn("px-4 py-3 font-semibold first:pl-5 last:pr-5", className)} {...props} />;
+export function TH({ className, children, ...props }: ComponentProps<"th">) {
+  return (
+    <th className={cn("px-4 py-3 font-semibold first:pl-5 last:pr-5", className)} {...props}>
+      {worded(children)}
+    </th>
+  );
 }
 
 export function TR({ className, ...props }: ComponentProps<"tr">) {

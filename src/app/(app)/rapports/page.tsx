@@ -18,6 +18,7 @@ import { PAYMENT_METHOD } from "@/lib/labels";
 import { cn } from "@/lib/utils/cn";
 import { formatMoney, formatNumber } from "@/lib/utils/format";
 import { param } from "@/lib/utils/search-params";
+import { W } from "@/components/shared/wording";
 
 export const metadata: Metadata = { title: "Rapports" };
 
@@ -72,7 +73,9 @@ export default async function ReportsPage({ searchParams }: PageProps<"/rapports
         <>
           {typeof data.total === "number" ? (
             <Card className="rise flex items-center gap-4 p-4">
-              <span className="text-sm text-muted-foreground">Total des élèves inscrits (année en cours)</span>
+              <span className="text-sm text-muted-foreground">
+                <W text="Total des élèves inscrits (année en cours)" />
+              </span>
               <span className="text-2xl font-bold tabular-nums">{formatNumber(data.total)}</span>
             </Card>
           ) : null}

@@ -219,7 +219,7 @@ describe("Audit applicatif", () => {
       assert.match(await rejects(q("select log_event('hack.x', $1)", [ORG_DEMO])), /non autorisée/);
       await switchTo(q, USERS.admin);
       const [log] = await q("select actor_role, result from audit_logs where action = 'document.download_denied'");
-      assert.deepEqual(log, { actor_role: "Enseignant / Formateur", result: "denied" });
+      assert.deepEqual(log, { actor_role: "Enseignant", result: "denied" });
     });
   });
 });

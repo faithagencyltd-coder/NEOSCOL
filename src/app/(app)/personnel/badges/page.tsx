@@ -18,6 +18,7 @@ import { can } from "@/lib/auth/session";
 import { qrDataUrl } from "@/lib/pdf/qr";
 import { createClient } from "@/lib/supabase/server";
 import { param } from "@/lib/utils/search-params";
+import { adaptWording, vocabularyFor } from "@/lib/vocabulary";
 
 export const metadata: Metadata = { title: "Badges du personnel" };
 
@@ -98,7 +99,7 @@ export default async function StaffBadgesPage({ searchParams }: PageProps<"/pers
       <TabNav
         label="Filtrer le personnel"
         active={kind}
-        tabs={KINDS.map((k) => ({ key: k.key, label: k.label, href: k.key === "tous" ? "/personnel/badges" : `/personnel/badges?type=${k.key}` }))}
+        tabs={KINDS.map((k) => ({ key: k.key, label: adaptWording(k.label, vocabularyFor(context.organization.type)), href: k.key === "tous" ? "/personnel/badges" : `/personnel/badges?type=${k.key}` }))}
       />
       {cards.length === 0 ? (
         <Card>

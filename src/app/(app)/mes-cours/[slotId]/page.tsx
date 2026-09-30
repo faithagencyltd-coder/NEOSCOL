@@ -19,6 +19,7 @@ import { requireOrganization } from "@/lib/auth/guards";
 import { can, canAny } from "@/lib/auth/session";
 import { formatDate, formatDateTime } from "@/lib/utils/format";
 import { isUuid, param } from "@/lib/utils/search-params";
+import { vocabularyFor } from "@/lib/vocabulary";
 
 export const metadata: Metadata = { title: "Cours" };
 
@@ -89,11 +90,13 @@ export default async function LessonPage({ params, searchParams }: PageProps<"/m
               </Link>
             </Button>
           ) : null}
-          <Button asChild variant="secondary">
-            <Link href={`/bulletins/apercu?classe=${slot.class_id}`}>
-              <FileSearch aria-hidden /> Aperçu du bulletin
-            </Link>
-          </Button>
+          {vocabularyFor(organization.type).family === "school" ? (
+            <Button asChild variant="secondary">
+              <Link href={`/bulletins/apercu?classe=${slot.class_id}`}>
+                <FileSearch aria-hidden /> Aperçu du bulletin
+              </Link>
+            </Button>
+          ) : null}
         </div>
       </Card>
 

@@ -3,13 +3,12 @@ import type { Tone } from "@/lib/labels";
 /** États d'accès d'un enseignant à un établissement (calculés en base). */
 export const ACCESS_STATE: Record<string, { label: string; tone: Tone; hint: string }> = {
   not_required: { label: "Accès inclus", tone: "success", hint: "Aucun abonnement supplémentaire n'est demandé pour cet établissement." },
-  pending: { label: "Paiement requis", tone: "warning", hint: "L'accès sera activé dès la confirmation du paiement." },
-  active: { label: "Abonnement actif", tone: "success", hint: "Accès complet jusqu'à la fin de la période payée." },
+  pending: { label: "Paiement requis", tone: "warning", hint: "Un seul abonnement ouvre tous vos établissements supplémentaires, dès la confirmation du paiement." },
+  active: { label: "Abonnement actif", tone: "success", hint: "Couvert par votre abonnement unique jusqu'à la fin de la période payée." },
   grace: { label: "Délai de grâce", tone: "warning", hint: "La période payée est terminée : renouvelez pour garder l'accès." },
-  expired: { label: "Abonnement expiré", tone: "danger", hint: "Accès suspendu jusqu'au renouvellement. Votre compte et vos autres établissements ne sont pas concernés." },
+  expired: { label: "Abonnement expiré", tone: "danger", hint: "Accès suspendu jusqu'au renouvellement. Votre compte et votre premier établissement ne sont pas concernés." },
   suspended: { label: "Suspendu par Neoscool", tone: "danger", hint: "Contactez l'administration Neoscool pour rétablir l'accès." },
   exempt: { label: "Accès offert", tone: "info", hint: "Accès accordé sans paiement par l'administration Neoscool." },
-  no_membership: { label: "Plus rattaché", tone: "neutral", hint: "L'enseignant n'est plus membre de cet établissement." },
 };
 
 export const PAYMENT_STATUS: Record<string, { label: string; tone: Tone }> = {

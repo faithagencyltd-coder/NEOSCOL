@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { AnimatedSwap } from "@/components/motion/animated-page";
 import { cn } from "@/lib/utils/cn";
+import { W } from "@/components/shared/wording";
 
 export type TabLink = { key: string; label: string; href: string; count?: number };
 
@@ -27,7 +28,7 @@ export function TabNav({ tabs, active, label }: { tabs: TabLink[]; active: strin
               selected ? "font-semibold text-primary" : "text-muted-foreground hover:bg-surface-muted/60 hover:text-foreground",
             )}
           >
-            {tab.label}
+            <W text={tab.label} />
             {tab.count !== undefined ? (
               <span className={cn("rounded-full px-1.5 text-xs transition-colors", selected ? "bg-primary-soft" : "bg-surface-muted")}>{tab.count}</span>
             ) : null}

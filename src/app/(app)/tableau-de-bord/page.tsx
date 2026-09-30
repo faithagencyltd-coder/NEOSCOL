@@ -36,8 +36,9 @@ import { requireOrganization } from "@/lib/auth/guards";
 import { can, displayName, isPortalOnly } from "@/lib/auth/session";
 import { cn } from "@/lib/utils/cn";
 import { formatDate, formatDateTime, formatMoney, formatNumber } from "@/lib/utils/format";
-import { vocabularyFor } from "@/lib/vocabulary";
+import { adaptWording, vocabularyFor } from "@/lib/vocabulary";
 import { isHigherOrg } from "@/features/university/config";
+import { W } from "@/components/shared/wording";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
 
@@ -395,7 +396,9 @@ export default async function DashboardPage() {
                         <span className="font-semibold">{item.className}</span> · {item.subjectName}
                       </span>
                     </div>
-                    <Badge>{item.students} élèves</Badge>
+                    <Badge>
+                      <W text={`${item.students} élèves`} />
+                    </Badge>
                   </li>
                 ))}
               </ul>
@@ -410,7 +413,7 @@ export default async function DashboardPage() {
               <CardDescription>Inscriptions validées de l&apos;année en cours</CardDescription>
             </CardHeader>
             <CardContent>
-              <HorizontalBars data={byClass} caption="Effectifs par classe" />
+              <HorizontalBars data={byClass} caption={adaptWording("Effectifs par classe", v)} />
             </CardContent>
           </Card>
         ) : null}
@@ -422,7 +425,7 @@ export default async function DashboardPage() {
               <CardDescription>Évaluations notées, ramenées sur 20</CardDescription>
             </CardHeader>
             <CardContent>
-              <HorizontalBars data={averages} caption="Moyennes par classe sur 20" />
+              <HorizontalBars data={averages} caption={adaptWording("Moyennes par classe sur 20", v)} />
             </CardContent>
           </Card>
         ) : null}

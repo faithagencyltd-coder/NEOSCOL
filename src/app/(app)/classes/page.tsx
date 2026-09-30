@@ -170,7 +170,7 @@ export default async function ClassesPage({ searchParams }: PageProps<"/classes"
                       ) : null}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {klass.head_teacher ? `Prof. principal : ${klass.head_teacher.first_name} ${klass.head_teacher.last_name}` : "Aucun professeur principal"}
+                      {klass.head_teacher ? `${v.headTeacher} : ${klass.head_teacher.first_name} ${klass.head_teacher.last_name}` : `Aucun ${v.headTeacher.toLowerCase()}`}
                       {klass.room ? ` · ${klass.room.name}` : ""}
                     </p>
                   </Card>

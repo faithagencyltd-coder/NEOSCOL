@@ -1,7 +1,7 @@
 import type { SchoolConfig, SchoolLevel } from "@/features/academic/school";
 import type { UniversityConfig, UniversityFeature } from "@/features/university/config";
 import type { Permission } from "@/config/permissions";
-import { vocabularyFor, type Vocabulary } from "@/lib/vocabulary";
+import { adaptWording, vocabularyFor, type Vocabulary } from "@/lib/vocabulary";
 
 export type NavIcon =
   | "dashboard"
@@ -105,7 +105,6 @@ export const NAVIGATION: NavSection[] = [
       { href: "/formation", label: "Aujourd'hui", icon: "learnerAttendance", anyOf: ["attendance.read", "reports.read", "staff_attendance.read"], family: "training", keywords: "présents absents retards sorties formateurs apprenants tableau du jour" },
       { href: "/formation/formations", label: "Formations", icon: "training", anyOf: ["academic.read"], family: "training", keywords: "formations métiers coût durée programme certificat conditions d'admission" },
       { href: "/formation/sessions", label: "Sessions et groupes", icon: "trainingSessions", anyOf: ["academic.read"], family: "training", keywords: "sessions dates capacité groupes classes formateurs" },
-      { href: "/formation/inscription", label: "Inscrire un apprenant", icon: "enrollLearner", anyOf: ["enrollments.manage"], family: "training", keywords: "inscription apprenant tarif échéancier paiement" },
       { href: "/formation/presences", label: "Entrées et sorties", icon: "attendance", anyOf: ["attendance.read"], family: "training", keywords: "pointage apprenants entrées sorties retards présence" },
       { href: "/formation/badges", label: "Badges apprenants", icon: "badges", anyOf: ["students.badges.manage", "students.read"], family: "training", keywords: "badges QR apprenants imprimer remplacer perdu" },
       { href: "/formation/statistiques", label: "Statistiques", icon: "stats", anyOf: ["reports.read", "attendance.read"], family: "training", keywords: "statistiques taux assiduité paiements reliquats certificats" },
@@ -118,12 +117,12 @@ export const NAVIGATION: NavSection[] = [
       { href: "/eleves", label: "Élèves", icon: "students", anyOf: ["students.read"], keywords: "dossier matricule étudiants apprenants" },
       { href: "/donnees-historiques", label: "Données historiques", icon: "history", anyOf: ["students.import"], keywords: "migration import anciens élèves diplômés transférés excel csv archives années" },
       { href: "/parametres/country-connect", label: "Country Connect", icon: "countryConnect", anyOf: ["students.import", "settings.manage"], keywords: "identifiant national ine educmaster ministère export import fichier officiel pays" },
-      { href: "/inscriptions", label: "Inscriptions", icon: "enrollments", anyOf: ["enrollments.read"], keywords: "réinscription validation" },
+      { href: "/inscriptions", label: "Inscriptions", icon: "enrollments", anyOf: ["enrollments.read"], keywords: "réinscription validation inscrire un apprenant nouvelle inscription" },
       { href: "/eleves/cartes", label: "Cartes scolaires", icon: "badges", anyOf: ["students.badges.manage"], family: "school", keywords: "carte scolaire badge QR élèves imprimer 3D remplacer perdue" },
       { href: "/parents", label: "Parents et tuteurs", icon: "guardians", anyOf: ["guardians.read"], keywords: "famille tuteur" },
       { href: "/personnel", label: "Personnel", icon: "staff", anyOf: ["staff.read"], keywords: "enseignants formateurs administratif badges comptes matricule" },
-      { href: "/classes", label: "Classes", icon: "classes", anyOf: ["academic.read"], keywords: "effectif session filière" },
-      { href: "/structure?onglet=filieres", label: "Séries et filières", icon: "structure", anyOf: ["academic.manage"], keywords: "lycée général technique séries filières F1 F2 F3 F4 G1 G2 G3 génie civil électrotechnique", schoolLevel: "lycee" },
+      { href: "/classes", label: "Classes", icon: "classes", anyOf: ["academic.read"], keywords: "effectif session filière" , family: "school" },
+      { href: "/structure?onglet=filieres", label: "Séries et filières", icon: "structure", anyOf: ["academic.manage"], keywords: "lycée général technique séries filières F1 F2 F3 F4 G1 G2 G3 génie civil électrotechnique", schoolLevel: "lycee" , family: "school" },
       { href: "/structure?onglet=matieres", label: "Matières", icon: "subjects", anyOf: ["academic.manage"], keywords: "matières modules coefficients" },
       { href: "/emploi-du-temps", label: "Emploi du temps", icon: "timetable", anyOf: ["timetable.read", "timetable.manage"], keywords: "cours horaires salles" },
     ],
@@ -132,12 +131,12 @@ export const NAVIGATION: NavSection[] = [
     label: "Pédagogie",
     items: [
       { href: "/mes-cours", label: "Mes cours", icon: "lessons", anyOf: ["attendance.take"], keywords: "appel cours emploi du temps badge" },
-      { href: "/presences", label: "Présences", icon: "attendance", anyOf: ["attendance.read", "attendance.manage", "attendance.justify"], keywords: "appel absences retards justificatifs" },
+      { href: "/presences", label: "Présences", icon: "attendance", anyOf: ["attendance.read", "attendance.manage", "attendance.justify"], keywords: "appel absences retards justificatifs" , family: "school" },
       { href: "/notes", label: "Notes et évaluations", icon: "grades", anyOf: ["grades.read", "grades.enter", "grades.manage"], keywords: "évaluations devoirs saisie interrogations examens" },
-      { href: "/bulletins", label: "Bulletins", icon: "reportCards", anyOf: ["report_cards.manage", "grades.read"], keywords: "moyennes rangs appréciations" },
-      { href: "/bulletins/apercu", label: "Aperçu des bulletins", icon: "reportCards", anyOf: ["grades.enter"], keywords: "aperçu moyennes classe" },
-      { href: "/resultats-annuels", label: "Résultats annuels", icon: "reportCards", anyOf: ["report_cards.manage"], keywords: "moyenne annuelle décision passage redoublement conseil de classe" },
-      { href: "/passage-annee", label: "Passage d'année", icon: "history", anyOf: ["academic.manage"], keywords: "réinscription groupée année suivante clôture archive passage redoublement fin d'année" },
+      { href: "/bulletins", label: "Bulletins", icon: "reportCards", anyOf: ["report_cards.manage", "grades.read"], keywords: "moyennes rangs appréciations" , family: "school" },
+      { href: "/bulletins/apercu", label: "Aperçu des bulletins", icon: "reportCards", anyOf: ["grades.enter"], keywords: "aperçu moyennes classe" , family: "school" },
+      { href: "/resultats-annuels", label: "Résultats annuels", icon: "reportCards", anyOf: ["report_cards.manage"], keywords: "moyenne annuelle décision passage redoublement conseil de classe" , family: "school" },
+      { href: "/passage-annee", label: "Passage d'année", icon: "history", anyOf: ["academic.manage"], keywords: "réinscription groupée année suivante clôture archive passage redoublement fin d'année" , family: "school" },
       { href: "/documents", label: "Documents", icon: "documents", anyOf: ["documents.read", "documents.generate", "documents.dossier"], keywords: "certificats attestations reçus cartes dossier complet PDF" },
       { href: "/documents/modeles", label: "Document Studio", icon: "templates", anyOf: ["documents.templates.manage"], keywords: "modèles certificats convocation contrat personnalisation" },
     ],
@@ -192,10 +191,10 @@ export const NAVIGATION: NavSection[] = [
       { href: "/parametres/etablissement", label: "Établissement", icon: "school", anyOf: ["settings.manage"], keywords: "identité logo couleurs cachet signature coordonnées en-tête" },
       { href: "/abonnement", label: "Mon abonnement", icon: "subscription", anyOf: ["billing.read"], keywords: "abonnement NeoScool formule facture paiement essai renouveler tarif" },
       { href: "/parametres", label: "Configuration", icon: "settings", anyOf: ["settings.manage"], keywords: "impayés restrictions rappels pointage notes verrouillage" },
-      { href: "/bulletins/configuration", label: "Modèle de bulletin", icon: "templates", anyOf: ["report_cards.manage"], keywords: "bulletin colonnes coefficients modèle" },
+      { href: "/bulletins/configuration", label: "Modèle de bulletin", icon: "templates", anyOf: ["report_cards.manage"], keywords: "bulletin colonnes coefficients modèle" , family: "school" },
       { href: "/parametres/cartes", label: "Cartes et badges", icon: "badges", anyOf: ["settings.manage"], keywords: "carte scolaire carte apprenant carte étudiant badge design modèle couleurs verso 3D" },
       { href: "/parametres/messages-vocaux", label: "Messages vocaux", icon: "settings", anyOf: ["voice_checkin.manage"], keywords: "voice check-in voix annonce arrivée pointage tablette synthèse vocale" },
-      { href: "/parametres/regles-academiques", label: "Règles de calcul", icon: "settings", anyOf: ["academic.manage"], keywords: "formule moyenne annuelle pondération trimestre décisions simulateur versions" },
+      { href: "/parametres/regles-academiques", label: "Règles de calcul", icon: "settings", anyOf: ["academic.manage"], keywords: "formule moyenne annuelle pondération trimestre décisions simulateur versions" , family: "school" },
       { href: "/formulaires", label: "Formulaires", icon: "forms", anyOf: ["forms.manage"], keywords: "champs personnalisés pièces" },
     ],
   },
@@ -385,7 +384,8 @@ export const DEMO_NAV_ITEM: NavItem = { href: "/demo", label: "Mode démonstrati
 function localizedLabel(item: NavItem, v: Vocabulary): string {
   if (item.href === "/eleves") return v.students;
   if (item.href === "/classes") return v.classes;
-  return item.label;
+  if (item.href === "/structure") return v.year;
+  return adaptWording(item.label, v);
 }
 
 export function visibleNavigation(

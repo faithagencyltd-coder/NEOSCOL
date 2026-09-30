@@ -36,7 +36,7 @@ export async function respondInvitation(_: ActionResult | null, formData: FormDa
   return {
     ok: true,
     message: result.payment_required
-      ? `Invitation acceptée. L'accès à ${result.organization} sera ouvert après le paiement de l'abonnement supplémentaire.`
+      ? `Invitation acceptée. ${result.organization} s'ouvrira dès le paiement de votre abonnement multi-établissements (un seul pour tous vos établissements supplémentaires).`
       : `Invitation acceptée : ${result.organization} est disponible dans votre liste d'établissements.`,
   };
 }
@@ -71,8 +71,8 @@ export async function startTeacherAccessCheckout(_: ActionResult | null, formDat
       reference: checkout.reference,
       amount: checkout.amount,
       currency: checkout.currency,
-      description: `Neoscool — accès enseignant supplémentaire : ${checkout.organization_name} (${months})`,
-      itemName: `Accès enseignant ${checkout.organization_name} (${months})`,
+      description: `Neoscool — abonnement enseignant multi-établissements (${months})`,
+      itemName: `Abonnement multi-établissements (${months})`,
       storeName: "NeoScool",
       returnUrl,
       cancelUrl: `${returnUrl}&annule=1`,

@@ -185,7 +185,8 @@ export function availableTextKinds(family: { training?: boolean; university?: bo
     if (k === "custom") return false;
     if (TRAINING_ONLY_DOCUMENT_KINDS.includes(k)) return Boolean(family.training);
     if (UNIVERSITY_ONLY_DOCUMENT_KINDS.includes(k)) return Boolean(family.university);
-    if (k === "training_certificate") return !family.university;
+    // Certificat de formation : propre au centre de formation (ni école ni université).
+    if (k === "training_certificate") return Boolean(family.training);
     return true;
   });
 }

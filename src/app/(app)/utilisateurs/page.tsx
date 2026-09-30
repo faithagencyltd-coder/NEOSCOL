@@ -19,6 +19,8 @@ import { can } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateTime } from "@/lib/utils/format";
 import { normalizeSearch as normalizeText, param } from "@/lib/utils/search-params";
+import { roleInModule } from "@/lib/modules";
+import { vocabularyFor } from "@/lib/vocabulary";
 
 export const metadata: Metadata = { title: "Utilisateurs" };
 
@@ -37,6 +39,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/utilisateu
   const q = param(params, "q");
   const persona = param(params, "profil");
   const supabase = await createClient();
+  const family = vocabularyFor(context.organization.type).family;
   const [{ data: members }, { data: roles }] = await Promise.all([
     supabase
       .from("memberships")
@@ -107,7 +110,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/utilisateu
             <tbody>
               {rows.map((m) => {
                 const self = m.user_id === context.user.id;
-                const available = (roles ?? []).filter((r) => !m.roles.some((x) => x.id === r.id));
+                const available = (roles ?? []).filter((r) => !m.roles.some((x) => x.id === r.id) && roleInModule(r.key, family));
                 return (
                   <TR key={m.id}>
                     <TD>

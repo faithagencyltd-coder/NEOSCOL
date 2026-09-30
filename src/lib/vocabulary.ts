@@ -87,3 +87,38 @@ export function vocabularyFor(type: string | null | undefined): Vocabulary {
       return SCHOOL;
   }
 }
+
+const WORDS: Record<Vocabulary["family"], { student: [string, string]; klass: [string, string]; teacher: [string, string] }> = {
+  school: { student: ["élève", "élèves"], klass: ["classe", "classes"], teacher: ["enseignant", "enseignants"] },
+  training: { student: ["apprenant", "apprenants"], klass: ["session", "sessions"], teacher: ["formateur", "formateurs"] },
+  higher: { student: ["étudiant", "étudiants"], klass: ["promotion", "promotions"], teacher: ["enseignant", "enseignants"] },
+};
+
+/** Reprend la casse du mot d'origine (« Élève » → « Apprenant », « ÉLÈVES » → « APPRENANTS »). */
+function matchCase(original: string, replacement: string): string {
+  if (original === original.toUpperCase() && original !== original.toLowerCase() && original.length > 1) return replacement.toUpperCase();
+  const first = original.charAt(0);
+  return first !== first.toLowerCase() ? replacement.charAt(0).toUpperCase() + replacement.slice(1) : replacement;
+}
+
+const word = (stem: string) => new RegExp(`(?<![\\p{L}])(${stem})(s?)(?![\\p{L}])`, "giu");
+
+/**
+ * Adapte un texte au module de l'établissement : un centre de formation ne lit
+ * jamais « élève » ni « classe », une université jamais « élève » ni « apprenant »,
+ * une école jamais « apprenant » ni « étudiant ». Les énumérations mixtes
+ * (« Élèves, étudiants, apprenants », « Enseignant / Formateur ») sont réduites
+ * au seul terme du module.
+ */
+export function adaptWording(text: string, v: Vocabulary): string {
+  const w = WORDS[v.family];
+  let out = text.replace(/(?<![\p{L}])professeurs? principa(l|ux)(?![\p{L}])/giu, (m) => matchCase(m, v.headTeacher.toLowerCase()));
+  const swap = (stem: string, [one, many]: [string, string]) => {
+    out = out.replace(word(stem), (m, base: string, plural: string) => matchCase(base, plural ? many : one) + "");
+  };
+  for (const stem of ["élève", "apprenant", "étudiant"]) swap(stem, w.student);
+  if (v.family !== "school") swap("classe", w.klass);
+  for (const stem of ["enseignant", "formateur"]) swap(stem, w.teacher);
+  // « Apprenants, apprenants et apprenants » → « Apprenants » ; « Formateur / Formateur » → « Formateur ».
+  return out.replace(/(?<![\p{L}])([\p{L}']+)((?:\s*(?:\/|,|et|ou)\s*)\1(?![\p{L}]))+/giu, "$1");
+}

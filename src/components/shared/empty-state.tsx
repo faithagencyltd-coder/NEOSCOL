@@ -1,6 +1,8 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { W } from "@/components/shared/wording";
+
 export function EmptyState({
   icon: Icon,
   title,
@@ -18,8 +20,12 @@ export function EmptyState({
         <Icon className="size-6" aria-hidden />
       </span>
       <div className="grid gap-1">
-        <p className="font-medium text-foreground">{title}</p>
-        {description ? <p className="max-w-sm text-sm text-muted-foreground">{description}</p> : null}
+        <p className="font-medium text-foreground">
+          <W text={title} />
+        </p>
+        {description ? <p className="max-w-sm text-sm text-muted-foreground">
+            <W text={description} />
+          </p> : null}
       </div>
       {action}
     </div>

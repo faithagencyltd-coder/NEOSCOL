@@ -160,11 +160,16 @@ check(s.status === "ACTIVE" && s.billing_interval === "MONTHLY", "paiement confi
 check((await page.goto(`${base}/eleves/nouveau`)).status() === 200, "écriture rétablie immédiatement");
 check((await q1("select count(*)::int n from subscription_events where organization_id = $1 and event_type = 'subscription_reactivated'", [org.id])).n === 1, "événement subscription_reactivated");
 
-console.log("\n=== 6. Changement de formule, annulation, reprise ===");
-await page.goto(`${base}/abonnement/souscrire?formule=UNIVERSITE&periodicite=MONTHLY`);
+console.log("\n=== 6. Changement de périodicité, annulation, reprise ===");
+// Séparation des modules : une école ne se voit proposer que la formule de son module.
+await page.goto(`${base}/abonnement`);
+t = await text(page);
+check(!t.includes("Formation professionnelle") && !/Université\s*20 000/.test(t), "école : seule la formule du Module Scolaire est proposée");
+await page.goto(`${base}/abonnement/souscrire?formule=MODULE_SCOLAIRE&periodicite=YEARLY`);
+await page.getByRole("radio", { name: /Annuel/ }).click().catch(() => {});
 await payThroughWizard(page, "Simuler un paiement réussi");
-s = await q1("select p.code, s.monthly_price from subscriptions s join subscription_plans p on p.id = s.plan_id where s.organization_id = $1", [org.id]);
-check(s.code === "UNIVERSITE" && s.monthly_price === 20000, "changement de formule → UNIVERSITE à 20 000");
+s = await q1("select p.code, s.billing_interval from subscriptions s join subscription_plans p on p.id = s.plan_id where s.organization_id = $1", [org.id]);
+check(s.code === "MODULE_SCOLAIRE" && s.billing_interval === "YEARLY", "changement de périodicité → Module Scolaire annuel");
 check((await q1("select count(*)::int n from subscription_events where organization_id = $1 and event_type = 'plan_changed'", [org.id])).n >= 1, "événement plan_changed (historique conservé)");
 await page.goto(`${base}/abonnement`);
 await page.getByRole("button", { name: "Annuler l'abonnement" }).click();
@@ -181,7 +186,7 @@ check(!(await q1("select cancel_at_period_end c from subscriptions where organiz
 const mp = await (await browser.newContext({ ...mobile, storageState: await context.storageState() })).newPage();
 await mp.goto(`${base}/abonnement`);
 await shot(mp, "11-mon-abonnement-mobile");
-await mp.goto(`${base}/abonnement/souscrire?formule=UNIVERSITE&periodicite=YEARLY`);
+await mp.goto(`${base}/abonnement/souscrire?formule=MODULE_SCOLAIRE&periodicite=YEARLY`);
 await shot(mp, "12-checkout-mobile");
 
 console.log("\n=== 7. Isolation et permissions ===");

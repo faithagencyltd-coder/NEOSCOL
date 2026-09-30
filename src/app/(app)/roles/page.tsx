@@ -11,11 +11,14 @@ import { createRole } from "@/features/security/actions";
 import { PermissionMatrix } from "@/features/security/components/permission-matrix";
 import { requireOrganization } from "@/lib/auth/guards";
 import { can, canAny } from "@/lib/auth/session";
+import { permissionInModule, roleInModule } from "@/lib/modules";
 import { createClient } from "@/lib/supabase/server";
+import { adaptWording, vocabularyFor } from "@/lib/vocabulary";
 
 export const metadata: Metadata = { title: "Rôles et permissions" };
 
 const PERSONA: Record<string, string> = { staff: "Personnel", teacher: "Enseignant", parent: "Portail parent", student: "Portail élève" };
+
 
 /** Rôles de l'établissement et matrice des permissions (RBAC). */
 export default async function RolesPage() {
@@ -28,8 +31,10 @@ export default async function RolesPage() {
     supabase.from("permissions").select("code, label, module, sort_order").order("sort_order"),
     supabase.from("membership_roles").select("role_id").eq("organization_id", context.organization.id),
   ]);
-  const ordered = (roles ?? []).sort((a, b) => Number(b.is_system) - Number(a.is_system) || a.name.localeCompare(b.name, "fr"));
+  const family = vocabularyFor(context.organization.type).family;
   const memberCount = (id: string) => (members ?? []).filter((m) => m.role_id === id).length;
+  // Séparation des modules : rôles et droits du seul module de l'établissement.
+  const ordered = (roles ?? []).filter((r) => roleInModule(r.key, family, memberCount(r.id))).sort((a, b) => Number(b.is_system) - Number(a.is_system) || a.name.localeCompare(b.name, "fr"));
   const grants = ordered.flatMap((r) => r.role_permissions.map((rp) => `${r.id}:${rp.permission_code}`));
 
   return (
@@ -65,10 +70,10 @@ export default async function RolesPage() {
               </span>
               {r.is_system ? <Badge>Système</Badge> : <Badge tone="info">Personnalisé</Badge>}
             </div>
-            <p className="text-xs text-muted-foreground">{r.description ?? "—"}</p>
+            <p className="text-xs text-muted-foreground">{r.description ? adaptWording(r.description, vocabularyFor(context.organization.type)) : "—"}</p>
             <p className="text-xs">
               <span className="font-semibold">{r.role_permissions.length}</span> permission(s) · <span className="font-semibold">{memberCount(r.id)}</span> compte(s) ·{" "}
-              {PERSONA[r.persona] ?? r.persona}
+              {adaptWording(PERSONA[r.persona] ?? r.persona, vocabularyFor(context.organization.type))}
             </p>
           </Card>
         ))}
@@ -79,7 +84,7 @@ export default async function RolesPage() {
         </h2>
         <PermissionMatrix
           roles={ordered.map((r) => ({ id: r.id, name: r.name, key: r.key }))}
-          permissions={(permissions ?? []).map((p) => ({ code: p.code, label: p.label, module: p.module }))}
+          permissions={(permissions ?? []).filter((p) => permissionInModule(p.code, family)).map((p) => ({ code: p.code, label: p.label, module: p.module }))}
           grants={grants}
           editable={manage}
         />

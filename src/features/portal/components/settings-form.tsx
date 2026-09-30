@@ -38,7 +38,8 @@ function NumberField({ name, label, hint, value, min = 0, max }: { name: string;
 }
 
 /** Paramètres de l'établissement (settings.manage) : impayés, rappels, pointage, notes. */
-export function SettingsForm({ values, currency }: { values: SettingsValues; currency: string }) {
+export function SettingsForm({ values, currency, family = "school" }: { values: SettingsValues; currency: string; family?: "school" | "training" | "higher" }) {
+  const university = family === "higher";
   const [state, action, pending] = useFeedbackAction(saveOrganizationSettings);
   return (
     <ActionForm dispatch={action} pending={pending} className="grid gap-5">
@@ -53,7 +54,11 @@ export function SettingsForm({ values, currency }: { values: SettingsValues; cur
         <fieldset className="grid gap-1 sm:col-span-2">
           <legend className="mb-1 text-sm font-medium">Fonctionnalités suspendues</legend>
           <Checkbox name="restrict_grades" label="Notes" defaultChecked={values.restrict_grades} />
-          <Checkbox name="restrict_report_cards" label="Bulletins" defaultChecked={values.restrict_report_cards} />
+          {family === "school" ? (
+            <Checkbox name="restrict_report_cards" label="Bulletins" defaultChecked={values.restrict_report_cards} />
+          ) : values.restrict_report_cards ? (
+            <input type="hidden" name="restrict_report_cards" value="on" />
+          ) : null}
           <Checkbox name="restrict_documents" label="Documents officiels" defaultChecked={values.restrict_documents} />
           <Checkbox name="restrict_timetable" label="Emploi du temps" defaultChecked={values.restrict_timetable} />
           <p className="text-xs text-muted-foreground">Les présences et la situation financière ne sont jamais suspendues.</p>
@@ -69,9 +74,21 @@ export function SettingsForm({ values, currency }: { values: SettingsValues; cur
         <NumberField name="duplicate_window_seconds" label="Anti double-scan (secondes)" value={values.duplicate_window_seconds} max={3600} />
         <Checkbox name="track_departure" label="Enregistrer aussi les départs" defaultChecked={values.track_departure} className="self-end" />
       </FormSection>
-      <FormSection title="Notes et crédits" description="Après validation par l'enseignant, les notes ne sont plus modifiables sans réouverture par l'administration. Crédits (ECTS) : une matière est acquise si sa moyenne atteint le seuil.">
+      {/* Séparation des modules : les crédits ECTS n'existent qu'à l'université. */}
+      <FormSection
+        title={university ? "Notes et crédits" : "Notes"}
+        description={
+          university
+            ? "Après validation par l'enseignant, les notes ne sont plus modifiables sans réouverture par l'administration. Crédits (ECTS) : une matière est acquise si sa moyenne atteint le seuil."
+            : "Après validation par l'enseignant, les notes ne sont plus modifiables sans réouverture par l'administration."
+        }
+      >
         <Checkbox name="lock_after_validation" label="Verrouiller les notes validées" defaultChecked={values.lock_after_validation} className="sm:col-span-2" />
-        <NumberField name="credit_threshold" label="Seuil d'acquisition des crédits (sur 20)" value={values.credit_threshold} min={1} max={20} />
+        {university ? (
+          <NumberField name="credit_threshold" label="Seuil d'acquisition des crédits (sur 20)" value={values.credit_threshold} min={1} max={20} />
+        ) : (
+          <input type="hidden" name="credit_threshold" value={values.credit_threshold} />
+        )}
       </FormSection>
       <div className="flex justify-end">
         <SubmitButton size="lg" pendingLabel="Enregistrement…">

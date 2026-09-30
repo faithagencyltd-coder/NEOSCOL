@@ -14,6 +14,7 @@ import { messageFor, renderVoice, voiceEvent, voiceVariables, type VoiceConfig }
 import { speak } from "@/features/voice-checkin/speak";
 import { enqueue, isNetworkError } from "@/lib/offline/outbox";
 import { cn } from "@/lib/utils/cn";
+import { useWording } from "@/components/shared/wording";
 
 type RecentScan = { id: string; at: string; result: "accepted" | "rejected"; name: string; message: string };
 
@@ -126,6 +127,7 @@ export function BadgeScanner({
   /** Voice Check-in : message vocal à chaque scan (réglages de l'établissement). */
   voice?: VoiceConfig | null;
 }) {
+  const word = useWording();
   const profileLabels = university ? UNIVERSITY_PROFILE_LABELS : PROFILE_LABELS;
   const [roomId, setRoomId] = useState<string>("");
   const roomRef = useRef<string>("");
@@ -540,7 +542,7 @@ export function BadgeScanner({
                   </option>
                 ))}
               </select>
-              <span className="text-xs text-[#9fb4de]">Si une salle est choisie, un apprenant dont le cours a lieu ailleurs est orienté vers la bonne salle.</span>
+              <span className="text-xs text-[#9fb4de]">{word("Si une salle est choisie, un apprenant dont le cours a lieu ailleurs est orienté vers la bonne salle.")}</span>
             </label>
           ) : null}
 

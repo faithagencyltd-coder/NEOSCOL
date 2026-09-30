@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { PageHeader } from "@/components/shared/page-header";
 import { SettingsForm } from "@/features/portal/components/settings-form";
 import { requirePermission } from "@/lib/auth/guards";
+import { vocabularyFor } from "@/lib/vocabulary";
 
 export const metadata: Metadata = { title: "Paramètres" };
 
@@ -24,6 +25,7 @@ export default async function SettingsPage() {
       <PageHeader title="Paramètres de l'établissement" description="Règles appliquées immédiatement par la base de données (portails, rappels, pointage, notes)." />
       <SettingsForm
         currency={context.organization.currency}
+        family={vocabularyFor(context.organization.type).family}
         values={{
           restrictions_enabled: bool(restrictions.enabled, false),
           grace_days: num(restrictions.grace_days, 0),

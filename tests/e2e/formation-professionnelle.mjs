@@ -56,8 +56,17 @@ const admin = await login("formation@demo.neoscol.app");
 
 console.log("\n=== Menu et tableau du jour ===");
 const menu = await nav(admin);
-for (const item of ["Aujourd'hui", "Formations", "Sessions et groupes", "Inscrire un apprenant", "Entrées et sorties", "Badges apprenants", "Statistiques"]) {
+for (const item of ["Aujourd'hui", "Formations", "Sessions et groupes", "Inscriptions", "Entrées et sorties", "Badges apprenants", "Statistiques"]) {
   check(menu.includes(item), `menu formation : « ${item} »`);
+}
+// Séparation des modules : aucun menu scolaire, doublons fusionnés.
+for (const item of ["Bulletins", "Résultats annuels", "Passage d'année", "Modèle de bulletin", "Règles de calcul", "Inscrire un apprenant"]) {
+  check(!menu.includes(item), `menu formation : pas de « ${item} »`);
+}
+await admin.goto(`${base}/inscriptions`);
+check(await admin.getByRole("link", { name: /Inscrire un apprenant/ }).isVisible(), "Inscriptions : bouton « Inscrire un apprenant »");
+for (const path of ["/bulletins", "/resultats-annuels", "/bulletins/configuration", "/passage-annee"]) {
+  check((await admin.goto(`${base}${path}`)).status() === 404, `page scolaire ${path} introuvable dans le centre de formation`);
 }
 check(!menu.includes("Séries et filières"), "menu : pas d'entrée du Module Scolaire");
 await admin.goto(`${base}/formation`);

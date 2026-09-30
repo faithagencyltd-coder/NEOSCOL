@@ -120,13 +120,16 @@ console.log("\n=== 4. Accès à B bloqué jusqu'au paiement, A intact ===");
 {
   await teacher.goto(`${base}/tableau-de-bord`);
   let t = await text(teacher);
-  check(t.includes(orgA.name) && t.includes("en attente d'abonnement supplémentaire"), "B inaccessible : retour sur A + bandeau");
+  check(t.includes(orgA.name) && t.includes("en attente de l'abonnement multi-établissements"), "B inaccessible : retour sur A + bandeau");
   await teacher.goto(`${base}/mes-etablissements`);
   const cardB = teacher.getByTestId("establishment-card").filter({ hasText: orgB.name });
   t = await cardB.innerText();
   check(t.includes("Paiement requis") && !t.includes("Ouvrir"), "carte B : paiement requis, pas d'ouverture");
   await shot(teacher, "05-paiement-requis");
-  await cardB.getByRole("button", { name: /Payer l'abonnement/ }).click();
+  const subCard = teacher.getByTestId("subscription-card");
+  check((await subCard.innerText()).includes("seul abonnement"), "une seule carte d'abonnement (couvre tous les établissements supplémentaires)");
+  check((await cardB.getByRole("button", { name: /Payer/ }).count()) === 0, "pas de paiement par établissement");
+  await subCard.getByRole("button", { name: /Payer l'abonnement/ }).click();
   await teacher.getByRole("dialog").getByRole("button", { name: "Continuer vers le paiement" }).click();
   await teacher.waitForURL(/mes-etablissements\/paiement-simule/, { timeout: 30000 });
   check((await text(teacher)).replace(/\s/g, "").includes("5000FCFA"), "montant fixé par le Super Admin (5 000 F CFA)");
@@ -135,14 +138,40 @@ console.log("\n=== 4. Accès à B bloqué jusqu'au paiement, A intact ===");
   await teacher.waitForURL(/mes-etablissements\/retour/, { timeout: 30000 });
   check((await text(teacher)).includes("Paiement confirmé"), "retour : paiement confirmé (vérifié côté serveur)");
   await shot(teacher, "07-paiement-confirme");
-  const a = await q1("select status, period_end > current_date as future from teacher_extra_accesses where user_id = $1 and organization_id = $2", [teacherId, orgB.id]);
-  check(a?.status === "active" && a.future, "accès B activé en base pour la période payée");
+  const a = await q1("select status, period_end > current_date as future from teacher_subscriptions where user_id = $1", [teacherId]);
+  check(a?.status === "active" && a.future, "abonnement unique activé en base pour la période payée");
   await teacher.goto(`${base}/mes-etablissements`);
   t = await teacher.getByTestId("establishment-card").filter({ hasText: orgB.name }).innerText();
   // B redevient accessible (bouton « Ouvrir », ou déjà l'établissement actif si c'était le dernier choisi).
   check(t.includes("Abonnement actif") && (t.includes("Ouvrir") || t.includes("Établissement actif")), "carte B : abonnement actif, accès rouvert");
-  check((await text(teacher)).includes(orgB.name) && !(await text(teacher)).includes("en attente d'abonnement supplémentaire"), "bandeau d'attente retiré");
+  check((await text(teacher)).includes(orgB.name) && !(await text(teacher)).includes("en attente de l'abonnement multi-établissements"), "bandeau d'attente retiré");
   check((await text(teacher)).includes("Mes paiements d'accès"), "historique des paiements");
+}
+
+console.log("\n=== 4 bis. Établissement C : couvert par le même abonnement, aucun nouveau paiement ===");
+{
+  const orgC = await q1("select id, name from organizations where code = 'DEMOU'");
+  const staffC = await q1(
+    "insert into staff_members (organization_id, first_name, last_name, email, is_teacher) values ($1, 'Koffi', 'Mensah', $2, true) returning id",
+    [orgC.id, TEACHER_EMAIL],
+  );
+  const u = await login("universite@demo.neoscol.app");
+  await u.goto(`${base}/personnel/${staffC.id}`);
+  await u.getByRole("button", { name: "Créer le compte de connexion" }).click();
+  await u.getByRole("dialog").getByRole("button", { name: "Créer le compte" }).click();
+  await u.getByRole("dialog").getByText(/aucun nouveau compte n'est créé/).waitFor({ timeout: 15000 });
+  await u.context().close();
+  await teacher.goto(`${base}/mes-etablissements`);
+  await teacher.getByRole("button", { name: "Accepter", exact: true }).click();
+  await teacher.getByRole("dialog").getByRole("button", { name: "Accepter l'invitation" }).click();
+  check(await toast(teacher, /Invitation acceptée/), "invitation de C acceptée");
+  await teacher.reload();
+  const cardC = await teacher.getByTestId("establishment-card").filter({ hasText: orgC.name }).innerText();
+  check(cardC.includes("Abonnement actif") && (cardC.includes("Ouvrir") || cardC.includes("Établissement actif")), "C ouvert immédiatement, sans paiement");
+  const pays = await q1("select count(*)::int as n from teacher_access_payments where user_id = $1 and status = 'SUCCESS'", [teacherId]);
+  check(pays.n === 1, "toujours un seul paiement pour B et C");
+  check((await teacher.getByTestId("subscription-card").innerText()).includes("2 établissement(s) supplémentaire(s) couvert(s)"), "abonnement : 2 établissements couverts");
+  await shot(teacher, "07b-c-couvert");
 }
 
 console.log("\n=== 5. Super Admin : paiements, suspension, rétablissement ===");
@@ -153,19 +182,19 @@ console.log("\n=== 5. Super Admin : paiements, suspension, rétablissement ===")
   await admin.getByRole("button", { name: "Suspendre" }).click();
   await admin.getByRole("dialog").getByLabel(/Motif/).fill("Paiement contesté");
   await admin.getByRole("dialog").getByRole("button", { name: "Suspendre" }).click();
-  check(await toast(admin, /Accès suspendu/), "accès suspendu");
+  check(await toast(admin, /Abonnement suspendu/), "abonnement suspendu");
   await teacher.goto(`${base}/mes-etablissements`);
   t = await teacher.getByTestId("establishment-card").filter({ hasText: orgB.name }).innerText();
   check(t.includes("Suspendu par Neoscool") && t.includes("Paiement contesté"), "enseignant : suspendu avec motif");
   const p = await q1("select is_active from profiles where id = $1", [teacherId]);
   const ms = await q1("select count(*)::int as n from memberships where user_id = $1 and status = 'active'", [teacherId]);
-  check(p.is_active && ms.n === 2, "compte principal et adhésions conservés");
+  check(p.is_active && ms.n === 3, "compte principal et adhésions conservés");
   await shot(teacher, "08-suspendu");
   await admin.reload();
   await admin.getByRole("button", { name: "Rétablir" }).click();
   await admin.getByRole("dialog").getByLabel(/Motif/).fill("Paiement vérifié");
   await admin.getByRole("dialog").getByRole("button", { name: "Rétablir" }).click();
-  check(await toast(admin, /Accès rétabli/), "accès rétabli");
+  check(await toast(admin, /Abonnement rétabli/), "abonnement rétabli");
   await teacher.reload();
   check((await teacher.getByTestId("establishment-card").filter({ hasText: orgB.name }).innerText()).includes("Abonnement actif"), "enseignant : accès de nouveau actif");
   await shot(admin, "09-super-admin-liste");

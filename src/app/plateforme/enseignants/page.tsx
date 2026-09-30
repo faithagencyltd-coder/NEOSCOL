@@ -37,8 +37,7 @@ export default async function PlatformTeachersPage() {
             <Settings2 className="size-5 text-primary" aria-hidden /> Abonnement enseignant supplémentaire
           </CardTitle>
           <CardDescription>
-            Un enseignant garde un seul compte Neoscool pour tous ses établissements. Décidez si l&apos;accès à un établissement supplémentaire demande un
-            abonnement.
+            Un enseignant garde un seul compte Neoscool pour tous ses établissements. Décidez si, à partir du 2e établissement, un abonnement unique est demandé : il couvre ensuite tous les établissements suivants.
             {current.enabled ? (
               <>
                 {" "}
@@ -78,8 +77,8 @@ export default async function PlatformTeachersPage() {
             <Users className="size-5 text-primary" aria-hidden /> Enseignants concernés ({accesses.length})
           </CardTitle>
           <CardDescription>
-            Enseignants dont le même compte travaille dans plusieurs établissements (hors premier établissement).
-            {current.enabled && blocked > 0 ? ` ${blocked} accès actuellement suspendu(s) ou en attente de paiement.` : ""}
+            Un enseignant = un seul abonnement. Son premier établissement reste gratuit ; l&apos;abonnement couvre tous les suivants (B, C, D…).
+            {current.enabled && blocked > 0 ? ` ${blocked} enseignant(s) en attente de paiement ou suspendu(s).` : ""}
           </CardDescription>
         </CardHeader>
         {accesses.length === 0 ? (
@@ -91,7 +90,7 @@ export default async function PlatformTeachersPage() {
             <THead>
               <tr className="border-t border-border">
                 <TH>Enseignant</TH>
-                <TH>Établissement supplémentaire</TH>
+                <TH>Établissements couverts</TH>
                 <TH>Statut de l&apos;abonnement</TH>
                 <TH>Période payée</TH>
                 <TH>Dernier paiement</TH>
@@ -101,9 +100,11 @@ export default async function PlatformTeachersPage() {
             <tbody>
               {accesses.map((a) => {
                 const state = ACCESS_STATE[a.access_state] ?? { label: a.access_state, tone: "neutral" as const, hint: "" };
-                const fields = { user_id: a.user_id, organization_id: a.organization_id };
+                // Actions sur l'abonnement unique du compte ; l'établissement indiqué ne sert qu'au journal et à la notification.
+                const firstExtra = a.extra_organizations[0]?.id ?? "";
+                const fields = { user_id: a.user_id, organization_id: firstExtra };
                 return (
-                  <TR key={`${a.user_id}-${a.organization_id}`}>
+                  <TR key={a.user_id}>
                     <TD>
                       <span className="grid">
                         <span className="font-medium">{a.teacher_name ?? "—"}</span>
@@ -112,8 +113,8 @@ export default async function PlatformTeachersPage() {
                     </TD>
                     <TD>
                       <span className="grid">
-                        <span>{a.organization_name}</span>
-                        <span className="text-xs text-muted-foreground">Aussi : {a.other_organizations.join(", ") || "—"}</span>
+                        <span>{a.extra_organizations.map((o) => o.name).join(", ") || "—"}</span>
+                        <span className="text-xs text-muted-foreground">Gratuit : {a.primary_organization ?? "—"}</span>
                       </span>
                     </TD>
                     <TD>
@@ -137,7 +138,7 @@ export default async function PlatformTeachersPage() {
                       <div className="flex flex-wrap justify-end gap-1.5">
                         <QuickFormDialog
                           title={`Paiement reçu — ${a.teacher_name ?? a.email}`}
-                          description={`Accès à ${a.organization_name} pour ${periodLabel(current.period_months)}. Le paiement active l'accès (ou prolonge la période en cours).`}
+                          description={`Abonnement unique pour ${periodLabel(current.period_months)} : il ouvre tous les établissements supplémentaires de l'enseignant (${a.extra_organizations.map((o) => o.name).join(", ") || "—"}). Le paiement active l'abonnement ou prolonge la période en cours.`}
                           trigger={<Button size="sm" variant="secondary">Valider un paiement</Button>}
                           submitLabel="Valider le paiement"
                           action={recordTeacherAccessPayment}
@@ -149,7 +150,7 @@ export default async function PlatformTeachersPage() {
                             { name: "note", label: "Note", type: "textarea", wide: true },
                           ]}
                         />
-                        {a.access_status === "suspended" ? (
+                        {!firstExtra ? null : a.subscription_status === "suspended" ? (
                           <ConfirmAction
                             trigger={<Button size="sm">Rétablir</Button>}
                             title="Rétablir l'accès ?"
@@ -162,8 +163,8 @@ export default async function PlatformTeachersPage() {
                         ) : (
                           <ConfirmAction
                             trigger={<Button size="sm" variant="ghost" className="text-danger">Suspendre</Button>}
-                            title="Suspendre cet accès supplémentaire ?"
-                            description="Seul l'accès à cet établissement est suspendu. Le compte de l'enseignant et ses autres établissements ne sont pas touchés ; aucune donnée n'est supprimée."
+                            title="Suspendre l'abonnement multi-établissements ?"
+                            description="Tous les établissements supplémentaires de l'enseignant sont suspendus. Son compte et son premier établissement ne sont pas touchés ; aucune donnée n'est supprimée."
                             confirmLabel="Suspendre"
                             tone="danger"
                             action={setTeacherAccessStatus}
@@ -171,10 +172,10 @@ export default async function PlatformTeachersPage() {
                             reason={{ label: "Motif (ex. paiement rejeté)", required: true }}
                           />
                         )}
-                        {a.access_status === "exempt" ? (
+                        {!firstExtra ? null : a.subscription_status === "exempt" ? (
                           <ConfirmAction
                             trigger={<Button size="sm" variant="ghost">Retirer l&apos;offre</Button>}
-                            title="Retirer l'accès offert ?"
+                            title="Retirer l'abonnement offert ?"
                             confirmLabel="Retirer"
                             action={setTeacherAccessStatus}
                             fields={{ ...fields, action: "remove_exemption" }}
@@ -183,7 +184,7 @@ export default async function PlatformTeachersPage() {
                         ) : (
                           <ConfirmAction
                             trigger={<Button size="sm" variant="ghost">Offrir l&apos;accès</Button>}
-                            title="Offrir cet accès sans paiement ?"
+                            title="Offrir l'abonnement sans paiement ?"
                             confirmLabel="Offrir"
                             action={setTeacherAccessStatus}
                             fields={{ ...fields, action: "exempt" }}

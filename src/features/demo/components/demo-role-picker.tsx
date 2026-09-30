@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 import { SubmitButton } from "@/components/shared/submit-button";
-import { DEMO_ACCOUNTS, type DemoAccountKey } from "@/features/demo/accounts";
+import { DEMO_ACCOUNTS, demoAccountFamily, type DemoAccountKey } from "@/features/demo/accounts";
 import { demoSignIn } from "@/features/demo/actions";
 import { cn } from "@/lib/utils/cn";
 
@@ -41,10 +41,21 @@ const ICONS: Record<DemoAccountKey, LucideIcon> = {
  * Choix d'un compte de démonstration : une vraie connexion (RLS et permissions
  * du rôle), sans saisir d'identifiants. Affiché uniquement en mode démonstration.
  */
-export function DemoRolePicker({ current, variant = "cards", next }: { current?: string | null; variant?: "cards" | "compact"; next?: string }) {
+export function DemoRolePicker({
+  current,
+  variant = "cards",
+  next,
+  family,
+}: {
+  current?: string | null;
+  variant?: "cards" | "compact";
+  next?: string;
+  /** Établissement ouvert : seulement les profils de son module (page publique : tous). */
+  family?: "school" | "training" | "higher";
+}) {
   return (
     <ul className={cn("grid gap-2.5", variant === "cards" ? "sm:grid-cols-2 xl:grid-cols-4" : "grid-cols-2")}>
-      {DEMO_ACCOUNTS.map((account, index) => {
+      {DEMO_ACCOUNTS.filter((account) => !family || demoAccountFamily(account.key) === family).map((account, index) => {
         const Icon = ICONS[account.key];
         const active = current === account.email;
         return (

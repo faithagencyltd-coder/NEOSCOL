@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { WordingProvider } from "@/components/shared/wording";
 import { requireOrganization } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
 
@@ -7,5 +8,9 @@ import { can } from "@/lib/auth/session";
 export default async function KioskLayout({ children }: { children: React.ReactNode }) {
   const context = await requireOrganization();
   if (!can(context, "staff_attendance.scan")) notFound();
-  return <div className="min-h-dvh bg-[#07142b] text-white">{children}</div>;
+  return (
+    <WordingProvider organizationType={context.organization.type}>
+      <div className="min-h-dvh bg-[#07142b] text-white">{children}</div>
+    </WordingProvider>
+  );
 }

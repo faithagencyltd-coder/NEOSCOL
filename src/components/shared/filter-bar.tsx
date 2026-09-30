@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils/cn";
+import { useWording } from "@/components/shared/wording";
 
 export type FilterOption = { value: string; label: string };
 export type FilterDef = { name: string; label: string; options: FilterOption[] };
@@ -18,6 +19,7 @@ export function FilterBar({ placeholder, filters = [] }: { placeholder: string; 
   const [pending, startTransition] = useTransition();
   const [query, setQuery] = useState(params.get("q") ?? "");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const word = useWording();
 
   const update = (key: string, value: string) => {
     const next = new URLSearchParams(params.toString());
@@ -40,7 +42,7 @@ export function FilterBar({ placeholder, filters = [] }: { placeholder: string; 
         <input
           type="search"
           value={query}
-          placeholder={placeholder}
+          placeholder={placeholder ? word(placeholder) : placeholder}
           onChange={(event) => {
             const value = event.target.value;
             setQuery(value);
@@ -52,13 +54,13 @@ export function FilterBar({ placeholder, filters = [] }: { placeholder: string; 
       </label>
       {filters.map((filter) => (
         <label key={filter.name} className="sm:w-48">
-          <span className="sr-only">{filter.label}</span>
+          <span className="sr-only">{word(filter.label)}</span>
           <Select
             value={params.get(filter.name) ?? ""}
             onChange={(event) => update(filter.name, event.target.value)}
             className="h-11"
           >
-            <option value="">{filter.label}</option>
+            <option value="">{word(filter.label)}</option>
             {filter.options.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}

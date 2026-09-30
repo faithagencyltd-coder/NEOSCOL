@@ -5,6 +5,7 @@ import { useOptimistic, useState, useTransition } from "react";
 
 import { toggleRolePermission } from "@/features/security/actions";
 import { cn } from "@/lib/utils/cn";
+import { useWording } from "@/components/shared/wording";
 
 type Role = { id: string; name: string; key: string };
 type Permission = { code: string; label: string; module: string };
@@ -40,6 +41,7 @@ export function PermissionMatrix({
   grants: string[];
   editable: boolean;
 }) {
+  const word = useWording();
   const [optimistic, apply] = useOptimistic(new Set(grants), (state, change: { key: string; on: boolean }) => {
     const next = new Set(state);
     if (change.on) next.add(change.key);
@@ -106,7 +108,7 @@ export function PermissionMatrix({
                   <tr className="border-t border-border hover:bg-background/70">
                     <td className="sticky left-0 z-[1] bg-surface px-4 py-2">
                       <span className="grid">
-                        <span className="font-medium">{p.label}</span>
+                        <span className="font-medium">{word(p.label)}</span>
                         <code className="text-[11px] text-muted-foreground">{p.code}</code>
                       </span>
                     </td>
@@ -119,7 +121,7 @@ export function PermissionMatrix({
                             type="button"
                             disabled={locked}
                             aria-pressed={on}
-                            aria-label={`${p.label} — ${r.name}`}
+                            aria-label={`${word(p.label)} — ${r.name}`}
                             onClick={() => toggle(r, p.code)}
                             className={cn(
                               "inline-flex size-7 items-center justify-center rounded-lg border transition-all duration-150",

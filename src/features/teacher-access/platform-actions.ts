@@ -53,7 +53,7 @@ export async function saveTeacherAccessSettings(_: ActionResult | null, formData
   return {
     ok: true,
     message: enabled
-      ? "Règle active : l'accès d'un enseignant à un établissement supplémentaire demande désormais l'abonnement configuré."
+      ? "Règle active : dès son 2e établissement, un enseignant a besoin d'un abonnement unique, qui couvre ensuite tous ses établissements suivants."
       : "Règle désactivée : les enseignants accèdent librement à tous leurs établissements.",
   };
 }
@@ -92,7 +92,7 @@ export async function recordTeacherAccessPayment(_: ActionResult | null, formDat
   if (error || !data) return { ok: false, message: dbErrorMessage(error) };
   refresh();
   const result = data as { covers_to: string };
-  return { ok: true, message: `Paiement enregistré : accès activé jusqu'au ${new Date(`${result.covers_to}T12:00:00Z`).toLocaleDateString("fr-FR")}.` };
+  return { ok: true, message: `Paiement enregistré : abonnement actif jusqu'au ${new Date(`${result.covers_to}T12:00:00Z`).toLocaleDateString("fr-FR")}.` };
 }
 
 const statusSchema = z.object({
@@ -103,9 +103,9 @@ const statusSchema = z.object({
 });
 
 const STATUS_MESSAGES = {
-  suspend: "Accès suspendu. Le compte de l'enseignant et ses autres établissements ne sont pas touchés.",
-  restore: "Accès rétabli selon la période payée.",
-  exempt: "Accès offert : aucun paiement ne sera demandé.",
+  suspend: "Abonnement suspendu : établissements supplémentaires coupés. Le compte et le premier établissement de l'enseignant ne sont pas touchés.",
+  restore: "Abonnement rétabli selon la période payée.",
+  exempt: "Abonnement offert : aucun paiement ne sera demandé.",
   remove_exemption: "Offre retirée : l'accès suit de nouveau le paiement.",
 } as const;
 

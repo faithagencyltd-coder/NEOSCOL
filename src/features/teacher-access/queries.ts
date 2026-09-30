@@ -33,7 +33,18 @@ export type MyAccessPayment = {
   covers_to: string | null;
 };
 
-export type MyOrganizationAccesses = { rule: AccessRule; memberships: MyMembership[]; payments: MyAccessPayment[] };
+/** Abonnement unique du compte : couvre tous les établissements supplémentaires (le 1er reste gratuit). */
+export type MySubscription = {
+  state: string;
+  status: string | null;
+  period_start: string | null;
+  period_end: string | null;
+  status_reason: string | null;
+  required: boolean;
+  covered: number;
+};
+
+export type MyOrganizationAccesses = { rule: AccessRule; subscription: MySubscription | null; memberships: MyMembership[]; payments: MyAccessPayment[] };
 
 /** Établissements, invitations et accès supplémentaires du compte connecté (calculés en base). */
 export async function getMyOrganizationAccesses(): Promise<MyOrganizationAccesses | null> {
@@ -45,13 +56,13 @@ export async function getMyOrganizationAccesses(): Promise<MyOrganizationAccesse
 
 export type PlatformTeacherAccess = {
   user_id: string;
-  organization_id: string;
   teacher_name: string | null;
   email: string | null;
-  organization_name: string;
-  other_organizations: string[];
-  membership_status: string | null;
-  access_status: string | null;
+  /** Premier établissement : toujours gratuit. */
+  primary_organization: string | null;
+  /** Établissements supplémentaires couverts par l'abonnement unique. */
+  extra_organizations: { id: string; name: string }[];
+  subscription_status: string | null;
   access_state: string;
   period_start: string | null;
   period_end: string | null;

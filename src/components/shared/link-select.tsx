@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 
 import { Select } from "@/components/ui/select";
+import { useWording } from "@/components/shared/wording";
 
 /** Liste déroulante de navigation : chaque option mène à une URL (état dans l'URL). */
 export function LinkSelect({
@@ -21,12 +22,13 @@ export function LinkSelect({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const word = useWording();
   return (
     <label className={className}>
-      <span className="sr-only">{label}</span>
+      <span className="sr-only">{word(label)}</span>
       <Select
         value={value}
-        aria-label={label}
+        aria-label={word(label)}
         disabled={pending}
         onChange={(event) => {
           const target = options.find((o) => o.value === event.target.value);
@@ -34,10 +36,11 @@ export function LinkSelect({
         }}
         className="h-11"
       >
-        {placeholder ? <option value="">{placeholder}</option> : null}
+        {placeholder ? <option value="">{word(placeholder)}</option> : null}
         {options.map((option) => (
           <option key={option.value} value={option.value}>
-            {option.label}
+            {/* Seule l'option générale (« Toutes les classes ») suit le module ; les noms saisis restent intacts. */}
+            {option.value === "" ? word(option.label) : option.label}
           </option>
         ))}
       </Select>

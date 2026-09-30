@@ -48,7 +48,9 @@ export default async function PortalHomePage() {
   const lates = recent.filter((a) => a.status === "late").length;
   const unjustified = attendance.filter((a) => a.status === "absent" && !a.isJustified).length;
   const todaySlots = slots.filter((s) => s.weekday === isoWeekday(today));
-  const locked = status ? (Object.keys(FEATURE_LABELS) as (keyof typeof FEATURE_LABELS)[]).filter((f) => status.features[f]) : [];
+  const locked = status
+    ? (Object.keys(FEATURE_LABELS) as (keyof typeof FEATURE_LABELS)[]).filter((f) => status.features[f] && (f !== "report_cards" || vocabularyFor(organization.type).family === "school"))
+    : [];
   const name = `${student.first_name} ${student.last_name}`;
 
   return (
@@ -219,7 +221,11 @@ export default async function PortalHomePage() {
       </div>
 
       <nav aria-label="Accès rapides" className="stagger grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <QuickLink href="/portail/notes?onglet=bulletins" icon={FileText} label="Bulletins" />
+        {vocabulary.family === "school" ? (
+          <QuickLink href="/portail/notes?onglet=bulletins" icon={FileText} label="Bulletins" />
+        ) : (
+          <QuickLink href="/portail/parcours" icon={FileText} label="Mon parcours" />
+        )}
         <QuickLink href="/portail/documents" icon={ShieldCheck} label="Documents" />
         <QuickLink href="/portail/emploi-du-temps" icon={CalendarClock} label="Emploi du temps" />
         {parent ? <QuickLink href="/portail/finances" icon={Wallet} label="Finances" /> : <QuickLink href="/portail/annonces" icon={Megaphone} label="Annonces" />}

@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import type { Permission } from "@/config/permissions";
 import { mfaRequirement } from "@/lib/auth/security";
 import { can, getSessionContext, type OrganizationSummary, type SessionContext } from "@/lib/auth/session";
+import { vocabularyFor, type Vocabulary } from "@/lib/vocabulary";
 
 export type OrgSessionContext = SessionContext & { organization: OrganizationSummary };
 
@@ -40,5 +41,17 @@ export async function requirePermission(permission: Permission): Promise<OrgSess
   if (!can(context, permission)) {
     notFound();
   }
+  return context;
+}
+
+/**
+ * Séparation des modules : une page propre au module scolaire (bulletins,
+ * résultats annuels, passage d'année, règles de calcul) n'existe pas pour un
+ * centre de formation ni pour une université — « Page introuvable », comme une
+ * école qui ouvrirait une page universitaire.
+ */
+export async function requireModule(...families: Vocabulary["family"][]): Promise<OrgSessionContext> {
+  const context = await requireOrganization();
+  if (!families.includes(vocabularyFor(context.organization.type).family)) notFound();
   return context;
 }

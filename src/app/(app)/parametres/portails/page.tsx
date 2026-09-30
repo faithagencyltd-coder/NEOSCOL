@@ -7,12 +7,13 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PORTALS, type PortalKind } from "@/features/auth/portals";
+import { portalsFor, type PortalKind } from "@/features/auth/portals";
 import { CopyLinkButton, PortalLinkShare } from "@/features/organization/components/portal-link-share";
 import { requirePermission } from "@/lib/auth/guards";
 import { qrDataUrl } from "@/lib/pdf/qr";
 import { portalLinkUrl } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
+import { vocabularyFor } from "@/lib/vocabulary";
 
 export const metadata: Metadata = { title: "Lien des portails" };
 
@@ -37,8 +38,8 @@ export default async function PortalLinkSettingsPage() {
   const lan = /\/\/(10\.\d+|192\.168|172\.(1[6-9]|2\d|3[01]))\.\d+\.\d+(:|\/|$)/.test(url);
   const rows: { kind: PortalKind; accounts: number; noun: string }[] = [
     { kind: "parent", accounts: c.parents, noun: "parent(s) avec accès" },
-    { kind: "enseignant", accounts: c.teachers, noun: "enseignant(s) / formateur(s)" },
-    { kind: "eleve", accounts: c.students, noun: "compte(s) élève / étudiant" },
+    { kind: "enseignant", accounts: c.teachers, noun: vocabularyFor(org.type).family === "training" ? "formateur(s)" : "enseignant(s)" },
+    { kind: "eleve", accounts: c.students, noun: `compte(s) ${vocabularyFor(org.type).student.toLowerCase()}` },
     { kind: "personnel", accounts: c.staff, noun: "compte(s) du personnel" },
   ];
 
@@ -83,7 +84,7 @@ export default async function PortalLinkSettingsPage() {
           <CardDescription>À envoyer aux familles, aux enseignants et aux élèves, ou à publier sur votre site et vos réseaux.</CardDescription>
         </CardHeader>
         <CardContent>
-          <PortalLinkShare url={url} organizationName={org.name} qr={qr} fileCode={org.code} />
+          <PortalLinkShare url={url} organizationName={org.name} qr={qr} fileCode={org.code} organizationType={org.type} />
         </CardContent>
       </Card>
 
@@ -95,7 +96,7 @@ export default async function PortalLinkSettingsPage() {
         <CardContent>
           <ul className="stagger grid gap-2.5">
             {rows.map(({ kind, accounts, noun }) => {
-              const { label, sub, method, icon: Icon } = PORTALS[kind];
+              const { label, sub, method, icon: Icon } = portalsFor(org.type)[kind];
               const direct = `${url}?portail=${kind}`;
               return (
                 <li key={kind} className="flex flex-col gap-3 rounded-xl border border-border p-3 transition-colors hover:bg-surface-muted/50 md:flex-row md:items-center">

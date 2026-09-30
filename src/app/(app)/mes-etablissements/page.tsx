@@ -1,4 +1,4 @@
-import { ArrowRight, Building2, CalendarClock, Check, CreditCard, Info, MailOpen, Receipt, X } from "lucide-react";
+import { ArrowRight, Building2, CalendarClock, Check, CreditCard, MailOpen, Receipt, X } from "lucide-react";
 import type { Metadata } from "next";
 
 import { ConfirmAction } from "@/components/shared/confirm-action";
@@ -35,6 +35,11 @@ export default async function MyEstablishmentsPage() {
   const establishments = memberships.filter((m) => m.status === "active");
   const rule = data?.rule;
   const accessible = new Set(context.organizations.map((o) => o.id));
+  // Abonnement unique du compte : payé une fois (depuis n'importe quel établissement supplémentaire), il couvre B, C, D…
+  const sub = data?.subscription ?? null;
+  const subState = ACCESS_STATE[sub?.state ?? "pending"] ?? ACCESS_STATE.pending!;
+  const payable = Boolean(rule?.enabled && sub?.required && PAYABLE_STATES.has(sub?.state ?? ""));
+  const payOrg = establishments.find((m) => m.extra)?.organization_id;
 
   return (
     <div className="grid min-w-0 gap-6 [&>*]:min-w-0">
@@ -74,7 +79,7 @@ export default async function MyEstablishmentsPage() {
                     title={`Rejoindre ${inv.organization_name} ?`}
                     description={
                       rule?.enabled
-                        ? `Vous accéderez à cet établissement avec votre compte actuel. S'il s'agit d'un établissement supplémentaire, l'accès demande un abonnement de ${formatMoney(rule.price, rule.currency)} par ${periodLabel(rule.period_months)}.`
+                        ? `Vous accéderez à cet établissement avec votre compte actuel. S'il s'agit d'un établissement supplémentaire, il est couvert par votre abonnement unique multi-établissements (${formatMoney(rule.price, rule.currency)} par ${periodLabel(rule.period_months)}), payé une seule fois pour tous vos établissements supplémentaires.`
                         : "Vous accéderez à cet établissement avec votre compte actuel et le rôle proposé."
                     }
                     confirmLabel="Accepter l'invitation"
@@ -102,15 +107,51 @@ export default async function MyEstablishmentsPage() {
       ) : null}
 
       {rule?.enabled ? (
-        <div className="flex items-start gap-3 rounded-2xl border border-border bg-surface p-4 text-sm">
-          <Info className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
-          <p>
-            Votre <strong>premier établissement reste toujours inclus</strong>. L&apos;accès d&apos;un enseignant à chaque établissement supplémentaire demande un
-            abonnement de <strong>{formatMoney(rule.price, rule.currency)}</strong> par {periodLabel(rule.period_months)}
-            {rule.grace_days > 0 ? `, avec ${rule.grace_days} jour(s) de grâce après la fin de période` : ""}. Sans abonnement, seul cet accès est suspendu : votre
-            compte n&apos;est jamais supprimé.
-          </p>
-        </div>
+        <Card className="overflow-hidden" data-testid="subscription-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="size-5 text-primary" aria-hidden /> Abonnement multi-établissements
+            </CardTitle>
+            <CardDescription>
+              Votre premier établissement reste toujours gratuit. Un <strong>seul abonnement</strong> ({formatMoney(rule.price, rule.currency)} par{" "}
+              {periodLabel(rule.period_months)}) ouvre tous vos autres établissements : B, C, D… sans aucun paiement de plus.
+              {rule.grace_days > 0 ? ` Délai de grâce : ${rule.grace_days} jour(s) après la fin de période.` : ""} Sans abonnement, seuls ces établissements
+              supplémentaires sont suspendus : votre compte n&apos;est jamais supprimé.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3">
+            {sub?.required ? (
+              <>
+                <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-surface-muted p-3 text-sm">
+                  <Badge tone={subState.tone}>{subState.label}</Badge>
+                  <span className="text-muted-foreground">
+                    {sub.covered} établissement(s) supplémentaire(s) couvert(s)
+                    {sub.period_end && ["active", "grace", "expired"].includes(sub.state) ? ` · période payée jusqu'au ${fmt(sub.period_end)}` : ""}
+                    {sub.status_reason && ["suspended", "exempt"].includes(sub.state) ? ` · motif : ${sub.status_reason}` : ""}
+                  </span>
+                </div>
+                {payable && payOrg ? (
+                  <div>
+                    <ConfirmAction
+                      trigger={
+                        <Button>
+                          <CreditCard aria-hidden /> {sub.state === "active" ? "Renouveler l'abonnement" : "Payer l'abonnement"} — {formatMoney(rule.price, rule.currency)}
+                        </Button>
+                      }
+                      title="Abonnement multi-établissements"
+                      description={`${formatMoney(rule.price, rule.currency)} pour ${rule.period_months === 1 ? "1 mois" : `${rule.period_months} mois`}. Un seul paiement ouvre tous vos établissements supplémentaires, dès la confirmation par le fournisseur.`}
+                      confirmLabel="Continuer vers le paiement"
+                      action={startTeacherAccessCheckout}
+                      fields={{ organization_id: payOrg }}
+                    />
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">Vous travaillez dans un seul établissement : aucun abonnement n&apos;est nécessaire.</p>
+            )}
+          </CardContent>
+        </Card>
       ) : null}
 
       {establishments.length === 0 ? (
@@ -121,7 +162,6 @@ export default async function MyEstablishmentsPage() {
             const state = ACCESS_STATE[m.access_state ?? "not_required"] ?? ACCESS_STATE.not_required!;
             const isActive = m.organization_id === context.organization.id;
             const canOpen = accessible.has(m.organization_id);
-            const payable = Boolean(rule?.enabled && m.extra && PAYABLE_STATES.has(m.access_state ?? ""));
             return (
               <li key={m.membership_id} className="flex flex-col gap-3 rounded-3xl border border-border bg-surface p-5 shadow-sm" data-testid="establishment-card">
                 <div className="flex items-start justify-between gap-3">
@@ -137,7 +177,7 @@ export default async function MyEstablishmentsPage() {
                 <p className="text-sm">
                   <span className="text-muted-foreground">Rôle(s) : </span>
                   {m.roles.join(", ") || "—"}
-                  {m.extra ? <span className="text-muted-foreground"> · établissement supplémentaire</span> : <span className="text-muted-foreground"> · établissement principal</span>}
+                  {m.extra ? <span className="text-muted-foreground"> · établissement supplémentaire (abonnement unique)</span> : <span className="text-muted-foreground"> · établissement principal (gratuit)</span>}
                 </p>
                 <div className="grid gap-1 rounded-2xl bg-surface-muted p-3 text-sm">
                   <span>
@@ -159,20 +199,6 @@ export default async function MyEstablishmentsPage() {
                         Ouvrir <ArrowRight aria-hidden />
                       </SubmitButton>
                     </form>
-                  ) : null}
-                  {payable && rule ? (
-                    <ConfirmAction
-                      trigger={
-                        <Button size="sm">
-                          <CreditCard aria-hidden /> {m.access_state === "active" ? "Renouveler" : "Payer l'abonnement"} — {formatMoney(rule.price, rule.currency)}
-                        </Button>
-                      }
-                      title={`Accès à ${m.organization_name}`}
-                      description={`Abonnement enseignant supplémentaire : ${formatMoney(rule.price, rule.currency)} pour ${rule.period_months === 1 ? "1 mois" : `${rule.period_months} mois`}. L'accès est activé dès la confirmation du paiement par le fournisseur.`}
-                      confirmLabel="Continuer vers le paiement"
-                      action={startTeacherAccessCheckout}
-                      fields={{ organization_id: m.organization_id }}
-                    />
                   ) : null}
                 </div>
               </li>

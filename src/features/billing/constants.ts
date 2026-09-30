@@ -103,6 +103,20 @@ export const MODULE4_COMPONENTS = [
 export type Module4Component = (typeof MODULE4_COMPONENTS)[number]["key"];
 export const MULTI_MODULES_PLAN = "MULTI_MODULES";
 
+/** Formule propre à chaque module (séparation des modules). */
+const MODULE_PLAN: Record<"school" | "training" | "higher", string> = { school: "MODULE_SCOLAIRE", training: "CENTRE_FORMATION", higher: "UNIVERSITE" };
+
+/**
+ * Formules proposées à un établissement : celle de son module (et sa formule
+ * actuelle si elle diffère encore) ; Module 4 seulement pour un établissement
+ * principal multi-modules. Le contrôle reste fait en base.
+ */
+export function plansForOrganization<T extends { code: string; is_active: boolean }>(plans: T[], organizationType: string, currentPlanCode?: string | null): T[] {
+  if (organizationType === "school_group") return plans.filter((p) => p.is_active && p.code === MULTI_MODULES_PLAN);
+  const family = ["university", "institute"].includes(organizationType) ? "higher" : ["vocational_center", "technical_center"].includes(organizationType) ? "training" : "school";
+  return plans.filter((p) => p.is_active && p.code !== MULTI_MODULES_PLAN && (p.code === MODULE_PLAN[family] || p.code === currentPlanCode));
+}
+
 export const PLAN_ACCENTS: Record<string, string> = {
   MODULE_SCOLAIRE: "from-blue-600 to-sky-500",
   MATERNELLE_PRIMAIRE: "from-sky-500 to-cyan-400",

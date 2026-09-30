@@ -1,7 +1,7 @@
 import { Document, renderToBuffer } from "@react-pdf/renderer";
 import type { NextRequest } from "next/server";
 
-import { PORTALS } from "@/features/auth/portals";
+import { portalsFor } from "@/features/auth/portals";
 import { denyDocument, hasAll, openDocumentRequest } from "@/features/documents/generate";
 import { PortalPosterPage } from "@/features/documents/pdf/portal-poster";
 import { loadImages, logDocumentEvent, pdfResponse } from "@/features/documents/server";
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
         images={images}
         url={url}
         qr={await qrDataUrl(url, "#000000")}
-        portals={(["parent", "enseignant", "eleve"] as const).map((k) => PORTALS[k])}
+        portals={(["parent", "enseignant", "eleve"] as const).map((k) => portalsFor(req.organization.type)[k])}
       />
     </Document>,
   );

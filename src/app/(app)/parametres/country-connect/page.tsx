@@ -19,6 +19,7 @@ import { StatCard } from "@/features/dashboard/components/stat-card";
 import { requireOrganization } from "@/lib/auth/guards";
 import { can, canAny } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { W } from "@/components/shared/wording";
 
 export const metadata: Metadata = { title: "Country Connect" };
 
@@ -82,7 +83,7 @@ export default async function CountryConnectPage() {
       />
       <Alert tone="info" title="Aucune connexion directe inventée">
         NeoScool ne se connecte à aucune plateforme nationale sans API officielle publiée. Les échanges se font par fichiers au format demandé par l&apos;administration. Un import ne modifie que le{" "}
-        {lower} : l&apos;identité des élèves n&apos;est jamais écrasée.
+        {lower} : <W text="l'identité des élèves n'est jamais écrasée." />
       </Alert>
 
       <section className="stagger grid gap-4 sm:grid-cols-3" aria-label="Couverture">
@@ -162,7 +163,7 @@ export default async function CountryConnectPage() {
           <CardHeader>
             <CardTitle>Importer un fichier officiel</CardTitle>
             <CardDescription>
-              Les élèves sont retrouvés par matricule NeoScool, ou par nom, prénom et date de naissance. Vérifiez d&apos;abord : rien n&apos;est enregistré avant votre confirmation.
+              <W text="Les élèves sont retrouvés par matricule NeoScool, ou par nom, prénom et date de naissance." /> Vérifiez d&apos;abord : rien n&apos;est enregistré avant votre confirmation.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -179,7 +180,7 @@ export default async function CountryConnectPage() {
         <CardHeader>
           <CardTitle>Élèves sans {lower}</CardTitle>
           <CardDescription>
-            {missingCount ? `${missingCount} élève(s) actif(s)${missingCount > 30 ? " — les 30 premiers" : ""}.` : "Tous les élèves actifs ont un identifiant."}
+            <W text={missingCount ? `${missingCount} élève(s) actif(s)${missingCount > 30 ? " — les 30 premiers" : ""}.` : "Tous les élèves actifs ont un identifiant."} />
             {o?.pattern ? " Le format est contrôlé à l'enregistrement." : null}
           </CardDescription>
         </CardHeader>

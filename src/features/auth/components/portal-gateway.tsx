@@ -7,7 +7,7 @@ import { useState } from "react";
 import { PasswordSignInForm } from "@/features/auth/components/password-sign-in-form";
 import { PhoneSignInForm } from "@/features/auth/components/phone-sign-in-form";
 import { StudentSignInForm } from "@/features/auth/components/student-sign-in-form";
-import { PORTALS, type PortalKind } from "@/features/auth/portals";
+import { portalsFor, type PortalKind } from "@/features/auth/portals";
 import { cn } from "@/lib/utils/cn";
 
 const MAIN: PortalKind[] = ["parent", "enseignant", "eleve"];
@@ -18,7 +18,22 @@ const MAIN: PortalKind[] = ["parent", "enseignant", "eleve"];
  * pour pouvoir partager un lien direct ; l'établissement et le portail sont
  * revérifiés côté serveur à la connexion.
  */
-export function PortalGateway({ code, initial, next, accent, captcha }: { code: string; initial: PortalKind | null; next?: string; accent: string; captcha?: CaptchaConfig }) {
+export function PortalGateway({
+  code,
+  initial,
+  next,
+  accent,
+  captcha,
+  organizationType,
+}: {
+  code: string;
+  initial: PortalKind | null;
+  next?: string;
+  accent: string;
+  captcha?: CaptchaConfig;
+  organizationType?: string | null;
+}) {
+  const PORTALS = portalsFor(organizationType);
   const [kind, setKind] = useState<PortalKind | null>(initial);
 
   const choose = (value: PortalKind | null) => {

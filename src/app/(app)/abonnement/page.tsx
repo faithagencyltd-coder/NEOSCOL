@@ -18,7 +18,7 @@ import { getAccessState, getSubscription, listEvents, listInvoices, listPlans, l
 import { requirePermission } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/utils/format";
-import { MODULE4_COMPONENTS, MULTI_MODULES_PLAN, TRIAL_DAYS, type Module4Component } from "@/features/billing/constants";
+import { MODULE4_COMPONENTS, MULTI_MODULES_PLAN, plansForOrganization, TRIAL_DAYS, type Module4Component } from "@/features/billing/constants";
 import { Module4ComponentsForm } from "@/features/billing/components/module4-forms";
 import { module4Overview } from "@/features/billing/module4";
 
@@ -400,8 +400,14 @@ export default async function SubscriptionPage({ searchParams }: PageProps<"/abo
             </p>
           </div>
           <PricingGrid
-            plans={plans.filter((p) => p.is_active && (p.code === MULTI_MODULES_PLAN) === (context.organization.type === "school_group"))}
+            plans={plansForOrganization(plans, context.organization.type, plan?.code)}
             mode="app" currentPlanCode={plan?.code} initialInterval={subscription.billing_interval === "YEARLY" ? "YEARLY" : "MONTHLY"} />
+          {context.organization.type !== "school_group" ? (
+            <p className="rounded-2xl border border-border bg-surface p-4 text-sm text-muted-foreground">
+              Votre établissement a aussi une école, un centre de formation ou une université ? Le <strong className="text-foreground">Module 4 — Multi-modules</strong>{" "}
+              réunit ces activités sous un seul abonnement, chacune dans son propre espace. Contactez Neoscool pour passer au Module 4 : vos données sont conservées.
+            </p>
+          ) : null}
         </section>
       ) : null}
 

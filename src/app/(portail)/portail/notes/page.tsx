@@ -11,6 +11,7 @@ import { getStudentGrades, getStudentReportCards } from "@/features/portal/queri
 import { assessmentKindLabel } from "@/lib/labels";
 import { formatDate, formatNumber } from "@/lib/utils/format";
 import { param } from "@/lib/utils/search-params";
+import { vocabularyFor } from "@/lib/vocabulary";
 
 export const metadata: Metadata = { title: "Notes et bulletins" };
 
@@ -32,25 +33,29 @@ function average(grades: Grade[]): number | null {
 export default async function PortalGradesPage({ searchParams }: PageProps<"/portail/notes">) {
   const { organization, parent, student, status } = await requirePortal();
   if (!student) return <EmptyState icon={NotebookPen} title="Aucun dossier rattaché" />;
-  const tab = param(await searchParams, "onglet") === "bulletins" ? "bulletins" : "notes";
+  // Séparation des modules : pas de bulletin dans un centre de formation ni à l'université (relevés et résultats dédiés).
+  const withReportCards = vocabularyFor(organization.type).family === "school";
+  const tab = withReportCards && param(await searchParams, "onglet") === "bulletins" ? "bulletins" : "notes";
   const restricted = tab === "notes" ? status?.features.grades : status?.features.report_cards;
 
   return (
     <>
       <div className="grid gap-1">
-        <h1 className="text-xl font-bold">Notes et bulletins</h1>
+        <h1 className="text-xl font-bold">{withReportCards ? "Notes et bulletins" : "Notes"}</h1>
         <p className="text-sm text-muted-foreground">
-          {student.first_name} · {student.class_name ?? "classe non affectée"} — seules les notes publiées par l&apos;établissement apparaissent.
+          {student.first_name} · {student.class_name ?? `${vocabularyFor(organization.type).klass.toLowerCase()} non affectée`} — seules les notes publiées par l&apos;établissement apparaissent.
         </p>
       </div>
-      <TabNav
-        label="Notes ou bulletins"
-        active={tab}
-        tabs={[
-          { key: "notes", label: "Notes", href: "/portail/notes" },
-          { key: "bulletins", label: "Bulletins", href: "/portail/notes?onglet=bulletins" },
-        ]}
-      />
+      {withReportCards ? (
+        <TabNav
+          label="Notes ou bulletins"
+          active={tab}
+          tabs={[
+            { key: "notes", label: "Notes", href: "/portail/notes" },
+            { key: "bulletins", label: "Bulletins", href: "/portail/notes?onglet=bulletins" },
+          ]}
+        />
+      ) : null}
       {restricted && status ? (
         <LockedFeature feature={tab === "notes" ? "Notes" : "Bulletins"} overdue={status.overdue_amount} currency={organization.currency} parent={parent} />
       ) : tab === "notes" ? (

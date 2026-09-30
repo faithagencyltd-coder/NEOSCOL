@@ -4,6 +4,7 @@ import { NotificationWatcher } from "@/components/layout/notification-watcher";
 import { NotificationsMenu } from "@/components/layout/notifications-menu";
 import { UserMenu } from "@/components/layout/user-menu";
 import { Logo } from "@/components/shared/logo";
+import { WordingProvider } from "@/components/shared/wording";
 import { getRecentNotifications } from "@/features/notifications/queries";
 import { ChildSwitcher } from "@/features/portal/components/child-switcher";
 import { PortalNav } from "@/features/portal/components/portal-nav";
@@ -20,6 +21,7 @@ export default async function PortalLayout({ children }: { children: React.React
   const name = displayName(context);
 
   return (
+    <WordingProvider organizationType={organization.type}>
     <div className="min-h-dvh bg-background pb-20 md:pb-8">
       {organization.is_demo ? (
         <div className="flex items-center justify-center gap-2 bg-warning-soft px-4 py-1.5 text-center text-xs font-medium text-warning">
@@ -59,5 +61,6 @@ export default async function PortalLayout({ children }: { children: React.React
       <main className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-5 px-4 py-5">{children}</main>
       <NotificationWatcher />
     </div>
+    </WordingProvider>
   );
 }

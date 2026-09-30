@@ -20,10 +20,11 @@ export function TeacherAccessSettingsForm({ rule }: { rule: Rule }) {
       <label className="flex items-start gap-3 rounded-2xl border border-border p-4">
         <input type="checkbox" name="enabled" defaultChecked={rule.enabled} className="mt-1 size-4 accent-[var(--primary)]" />
         <span className="grid gap-0.5">
-          <span className="font-semibold">Exiger un abonnement pour chaque établissement supplémentaire</span>
+          <span className="font-semibold">Exiger un abonnement unique à partir du 2e établissement</span>
           <span className="text-sm text-muted-foreground">
-            Le premier établissement d&apos;un enseignant reste inclus. Sans abonnement valide, seul l&apos;accès supplémentaire est suspendu — le compte n&apos;est
-            jamais supprimé.
+            Le premier établissement d&apos;un enseignant reste gratuit. Dès le 2e, un seul abonnement est demandé : il couvre ensuite tous les établissements
+            suivants (C, D, E…) sans autre paiement. Sans abonnement valide, seuls les établissements supplémentaires sont suspendus — le compte n&apos;est jamais
+            supprimé.
           </span>
         </span>
       </label>

@@ -7538,7 +7538,7 @@ export type Database = {
       }
       teacher_access_payments: {
         Row: {
-          access_id: string
+          access_id: string | null
           amount: number
           checkout_url: string | null
           confirmed_by: string | null
@@ -7564,7 +7564,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          access_id: string
+          access_id?: string | null
           amount: number
           checkout_url?: string | null
           confirmed_by?: string | null
@@ -7590,7 +7590,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          access_id?: string
+          access_id?: string | null
           amount?: number
           checkout_url?: string | null
           confirmed_by?: string | null
@@ -7719,6 +7719,67 @@ export type Database = {
             foreignKeyName: "teacher_extra_accesses_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      teacher_subscriptions: {
+        Row: {
+          created_at: string
+          first_organization_id: string | null
+          last_payment_at: string | null
+          period_end: string | null
+          period_start: string | null
+          status: string
+          status_reason: string | null
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          first_organization_id?: string | null
+          last_payment_at?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          status?: string
+          status_reason?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          first_organization_id?: string | null
+          last_payment_at?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          status?: string
+          status_reason?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_subscriptions_first_organization_id_fkey"
+            columns: ["first_organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_subscriptions_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           }

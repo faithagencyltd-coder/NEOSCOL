@@ -454,7 +454,9 @@ describe("Plateforme (Super administrateur)", () => {
       await switchTo(q, USERS.teacher2);
       assert.ok((await q("select my_permissions($1) as p", [orgId]))[0].p.includes("settings.manage"));
       // Rôles provisionnés automatiquement
-      assert.ok((await q("select count(*)::int n from roles where organization_id = $1", [orgId]))[0].n >= 9);
+      // Séparation des modules : une école n'a pas le rôle « Responsable formation » (8 rôles standard).
+      assert.ok((await q("select count(*)::int n from roles where organization_id = $1", [orgId]))[0].n >= 8);
+      assert.equal((await q("select count(*)::int n from roles where organization_id = $1 and key = 'training_manager'", [orgId]))[0].n, 0);
       assert.equal((await q("select count(*)::int n from students where organization_id = $1", [orgId]))[0].n, 0);
       // Et l'administrateur de A ne voit rien de B.
       await switchTo(q, USERS.admin);

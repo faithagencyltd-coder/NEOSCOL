@@ -13,6 +13,7 @@ import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { GUARDIANS_PAGE_SIZE, listGuardians } from "@/features/guardians/queries";
 import { requirePermission } from "@/lib/auth/guards";
 import { pageParam, param } from "@/lib/utils/search-params";
+import { W } from "@/components/shared/wording";
 
 export const metadata: Metadata = { title: "Parents et tuteurs" };
 
@@ -28,7 +29,7 @@ export default async function GuardiansPage({ searchParams }: PageProps<"/parent
         <p className="text-sm text-muted-foreground">Scolarité</p>
         <h1 className="text-2xl font-semibold sm:text-[26px]">Parents et tuteurs</h1>
         <p className="text-sm text-muted-foreground">
-          {total} fiche{total > 1 ? "s" : ""} · les parents sont créés depuis le dossier de l&apos;élève ou l&apos;inscription.
+          {total} fiche{total > 1 ? "s" : ""} · <W text="les parents sont créés depuis le dossier de l'élève ou l'inscription." />
         </p>
       </div>
       <Card className="overflow-hidden">
