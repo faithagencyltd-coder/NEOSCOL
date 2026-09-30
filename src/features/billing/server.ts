@@ -44,7 +44,7 @@ export type SignalResult = {
 export async function processProviderSignal(providerCode: string, providerTransactionId: string): Promise<SignalResult> {
   const admin = createAdminClient();
   if (!admin) return { status: "error", reason: "Clé de service Supabase absente du serveur." };
-  const setup = providerFor(providerCode, await publicBaseUrl());
+  const setup = await providerFor(providerCode, await publicBaseUrl());
   if (!setup.enabled) return { status: "rejected", reason: setup.reason };
 
   const { data: tx } = await admin
@@ -129,7 +129,7 @@ export async function processProviderSignal(providerCode: string, providerTransa
 async function processTeacherAccessSignal(
   providerCode: string,
   providerTransactionId: string,
-  setup: Extract<ReturnType<typeof providerFor>, { enabled: true }>,
+  setup: Extract<Awaited<ReturnType<typeof providerFor>>, { enabled: true }>,
 ): Promise<SignalResult> {
   const admin = createAdminClient();
   if (!admin) return { status: "error", reason: "Clé de service Supabase absente du serveur." };
@@ -205,7 +205,7 @@ async function processTeacherAccessSignal(
 export async function receiveWebhook(providerCode: string, body: unknown, ip: string | null): Promise<SignalResult & { webhookId?: string }> {
   const admin = createAdminClient();
   if (!admin) return { status: "error", reason: "Clé de service Supabase absente du serveur." };
-  const setup = providerFor(providerCode, await publicBaseUrl());
+  const setup = await providerFor(providerCode, await publicBaseUrl());
   const signal = setup.enabled ? setup.provider.handleWebhook(body) : { providerTransactionId: null, reference: null };
   const { data: webhook } = await admin
     .from("payment_webhooks")

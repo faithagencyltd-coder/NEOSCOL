@@ -39,6 +39,13 @@ export const INTERVAL_LABELS: Record<string, { label: string; short: string; per
 
 export const PROVIDER_LABELS: Record<string, string> = {
   paydunya: "PayDunya",
+  cinetpay: "CinetPay",
+  fedapay: "FedaPay",
+  flutterwave: "Flutterwave",
+  paystack: "Paystack",
+  stripe: "Stripe",
+  wave: "Wave",
+  offline: "Paiement par transfert",
   simulation: "Paiement simulé (test)",
   manual: "Paiement manuel",
 };

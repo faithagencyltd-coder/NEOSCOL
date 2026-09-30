@@ -1,7 +1,8 @@
-import { CreditCard, FileText, Webhook } from "lucide-react";
+import { Check, CreditCard, FileText, Landmark, Webhook, X } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { ConfirmAction } from "@/components/shared/confirm-action";
 import { EmptyState } from "@/components/shared/empty-state";
 import { QuickFormDialog } from "@/components/shared/quick-form-dialog";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -11,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { INVOICE_STATUS, PROVIDER_LABELS, TRANSACTION_STATUS } from "@/features/billing/constants";
 import { recordManualPayment } from "@/features/platform/billing-actions";
+import { decideOfflinePayment } from "@/features/platform/gateway-actions";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateTime, formatMoney } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
@@ -37,7 +39,7 @@ export default async function PlatformPaymentsPage({ searchParams }: PageProps<"
     .order("created_at", { ascending: false })
     .limit(100);
   if (filter) txQuery = txQuery.eq("status", filter);
-  const [{ data: transactions }, { data: pending }, { data: webhooks }] = await Promise.all([
+  const [{ data: transactions }, { data: pending }, { data: webhooks }, { data: transfers }] = await Promise.all([
     txQuery,
     supabase
       .from("subscription_invoices")
@@ -46,10 +48,102 @@ export default async function PlatformPaymentsPage({ searchParams }: PageProps<"
       .order("issued_at", { ascending: false })
       .limit(100),
     supabase.from("payment_webhooks").select("id, provider, mode, received_at, processing_status, error, provider_transaction_id, organization:organizations(name)").order("received_at", { ascending: false }).limit(30),
+    supabase
+      .from("payment_transactions")
+      .select("id, internal_reference, amount, currency, status, mode, created_at, provider_response, organization:organizations(name, code)")
+      .eq("provider", "offline")
+      .in("status", ["PENDING", "PROCESSING"])
+      .order("created_at", { ascending: false })
+      .limit(100),
   ]);
 
   return (
     <div className="grid gap-6">
+      <Card className="overflow-hidden" data-testid="offline-transfers">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Landmark className="size-5 text-primary" aria-hidden /> Paiements par transfert à valider
+          </CardTitle>
+          <CardDescription>
+            Paiements déclarés par les établissements (Mobile Money, virement, lien de paiement). Vérifiez la réception sur votre compte, puis validez : la facture est
+            payée et l&apos;abonnement activé automatiquement. Réglage : onglet Paiements en ligne.
+          </CardDescription>
+        </CardHeader>
+        {!transfers?.length ? (
+          <CardContent>
+            <EmptyState icon={Landmark} title="Aucun paiement par transfert en attente" />
+          </CardContent>
+        ) : (
+          <Table>
+            <THead>
+              <tr className="border-t border-border">
+                <TH>Référence</TH>
+                <TH>Établissement</TH>
+                <TH className="text-right">Montant</TH>
+                <TH>Déclaration du client</TH>
+                <TH className="text-right">Décision</TH>
+              </tr>
+            </THead>
+            <tbody>
+              {transfers.map((t) => {
+                const declaration = ((t.provider_response ?? {}) as { declaration?: { reference?: string; note?: string; at?: string } }).declaration;
+                return (
+                  <TR key={t.id}>
+                    <TD>
+                      <span className="grid">
+                        <span className="font-mono text-xs font-semibold">{t.internal_reference}</span>
+                        <span className="text-xs text-muted-foreground">{formatDateTime(t.created_at)}{t.mode === "test" ? " · test" : ""}</span>
+                      </span>
+                    </TD>
+                    <TD>{t.organization?.name ?? "—"}</TD>
+                    <TD className="text-right font-semibold tabular-nums">{formatMoney(t.amount, t.currency)}</TD>
+                    <TD>
+                      {declaration?.reference ? (
+                        <span className="grid text-sm">
+                          <span className="font-medium">Réf. {declaration.reference}</span>
+                          {declaration.note ? <span className="text-xs text-muted-foreground">{declaration.note}</span> : null}
+                        </span>
+                      ) : (
+                        <Badge tone="neutral">Pas encore déclaré</Badge>
+                      )}
+                    </TD>
+                    <TD className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <ConfirmAction
+                          trigger={
+                            <Button size="sm">
+                              <Check aria-hidden /> Valider
+                            </Button>
+                          }
+                          title="Valider ce paiement ?"
+                          description={`Confirmez avoir reçu ${formatMoney(t.amount, t.currency)} pour ${t.internal_reference}. La facture sera payée et l'abonnement activé.`}
+                          confirmLabel="Valider le paiement"
+                          action={decideOfflinePayment}
+                          fields={{ transaction_id: t.id, decision: "accept" }}
+                        />
+                        <ConfirmAction
+                          trigger={
+                            <Button size="sm" variant="secondary">
+                              <X aria-hidden /> Refuser
+                            </Button>
+                          }
+                          title="Refuser ce paiement ?"
+                          confirmLabel="Refuser"
+                          tone="danger"
+                          action={decideOfflinePayment}
+                          fields={{ transaction_id: t.id, decision: "refuse" }}
+                          reason={{ label: "Motif (visible par l'établissement)", required: true }}
+                        />
+                      </div>
+                    </TD>
+                  </TR>
+                );
+              })}
+            </tbody>
+          </Table>
+        )}
+      </Card>
+
       <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

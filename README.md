@@ -192,7 +192,11 @@ utilisées par tous les établissements (migration `20261004002600_integrations.
   référence et mode contrôlés). Webhook : `POST /api/webhooks/payments/[provider]`.
 - **Tâche quotidienne** : `GET /api/cron/abonnements` (Bearer `CRON_SECRET`) — rappels d'essai J-7/J-3/J-1/J,
   factures de renouvellement, impayés, paiements abandonnés.
-- **Variables** (serveur uniquement, voir `.env.example`) : `PAYMENT_PROVIDER`, `PAYDUNYA_MODE`,
+- **Passerelles réglables par le Super Admin** (Console › Paiements en ligne) : PayDunya, CinetPay, FedaPay,
+  Flutterwave, Paystack, Stripe, Wave et « Paiement par transfert » (tout autre moyen, validé dans Paiements).
+  Plusieurs passerelles peuvent être proposées (le client choisit), mode test ou réel, clés chiffrées côté serveur,
+  adresse de notification à copier chez le fournisseur. Aucune modification de code pour changer de fournisseur.
+- **Variables historiques** (utilisées seulement tant qu'aucune passerelle n'est proposée) : `PAYMENT_PROVIDER`, `PAYDUNYA_MODE`,
   `PAYDUNYA_MASTER_KEY`, `PAYDUNYA_PRIVATE_KEY`, `PAYDUNYA_PUBLIC_KEY`, `PAYDUNYA_TOKEN`, `PAYMENT_WEBHOOK_SECRET`.
 - **Tests** : `npm run db:test` (dont `tests/db/billing.test.mjs`), `npm run test:unit` (fournisseurs, secrets),
   `tests/e2e/abonnements.mjs` (parcours navigateur complet, avec `PAYMENT_PROVIDER=simulation`).

@@ -26,6 +26,13 @@ async function billingContext(permission: "billing.manage" | "billing.read") {
   return { ok: true as const, context, organizationId: context.organization.id };
 }
 
+/** Payeur transmis au fournisseur (certains exigent une adresse e-mail). */
+async function payer(organizationId: string, userEmail: string | null) {
+  const supabase = await createClient();
+  const { data } = await supabase.from("organizations").select("name, email, phone").eq("id", organizationId).maybeSingle();
+  return { email: data?.email || userEmail, name: data?.name ?? null, phone: data?.phone ?? null };
+}
+
 /**
  * Paiement de l'abonnement : facture + transaction locale (montant calculé en
  * base), création du paiement chez le fournisseur, redirection vers sa page.
@@ -38,7 +45,7 @@ export async function startSubscriptionCheckout(_: ActionResult | null, formData
   if (!choice.success) return { ok: false, message: choice.error.issues[0]?.message ?? "Choix invalide." };
 
   const base = await publicBaseUrl();
-  const setup = activePaymentSetup(base);
+  const setup = await activePaymentSetup(base, String(formData.get("gateway") ?? "") || null);
   if (!setup.enabled) return { ok: false, message: setup.reason };
   const admin = createAdminClient();
   if (!admin) return { ok: false, message: "Configuration serveur incomplète (clé de service Supabase absente)." };
@@ -69,6 +76,7 @@ export async function startSubscriptionCheckout(_: ActionResult | null, formData
       cancelUrl: `${returnUrl}&annule=1`,
       callbackUrl: `${base}/api/webhooks/payments/${setup.code}${secret ? `?cle=${encodeURIComponent(secret)}` : ""}`,
       customData: { organization_id: auth.organizationId, invoice_number: checkout.invoice_number },
+      customer: await payer(auth.organizationId, auth.context.user.email ?? null),
     });
     const { error: attachError } = await admin.rpc("billing_attach_checkout", {
       p_transaction: checkout.transaction_id,
@@ -172,4 +180,21 @@ export async function simulatePayment(formData: FormData): Promise<void> {
   await admin.from("payment_simulations").upsert({ reference, outcome, amount: tx.amount });
   await receiveWebhook("simulation", { token: tx.provider_transaction_id }, "simulation");
   redirect(`/abonnement/retour?ref=${encodeURIComponent(reference)}`);
+}
+
+/** Le client déclare son paiement par transfert (validation ensuite par le Super Admin). */
+export async function declareOfflinePayment(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await billingContext("billing.manage");
+  if (!auth.ok) return auth;
+  const reference = String(formData.get("reference") ?? "");
+  if (!/^NEO-\d{4}-\d{6,}$/.test(reference)) return { ok: false, message: "Référence invalide." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("billing_declare_offline_payment", {
+    p_reference: reference,
+    p_declared_reference: String(formData.get("declared") ?? ""),
+    p_note: String(formData.get("note") ?? "") || undefined,
+  });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  revalidatePath(`/abonnement/transfert/${reference}`);
+  return { ok: true, message: "Paiement déclaré : NeoScool le vérifie et active votre abonnement dès validation." };
 }

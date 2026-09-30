@@ -1,7 +1,8 @@
 /**
  * Abstraction des fournisseurs de paiement des abonnements NeoScool.
  * La logique d'abonnement (base de données) ne dépend que de ce contrat :
- * ajouter CinetPay, FedaPay… revient à écrire une nouvelle implémentation.
+ * chaque agrégateur (PayDunya, CinetPay, FedaPay, Flutterwave, Paystack,
+ * Stripe, Wave, transfert) en est une implémentation, réglée dans le Super Admin.
  *
  * Règle d'or : seul `verifyPayment` (appel serveur → fournisseur) fait foi.
  * Le retour du navigateur et le contenu d'un webhook ne sont que des signaux.
@@ -21,6 +22,8 @@ export type CheckoutRequest = {
   cancelUrl: string;
   callbackUrl: string;
   customData: Record<string, string>;
+  /** Payeur (certains fournisseurs exigent une adresse e-mail). */
+  customer?: { email?: string | null; name?: string | null; phone?: string | null };
 };
 
 export type CheckoutSession = {
@@ -57,6 +60,8 @@ export interface PaymentProvider {
   /** Extrait l'identifiant à vérifier d'une notification (jamais son statut). */
   handleWebhook(body: unknown): WebhookSignal;
   refundPayment(providerTransactionId: string, amount: number): Promise<{ supported: false; message: string } | { supported: true; raw: Record<string, unknown> }>;
+  /** Vérifie les clés auprès du fournisseur, sans créer de paiement (quand l'API le permet). */
+  checkCredentials?(): Promise<{ ok: true; message: string } | { ok: false; error: string }>;
 }
 
 export class PaymentProviderError extends Error {

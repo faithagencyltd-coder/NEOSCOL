@@ -39,11 +39,12 @@ export function CheckoutWizard({
   initialPlan: string;
   initialInterval: Interval;
   trial: { active: boolean; endLabel: string | null };
-  payment: { enabled: boolean; label: string; test: boolean; reason?: string };
+  payment: { options: { code: string; label: string; mode: "test" | "live"; isDefault: boolean; instructions: string | null }[]; reason?: string };
 }) {
   const [step, setStep] = useState(0);
   const [planCode, setPlanCode] = useState(plans.some((p) => p.code === initialPlan) ? initialPlan : (plans[0]?.code ?? ""));
   const [interval, setBillingInterval] = useState<Interval>(initialInterval);
+  const [gateway, setGateway] = useState(payment.options.find((o) => o.isDefault)?.code ?? payment.options[0]?.code ?? "");
   const [payState, payAction, paying] = useActionState(startSubscriptionCheckout, null);
   const [trialState, trialAction, savingTrial] = useActionState(async (prev: ActionResult | null, formData: FormData) => {
     const result = await changeTrialPlan(prev, formData);
@@ -172,14 +173,34 @@ export function CheckoutWizard({
           ) : (
             <>
               <h2 className="text-lg font-semibold">5. Paiement</h2>
-              {payment.test ? (
-                <Alert tone="warning" title="Mode test">
-                  <span className="inline-flex items-center gap-1.5">
-                    <FlaskConical className="size-4" aria-hidden /> {payment.label} : aucun argent réel n&apos;est débité.
-                  </span>
-                </Alert>
+              {payment.options.length === 0 ? <Alert tone="warning">{payment.reason}</Alert> : null}
+              {payment.options.length > 1 ? <p className="text-sm font-medium">Choisissez votre moyen de paiement :</p> : null}
+              {payment.options.length > 0 ? (
+                <div className="grid gap-2" role="radiogroup" aria-label="Moyen de paiement" data-testid="payment-options">
+                  {payment.options.map((option) => (
+                    <label
+                      key={option.code}
+                      className={cn(
+                        "flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm transition-colors",
+                        gateway === option.code ? "border-primary bg-primary-soft/60" : "border-border hover:bg-surface-muted",
+                      )}
+                    >
+                      <input type="radio" name="gateway-choice" value={option.code} checked={gateway === option.code} onChange={() => setGateway(option.code)} className="mt-0.5 size-4 accent-[var(--primary)]" />
+                      <span className="grid gap-1">
+                        <span className="font-semibold">{option.label}</span>
+                        {option.mode === "test" ? (
+                          <span className="inline-flex items-center gap-1.5 text-xs text-warning">
+                            <FlaskConical className="size-3.5" aria-hidden /> Mode test : aucun argent réel n&apos;est débité.
+                          </span>
+                        ) : null}
+                        {option.code === "offline" && option.instructions && gateway === option.code ? (
+                          <span className="whitespace-pre-line text-xs text-muted-foreground">{option.instructions}</span>
+                        ) : null}
+                      </span>
+                    </label>
+                  ))}
+                </div>
               ) : null}
-              {!payment.enabled ? <Alert tone="warning">{payment.reason}</Alert> : null}
               {payState && !payState.ok ? (
                 <div className="anim-shake">
                   <Alert tone="danger">{payState.message}</Alert>
@@ -199,7 +220,8 @@ export function CheckoutWizard({
               <ActionForm dispatch={payAction} pending={paying} className="grid gap-3">
                 <input type="hidden" name="plan" value={plan.code} />
                 <input type="hidden" name="interval" value={interval} />
-                <SubmitButton size="lg" className="w-full uppercase tracking-wide" pendingLabel="Redirection vers le paiement…" disabled={!payment.enabled}>
+                <input type="hidden" name="gateway" value={gateway} />
+                <SubmitButton size="lg" className="w-full uppercase tracking-wide" pendingLabel="Redirection vers le paiement…" disabled={payment.options.length === 0}>
                   <CreditCard aria-hidden /> Payer mon abonnement — {formatMoney(total, plan.currency)}
                 </SubmitButton>
               </ActionForm>

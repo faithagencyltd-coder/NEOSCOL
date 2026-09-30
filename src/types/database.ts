@@ -4758,6 +4758,68 @@ export type Database = {
           }
         ]
       }
+      payment_gateway_settings: {
+        Row: {
+          checkout_enabled: boolean
+          config: Json
+          instructions: string | null
+          is_default: boolean
+          last_test_at: string | null
+          last_test_message: string | null
+          last_test_ok: boolean | null
+          mode: string
+          provider: string
+          public_label: string | null
+          secret_ciphertext: string | null
+          secret_hint: string | null
+          sort_order: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          checkout_enabled?: boolean
+          config?: Json
+          instructions?: string | null
+          is_default?: boolean
+          last_test_at?: string | null
+          last_test_message?: string | null
+          last_test_ok?: boolean | null
+          mode?: string
+          provider: string
+          public_label?: string | null
+          secret_ciphertext?: string | null
+          secret_hint?: string | null
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          checkout_enabled?: boolean
+          config?: Json
+          instructions?: string | null
+          is_default?: boolean
+          last_test_at?: string | null
+          last_test_message?: string | null
+          last_test_ok?: boolean | null
+          mode?: string
+          provider?: string
+          public_label?: string | null
+          secret_ciphertext?: string | null
+          secret_hint?: string | null
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_gateway_settings_provider_fkey"
+            columns: ["provider"]
+            isOneToOne: true
+            referencedRelation: "payment_providers"
+            referencedColumns: ["code"]
+          }
+        ]
+      }
       payment_provider_events: {
         Row: {
           created_at: string
@@ -8636,6 +8698,17 @@ export type Database = {
         }
         Returns: Json
       }
+      available_payment_gateways: {
+        Args: never
+        Returns: {
+          provider: string
+          label: string
+          mode: string
+          is_default: boolean
+          instructions: string
+          sort_order: number
+        }[]
+      }
       billing_access_state: {
         Args: {
           p_org: string
@@ -8676,6 +8749,14 @@ export type Database = {
           p_currency: string
           p_method?: string
           p_response?: Json
+        }
+        Returns: Json
+      }
+      billing_declare_offline_payment: {
+        Args: {
+          p_reference: string
+          p_declared_reference: string
+          p_note?: string
         }
         Returns: Json
       }
@@ -9324,6 +9405,14 @@ export type Database = {
           active_subscriptions: number
         }[]
       }
+      platform_decide_offline_payment: {
+        Args: {
+          p_transaction: string
+          p_accept: boolean
+          p_reason?: string
+        }
+        Returns: Json
+      }
       platform_issue_invoice: {
         Args: {
           p_org: string
@@ -9366,6 +9455,14 @@ export type Database = {
           members: number
           admins: number
         }[]
+      }
+      platform_record_gateway_test: {
+        Args: {
+          p_provider: string
+          p_ok: boolean
+          p_message: string
+        }
+        Returns: undefined
       }
       platform_record_integration_test: {
         Args: {
@@ -9490,6 +9587,21 @@ export type Database = {
           p_email: number
           p_sms: number
           p_whatsapp: number
+        }
+        Returns: undefined
+      }
+      platform_update_payment_gateway: {
+        Args: {
+          p_provider: string
+          p_checkout_enabled: boolean
+          p_mode: string
+          p_is_default: boolean
+          p_public_label: string
+          p_instructions: string
+          p_config: Json
+          p_secret_ciphertext?: string
+          p_secret_hint?: string
+          p_clear_secret?: boolean
         }
         Returns: undefined
       }

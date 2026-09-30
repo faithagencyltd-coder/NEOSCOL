@@ -6,8 +6,7 @@ import { CheckoutWizard } from "@/features/billing/components/checkout-wizard";
 import { plansForOrganization } from "@/features/billing/constants";
 import { getSubscription, listPlans } from "@/features/billing/queries";
 import { requirePermission } from "@/lib/auth/guards";
-import { activePaymentSetup } from "@/lib/payments/config";
-import { publicBaseUrl } from "@/lib/site-url";
+import { paymentOptions } from "@/lib/payments/config";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/utils/format";
 
@@ -24,7 +23,7 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/abonnem
   ]);
   // Espace Module 4 : couvert par l'abonnement de l'établissement principal, rien à payer ici.
   if (!subscription) redirect("/abonnement");
-  const setup = activePaymentSetup(await publicBaseUrl());
+  const options = await paymentOptions();
   // Module 4 réservé aux établissements principaux (et réciproquement) : contrôlé en base, reflété ici.
   // Séparation des modules : la formule du module (et la formule actuelle), Module 4 pour un établissement principal.
   const active = plansForOrganization(plans, org?.type ?? context.organization.type, subscription.plan?.code);
@@ -46,7 +45,7 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/abonnem
         initialPlan={typeof params.formule === "string" ? params.formule : (subscription?.plan?.code ?? "")}
         initialInterval={params.periodicite === "YEARLY" || (!params.periodicite && subscription?.billing_interval === "YEARLY") ? "YEARLY" : "MONTHLY"}
         trial={{ active: trialing, endLabel: trialing && subscription?.trial_end ? formatDate(subscription.trial_end, "fr-FR", { day: "numeric", month: "long", year: "numeric" }) : null }}
-        payment={setup.enabled ? { enabled: true, label: setup.label, test: setup.mode === "test" } : { enabled: false, label: "", test: false, reason: setup.reason }}
+        payment={{ options, reason: "Aucun moyen de paiement en ligne n'est encore activé. Contactez NeoScool." }}
       />
     </div>
   );

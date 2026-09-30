@@ -52,7 +52,7 @@ export async function startTeacherAccessCheckout(_: ActionResult | null, formDat
   const organizationId = String(formData.get("organization_id") ?? "");
   if (!isUuid(organizationId)) return { ok: false, message: "Établissement invalide." };
   const base = await publicBaseUrl();
-  const setup = activePaymentSetup(base);
+  const setup = await activePaymentSetup(base, String(formData.get("gateway") ?? "") || null, { includeOffline: false });
   if (!setup.enabled) return { ok: false, message: setup.reason };
   const admin = createAdminClient();
   if (!admin) return { ok: false, message: "Configuration serveur incomplète (clé de service Supabase absente)." };

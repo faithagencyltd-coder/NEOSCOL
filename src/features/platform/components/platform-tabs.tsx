@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftRight, Building2, CreditCard, Gem, Globe2, Layers, PlugZap, ShieldCheck, Sigma, Users } from "lucide-react";
+import { ArrowLeftRight, Building2, CreditCard, Gem, Globe2, Layers, PlugZap, ShieldCheck, Sigma, Users, Wallet } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -10,6 +10,7 @@ const TABS = [
   { href: "/plateforme", label: "Établissements", icon: Building2 },
   { href: "/plateforme/abonnements", label: "Abonnements", icon: Gem },
   { href: "/plateforme/paiements", label: "Paiements", icon: CreditCard },
+  { href: "/plateforme/paiements-en-ligne", label: "Paiements en ligne", icon: Wallet },
   { href: "/plateforme/formules", label: "Formules", icon: Layers },
   { href: "/plateforme/enseignants", label: "Enseignants multi-établissements", icon: Users },
   { href: "/plateforme/pays", label: "Pays", icon: Globe2 },
@@ -24,7 +25,7 @@ export function PlatformTabs() {
   return (
     <nav aria-label="Console de la plateforme" className="-mb-px flex gap-1 overflow-x-auto">
       {TABS.map(({ href, label, icon: Icon }) => {
-        const active = href === "/plateforme" ? pathname === href : pathname.startsWith(href);
+        const active = href === "/plateforme" ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
         return (
           <Link
             key={href}
