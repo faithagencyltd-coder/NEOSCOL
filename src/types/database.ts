@@ -5714,6 +5714,38 @@ export type Database = {
           }
         ]
       }
+      platform_sms_pricing: {
+        Row: {
+          billing_enabled: boolean
+          currency: string
+          default_price: number
+          id: number
+          min_purchase: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          billing_enabled?: boolean
+          currency?: string
+          default_price?: number
+          id?: number
+          min_purchase?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          billing_enabled?: boolean
+          currency?: string
+          default_price?: number
+          id?: number
+          min_purchase?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          
+        ]
+      }
       platform_teacher_access_settings: {
         Row: {
           currency: string
@@ -6837,6 +6869,234 @@ export type Database = {
         }
         Relationships: [
           
+        ]
+      }
+      sms_country_prices: {
+        Row: {
+          country_code: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          country_code: string
+          price: number
+          updated_at?: string
+        }
+        Update: {
+          country_code?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_country_prices_country_code_fkey"
+            columns: ["country_code"]
+            isOneToOne: true
+            referencedRelation: "countries"
+            referencedColumns: ["code"]
+          }
+        ]
+      }
+      sms_credit_purchases: {
+        Row: {
+          amount: number
+          checkout_url: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          failure_reason: string | null
+          id: string
+          internal_reference: string
+          mode: string
+          organization_id: string
+          paid_at: string | null
+          payment_method: string | null
+          provider: string
+          provider_response: Json
+          provider_transaction_id: string | null
+          sms_count: number
+          status: string
+          unit_price: number
+        }
+        Insert: {
+          amount: number
+          checkout_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency: string
+          failure_reason?: string | null
+          id?: string
+          internal_reference: string
+          mode: string
+          organization_id: string
+          paid_at?: string | null
+          payment_method?: string | null
+          provider: string
+          provider_response?: Json
+          provider_transaction_id?: string | null
+          sms_count: number
+          status?: string
+          unit_price: number
+        }
+        Update: {
+          amount?: number
+          checkout_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          failure_reason?: string | null
+          id?: string
+          internal_reference?: string
+          mode?: string
+          organization_id?: string
+          paid_at?: string | null
+          payment_method?: string | null
+          provider?: string
+          provider_response?: Json
+          provider_transaction_id?: string | null
+          sms_count?: number
+          status?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_credit_purchases_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      sms_org_prices: {
+        Row: {
+          note: string | null
+          organization_id: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          note?: string | null
+          organization_id: string
+          price: number
+          updated_at?: string
+        }
+        Update: {
+          note?: string | null
+          organization_id?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_org_prices_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      sms_price_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          new_price: number | null
+          old_price: number | null
+          scope: string
+          target: string | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_price?: number | null
+          old_price?: number | null
+          scope: string
+          target?: string | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_price?: number | null
+          old_price?: number | null
+          scope?: string
+          target?: string | null
+        }
+        Relationships: [
+          
+        ]
+      }
+      sms_wallet_movements: {
+        Row: {
+          balance_after: number
+          created_at: string
+          created_by: string | null
+          delta: number
+          id: string
+          note: string | null
+          organization_id: string
+          reason: string
+          reference: string | null
+        }
+        Insert: {
+          balance_after: number
+          created_at?: string
+          created_by?: string | null
+          delta: number
+          id?: string
+          note?: string | null
+          organization_id: string
+          reason: string
+          reference?: string | null
+        }
+        Update: {
+          balance_after?: number
+          created_at?: string
+          created_by?: string | null
+          delta?: number
+          id?: string
+          note?: string | null
+          organization_id?: string
+          reason?: string
+          reference?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_wallet_movements_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      sms_wallets: {
+        Row: {
+          balance: number
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          balance?: number
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          balance?: number
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_wallets_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
         ]
       }
       staff_attendance: {
@@ -10162,6 +10422,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      platform_adjust_sms_credit: {
+        Args: {
+          p_org: string
+          p_delta: number
+          p_reason: string
+        }
+        Returns: number
+      }
       platform_ai_usage: {
         Args: never
         Returns: {
@@ -10476,6 +10744,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      platform_save_sms_pricing: {
+        Args: {
+          p_enabled: boolean
+          p_default_price: number
+          p_min_purchase: number
+        }
+        Returns: undefined
+      }
       platform_save_social_link: {
         Args: {
           p_id: string
@@ -10522,6 +10798,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      platform_set_country_sms_price: {
+        Args: {
+          p_country: string
+          p_price: number
+        }
+        Returns: undefined
+      }
       platform_set_messaging_quota: {
         Args: {
           p_org: string
@@ -10550,6 +10833,14 @@ export type Database = {
           p_reason: string
         }
         Returns: Json
+      }
+      platform_set_org_sms_price: {
+        Args: {
+          p_org: string
+          p_price: number
+          p_note?: string
+        }
+        Returns: undefined
       }
       platform_set_plan_active: {
         Args: {
@@ -11124,6 +11415,72 @@ export type Database = {
       site_settings: {
         Args: never
         Returns: Json
+      }
+      sms_credit_attach_checkout: {
+        Args: {
+          p_payment: string
+          p_provider_tx: string
+          p_checkout_url: string
+          p_response?: Json
+        }
+        Returns: undefined
+      }
+      sms_credit_confirm_payment: {
+        Args: {
+          p_provider: string
+          p_mode: string
+          p_provider_tx: string
+          p_reference: string
+          p_amount: number
+          p_currency: string
+          p_method?: string
+          p_response?: Json
+        }
+        Returns: Json
+      }
+      sms_credit_fail_payment: {
+        Args: {
+          p_provider: string
+          p_mode: string
+          p_provider_tx: string
+          p_reference: string
+          p_status: string
+          p_reason: string
+          p_response?: Json
+        }
+        Returns: Json
+      }
+      sms_credit_start_checkout: {
+        Args: {
+          p_org: string
+          p_sms: number
+          p_provider: string
+          p_mode: string
+        }
+        Returns: Json
+      }
+      sms_debit: {
+        Args: {
+          p_org: string
+          p_count: number
+          p_reference?: string
+        }
+        Returns: Json
+      }
+      sms_quote: {
+        Args: {
+          p_org: string
+          p_sms?: number
+        }
+        Returns: Json
+      }
+      sms_refund: {
+        Args: {
+          p_org: string
+          p_count: number
+          p_reference?: string
+        }
+        Returns: undefined
       }
       start_thread: {
         Args: {

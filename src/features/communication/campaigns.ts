@@ -31,8 +31,10 @@ export async function processCampaignBatch(campaignId: string, userId: string | 
 
   const results: { id: string; status: string; error: string | null }[] = [];
   const queue = [...(batch ?? [])];
+  // Crédit SMS épuisé : on s'arrête ; les destinataires non servis restent en attente (reprise après achat).
+  let outOfCredit = false;
   const worker = async () => {
-    for (let item = queue.shift(); item; item = queue.shift()) {
+    for (let item = queue.shift(); item && !outOfCredit; item = queue.shift()) {
       const vars = (item.variables ?? {}) as Record<string, unknown>;
       let result: SendResult;
       if (!item.contact) {
@@ -57,11 +59,22 @@ export async function processCampaignBatch(campaignId: string, userId: string | 
           ctx,
         );
       }
-      results.push(result.ok ? { id: item.recipient_id, status: "sent", error: null } : { id: item.recipient_id, status: result.status, error: result.error });
+      if (!result.ok && result.status === "blocked_credit") {
+        outOfCredit = true;
+        continue;
+      }
+      results.push(
+        result.ok
+          ? { id: item.recipient_id, status: "sent", error: null }
+          : { id: item.recipient_id, status: result.status === "blocked_plan" ? "failed" : result.status, error: result.error },
+      );
     }
   };
   await Promise.all(Array.from({ length: 4 }, worker));
   const { data: recorded, error: recordError } = await admin.rpc("message_campaign_record", { p_campaign: campaignId, p_results: results });
   if (recordError) return { ok: false, message: "Résultats non enregistrés." };
+  if (outOfCredit) {
+    return { ok: false, message: "Crédit SMS insuffisant : l'envoi est en pause. Achetez du crédit (Communication › Crédit SMS) puis reprenez l'envoi." };
+  }
   return { ok: true, pending: (recorded as { pending: number }).pending, sent: results.filter((r) => r.status === "sent").length };
 }

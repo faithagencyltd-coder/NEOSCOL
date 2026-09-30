@@ -38,6 +38,8 @@ export type SignalResult = {
   transactionId?: string;
   /** Paiement d'un accès enseignant supplémentaire (registre distinct des abonnements). */
   teacherPaymentId?: string;
+  /** Achat de crédit SMS (registre distinct). */
+  smsPurchaseId?: string;
 };
 
 /** Vérifie un paiement auprès du fournisseur puis l'applique en base (idempotent). */
@@ -139,7 +141,7 @@ async function processTeacherAccessSignal(
     .eq("provider", providerCode)
     .eq("provider_transaction_id", providerTransactionId)
     .maybeSingle();
-  if (!pay) return { status: "rejected", reason: "transaction_inconnue" };
+  if (!pay) return processSmsCreditSignal(providerCode, providerTransactionId, setup);
   const base = { reference: pay.internal_reference, organizationId: pay.organization_id, teacherPaymentId: pay.id };
   if (pay.mode !== setup.mode) return { status: "rejected", reason: "mode_different", ...base };
 
@@ -171,6 +173,80 @@ async function processTeacherAccessSignal(
     reason = result.reason;
   } else {
     const { data, error } = await admin.rpc("teacher_access_fail_payment", {
+      p_provider: providerCode,
+      p_mode: setup.mode,
+      p_provider_tx: providerTransactionId,
+      p_reference: pay.internal_reference,
+      p_status: verified.state === "failed" ? "FAILED" : "CANCELLED",
+      p_reason: verified.state === "failed" ? "Paiement refusé par le fournisseur" : "Paiement annulé",
+      p_response: redact(verified.raw),
+    });
+    if (error) return { status: "error", reason: "Mise à jour du paiement impossible.", ...base };
+    status = (data as { result: string }).result === "duplicate" ? "duplicate" : verified.state;
+  }
+  await admin.from("payment_provider_events").upsert(
+    {
+      provider: providerCode,
+      mode: setup.mode,
+      event_key: `${providerTransactionId}:${verified.state}`,
+      provider_transaction_id: providerTransactionId,
+      status: verified.state,
+      organization_id: pay.organization_id,
+      transaction_id: null,
+      payload: redact(verified.raw),
+    },
+    { onConflict: "provider,mode,event_key", ignoreDuplicates: true },
+  );
+  return { status, reason, ...base };
+}
+
+/**
+ * Achat de crédit SMS : même vérification auprès du fournisseur et mêmes
+ * contrôles ; le crédit n'est ajouté qu'une fois (sms_credit_confirm_payment).
+ */
+async function processSmsCreditSignal(
+  providerCode: string,
+  providerTransactionId: string,
+  setup: Extract<Awaited<ReturnType<typeof providerFor>>, { enabled: true }>,
+): Promise<SignalResult> {
+  const admin = createAdminClient();
+  if (!admin) return { status: "error", reason: "Clé de service Supabase absente du serveur." };
+  const { data: pay } = await admin
+    .from("sms_credit_purchases")
+    .select("id, organization_id, internal_reference, mode, status")
+    .eq("provider", providerCode)
+    .eq("provider_transaction_id", providerTransactionId)
+    .maybeSingle();
+  if (!pay) return { status: "rejected", reason: "transaction_inconnue" };
+  const base = { reference: pay.internal_reference, organizationId: pay.organization_id, smsPurchaseId: pay.id };
+  if (pay.mode !== setup.mode) return { status: "rejected", reason: "mode_different", ...base };
+  let verified;
+  try {
+    verified = await setup.provider.verifyPayment(providerTransactionId);
+  } catch (error) {
+    return { status: "error", reason: error instanceof PaymentProviderError ? error.message : "Vérification impossible.", reference: pay.internal_reference };
+  }
+  if (verified.reference && verified.reference !== pay.internal_reference) return { status: "rejected", reason: "reference_differente", ...base };
+  if (verified.state === "pending") return { status: "pending", ...base };
+  let status: SignalResult["status"];
+  let reason: string | undefined;
+  if (verified.state === "paid") {
+    const { data, error } = await admin.rpc("sms_credit_confirm_payment", {
+      p_provider: providerCode,
+      p_mode: setup.mode,
+      p_provider_tx: providerTransactionId,
+      p_reference: pay.internal_reference,
+      p_amount: verified.amount as number,
+      p_currency: verified.currency as string,
+      p_method: verified.method as string,
+      p_response: redact(verified.raw),
+    });
+    if (error) return { status: "error", reason: "Enregistrement du paiement impossible.", ...base };
+    const result = data as { result: string; reason?: string };
+    status = result.result === "confirmed" ? "confirmed" : result.result === "duplicate" ? "duplicate" : "rejected";
+    reason = result.reason;
+  } else {
+    const { data, error } = await admin.rpc("sms_credit_fail_payment", {
       p_provider: providerCode,
       p_mode: setup.mode,
       p_provider_tx: providerTransactionId,

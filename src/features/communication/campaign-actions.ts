@@ -124,3 +124,15 @@ export async function saveAutomation(_: ActionResult | null, formData: FormData)
   refresh();
   return { ok: true, message: enabled ? "Relance automatique des impayés activée." : "Relance automatique désactivée." };
 }
+
+export type SmsQuote = { billing_enabled: boolean; included_in_plan: boolean; unit_price: number; currency: string; balance: number; sms: number; amount: number; missing: number };
+
+/** Devis d'un envoi SMS : nombre de SMS × prix d'un SMS (fixé par NeoScool), crédit disponible et manque éventuel. */
+export async function quoteSms(sms: number): Promise<ActionResult<SmsQuote>> {
+  const auth = await authorize("communication.send");
+  if (!auth.ok) return auth;
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("sms_quote", { p_org: auth.context.organization.id, p_sms: Math.max(0, Math.floor(sms)) });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  return { ok: true, data: data as unknown as SmsQuote };
+}

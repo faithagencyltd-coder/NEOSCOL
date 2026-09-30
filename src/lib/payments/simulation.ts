@@ -28,7 +28,9 @@ export class SimulationProvider implements PaymentProvider {
       checkoutUrl:
         request.customData.kind === "teacher_access"
           ? `${this.baseUrl}/mes-etablissements/paiement-simule/${encodeURIComponent(request.reference)}`
-          : `${this.baseUrl}/abonnement/paiement-simule/${encodeURIComponent(request.reference)}`,
+          : request.customData.kind === "sms_credit"
+            ? `${this.baseUrl}/communication/credit-sms/paiement-simule/${encodeURIComponent(request.reference)}`
+            : `${this.baseUrl}/abonnement/paiement-simule/${encodeURIComponent(request.reference)}`,
       raw: { simulated: true },
     };
   }

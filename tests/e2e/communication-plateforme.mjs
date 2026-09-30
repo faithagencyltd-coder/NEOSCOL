@@ -74,6 +74,8 @@ try {
   const notif = await q1("select count(*)::int n from notifications n join profiles p on p.id = n.user_id where p.email = 'admin@demo.neoscol.app' and n.title = $1", [ALL]);
   check(notif.n === 1, "notification reçue une seule fois");
 
+  // L'enseignant de démo peut enseigner dans plusieurs établissements : on le place sur le module scolaire.
+  await db.query("update profiles set last_organization_id = (select id from organizations where code = 'DEMO') where email = 'enseignant@demo.neoscol.app'");
   const teacher = await login("enseignant@demo.neoscol.app");
   await teacher.goto(`${base}/tableau-de-bord`);
   await teacher.getByText(ALL).first().waitFor({ timeout: 15000 });

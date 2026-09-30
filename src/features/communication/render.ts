@@ -30,9 +30,5 @@ export function renderEmailHtml(template: string, variables: Record<string, unkn
 </div></body></html>`;
 }
 
-/** Nombre de SMS (160 caractères, 153 par segment au-delà ; 70 / 67 avec des caractères hors GSM). */
-export function smsSegments(text: string): number {
-  const gsm = /^[\n\r !"#$%&'()*+,\-./0-9:;<=>?@A-Z_a-z£¥èéùìòÇØøÅåΔΦΓΛΩΠΨΣΘΞÆæßÉÄÖÑÜ§¿äöñüà^{}\\[~\]|€]*$/.test(text);
-  const [single, multi] = gsm ? [160, 153] : [70, 67];
-  return text.length <= single ? 1 : Math.ceil(text.length / multi);
-}
+/** Nombre de SMS facturés : une seule règle pour le devis et le décompte réel. */
+export { smsSegments } from "@/lib/messaging/sms-segments";

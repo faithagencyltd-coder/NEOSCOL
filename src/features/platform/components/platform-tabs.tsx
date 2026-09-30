@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftRight, BadgePercent, Building2, CreditCard, Gem, Globe2, Layers, Megaphone, MonitorSmartphone, Palette, PlugZap, ShieldCheck, Sigma, TrendingUp, Users, Wallet } from "lucide-react";
+import { ArrowLeftRight, BadgePercent, Building2, CreditCard, Gem, Globe2, Layers, Megaphone, MonitorSmartphone, Palette, PlugZap, ShieldCheck, Sigma, TrendingUp, Users, Wallet, MessageSquareText } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -14,6 +14,7 @@ const TABS = [
   { href: "/plateforme/revenus", label: "Revenus", icon: TrendingUp },
   { href: "/plateforme/formules", label: "Formules", icon: Layers },
   { href: "/plateforme/offres", label: "Offres", icon: BadgePercent },
+  { href: "/plateforme/sms", label: "SMS", icon: MessageSquareText },
   { href: "/plateforme/communication", label: "Communication", icon: Megaphone },
   { href: "/plateforme/site", label: "Site et marque", icon: Palette },
   { href: "/plateforme/site-web", label: "Site web", icon: MonitorSmartphone },

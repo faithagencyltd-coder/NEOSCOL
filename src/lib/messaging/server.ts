@@ -3,6 +3,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import { decryptSecret, encryptionKeyFrom } from "./crypto";
+import { smsSegments } from "./sms-segments";
 import {
   brevoSendEmail,
   brevoSendSms,
@@ -22,7 +23,7 @@ import {
  * explicite (repli propre), jamais d'erreur bloquante pour l'appelant.
  */
 export type LoadedIntegration = { provider: IntegrationProvider; config: Record<string, string>; secret: string };
-export type SendResult = { ok: true; id?: string } | { ok: false; status: "failed" | "blocked_quota" | "not_configured"; error: string };
+export type SendResult = { ok: true; id?: string } | { ok: false; status: "failed" | "blocked_quota" | "not_configured" | "blocked_credit" | "blocked_plan"; error: string };
 
 export async function loadIntegration(provider: IntegrationProvider, { requireEnabled = true } = {}): Promise<LoadedIntegration | null> {
   const admin = createAdminClient();
@@ -88,10 +89,47 @@ export async function sendEmail(message: { to: string; subject: string; html: st
   });
 }
 
+/**
+ * SMS payants : décompte du crédit SMS de l'établissement AVANT l'envoi (un SMS
+ * long compte pour plusieurs), recrédit si l'opérateur refuse. Sans facturation
+ * active (Super Admin › SMS), rien n'est décompté ; un SMS hors formule est refusé.
+ */
+async function debitSms(ctx: Context, count: number): Promise<SendResult | null> {
+  if (!ctx.organizationId) return null; // envois de la plateforme (codes de connexion, tests)
+  const admin = createAdminClient();
+  if (!admin) return { ok: false, status: "failed", error: "Configuration serveur incomplète." };
+  const { data, error } = await admin.rpc("sms_debit", { p_org: ctx.organizationId, p_count: count, p_reference: ctx.purpose ?? "notification" });
+  if (error) return { ok: false, status: "failed", error: "Décompte du crédit SMS impossible." };
+  const state = data as { ok: boolean; reason?: string };
+  if (state.ok) return null;
+  return state.reason === "plan"
+    ? { ok: false, status: "blocked_plan", error: "L'envoi de SMS n'est pas inclus dans la formule de l'établissement." }
+    : { ok: false, status: "blocked_credit", error: "Crédit SMS insuffisant : achetez du crédit (Communication › Crédit SMS)." };
+}
+
+async function refundSms(ctx: Context, count: number) {
+  const admin = createAdminClient();
+  if (!admin || !ctx.organizationId) return;
+  await admin.rpc("sms_refund", { p_org: ctx.organizationId, p_count: count, p_reference: ctx.purpose ?? "notification" });
+}
+
 /** SMS : Brevo en priorité, Twilio en secours. */
 export async function sendSms(message: { to: string; text: string }, ctx: Context = {}): Promise<SendResult> {
   const to = normalizePhone(message.to);
   if (!to) return { ok: false, status: "failed", error: "Numéro de téléphone invalide (format international attendu)." };
+  const segments = Math.max(1, smsSegments(message.text));
+  const blocked = await debitSms(ctx, segments);
+  if (blocked) {
+    await log("sms", null, to, ctx, blocked);
+    return blocked;
+  }
+  const result = await sendSmsNow(to, message.text, ctx);
+  if (!result.ok && ctx.organizationId) await refundSms(ctx, segments);
+  return result;
+}
+
+async function sendSmsNow(to: string, text: string, ctx: Context): Promise<SendResult> {
+  const message = { text };
   return guarded("sms", to, ctx, async () => {
     const brevo = await loadIntegration("brevo_sms");
     let brevoError: string | null = null;

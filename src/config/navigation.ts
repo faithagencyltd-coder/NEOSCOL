@@ -147,6 +147,7 @@ export const NAVIGATION: NavSection[] = [
       { href: "/communication", label: "Annonces", icon: "communication", anyOf: [], keywords: "annonces information publication familles" },
       { href: "/messages", label: "Messagerie", icon: "communication", anyOf: [], keywords: "messages conversation parents enseignants" },
       { href: "/communication/envois", label: "Centre d'envois", icon: "communication", anyOf: ["communication.send"], keywords: "sms e-mail email whatsapp envoi groupé relance impayés modèles parents personnel" },
+      { href: "/communication/credit-sms", label: "Crédit SMS", icon: "communication", anyOf: ["communication.send", "billing.manage"], keywords: "sms crédit acheter prix recharge solde" },
     ],
   },
   {
@@ -304,6 +305,7 @@ export const UNIVERSITY_NAVIGATION: NavSection[] = [
       { href: "/communication", label: "Annonces", icon: "communication", anyOf: [], keywords: "annonces" },
       { href: "/messages", label: "Messagerie", icon: "communication", anyOf: [], keywords: "messages" },
       { href: "/communication/envois", label: "Centre d'envois", icon: "communication", anyOf: ["communication.send"], keywords: "sms e-mail whatsapp envoi groupé relance" },
+      { href: "/communication/credit-sms", label: "Crédit SMS", icon: "communication", anyOf: ["communication.send", "billing.manage"], keywords: "sms crédit acheter prix recharge solde" },
     ],
   },
   {

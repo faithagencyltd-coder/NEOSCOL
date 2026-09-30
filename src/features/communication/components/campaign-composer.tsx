@@ -1,6 +1,7 @@
 "use client";
 
 import { Eye, Send } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 
@@ -10,8 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { formatMoney } from "@/lib/utils/format";
 
-import { createCampaign, previewAudience, sendCampaignBatch, type AudiencePreview } from "../campaign-actions";
+import { createCampaign, previewAudience, quoteSms, sendCampaignBatch, type AudiencePreview, type SmsQuote } from "../campaign-actions";
 import { renderText, smsSegments } from "../render";
 
 export type ComposerTemplate = { id: string; name: string; channel: "email" | "sms" | "whatsapp"; subject: string | null; body: string };
@@ -51,6 +53,7 @@ export function CampaignComposer({ templates, classes }: { templates: ComposerTe
   const [classIds, setClassIds] = useState<string[]>([]);
   const [name, setName] = useState("");
   const [preview, setPreview] = useState<AudiencePreview | null>(null);
+  const [quote, setQuote] = useState<SmsQuote | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<{ total: number; pending: number } | null>(null);
   const [pending, startTransition] = useTransition();
@@ -65,7 +68,10 @@ export function CampaignComposer({ templates, classes }: { templates: ComposerTe
     for (const id of classIds) fd.append("class_ids", id);
     return fd;
   };
-  const reset = () => setPreview(null);
+  const reset = () => {
+    setPreview(null);
+    setQuote(null);
+  };
 
   const doPreview = () =>
     startTransition(async () => {
@@ -73,6 +79,13 @@ export function CampaignComposer({ templates, classes }: { templates: ComposerTe
       const res = await previewAudience(form());
       if (!res.ok || !res.data) return setError(res.ok ? "Aperçu impossible." : res.message);
       setPreview(res.data);
+      // SMS : devis avant l'envoi (destinataires joignables × SMS par message × prix d'un SMS).
+      if (template?.channel === "sms") {
+        const first = res.data.sample[0];
+        const perMessage = Math.max(1, smsSegments(first ? renderText(template.body, first.variables) : template.body));
+        const q = await quoteSms(res.data.reachable * perMessage);
+        setQuote(q.ok && q.data ? q.data : null);
+      } else setQuote(null);
     });
 
   const doSend = () =>
@@ -176,6 +189,24 @@ export function CampaignComposer({ templates, classes }: { templates: ComposerTe
               {template?.channel === "sms" ? <p className="text-xs text-muted-foreground">{rendered.length} caractère(s) — {smsSegments(rendered)} SMS par destinataire.</p> : null}
             </div>
           ) : null}
+          {quote && quote.billing_enabled ? (
+            <div className="grid gap-1 rounded-xl border border-border bg-surface p-3 text-sm" data-testid="sms-quote">
+              <p>
+                <span className="font-semibold tabular-nums">{quote.sms}</span> SMS × {formatMoney(quote.unit_price, quote.currency)} ={" "}
+                <span className="font-semibold tabular-nums">{formatMoney(quote.amount, quote.currency)}</span>
+              </p>
+              <p className="text-xs text-muted-foreground">Crédit disponible : {quote.balance} SMS.</p>
+              {quote.missing > 0 ? (
+                <p className="text-sm font-medium text-warning">
+                  Il manque {quote.missing} SMS.{" "}
+                  <Link href={`/communication/credit-sms?manque=${quote.missing}`} className="underline">
+                    Acheter le crédit manquant
+                  </Link>
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+          {quote && !quote.included_in_plan ? <Alert tone="warning">L&apos;envoi de SMS n&apos;est pas inclus dans votre formule.</Alert> : null}
         </div>
       ) : null}
 
@@ -192,7 +223,7 @@ export function CampaignComposer({ templates, classes }: { templates: ComposerTe
         <Button type="button" variant="secondary" onClick={doPreview} disabled={pending || (audience === "classes" && classIds.length === 0)}>
           <Eye aria-hidden /> Aperçu des destinataires
         </Button>
-        <Button type="button" onClick={doSend} disabled={pending || !preview || preview.reachable === 0}>
+        <Button type="button" onClick={doSend} disabled={pending || !preview || preview.reachable === 0 || Boolean(quote && (quote.missing > 0 || !quote.included_in_plan))}>
           <Send aria-hidden /> Envoyer à {preview?.reachable ?? "…"} destinataire(s)
         </Button>
       </div>
