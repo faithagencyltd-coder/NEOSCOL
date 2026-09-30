@@ -9684,6 +9684,39 @@ export type Database = {
         }
         Returns: Json
       }
+      platform_revenue_export: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_include_test?: boolean
+        }
+        Returns: {
+          paid_at: string
+          source: string
+          organization_name: string
+          organization_code: string
+          reference: string
+          label: string
+          billing_interval: string
+          period_start: string
+          period_end: string
+          list_amount: number
+          discount_amount: number
+          promo_code: string
+          amount: number
+          currency: string
+          payment_method: string
+          provider: string
+          mode: string
+        }[]
+      }
+      platform_revenue_summary: {
+        Args: {
+          p_from: string
+          p_to: string
+        }
+        Returns: Json
+      }
       platform_revoke_user_sessions: {
         Args: {
           p_user: string
