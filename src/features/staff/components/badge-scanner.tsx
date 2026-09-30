@@ -11,7 +11,7 @@ import { scanBadge } from "@/features/staff/actions";
 import type { ScanResult } from "@/features/staff/schemas";
 import { SCAN_REJECTIONS } from "@/features/training/config";
 import { messageFor, renderVoice, voiceEvent, voiceVariables, type VoiceConfig } from "@/features/voice-checkin/messages";
-import { speak } from "@/features/voice-checkin/speak";
+import { speak, useDeviceVoices, voiceGender, GENDER_LABELS } from "@/features/voice-checkin/speak";
 import { enqueue, isNetworkError } from "@/lib/offline/outbox";
 import { cn } from "@/lib/utils/cn";
 import { useWording } from "@/components/shared/wording";
@@ -28,6 +28,36 @@ declare global {
 const RESET_AFTER_MS = 6000;
 const ROOM_KEY = "neoscol:kiosque:salle";
 const VOICE_MUTE_KEY = "neoscol:kiosque:voix-coupee";
+/** Voix exacte choisie sur cette tablette (les voix disponibles dépendent de l'appareil). */
+const VOICE_NAME_KEY = "neoscol:kiosque:voix";
+
+/** Signal sonore et vibration : deux notes montantes (accepté), note grave (refusé). */
+function feedback(accepted: boolean) {
+  try {
+    navigator.vibrate?.(accepted ? 60 : [120, 60, 120]);
+    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const notes = accepted ? [880, 1320] : [220];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = accepted ? "sine" : "square";
+      osc.frequency.value = freq;
+      const start = ctx.currentTime + i * 0.12;
+      const length = accepted ? 0.11 : 0.35;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(accepted ? 0.25 : 0.12, start + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + length);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + length + 0.02);
+    });
+    setTimeout(() => void ctx.close(), 800);
+  } catch {
+    // Son indisponible (politique du navigateur) : l'écran suffit.
+  }
+}
 
 const PROFILE_LABELS: Record<string, string> = { learner: "APPRENANT", trainer: "FORMATEUR", staff: "PERSONNEL" };
 /** Enseignement supérieur : même moteur de scan, vocabulaire universitaire. */
@@ -154,18 +184,48 @@ export function BadgeScanner({
       // Stockage indisponible : voix active par défaut.
     }
   }, []);
-  const voiceRef = useRef({ voice, muted });
+  const [voiceName, setVoiceName] = useState<string>("");
+  const [voicePicker, setVoicePicker] = useState(false);
+  const deviceVoices = useDeviceVoices(voice?.language ?? "fr");
   useEffect(() => {
-    voiceRef.current = { voice, muted };
-  }, [voice, muted]);
+    try {
+      setVoiceName(window.localStorage.getItem(VOICE_NAME_KEY) ?? ""); // eslint-disable-line react-hooks/set-state-in-effect -- préférence locale de la tablette, lue une fois
+    } catch {
+      // Stockage indisponible : voix de l'établissement.
+    }
+  }, []);
+  const voiceRef = useRef({ voice, muted, voiceName });
+  useEffect(() => {
+    voiceRef.current = { voice, muted, voiceName };
+  }, [voice, muted, voiceName]);
+  // Borne : l'écran ne se met pas en veille tant que la page de pointage est ouverte.
+  useEffect(() => {
+    let lock: { release: () => Promise<void> } | null = null;
+    const request = async () => {
+      try {
+        if (document.visibilityState === "visible" && "wakeLock" in navigator) {
+          lock = await (navigator as unknown as { wakeLock: { request: (type: "screen") => Promise<{ release: () => Promise<void> }> } }).wakeLock.request("screen");
+        }
+      } catch {
+        // Refusé (économie d'énergie) : sans effet sur le pointage.
+      }
+    };
+    void request();
+    document.addEventListener("visibilitychange", request);
+    return () => {
+      document.removeEventListener("visibilitychange", request);
+      void lock?.release().catch(() => undefined);
+    };
+  }, []);
   /** Annonce vocale du résultat (jamais de nom pour un refus). */
   const announce = useCallback((scan: ScanResult | null, queued = false) => {
-    const { voice: cfg, muted: off } = voiceRef.current;
+    const { voice: cfg, muted: off, voiceName: chosen } = voiceRef.current;
+    if (!off) feedback(queued || scan?.result === "accepted");
     if (!cfg?.available || !cfg.enabled || off) return;
     const event = voiceEvent(scan, queued);
     if (!event) return;
     const text = renderVoice(messageFor(cfg, event), voiceVariables(scan, cfg.organization), cfg.announce_names);
-    speak(text, { language: cfg.language, rate: cfg.rate, volume: cfg.volume });
+    speak(text, { language: cfg.language, rate: cfg.rate, volume: cfg.volume, pitch: cfg.pitch ?? 1, gender: cfg.voice_gender ?? "auto", voiceName: chosen || null });
     document.documentElement.dataset.lastVoice = text;
   }, []);
   const offlineRef = useRef(offline);
@@ -393,7 +453,8 @@ export function BadgeScanner({
                   </p>
                 ) : null}
                 {result.learner ? (
-                  <div className="anim-fade-up grid" style={{ "--delay": "150ms" } as React.CSSProperties}>
+                  <div className="anim-fade-up grid justify-items-center gap-1" style={{ "--delay": "150ms" } as React.CSSProperties}>
+                    <ScanPhoto fileId={result.learner.photo_file_id} name={result.learner.name} accepted={accepted} />
                     <p className="font-display text-3xl font-semibold">{result.learner.name}</p>
                     <p className="text-[#c7d3f0]">
                       Matricule {result.learner.matricule}
@@ -415,7 +476,8 @@ export function BadgeScanner({
                   </p>
                 ) : null}
                 {result.staff ? (
-                  <div className="anim-fade-up grid" style={{ "--delay": "150ms" } as React.CSSProperties}>
+                  <div className="anim-fade-up grid justify-items-center gap-1" style={{ "--delay": "150ms" } as React.CSSProperties}>
+                    <ScanPhoto fileId={result.staff.photo_file_id} name={result.staff.name} accepted={accepted} />
                     <p className="font-display text-3xl font-semibold">{result.staff.name}</p>
                     <p className="text-[#c7d3f0]">{result.staff.job_title}</p>
                   </div>
@@ -508,6 +570,16 @@ export function BadgeScanner({
                 {muted ? <VolumeX className="size-5" aria-hidden /> : <Volume2 className="size-5" aria-hidden />}
                 {muted ? "Voix coupée" : "Voix activée"}
               </button>
+            ) : null}
+            {voiceOn ? (
+              <button
+                type="button"
+                aria-expanded={voicePicker}
+                onClick={() => setVoicePicker((v) => !v)}
+                className="flex h-12 items-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-5 font-semibold backdrop-blur hover:bg-white/15"
+              >
+                Voix : {voiceName ? voiceName.split(/[-(]/)[0]!.trim() : voice?.voice_gender && voice.voice_gender !== "auto" ? GENDER_LABELS[voice.voice_gender] : "par défaut"}
+              </button>
             ) : voice?.available ? (
               // Tablette parlante disponible mais désactivée : indiquer où l'activer.
               <span className="flex h-12 items-center gap-2 rounded-2xl border border-dashed border-white/20 px-4 text-sm text-[#c7d3f0]" data-testid="voice-hint">
@@ -522,6 +594,35 @@ export function BadgeScanner({
               <Maximize className="size-5" aria-hidden /> Plein écran
             </button>
           </div>
+          {voiceOn && voicePicker ? (
+            <div className="grid gap-2 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm text-[#c7d3f0]" data-testid="kiosk-voice-picker">
+              <label className="grid gap-1.5">
+                Voix de cette tablette
+                <select
+                  value={voiceName}
+                  onChange={(e) => {
+                    setVoiceName(e.target.value);
+                    try {
+                      window.localStorage.setItem(VOICE_NAME_KEY, e.target.value);
+                    } catch {
+                      // Stockage indisponible : choix gardé pour cette session.
+                    }
+                    if (voice) speak(renderVoice(messageFor(voice, "arrival"), voiceVariables(null, voice.organization), false), { language: voice.language, rate: voice.rate, volume: voice.volume, pitch: voice.pitch ?? 1, gender: voice.voice_gender ?? "auto", voiceName: e.target.value || null });
+                  }}
+                  className="h-11 rounded-xl border border-white/20 bg-[#0b2559] px-3 text-white"
+                  aria-label="Voix de cette tablette"
+                >
+                  <option value="">Réglage de l&apos;établissement ({GENDER_LABELS[voice?.voice_gender ?? "auto"].toLowerCase()})</option>
+                  {deviceVoices.map((v) => (
+                    <option key={v.name} value={v.name}>
+                      {v.name} {voiceGender(v) === "auto" ? "" : `· ${GENDER_LABELS[voiceGender(v)]}`}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <span className="text-xs text-[#9fb4de]">{deviceVoices.length ? `${deviceVoices.length} voix disponibles sur cet appareil. Le choix s'entend aussitôt.` : "Aucune voix installée pour cette langue sur cet appareil."}</span>
+            </div>
+          ) : null}
           {cameraError ? <p className="text-sm text-amber-300">{cameraError}</p> : null}
           {training && training.rooms.length > 0 ? (
             <label className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm text-[#c7d3f0]">
@@ -623,6 +724,33 @@ export function BadgeScanner({
           </div>
         </aside>
       </main>
+    </div>
+  );
+}
+
+/**
+ * Photo d'identité de la personne scannée (le surveillant compare au visage :
+ * parade au badge prêté). Sans photo enregistrée : initiales et mention discrète.
+ */
+function ScanPhoto({ fileId, name, accepted }: { fileId?: string | null; name: string; accepted: boolean }) {
+  const [failed, setFailed] = useState(false);
+  const initials = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]!.toUpperCase())
+    .join("");
+  const ring = accepted ? "ring-emerald-300/80" : "ring-rose-300/80";
+  if (fileId && !failed) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- photo privée servie par l'API de pointage (session requise)
+      <img src={`/api/pointage/photo/${fileId}`} alt={`Photo de ${name}`} data-testid="scan-photo" onError={() => setFailed(true)} className={cn("anim-pop mb-1 size-36 rounded-3xl object-cover shadow-2xl ring-4 sm:size-44", ring)} />
+    );
+  }
+  return (
+    <div className="mb-1 grid justify-items-center gap-1" data-testid="scan-photo-missing">
+      <span className={cn("anim-pop flex size-28 items-center justify-center rounded-3xl bg-white/10 font-display text-4xl font-bold ring-4", ring)}>{initials || "?"}</span>
+      <span className="text-xs text-[#9fb4de]">Photo non enregistrée</span>
     </div>
   );
 }

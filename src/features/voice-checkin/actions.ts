@@ -26,6 +26,13 @@ export async function saveVoiceSettings(_: ActionResult | null, formData: FormDa
     p_messages: messages,
   });
   if (error) return { ok: false, message: dbErrorMessage(error) };
+  const gender = String(formData.get("voice_gender") ?? "auto");
+  const voice = await supabase.rpc("save_voice_checkin_voice", {
+    p_org: auth.context.organization.id,
+    p_gender: ["auto", "female", "male"].includes(gender) ? gender : "auto",
+    p_pitch: Number(formData.get("pitch") ?? 1),
+  });
+  if (voice.error) return { ok: false, message: dbErrorMessage(voice.error) };
   revalidatePath("/parametres/messages-vocaux");
   revalidatePath("/pointage");
   return { ok: true, message: "Messages vocaux enregistrés." };

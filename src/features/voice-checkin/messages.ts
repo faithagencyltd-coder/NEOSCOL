@@ -58,12 +58,17 @@ export const DEFAULT_VOICE_MESSAGES: Record<VoiceLanguage, Record<VoiceEvent, st
 
 export const SPEECH_LANG: Record<VoiceLanguage, string> = { fr: "fr-FR", en: "en-GB" };
 
+export type VoiceGender = "auto" | "female" | "male";
+
 export type VoiceConfig = {
   available: boolean;
   enabled: boolean;
   language: VoiceLanguage;
   rate: number;
   volume: number;
+  /** Hauteur de la voix (0,5 à 1,5) et préférence homme / femme de l'établissement. */
+  pitch?: number;
+  voice_gender?: VoiceGender;
   announce_names: boolean;
   messages: Partial<Record<VoiceEvent, string>>;
   organization: string;

@@ -15,8 +15,8 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
 import { saveVoiceSettings } from "../actions";
-import { DEFAULT_VOICE_MESSAGES, renderVoice, VOICE_EVENTS, VOICE_VARIABLES, type VoiceConfig, type VoiceEvent, type VoiceLanguage } from "../messages";
-import { speak } from "../speak";
+import { DEFAULT_VOICE_MESSAGES, renderVoice, VOICE_EVENTS, VOICE_VARIABLES, type VoiceConfig, type VoiceEvent, type VoiceGender, type VoiceLanguage } from "../messages";
+import { GENDER_LABELS, pickVoice, speak, useDeviceVoices, voiceGender } from "../speak";
 
 /** Exemple fictif clairement présenté comme tel pour l'écoute (aucune donnée réelle). */
 const SAMPLE: Record<string, string> = { prenom: "Awa", nom: "Awa KONÉ", retard: "7", cours: "Mathématiques", classe: "6e A", salle: "Salle 101", heure: "07:52" };
@@ -30,13 +30,18 @@ export function VoiceSettingsForm({ config }: { config: VoiceConfig }) {
   const [language, setLanguage] = useState<VoiceLanguage>(config.language);
   const [rate, setRate] = useState(String(config.rate));
   const [volume, setVolume] = useState(String(config.volume));
+  const [pitch, setPitch] = useState(String(config.pitch ?? 1));
+  const [gender, setGender] = useState<VoiceGender>(config.voice_gender ?? "auto");
   const [names, setNames] = useState(config.announce_names);
+  const deviceVoices = useDeviceVoices(language);
+  const chosen = pickVoice(language, gender);
   const [messages, setMessages] = useState<Record<string, string>>(() => ({ ...config.messages }));
 
   const listen = (event: VoiceEvent) => {
     const template = messages[event]?.trim() || DEFAULT_VOICE_MESSAGES[language][event];
-    speak(renderVoice(template, { ...SAMPLE, etablissement: config.organization }, names), { language, rate: Number(rate), volume: Number(volume) });
+    speak(renderVoice(template, { ...SAMPLE, etablissement: config.organization }, names), { language, rate: Number(rate), volume: Number(volume), pitch: Number(pitch), gender });
   };
+  const sample = renderVoice(DEFAULT_VOICE_MESSAGES[language].arrival, { ...SAMPLE, etablissement: config.organization }, names);
 
   return (
     <ActionForm dispatch={formAction} pending={pending} className="grid gap-5">
@@ -72,6 +77,53 @@ export function VoiceSettingsForm({ config }: { config: VoiceConfig }) {
           <div className="grid gap-2">
             <Label htmlFor="voice-volume">Volume ({Math.round(Number(volume) * 100)} %)</Label>
             <Input id="voice-volume" name="volume" type="range" min="0" max="1" step="0.1" value={volume} onChange={(e) => setVolume(e.target.value)} />
+          </div>
+        </CardContent>
+      </Card>
+
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Voix</CardTitle>
+          <CardDescription>
+            Choisissez une voix de femme ou d&apos;homme et sa hauteur. Chaque tablette peut aussi choisir sa voix exacte (bouton « Voix » sur l&apos;écran de pointage) : les voix proposées
+            dépendent de l&apos;appareil.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-2">
+            <Label htmlFor="voice-gender">Type de voix</Label>
+            <Select id="voice-gender" name="voice_gender" value={gender} onChange={(e) => setGender(e.target.value as VoiceGender)}>
+              {(Object.keys(GENDER_LABELS) as VoiceGender[]).map((g) => (
+                <option key={g} value={g}>
+                  {g === "auto" ? "Automatique (voix par défaut de la tablette)" : `Voix de ${GENDER_LABELS[g].toLowerCase()}`}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="voice-pitch">Hauteur ({pitch})</Label>
+            <Input id="voice-pitch" name="pitch" type="range" min="0.5" max="1.5" step="0.1" value={pitch} onChange={(e) => setPitch(e.target.value)} />
+          </div>
+          <div className="grid gap-2 sm:col-span-2" data-testid="device-voices">
+            <p className="text-sm font-medium">Voix disponibles sur cet appareil ({deviceVoices.length})</p>
+            {deviceVoices.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Aucune voix {language === "fr" ? "française" : "anglaise"} sur cet appareil : la tablette restera silencieuse. Installez une voix dans les réglages de l&apos;appareil (synthèse vocale).</p>
+            ) : (
+              <ul className="grid gap-1.5 sm:grid-cols-2">
+                {deviceVoices.map((v) => (
+                  <li key={v.name} className="flex items-center justify-between gap-2 rounded-xl border border-border px-3 py-2 text-sm">
+                    <span className="min-w-0 truncate">
+                      {v.name} <span className="text-xs text-muted-foreground">· {voiceGender(v) === "auto" ? "type inconnu" : GENDER_LABELS[voiceGender(v)]}</span>
+                      {chosen?.name === v.name ? <span className="ml-1 text-xs font-semibold text-primary">· retenue</span> : null}
+                    </span>
+                    <Button type="button" size="sm" variant="ghost" onClick={() => speak(sample, { language, rate: Number(rate), volume: Number(volume), pitch: Number(pitch), voiceName: v.name })} aria-label={`Écouter la voix ${v.name}`}>
+                      <Volume2 aria-hidden />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </CardContent>
       </Card>

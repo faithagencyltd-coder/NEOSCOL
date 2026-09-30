@@ -9252,9 +9252,11 @@ export type Database = {
           language: string | null
           messages: Json
           organization_id: string
+          pitch: number
           rate: number
           updated_at: string
           updated_by: string | null
+          voice_gender: string
           volume: number
         }
         Insert: {
@@ -9263,9 +9265,11 @@ export type Database = {
           language?: string | null
           messages?: Json
           organization_id: string
+          pitch?: number
           rate?: number
           updated_at?: string
           updated_by?: string | null
+          voice_gender?: string
           volume?: number
         }
         Update: {
@@ -9274,9 +9278,11 @@ export type Database = {
           language?: string | null
           messages?: Json
           organization_id?: string
+          pitch?: number
           rate?: number
           updated_at?: string
           updated_by?: string | null
+          voice_gender?: string
           volume?: number
         }
         Relationships: [
@@ -10918,6 +10924,14 @@ export type Database = {
           p_volume: number
           p_announce_names: boolean
           p_messages: Json
+        }
+        Returns: undefined
+      }
+      save_voice_checkin_voice: {
+        Args: {
+          p_org: string
+          p_gender: string
+          p_pitch: number
         }
         Returns: undefined
       }

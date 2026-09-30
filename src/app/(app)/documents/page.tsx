@@ -102,7 +102,7 @@ export default async function DocumentsPage({ searchParams }: PageProps<"/docume
         { key: "certificat", title: family === "training" ? "Attestation d'inscription" : "Certificat de scolarité", description: "Modèle officiel, cachet et signature.", icon: FileBadge, href: `/api/documents/certificats/${student.id}`, allowed: generate },
         { key: "bulletin", title: "Bulletin", description: "Notes, moyennes, rang, appréciations.", icon: FileCheck2, href: card ? `/api/documents/bulletins/${card.id}` : null, allowed: reports, missing: "Bulletin non calculé" },
         { key: "releve", title: "Relevé de notes", description: "Moyennes de l'année par matière et par période.", icon: FileSpreadsheet, href: card ? `/api/documents/releves/${student.id}` : null, allowed: reports, missing: "Aucun bulletin" },
-        { key: "carte", title: family === "training" ? "Carte apprenant" : family === "higher" ? "Carte étudiant" : "Carte scolaire", description: "Format carte CR80 avec photo et QR.", icon: CreditCard, href: `/api/documents/cartes/${student.id}`, allowed: generate },
+        { key: "carte", title: family === "training" ? "Carte apprenant" : family === "higher" ? "Carte étudiant" : "Carte scolaire", description: "Carte 3D au design de l'établissement (recto-verso CR80, photo, QR).", icon: CreditCard, href: `/api/documents/cartes/${student.id}`, allowed: generate },
       ]
     : [];
   // Séparation des modules : le bulletin et son relevé n'existent que dans le module scolaire.

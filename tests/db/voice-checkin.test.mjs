@@ -61,4 +61,26 @@ describe("Voice Check-in", () => {
       assert.ok(r.staff.first_name && r.staff.name.startsWith(r.staff.first_name));
     });
   });
+
+  test("voix : homme, femme ou automatique et hauteur ; direction uniquement ; lue par la tablette ; audit", async () => {
+    await as(USERS.admin, async (q) => {
+      const [{ c: before }] = await q("select voice_checkin_config($1) as c", [ORG_DEMO]);
+      assert.deepEqual([before.voice_gender, Number(before.pitch)], ["auto", 1], "automatique et hauteur normale par défaut");
+      await q("select save_voice_checkin_voice($1, 'female', 1.2)", [ORG_DEMO]);
+      const [{ c }] = await q("select voice_checkin_config($1) as c", [ORG_DEMO]);
+      assert.deepEqual([c.voice_gender, Number(c.pitch), c.enabled], ["female", 1.2, false], "voix enregistrée, sans activer les messages");
+      assert.match(await rejects(q("select save_voice_checkin_voice($1, 'robot', 1)", [ORG_DEMO])), /Type de voix invalide/);
+      assert.match(await rejects(q("select save_voice_checkin_voice($1, 'male', 3)", [ORG_DEMO])), /Hauteur de la voix invalide/);
+      assert.equal((await q("select count(*)::int as n from audit_logs where action = 'settings.voice_checkin' and summary = 'Voix de la tablette modifiée'"))[0].n, 1);
+      await q("select save_voice_checkin_voice($1, 'female', 1.2)", [ORG_DEMO]);
+      assert.equal((await q("select count(*)::int as n from audit_logs where action = 'settings.voice_checkin' and summary = 'Voix de la tablette modifiée'"))[0].n, 1, "sans changement : pas de nouvelle ligne d'audit");
+      await switchTo(q, USERS.kiosk);
+      const [{ c: kiosk }] = await q("select voice_checkin_config($1) as c", [ORG_DEMO]);
+      assert.equal(kiosk.voice_gender, "female", "la tablette lit la voix choisie");
+      for (const user of [USERS.kiosk, USERS.teacher, USERS.secretary, USERS.otherOrgAdmin]) {
+        await switchTo(q, user);
+        assert.match(await rejects(q("select save_voice_checkin_voice($1, 'male', 1)", [ORG_DEMO])), /Permission refusée/);
+      }
+    });
+  });
 });
