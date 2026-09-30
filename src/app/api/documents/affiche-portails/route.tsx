@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   const url = await portalLinkUrl(req.organization.code);
   const images = await loadImages(req.supabase, req.organization);
   const pdf = await renderToBuffer(
-    <Document title={`Portails — ${req.organization.name}`} author="NéoScol" language="fr">
+    <Document title={`Portails — ${req.organization.name}`} author="NEOSCOOL" language="fr">
       <PortalPosterPage
         organization={req.organization}
         images={images}

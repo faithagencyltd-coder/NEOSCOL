@@ -118,7 +118,7 @@ describe("Import et export", () => {
       const byId = Object.fromEntries(after.map((s) => [s.id, s]));
       assert.equal(byId[pupils[0].id].national_id, "CI00000001");
       assert.equal(byId[pupils[1].id].national_id, "CI00000002");
-      assert.equal(byId[pupils[1].id].last_name, pupils[1].last_name, "identité NéoScol conservée");
+      assert.equal(byId[pupils[1].id].last_name, pupils[1].last_name, "identité NEOSCOOL conservée");
       assert.equal(byId[pupils[2].id].national_id, "CI99999999", "identifiant existant jamais écrasé");
       const jobs = await q("select status, ok_rows, error_rows, updated_rows from country_connect_jobs where organization_id = $1 order by status desc", [ORG_DEMO]);
       assert.deepEqual(jobs.map((j) => j.status), ["checked", "applied"]);

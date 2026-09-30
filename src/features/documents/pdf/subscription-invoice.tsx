@@ -27,7 +27,7 @@ export type SubscriptionInvoiceData = {
 const NAVY = "#0B1F3A";
 const BLUE = "#1D63ED";
 
-/** Facture d'abonnement NéoScol (SYSTÈME A) — émise par NéoScol à l'établissement. */
+/** Facture d'abonnement NEOSCOOL (SYSTÈME A) — émise par NEOSCOOL à l'établissement. */
 export function SubscriptionInvoicePage({ data }: { data: SubscriptionInvoiceData }) {
   const row = (label: string, value: string | null) => (
     <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 5, borderBottomWidth: 1, borderBottomColor: COLORS.line }}>
@@ -44,7 +44,7 @@ export function SubscriptionInvoicePage({ data }: { data: SubscriptionInvoiceDat
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
         <View>
           <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 24, color: NAVY }}>
-            Néo<Text style={{ color: BLUE }}>Scol</Text>
+            NEO<Text style={{ color: BLUE }}>SCOOL</Text>
           </Text>
           <Text style={{ fontSize: 9, color: COLORS.muted, marginTop: 2 }}>Logiciel de gestion scolaire</Text>
         </View>
@@ -84,7 +84,7 @@ export function SubscriptionInvoicePage({ data }: { data: SubscriptionInvoiceDat
         </View>
         <View style={{ flexDirection: "row", padding: 8, borderBottomWidth: 1, borderBottomColor: COLORS.line }}>
           <View style={{ flex: 3 }}>
-            <Text style={{ fontFamily: "Helvetica-Bold" }}>Abonnement NéoScol — {pdfText(data.plan_name)}</Text>
+            <Text style={{ fontFamily: "Helvetica-Bold" }}>Abonnement NEOSCOOL — {pdfText(data.plan_name)}</Text>
             <Text style={{ color: COLORS.muted, fontSize: 9 }}>Périodicité : {pdfText(data.interval_label)}</Text>
           </View>
           <Text style={{ flex: 2 }}>{pdfText(data.period)}</Text>
@@ -110,7 +110,7 @@ export function SubscriptionInvoicePage({ data }: { data: SubscriptionInvoiceDat
 
       <View style={{ position: "absolute", bottom: 30, left: 40, right: 40, borderTopWidth: 1, borderTopColor: COLORS.line, paddingTop: 8 }}>
         <Text style={{ fontSize: 8, color: COLORS.muted, textAlign: "center" }}>
-          Facture d&apos;abonnement au logiciel NéoScol. Distincte des factures de scolarité émises par l&apos;établissement à ses familles.
+          Facture d&apos;abonnement au logiciel NEOSCOOL. Distincte des factures de scolarité émises par l&apos;établissement à ses familles.
         </Text>
       </View>
     </Page>

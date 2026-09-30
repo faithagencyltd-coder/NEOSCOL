@@ -186,6 +186,6 @@ export class PayDunyaProvider implements PaymentProvider {
   }
 
   async refundPayment(): Promise<{ supported: false; message: string }> {
-    return { supported: false, message: "Remboursement non disponible via l'API PayDunya : à traiter depuis le tableau de bord PayDunya puis à enregistrer dans NéoScol." };
+    return { supported: false, message: "Remboursement non disponible via l'API PayDunya : à traiter depuis le tableau de bord PayDunya puis à enregistrer dans NEOSCOOL." };
   }
 }

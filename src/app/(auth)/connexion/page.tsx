@@ -23,7 +23,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/connexion
         <h1 className="text-[1.75rem] font-bold leading-tight text-[#0b1f4d] sm:text-3xl dark:text-white">
           Connexion à votre <span className="bg-gradient-to-r from-[#1d63ed] to-[#0ea5e9] bg-clip-text text-transparent">espace</span>
         </h1>
-        <p className="text-sm text-muted-foreground">Accédez à votre portail NéoScol</p>
+        <p className="text-sm text-muted-foreground">Accédez à votre portail NEOSCOOL</p>
       </div>
       {expired ? (
         <Alert tone="warning" title="Lien expiré">

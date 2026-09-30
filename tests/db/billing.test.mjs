@@ -1,4 +1,4 @@
-// Abonnements NéoScol : formules, essai, paiement vérifié, idempotence, impayés, isolation, permissions.
+// Abonnements NEOSCOOL : formules, essai, paiement vérifié, idempotence, impayés, isolation, permissions.
 import { after, describe, test } from "node:test";
 import assert from "node:assert/strict";
 
@@ -22,7 +22,7 @@ async function checkout(q, plan = "MODULE_SCOLAIRE", interval = "YEARLY", provid
 const confirm = (q, c, { amount = c.amount, mode = "test", currency = "XOF" } = {}) =>
   q("select public.billing_confirm_payment('simulation', $1, $2, $3, $4, $5) as r", [mode, `SIM-${c.reference}`, c.reference, amount, currency]).then((rows) => rows[0].r);
 
-describe("Abonnements NéoScol", () => {
+describe("Abonnements NEOSCOOL", () => {
   test("formules proposées : Module Scolaire unique à 15 000, annuel -30 %, prix barré et économie exacts, essai 20 jours", async () => {
     await as("anon", async (q) => {
       const plans = await q("select code, monthly_price, annual_price, annual_list_price, annual_savings, annual_discount_percent::int as d, currency, trial_days from subscription_plans order by sort_order");

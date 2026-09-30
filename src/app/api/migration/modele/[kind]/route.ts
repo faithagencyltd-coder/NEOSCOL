@@ -32,7 +32,7 @@ export async function GET(_request: NextRequest, ctx: RouteContext<"/api/migrati
   return new Response(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="neoscol-modele-${kind}.csv"`,
+      "Content-Disposition": `attachment; filename="neoscool-modele-${kind}.csv"`,
       "Cache-Control": "private, no-store",
     },
   });

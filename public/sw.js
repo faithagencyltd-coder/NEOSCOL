@@ -1,4 +1,4 @@
-/* NéoScol — service worker.
+/* NEOSCOOL — service worker.
  * Règle de sécurité : AUCUNE donnée personnelle n'est mise en cache (appareils
  * partagés). Seules les ressources statiques et la page hors ligne le sont ;
  * les pages et les API passent toujours par le réseau. */

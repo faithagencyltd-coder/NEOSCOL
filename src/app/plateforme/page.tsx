@@ -15,7 +15,7 @@ import { requireSession } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, formatNumber } from "@/lib/utils/format";
 
-export const metadata: Metadata = { title: { absolute: "Établissements · NéoScol Console" } };
+export const metadata: Metadata = { title: { absolute: "Établissements · NEOSCOOL Console" } };
 
 /** Console du Super Administrateur : tous les établissements de la plateforme. */
 export default async function PlatformPage() {

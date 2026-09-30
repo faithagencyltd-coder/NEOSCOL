@@ -3,7 +3,7 @@ import { timingSafeEqual } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
- * Cycle de vie quotidien des abonnements NéoScol : fin d'essai (rappels J-7, J-3,
+ * Cycle de vie quotidien des abonnements NEOSCOOL : fin d'essai (rappels J-7, J-3,
  * J-1, jour J), factures de renouvellement, impayés (PAST_DUE → GRACE_PERIOD →
  * RESTRICTED → EXPIRED), paiements abandonnés. À appeler chaque jour avec
  * « Authorization: Bearer <CRON_SECRET> ». L'accès est de toute façon calculé

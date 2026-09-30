@@ -42,7 +42,7 @@ export const PROVIDERS: ProviderDefinition[] = [
     docs: "Brevo → SMTP & API → Clés API. Vérifiez l'expéditeur (domaine) dans Brevo.",
     fields: [
       { key: "sender_email", label: "Adresse d'expédition", required: true, pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, placeholder: "no-reply@votre-domaine.com" },
-      { key: "sender_name", label: "Nom d'expéditeur", placeholder: "NéoScol" },
+      { key: "sender_name", label: "Nom d'expéditeur", placeholder: "NEOSCOOL" },
     ],
     secret: { label: "Clé API Brevo", hint: "Commence par « xkeysib- »." },
   },
@@ -52,7 +52,7 @@ export const PROVIDERS: ProviderDefinition[] = [
     channel: "sms",
     description: "SMS transactionnels (codes, alertes). Fournisseur SMS principal.",
     docs: "Brevo → SMS : achetez des crédits SMS et choisissez un nom d'expéditeur (11 caractères max).",
-    fields: [{ key: "sender", label: "Nom d'expéditeur SMS", required: true, pattern: /^[A-Za-z0-9 ]{3,11}$/, placeholder: "NeoScol" }],
+    fields: [{ key: "sender", label: "Nom d'expéditeur SMS", required: true, pattern: /^[A-Za-z0-9 ]{3,11}$/, placeholder: "NEOSCOOL" }],
     secret: { label: "Clé API Brevo", hint: "Même type de clé que pour l'e-mail (peut être la même)." },
   },
   {
@@ -178,7 +178,7 @@ export async function brevoSendEmail(
       method: "POST",
       headers: { "api-key": args.apiKey, "content-type": "application/json", accept: "application/json" },
       body: JSON.stringify({
-        sender: { email: args.senderEmail, name: args.senderName || "NéoScol" },
+        sender: { email: args.senderEmail, name: args.senderName || "NEOSCOOL" },
         to: [{ email: args.to }],
         subject: args.subject,
         htmlContent: args.html,

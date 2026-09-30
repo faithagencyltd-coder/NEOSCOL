@@ -65,7 +65,7 @@ describe("Chiffrement des clés", () => {
 describe("Fournisseurs", () => {
   test("Brevo e-mail : endpoint officiel, en-tête api-key, expéditeur et destinataire", async () => {
     const { impl, calls } = fakeFetch([{ status: 201, body: { messageId: "<m1@brevo>" } }]);
-    const r = await p.brevoSendEmail({ apiKey: "xkeysib-K", senderEmail: "no-reply@neoscol.app", senderName: "NéoScol", to: "a@b.co", subject: "S", html: "<p>h</p>" }, impl);
+    const r = await p.brevoSendEmail({ apiKey: "xkeysib-K", senderEmail: "no-reply@neoscol.app", senderName: "NEOSCOOL", to: "a@b.co", subject: "S", html: "<p>h</p>" }, impl);
     assert.deepEqual(r, { ok: true, id: "<m1@brevo>" });
     assert.equal(calls[0].url, "https://api.brevo.com/v3/smtp/email");
     assert.equal(calls[0].init.headers["api-key"], "xkeysib-K");

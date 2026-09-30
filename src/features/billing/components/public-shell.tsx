@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 import { Logo } from "@/components/shared/logo";
 
-/** Enveloppe des pages publiques de l'offre NéoScol (tarifs, inscription). */
+/** Enveloppe des pages publiques de l'offre NEOSCOOL (tarifs, inscription). */
 export function PublicShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh bg-background">
@@ -13,7 +13,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
           <div className="absolute -right-16 bottom-[-10rem] size-[28rem] rounded-full bg-blue-500/30 blur-3xl [animation:blob_24s_ease-in-out_infinite_reverse]" />
         </div>
         <nav className="relative mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-8" aria-label="Navigation principale">
-          <Link href="/tarifs" aria-label="NéoScol — tarifs">
+          <Link href="/tarifs" aria-label="NEOSCOOL — tarifs">
             <Logo inverted tagline />
           </Link>
           <div className="flex items-center gap-2 text-sm font-semibold">
@@ -28,7 +28,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
       </header>
       {children}
       <footer className="border-t border-border py-8 text-center text-xs text-muted-foreground">
-        NéoScol — Plus qu&apos;un logiciel, une vision pour l&apos;éducation · Prix en F CFA (XOF), hors frais éventuels du moyen de paiement.
+        NEOSCOOL — Plus qu&apos;un logiciel, une vision pour l&apos;éducation · Prix en F CFA (XOF), hors frais éventuels du moyen de paiement.
       </footer>
     </div>
   );

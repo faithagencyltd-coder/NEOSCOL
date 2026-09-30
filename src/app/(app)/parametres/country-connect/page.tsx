@@ -72,7 +72,7 @@ export default async function CountryConnectPage() {
           canManage ? (
             <QuickFormDialog
               title="Nouvelle correspondance"
-              description="Colonnes du fichier officiel et champ NéoScol correspondant."
+              description="Colonnes du fichier officiel et champ NEOSCOOL correspondant."
               triggerLabel="Nouvelle correspondance"
               action={saveMapping}
               fields={mappingFields(null)}
@@ -81,7 +81,7 @@ export default async function CountryConnectPage() {
         }
       />
       <Alert tone="info" title="Aucune connexion directe inventée">
-        NéoScol ne se connecte à aucune plateforme nationale sans API officielle publiée. Les échanges se font par fichiers au format demandé par l&apos;administration. Un import ne modifie que le{" "}
+        NEOSCOOL ne se connecte à aucune plateforme nationale sans API officielle publiée. Les échanges se font par fichiers au format demandé par l&apos;administration. Un import ne modifie que le{" "}
         {lower} : l&apos;identité des élèves n&apos;est jamais écrasée.
       </Alert>
 
@@ -94,7 +94,7 @@ export default async function CountryConnectPage() {
       <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle>Correspondances</CardTitle>
-          <CardDescription>Modèles fournis pour {o?.country_name ?? "votre pays"} par NéoScol, et formats propres à l&apos;établissement.</CardDescription>
+          <CardDescription>Modèles fournis pour {o?.country_name ?? "votre pays"} par NEOSCOOL, et formats propres à l&apos;établissement.</CardDescription>
         </CardHeader>
         {all.length === 0 ? (
           <CardContent>
@@ -162,7 +162,7 @@ export default async function CountryConnectPage() {
           <CardHeader>
             <CardTitle>Importer un fichier officiel</CardTitle>
             <CardDescription>
-              Les élèves sont retrouvés par matricule NéoScol, ou par nom, prénom et date de naissance. Vérifiez d&apos;abord : rien n&apos;est enregistré avant votre confirmation.
+              Les élèves sont retrouvés par matricule NEOSCOOL, ou par nom, prénom et date de naissance. Vérifiez d&apos;abord : rien n&apos;est enregistré avant votre confirmation.
             </CardDescription>
           </CardHeader>
           <CardContent>

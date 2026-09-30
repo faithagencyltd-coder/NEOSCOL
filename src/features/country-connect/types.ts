@@ -1,6 +1,6 @@
-/** Champs NéoScol utilisables dans une correspondance Country Connect (liste fermée, vérifiée en base). */
+/** Champs NEOSCOOL utilisables dans une correspondance Country Connect (liste fermée, vérifiée en base). */
 export const CC_FIELDS = [
-  { key: "matricule", label: "Matricule NéoScol" },
+  { key: "matricule", label: "Matricule NEOSCOOL" },
   { key: "national_id", label: "Identifiant national" },
   { key: "last_name", label: "Nom" },
   { key: "first_name", label: "Prénom" },

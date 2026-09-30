@@ -96,7 +96,7 @@ export async function sendSms(message: { to: string; text: string }, ctx: Contex
     const brevo = await loadIntegration("brevo_sms");
     let brevoError: string | null = null;
     if (brevo) {
-      const r = await brevoSendSms({ apiKey: brevo.secret, sender: brevo.config.sender ?? "NeoScol", to, content: message.text });
+      const r = await brevoSendSms({ apiKey: brevo.secret, sender: brevo.config.sender ?? "NEOSCOOL", to, content: message.text });
       if (r.ok) return { provider: "brevo_sms", result: { ok: true, id: r.id } };
       brevoError = r.error;
     }

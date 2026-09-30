@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatDate, formatMoney } from "@/lib/utils/format";
 import { isUuid } from "@/lib/utils/search-params";
 
-/** Facture d'abonnement NéoScol en PDF : la RLS limite l'accès à l'établissement (billing.read) et à la plateforme. */
+/** Facture d'abonnement NEOSCOOL en PDF : la RLS limite l'accès à l'établissement (billing.read) et à la plateforme. */
 export async function GET(request: NextRequest, ctx: RouteContext<"/api/abonnement/factures/[id]">) {
   const { id } = await ctx.params;
   if (!isUuid(id)) return errorResponse(404, "Facture introuvable.");
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/api/abonneme
   if (!inv || !inv.organization) return errorResponse(404, "Facture introuvable.");
   const d = (value: string | null) => (value ? formatDate(value, "fr-FR", { day: "2-digit", month: "long", year: "numeric" }) : null);
   const pdf = await renderToBuffer(
-    <Document title={`Facture ${inv.invoice_number}`} author="NéoScol" language="fr">
+    <Document title={`Facture ${inv.invoice_number}`} author="NEOSCOOL" language="fr">
       <SubscriptionInvoicePage
         data={{
           invoice_number: inv.invoice_number,

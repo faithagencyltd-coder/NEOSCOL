@@ -261,7 +261,7 @@ export function SignupForm({
         ) : null}
       </fieldset>
 
-      <Checkbox name="terms" label="J'accepte les conditions d'utilisation de NéoScol et le traitement des données de l'établissement." required />
+      <Checkbox name="terms" label="J'accepte les conditions d'utilisation de NEOSCOOL et le traitement des données de l'établissement." required />
       {errors.terms ? <p className="-mt-3 text-xs font-medium text-danger">{errors.terms[0]}</p> : null}
       {captcha ? <TurnstileWidget key={state ? JSON.stringify(state) : "init"} siteKey={captcha.siteKey} /> : null}
 

@@ -20,12 +20,12 @@ export default function ConfigurationPage() {
         <CardHeader>
           <CardTitle>Configuration de Supabase requise</CardTitle>
           <CardDescription>
-            NéoScol a besoin d&apos;un projet Supabase (base PostgreSQL, authentification, stockage) pour fonctionner.
+            NEOSCOOL a besoin d&apos;un projet Supabase (base PostgreSQL, authentification, stockage) pour fonctionner.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 text-sm">
           <div className="grid gap-1.5 rounded-xl border border-primary/30 bg-primary-soft/60 p-4">
-            <p className="font-semibold text-foreground">Essayer NéoScol sur votre ordinateur (données de démonstration)</p>
+            <p className="font-semibold text-foreground">Essayer NEOSCOOL sur votre ordinateur (données de démonstration)</p>
             <p>
               Démarrez Docker Desktop, arrêtez ce serveur (<kbd>Ctrl</kbd>+<kbd>C</kbd>) puis lancez dans le dossier du projet :
             </p>

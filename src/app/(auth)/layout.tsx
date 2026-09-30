@@ -46,7 +46,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </span>
           <span className="grid gap-1">
             <span className="font-display text-5xl font-bold tracking-tight">
-              Néo<span className="bg-gradient-to-r from-sky-300 to-cyan-300 bg-clip-text text-transparent">Scol</span>
+              NEO<span className="bg-gradient-to-r from-sky-300 to-cyan-300 bg-clip-text text-transparent">SCOOL</span>
             </span>
             <span className="text-base text-sky-100/85">
               Plus qu&apos;un logiciel, une <strong className="text-white">vision</strong> pour{" "}
@@ -112,10 +112,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="mb-6 flex w-full max-w-lg items-center justify-between">
           <span className="flex items-center gap-2.5 lg:hidden">
             <LogoMark className="size-10" />
-            <span className="font-display text-xl font-bold text-[#0b1f4d] dark:text-white">NéoScol</span>
+            <span className="font-display text-xl font-bold text-[#0b1f4d] dark:text-white">NEOSCOOL</span>
           </span>
           <span className="ml-auto hidden items-center gap-3 text-sm sm:flex">
-            <span className="font-display font-semibold text-primary">NéoScol</span>
+            <span className="font-display font-semibold text-primary">NEOSCOOL</span>
             <span className="h-4 w-px bg-border" aria-hidden />
             <span className="text-muted-foreground">Votre réussite, notre priorité</span>
             <span aria-hidden className="h-0.5 w-8 rounded-full bg-amber-400" />

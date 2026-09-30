@@ -12,7 +12,7 @@ async function requirePlatformAdmin(): Promise<{ ok: true } | { ok: false; messa
   if (!(await getSessionContext())) return { ok: false, message: "Votre session a expiré. Reconnectez-vous." };
   const supabase = await createClient();
   const { data } = await supabase.rpc("is_platform_admin");
-  return data ? { ok: true } : { ok: false, message: "Réservé à l'administration de la plateforme NéoScol." };
+  return data ? { ok: true } : { ok: false, message: "Réservé à l'administration de la plateforme NEOSCOOL." };
 }
 
 const list = (v: FormDataEntryValue | null) =>
@@ -90,7 +90,7 @@ export async function saveCountry(_: ActionResult | null, formData: FormData): P
   revalidatePath("/plateforme/pays");
   revalidatePath("/inscription");
   revalidatePath("/plateforme/country-connect");
-  return { ok: true, message: `Pays ${d.name} enregistré : disponible dans NéoScol.` };
+  return { ok: true, message: `Pays ${d.name} enregistré : disponible dans NEOSCOOL.` };
 }
 
 export async function saveCurrency(_: ActionResult | null, formData: FormData): Promise<ActionResult> {

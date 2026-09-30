@@ -1,4 +1,4 @@
-# Essayer NéoScol sur votre ordinateur
+# Essayer NEOSCOOL sur votre ordinateur
 
 Une seule commande lance la vraie application avec les données de démonstration
 (3 établissements fictifs : groupe scolaire, centre de formation, université).
@@ -34,7 +34,7 @@ Démarrez **Docker Desktop**, puis dans le dossier `neoscol` :
 | Windows (PowerShell) | `npm run demo:windows` |
 
 La première fois, comptez 5 à 10 minutes (téléchargement de la base de données).
-Quand « NéoScol démarre » s'affiche, ouvrez **http://localhost:3000**.
+Quand « NEOSCOOL démarre » s'affiche, ouvrez **http://localhost:3000**.
 
 ## 4. Se connecter
 
@@ -102,7 +102,7 @@ installé. Le dépôt contient la configuration (`.devcontainer/`).
    ```
 
 4. À la fin, VS Code propose **Ouvrir dans le navigateur** (port 3000) ; sinon, onglet
-   **Ports** → ligne « NéoScol » → icône globe. Depuis VS Code sur l'ordinateur,
+   **Ports** → ligne « NEOSCOOL » → icône globe. Depuis VS Code sur l'ordinateur,
    http://localhost:3000 fonctionne aussi (le port est redirigé).
 
 Arrêtez le Codespace quand vous avez fini (le quota gratuit mensuel est limité) :

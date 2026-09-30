@@ -47,7 +47,7 @@ export default async function PortalLinkPage({ params, searchParams }: PageProps
           </p>
         </div>
         <Button asChild variant="secondary">
-          <Link href="/connexion">Page de connexion NéoScol</Link>
+          <Link href="/connexion">Page de connexion NEOSCOOL</Link>
         </Button>
       </div>
     );

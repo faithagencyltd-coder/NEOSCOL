@@ -75,7 +75,7 @@ export function PastRecordsTab({
               ? `Dossier créé par import des données historiques le ${formatDate(student.created_at, "fr-FR", { dateStyle: "long" })}.`
               : student.origin === "manual_history"
                 ? `Ancien dossier saisi manuellement le ${formatDate(student.created_at, "fr-FR", { dateStyle: "long" })}.`
-                : "Dossier créé dans NéoScol."}
+                : "Dossier créé dans NEOSCOOL."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -253,7 +253,7 @@ export function PastRecordsTab({
           <CardHeader className="flex-row flex-wrap items-center justify-between gap-2">
             <div className="grid gap-1">
               <CardTitle>Paiements historiques</CardTitle>
-              <CardDescription>Versements enregistrés dans l&apos;ancien système (hors factures NéoScol)</CardDescription>
+              <CardDescription>Versements enregistrés dans l&apos;ancien système (hors factures NEOSCOOL)</CardDescription>
             </div>
             <Badge tone="primary">
               <Wallet className="size-3.5" aria-hidden /> Total {formatMoney(paymentsTotal, currency)}

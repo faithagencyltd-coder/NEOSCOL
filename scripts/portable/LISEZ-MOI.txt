@@ -1,5 +1,5 @@
-﻿NéoScol — démonstration locale (Windows, sans Docker)
-=====================================================
+﻿NEOSCOOL — démonstration locale (Windows, sans Docker)
+======================================================
 
 CE QU'IL FAUT
   - Windows 10 ou 11 (64 bits)
@@ -8,12 +8,12 @@ CE QU'IL FAUT
   - 2 Go d'espace disque libre
 
 LANCER
-  1. NéoScol est livré en 3 fichiers .zip :
-       NeoScol-1-application.zip, NeoScol-2-postgresql.zip, NeoScol-3-services.zip
+  1. NEOSCOOL est livré en 3 fichiers .zip :
+       NEOSCOOL-1-application.zip, NEOSCOOL-2-postgresql.zip, NEOSCOOL-3-services.zip
      Pour CHACUN des 3 : clic droit > « Extraire tout… » > dans la case du dossier,
      écrivez   C:\   puis « Extraire ».
-     Les 3 se rangent alors dans le même dossier  C:\NeoScol
-  2. Ouvrez C:\NeoScol et double-cliquez sur  DEMARRER.cmd
+     Les 3 se rangent alors dans le même dossier  C:\NEOSCOOL
+  2. Ouvrez C:\NEOSCOOL et double-cliquez sur  DEMARRER.cmd
      - Premier lancement : 1 à 3 minutes (création de la base de données).
      - Si Windows affiche « Windows a protégé votre ordinateur » :
        cliquez « Informations complémentaires » puis « Exécuter quand même ».
@@ -23,7 +23,7 @@ LANCER
 
 UTILISER SUR LES AUTRES APPAREILS (MÊME WI-FI)
   Téléphones, tablettes et autres ordinateurs connectés au MÊME Wi-Fi que ce poste
-  peuvent utiliser NéoScol dans leur navigateur, sans rien installer :
+  peuvent utiliser NEOSCOOL dans leur navigateur, sans rien installer :
   1. Lancez DEMARRER.cmd sur ce poste (il doit rester allumé et la fenêtre ouverte).
   2. La fenêtre affiche l'adresse à ouvrir, par exemple :
          Sur les autres appareils du même Wi-Fi :  http://192.168.1.20:3000
@@ -33,7 +33,7 @@ UTILISER SUR LES AUTRES APPAREILS (MÊME WI-FI)
      Windows (Paramètres > Réseau et Internet > Wi-Fi > Profil réseau : Privé).
   Chacun se connecte avec son propre compte. Le « Lien des portails » (menu Portails)
   et ses QR codes utilisent automatiquement cette adresse Wi-Fi.
-  Hors du Wi-Fi (Internet), NéoScol n'est pas accessible : c'est une installation locale.
+  Hors du Wi-Fi (Internet), NEOSCOOL n'est pas accessible : c'est une installation locale.
 
 GUIDE COMPLET
   Ouvrez  GUIDE-DEMONSTRATION.html  (double-clic) : parcours pas à pas de chaque
@@ -60,11 +60,11 @@ REMETTRE À ZÉRO
   Double-cliquez sur  REINITIALISER.cmd
 
 EN CAS DE PROBLÈME
-  - « le port 3000 est déjà utilisé » : une autre fenêtre NéoScol (ou un autre
+  - « le port 3000 est déjà utilisé » : une autre fenêtre NEOSCOOL (ou un autre
     serveur, par ex. « npm run dev ») est ouverte : fermez-la puis relancez.
   - Les journaux détaillés sont dans  donnees\journaux
   - Les données restent sur cet ordinateur : rien n'est envoyé sur Internet.
     Seuls les appareils du même réseau local peuvent ouvrir l'application.
 
-Contenu : application NéoScol, PostgreSQL 17, GoTrue (authentification),
+Contenu : application NEOSCOOL, PostgreSQL 17, GoTrue (authentification),
 PostgREST (API). Données entièrement fictives.

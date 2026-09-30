@@ -17,7 +17,7 @@ export function ServiceWorkerRegistration() {
 }
 
 /** « Installer l'application » : invite native (Chromium) ou instructions (iOS). */
-export function InstallAppButton({ label = "Installer l'application", appName = "NéoScol" }: { label?: string; appName?: string } = {}) {
+export function InstallAppButton({ label = "Installer l'application", appName = "NEOSCOOL" }: { label?: string; appName?: string } = {}) {
   const [event, setEvent] = useState<InstallEvent | null>(null);
   const [accepted, setAccepted] = useState(false);
   const standalone = useSyncExternalStore(

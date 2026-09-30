@@ -448,7 +448,7 @@ export function ImportWizard({ resume, studentLabel }: { resume: WizardResume | 
 
       {/* 3. Correspondance */}
       {step === 2 && upload ? (
-        <StepCard direction={direction} title="Correspondance avec les champs NéoScol" description="Chaque champ NéoScol reçoit une colonne de votre fichier (ou n'est pas importé). Les champs * sont obligatoires.">
+        <StepCard direction={direction} title="Correspondance avec les champs NEOSCOOL" description="Chaque champ NEOSCOOL reçoit une colonne de votre fichier (ou n'est pas importé). Les champs * sont obligatoires.">
           {[...new Set(fields.map((f) => f.group))].map((group) => (
             <fieldset key={group} className="grid gap-2">
               <legend className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group}</legend>
@@ -612,7 +612,7 @@ export function ImportWizard({ resume, studentLabel }: { resume: WizardResume | 
                         </span>
                       </div>
                       <div className="grid gap-0.5 rounded-xl border border-border p-3 text-sm">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Déjà dans NéoScol</span>
+                        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Déjà dans NEOSCOOL</span>
                         <a href={`/eleves/${d.id}`} target="_blank" rel="noopener" className="inline-flex items-center gap-1 font-semibold text-primary hover:underline">
                           {d.last_name} {d.first_name} <ExternalLink className="size-3.5" aria-hidden />
                         </a>

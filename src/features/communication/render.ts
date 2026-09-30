@@ -26,7 +26,7 @@ export function renderEmailHtml(template: string, variables: Record<string, unkn
 <div style="max-width:560px;margin:24px auto;background:#ffffff;border-radius:12px;padding:24px">
 <p style="margin:0 0 16px;font-weight:bold;color:#1d4ed8">${escapeHtml(organization)}</p>
 <div style="font-size:15px;line-height:1.6">${body}</div>
-<p style="margin:24px 0 0;font-size:12px;color:#6b7280">Message envoyé par ${escapeHtml(organization)} via NéoScol.</p>
+<p style="margin:24px 0 0;font-size:12px;color:#6b7280">Message envoyé par ${escapeHtml(organization)} via NEOSCOOL.</p>
 </div></body></html>`;
 }
 

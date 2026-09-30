@@ -10,10 +10,10 @@ const body = DM_Sans({ subsets: ["latin"], variable: "--font-body", display: "sw
 const heading = Poppins({ subsets: ["latin"], weight: ["500", "600", "700"], variable: "--font-heading", display: "swap" });
 
 export const metadata: Metadata = {
-  title: { default: "NéoScol", template: "%s · NéoScol" },
+  title: { default: "NEOSCOOL", template: "%s · NEOSCOOL" },
   description: "Plus qu'un logiciel, une vision pour l'éducation. Gestion scolaire et de formation.",
-  applicationName: "NéoScol",
-  appleWebApp: { capable: true, title: "NéoScol", statusBarStyle: "black-translucent" },
+  applicationName: "NEOSCOOL",
+  appleWebApp: { capable: true, title: "NEOSCOOL", statusBarStyle: "black-translucent" },
   icons: { apple: "/icons/apple-touch-icon.png" },
 };
 

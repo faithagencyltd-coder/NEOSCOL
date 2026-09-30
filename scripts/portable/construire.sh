@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Assemble le paquet portable NéoScol (sans Docker).
+# Assemble le paquet portable NEOSCOOL (sans Docker).
 #
 #   PG_DIR=…/native  AUTH_BIN=…/auth.exe  AUTH_MIGRATIONS=…/migrations  POSTGREST_BIN=…/postgrest.exe \
 #   SHARP_DIR=…/@img/sharp-win32-x64 (facultatif)  scripts/portable/construire.sh windows /chemin/sortie

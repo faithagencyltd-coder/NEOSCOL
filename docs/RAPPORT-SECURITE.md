@@ -1,4 +1,4 @@
-# Rapport de sécurité NéoScol
+# Rapport de sécurité NEOSCOOL
 
 Ce rapport porte sur les étapes P3 (intégrations) et P4 (sécurité).
 

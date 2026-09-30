@@ -17,7 +17,7 @@ export default function OfflinePage() {
       <div className="grid gap-2">
         <h1 className="text-xl font-semibold">Vous êtes hors ligne</h1>
         <p className="text-sm text-muted-foreground">
-          NéoScol a besoin d&apos;une connexion pour afficher vos données. Pour protéger la confidentialité, aucune information personnelle n&apos;est
+          NEOSCOOL a besoin d&apos;une connexion pour afficher vos données. Pour protéger la confidentialité, aucune information personnelle n&apos;est
           conservée sur cet appareil.
         </p>
       </div>

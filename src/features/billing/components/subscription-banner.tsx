@@ -5,7 +5,7 @@ import { getAccessState } from "@/features/billing/queries";
 import { cn } from "@/lib/utils/cn";
 
 /**
- * Bandeau d'état de l'abonnement NéoScol : essai (jours restants), échéance
+ * Bandeau d'état de l'abonnement NEOSCOOL : essai (jours restants), échéance
  * dépassée, lecture seule. Les responsables (billing.read) voient le lien de paiement ;
  * en lecture seule, tous les membres sont informés.
  */
@@ -25,7 +25,7 @@ export async function SubscriptionBanner({ organizationId, canBill }: { organiza
   } else if (state.access === "read_only") {
     tone = "danger";
     icon = Lock;
-    text = "Établissement en lecture seule : l'abonnement NéoScol est à régler. Toutes vos données sont conservées et consultables.";
+    text = "Établissement en lecture seule : l'abonnement NEOSCOOL est à régler. Toutes vos données sont conservées et consultables.";
   } else if (state.status === "TRIALING") {
     if (!canBill) return null;
     tone = days <= 3 ? "warning" : "info";

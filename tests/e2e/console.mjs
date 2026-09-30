@@ -1,4 +1,4 @@
-// P6 — « NéoScol Console » installable : manifeste propre (portée /plateforme,
+// P6 — « NEOSCOOL Console » installable : manifeste propre (portée /plateforme,
 // icône, raccourcis), distinct de l'application des établissements, accessible
 // sans session (exigence des navigateurs), réservé au Super Admin, alerte de
 // double authentification, aucune page mise en cache.
@@ -23,13 +23,13 @@ async function login(identifier) {
   return page;
 }
 
-console.log("\n=== 1. Manifeste « NéoScol Console » ===");
+console.log("\n=== 1. Manifeste « NEOSCOOL Console » ===");
 const anon = await (await browser.newContext()).newPage();
 const res = await anon.request.get(`${base}/console.webmanifest`, { maxRedirects: 0 });
 const manifest = await res.json().catch(() => ({}));
 check(res.status() === 200 && res.headers()["content-type"].includes("manifest+json"), "manifeste accessible sans session (téléchargé par le navigateur)");
 check(manifest.id === "/plateforme" && manifest.scope === "/plateforme" && manifest.start_url === "/plateforme", "application distincte : id, portée et démarrage /plateforme");
-check(manifest.short_name === "NéoScol Console" && manifest.display === "standalone", "nom et fenêtre propres");
+check(manifest.short_name === "NEOSCOOL Console" && manifest.display === "standalone", "nom et fenêtre propres");
 check(manifest.icons?.length === 3 && manifest.shortcuts?.length === 4, "icônes (dont maskable) et raccourcis");
 for (const icon of manifest.icons ?? []) {
   const r = await anon.request.get(`${base}${icon.src}`);
@@ -42,14 +42,14 @@ console.log("\n=== 2. Console du Super Admin ===");
 const sa = await login("superadmin@demo.neoscol.app");
 await sa.goto(`${base}/plateforme`);
 check((await sa.locator('link[rel="manifest"]').getAttribute("href")) === "/console.webmanifest", "la console déclare son propre manifeste");
-check((await sa.title()).includes("NéoScol Console"), "titre de fenêtre « NéoScol Console »");
+check((await sa.title()).includes("NEOSCOOL Console"), "titre de fenêtre « NEOSCOOL Console »");
 check(await sa.getByText(/Console non protégée par la double authentification/).isVisible(), "alerte : double authentification non activée");
-check(await sa.getByText(/NéoScol Console s'installe|Installer NéoScol Console/).first().isVisible(), "installation proposée");
+check(await sa.getByText(/NEOSCOOL Console s'installe|Installer NEOSCOOL Console/).first().isVisible(), "installation proposée");
 await sa.screenshot({ path: `${out}/01-console.png`, fullPage: false });
 
 console.log("\n=== 3. Application des établissements inchangée ; console refusée ===");
 const admin = await login("admin@demo.neoscol.app");
-check((await admin.locator('link[rel="manifest"]').getAttribute("href"))?.includes("manifest.webmanifest"), "application des établissements : manifeste NéoScol habituel");
+check((await admin.locator('link[rel="manifest"]').getAttribute("href"))?.includes("manifest.webmanifest"), "application des établissements : manifeste NEOSCOOL habituel");
 check((await admin.goto(`${base}/plateforme`)).status() === 404, "administrateur d'établissement : console introuvable");
 const sw = await (await anon.request.get(`${base}/sw.js`)).text();
 check(sw.includes('request.mode === "navigate"') && sw.includes("fetch(request)"), "service worker : pages toujours chargées depuis le serveur (rien de sensible en cache)");

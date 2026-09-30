@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils/cn";
 
 /**
- * Emblème NéoScol : « N » en dégradé bleu coiffé d'une toque, posé sur un
+ * Emblème NEOSCOOL : « N » en dégradé bleu coiffé d'une toque, posé sur un
  * livre ouvert (accent orange). `inverted` : version pour fond sombre.
  */
 export function LogoMark({ className, inverted = false }: { className?: string; inverted?: boolean }) {
@@ -41,10 +41,10 @@ export function Logo({
     <span className={cn("inline-flex items-center gap-3", className)}>
       <LogoMark inverted={inverted} />
       <span className="flex flex-col leading-tight">
-        <span className={cn("font-display text-xl font-bold", inverted ? "text-white" : "text-foreground")}>NéoScol</span>
+        <span className={cn("font-display text-xl font-bold", inverted ? "text-white" : "text-foreground")}>NEOSCOOL</span>
         {tagline ? (
-          <span className={cn("text-[11px]", inverted ? "text-sidebar-foreground" : "text-muted-foreground")}>
-            Éduquer aujourd&apos;hui, bâtir demain
+          <span className={cn("max-w-44 text-[11px] leading-snug", inverted ? "text-sidebar-foreground" : "text-muted-foreground")}>
+            Plus qu&apos;un logiciel, une vision pour l&apos;éducation.
           </span>
         ) : null}
       </span>

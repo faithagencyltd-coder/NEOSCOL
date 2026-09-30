@@ -72,7 +72,7 @@ export default async function PlatformCountriesPage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="grid gap-1">
           <h2 className="text-2xl font-bold">Pays et devises</h2>
-          <p className="text-sm text-muted-foreground">Un seul NéoScol pour tous les pays : un nouveau pays s&apos;ajoute ici, sans nouvelle version du logiciel.</p>
+          <p className="text-sm text-muted-foreground">Un seul NEOSCOOL pour tous les pays : un nouveau pays s&apos;ajoute ici, sans nouvelle version du logiciel.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="secondary">

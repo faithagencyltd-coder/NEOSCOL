@@ -380,7 +380,7 @@ describe("Vérification publique et recherche", () => {
       const [result] = await q("select * from verify_document($1)", [code]);
       assert.equal(result.status, "valid");
       assert.equal(result.holder, "K. BAMBA");
-      assert.equal(result.organization_name, "Groupe Scolaire Démo NéoScol");
+      assert.equal(result.organization_name, "Groupe Scolaire Démo NEOSCOOL");
       assert.deepEqual(Object.keys(result).sort(), [
         "expires_at", "holder", "issued_at", "kind", "number", "organization_city", "organization_name", "status", "title",
       ]);

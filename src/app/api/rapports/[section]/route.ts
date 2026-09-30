@@ -33,7 +33,7 @@ export async function GET(_request: NextRequest, ctx: RouteContext<"/api/rapport
   return new Response(toCsv(REPORT_SECTIONS[section].columns, data.rows), {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="neoscol-${section}-${date}.csv"`,
+      "Content-Disposition": `attachment; filename="neoscool-${section}-${date}.csv"`,
       "Cache-Control": "private, no-store",
     },
   });

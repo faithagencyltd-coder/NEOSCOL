@@ -19,7 +19,7 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/api/document
   const pages = await learnerBadgePages(req, [studentId]);
   if (pages.length === 0) return errorResponse(409, `Aucun badge actif : générez d'abord le badge de l'${who}.`);
   const pdf = await renderToBuffer(
-    <Document title={`Badge ${who}`} author="NéoScol" language="fr">
+    <Document title={`Badge ${who}`} author="NEOSCOOL" language="fr">
       {pages}
     </Document>,
   );

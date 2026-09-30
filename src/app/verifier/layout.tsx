@@ -7,7 +7,7 @@ export default function VerifyLayout({ children }: { children: React.ReactNode }
       <Logo tagline />
       {children}
       <p className="text-center text-xs text-muted-foreground">
-        Service public de vérification NéoScol : seules les informations strictement nécessaires sont affichées.
+        Service public de vérification NEOSCOOL : seules les informations strictement nécessaires sont affichées.
       </p>
     </main>
   );

@@ -40,7 +40,7 @@ function DateItem({ icon: Icon, label, value, hint }: { icon: typeof CalendarClo
 }
 
 /**
- * Abonnement NéoScol de l'établissement (SYSTÈME A) : formule, statut, échéances,
+ * Abonnement NEOSCOOL de l'établissement (SYSTÈME A) : formule, statut, échéances,
  * factures, paiements, historique. Distinct des finances de l'établissement.
  */
 export default async function SubscriptionPage({ searchParams }: PageProps<"/abonnement">) {
@@ -94,7 +94,7 @@ export default async function SubscriptionPage({ searchParams }: PageProps<"/abo
         </div>
       );
     }
-    return <EmptyState icon={CreditCard} title="Aucun abonnement" description="Contactez l'administration NéoScol." />;
+    return <EmptyState icon={CreditCard} title="Aucun abonnement" description="Contactez l'administration NEOSCOOL." />;
   }
   const isModule4 = subscription.plan?.code === MULTI_MODULES_PLAN;
   const components = ((subscription as { components?: string[] }).components ?? []) as Module4Component[];
@@ -114,7 +114,7 @@ export default async function SubscriptionPage({ searchParams }: PageProps<"/abo
     <div className="grid gap-6">
       <PageHeader
         title="Mon abonnement"
-        description="Votre abonnement au logiciel NéoScol. Les frais de scolarité et paiements des familles se gèrent dans Finances."
+        description="Votre abonnement au logiciel NEOSCOOL. Les frais de scolarité et paiements des familles se gèrent dans Finances."
         actions={
           <Button asChild variant="secondary">
             <Link href="/tarifs" target="_blank">
@@ -125,7 +125,7 @@ export default async function SubscriptionPage({ searchParams }: PageProps<"/abo
       />
 
       {params.bienvenue ? (
-        <Alert tone="success" title="Bienvenue sur NéoScol !">
+        <Alert tone="success" title="Bienvenue sur NEOSCOOL !">
           <span className="inline-flex items-center gap-2">
             <PartyPopper className="size-4" aria-hidden /> Votre établissement est créé et votre essai gratuit de {trialTotal} jours a commencé. Aucun paiement n&apos;est demandé
             pendant l&apos;essai.
@@ -211,7 +211,7 @@ export default async function SubscriptionPage({ searchParams }: PageProps<"/abo
                       <XCircle aria-hidden /> Annuler l&apos;abonnement
                     </Button>
                   }
-                  title="Annuler l'abonnement NéoScol ?"
+                  title="Annuler l'abonnement NEOSCOOL ?"
                   description={`L'accès reste complet jusqu'au ${fmt(endAt)}. Ensuite, l'établissement passe en lecture seule : aucune donnée n'est supprimée et vous pourrez réactiver à tout moment.`}
                   confirmLabel="Confirmer l'annulation"
                   tone="danger"
@@ -293,7 +293,7 @@ export default async function SubscriptionPage({ searchParams }: PageProps<"/abo
       <div className="grid gap-6 xl:grid-cols-2">
         <Card className="anim-fade-up overflow-hidden" style={{ "--delay": "80ms" } as React.CSSProperties}>
           <CardHeader>
-            <CardTitle>Factures NéoScol</CardTitle>
+            <CardTitle>Factures NEOSCOOL</CardTitle>
             <CardDescription>Consultables, téléchargeables et imprimables en PDF.</CardDescription>
           </CardHeader>
           {invoices.length === 0 ? (
@@ -345,7 +345,7 @@ export default async function SubscriptionPage({ searchParams }: PageProps<"/abo
         <Card className="anim-fade-up overflow-hidden" style={{ "--delay": "140ms" } as React.CSSProperties}>
           <CardHeader>
             <CardTitle>Paiements</CardTitle>
-            <CardDescription>Chaque tentative, avec sa référence NéoScol.</CardDescription>
+            <CardDescription>Chaque tentative, avec sa référence NEOSCOOL.</CardDescription>
           </CardHeader>
           {transactions.length === 0 ? (
             <CardContent>
@@ -415,7 +415,7 @@ export default async function SubscriptionPage({ searchParams }: PageProps<"/abo
           ) : (
             <ol className="stagger relative grid gap-3 border-l-2 border-border pl-5">
               {events.map((e) => {
-                const who = e.user ? [e.user.first_name, e.user.last_name].filter(Boolean).join(" ") || e.user.email : "NéoScol";
+                const who = e.user ? [e.user.first_name, e.user.last_name].filter(Boolean).join(" ") || e.user.email : "NEOSCOOL";
                 const meta = (e.metadata ?? {}) as Record<string, unknown>;
                 return (
                   <li key={e.id} className="relative">

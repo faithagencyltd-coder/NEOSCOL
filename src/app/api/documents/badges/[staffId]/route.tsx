@@ -36,7 +36,7 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/api/document
 
   const images = await loadImages(req.supabase, req.organization, staff.photo_path);
   const pdf = await renderToBuffer(
-    <Document title={`Badge ${badge.number}`} author="NéoScol" language="fr">
+    <Document title={`Badge ${badge.number}`} author="NEOSCOOL" language="fr">
       <StaffBadgePage
         images={images}
         data={{

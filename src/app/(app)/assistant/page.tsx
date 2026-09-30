@@ -12,7 +12,7 @@ export default async function AssistantPage() {
   await requirePermission("assistant.use");
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-5">
-      <PageHeader title="Assistant NéoScol" description="Recherchez, résumez les statistiques, repérez les anomalies. Chaque question est journalisée." />
+      <PageHeader title="Assistant NEOSCOOL" description="Recherchez, résumez les statistiques, repérez les anomalies. Chaque question est journalisée." />
       <AssistantChat llm={await aiAvailable()} />
     </div>
   );

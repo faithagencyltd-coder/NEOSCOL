@@ -39,10 +39,10 @@ export async function sendVerificationEmail(args: { userId: string; organization
   const result = await sendEmail(
     {
       to: args.email,
-      subject: "Activez votre établissement sur NéoScol",
+      subject: "Activez votre établissement sur NEOSCOOL",
       html: `<!doctype html><html lang="fr"><body style="font-family:Arial,sans-serif;background:#f4f7fb;padding:24px;color:#0b1f4d">
 <div style="max-width:520px;margin:auto;background:#fff;border-radius:16px;padding:28px">
-<h1 style="font-size:20px;margin:0 0 16px">NéoScol</h1><p>${hello}</p>
+<h1 style="font-size:20px;margin:0 0 16px">NEOSCOOL</h1><p>${hello}</p>
 <p>Confirmez votre adresse e-mail pour activer <strong>${escape(args.orgName)}</strong>. Le lien est valable 48 heures.</p>
 <p style="margin:28px 0"><a href="${escape(link)}" style="background:#1d63ed;color:#fff;padding:12px 22px;border-radius:12px;text-decoration:none;font-weight:600">Activer mon établissement</a></p>
 <p style="color:#64748b;font-size:12px">Si vous n'êtes pas à l'origine de cette inscription, ignorez cet e-mail.</p></div></body></html>`,

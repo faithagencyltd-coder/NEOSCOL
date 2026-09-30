@@ -1,5 +1,5 @@
 /**
- * Manifeste de « NéoScol Console » : application installable distincte
+ * Manifeste de « NEOSCOOL Console » : application installable distincte
  * (identifiant, portée /plateforme, icône et fenêtre propres) pour le
  * Super Administrateur. Mises à jour automatiques : c'est le site lui-même.
  * Aucune donnée n'est stockée sur l'ordinateur (le service worker ne met
@@ -9,9 +9,9 @@ export function GET() {
   return Response.json(
     {
       id: "/plateforme",
-      name: "NéoScol Console — Super Administration",
-      short_name: "NéoScol Console",
-      description: "Centre de contrôle de la plateforme NéoScol : établissements, abonnements, paiements, intégrations, sécurité.",
+      name: "NEOSCOOL Console — Super Administration",
+      short_name: "NEOSCOOL Console",
+      description: "Centre de contrôle de la plateforme NEOSCOOL : établissements, abonnements, paiements, intégrations, sécurité.",
       lang: "fr",
       start_url: "/plateforme",
       scope: "/plateforme",

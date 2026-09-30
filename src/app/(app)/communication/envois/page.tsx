@@ -120,7 +120,7 @@ export default async function SendingCenterPage({ searchParams }: PageProps<"/co
       />
       {disabled.length ? (
         <Alert tone="warning" title="Canal non activé par la plateforme">
-          {disabled.map((c) => CHANNEL[c]).join(", ")} : le fournisseur n&apos;est pas encore activé par NéoScol. Les destinataires de ces canaux seront marqués « canal non configuré » — aucun message n&apos;est simulé.
+          {disabled.map((c) => CHANNEL[c]).join(", ")} : le fournisseur n&apos;est pas encore activé par NEOSCOOL. Les destinataires de ces canaux seront marqués « canal non configuré » — aucun message n&apos;est simulé.
         </Alert>
       ) : null}
 

@@ -22,7 +22,7 @@ const choiceSchema = z.object({
 async function billingContext(permission: "billing.manage" | "billing.read") {
   const context = await getSessionContext();
   if (!context?.organization) return { ok: false as const, message: "Votre session a expiré. Reconnectez-vous." };
-  if (!can(context, permission)) return { ok: false as const, message: "Seule la direction de l'établissement peut gérer l'abonnement NéoScol." };
+  if (!can(context, permission)) return { ok: false as const, message: "Seule la direction de l'établissement peut gérer l'abonnement NEOSCOOL." };
   return { ok: true as const, context, organizationId: context.organization.id };
 }
 
@@ -62,9 +62,9 @@ export async function startSubscriptionCheckout(_: ActionResult | null, formData
       reference: checkout.reference,
       amount: checkout.amount,
       currency: checkout.currency,
-      description: `Abonnement NéoScol ${checkout.plan_name} — ${checkout.interval === "YEARLY" ? "annuel" : "mensuel"} — facture ${checkout.invoice_number}`,
-      itemName: `NéoScol ${checkout.plan_name} (${checkout.interval === "YEARLY" ? "12 mois" : "1 mois"})`,
-      storeName: "NéoScol",
+      description: `Abonnement NEOSCOOL ${checkout.plan_name} — ${checkout.interval === "YEARLY" ? "annuel" : "mensuel"} — facture ${checkout.invoice_number}`,
+      itemName: `NEOSCOOL ${checkout.plan_name} (${checkout.interval === "YEARLY" ? "12 mois" : "1 mois"})`,
+      storeName: "NEOSCOOL",
       returnUrl,
       cancelUrl: `${returnUrl}&annule=1`,
       callbackUrl: `${base}/api/webhooks/payments/${setup.code}${secret ? `?cle=${encodeURIComponent(secret)}` : ""}`,
