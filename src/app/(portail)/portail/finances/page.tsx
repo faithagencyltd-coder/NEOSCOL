@@ -5,7 +5,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { requirePortal } from "@/features/portal/context";
+import { requirePortalSection } from "@/features/portal/context";
 import { getStudentFinance } from "@/features/portal/queries";
 import { todayIn } from "@/lib/dates";
 import { INVOICE_PAYMENT_STATUS, PAYMENT_METHOD } from "@/lib/labels";
@@ -23,7 +23,7 @@ const REMINDER_KIND: Record<string, string> = {
 
 /** Situation financière : factures, échéancier, paiements et reçus (jamais restreinte). */
 export default async function PortalFinancePage() {
-  const { organization, student, status } = await requirePortal();
+  const { organization, student, status } = await requirePortalSection("finances");
   if (!student) return <EmptyState icon={Wallet} title="Aucun dossier rattaché" />;
   const { invoices, payments, reminders, installments } = await getStudentFinance(organization.id, student.id);
   const currency = organization.currency;

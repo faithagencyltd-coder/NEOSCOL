@@ -21,20 +21,20 @@ export const metadata: Metadata = { title: "Plus" };
 
 /** Profil, matières et enseignants, raccourcis, compte et déconnexion. */
 export default async function PortalMorePage() {
-  const { context, organization, parent, students, student } = await requirePortal();
+  const { context, organization, parent, students, student, shows } = await requirePortal();
   const [subjects, record] = student ? await Promise.all([getPortalSubjects(student.id), getPortalSchoolRecord(student.id)]) : [[], null];
-  const university = !parent && isHigherOrg(organization.type);
+  const university = isHigherOrg(organization.type);
   const vocabulary = vocabularyFor(organization.type);
   const links: { href: string; label: string; icon: LucideIcon }[] = [
     ...(university
       ? [
-          { href: "/portail/parcours", label: "Mon parcours universitaire", icon: Route },
-          { href: "/portail/notes", label: "Notes des évaluations", icon: NotebookPen },
+          ...(shows("results") ? [{ href: "/portail/parcours", label: parent ? "Parcours universitaire" : "Mon parcours universitaire", icon: Route }] : []),
+          ...(shows("grades") ? [{ href: "/portail/notes", label: "Notes des évaluations", icon: NotebookPen }] : []),
         ]
       : [{ href: "/portail/parcours", label: parent ? "Parcours scolaire" : vocabulary.family === "training" ? "Mon parcours de formation" : "Mon parcours scolaire", icon: Route }]),
-    ...(parent ? [{ href: "/portail/emploi-du-temps", label: "Emploi du temps", icon: CalendarClock }] : []),
+    ...(parent && shows("timetable") ? [{ href: "/portail/emploi-du-temps", label: "Emploi du temps", icon: CalendarClock }] : []),
     ...(parent ? [] : [{ href: "/portail/badge", label: "Mon badge (QR de pointage)", icon: IdCard }]),
-    { href: "/portail/documents", label: "Documents officiels", icon: FileCheck2 },
+    ...(shows("documents") ? [{ href: "/portail/documents", label: "Documents officiels", icon: FileCheck2 }] : []),
     ...(parent ? [] : [{ href: "/portail/finances", label: "Situation financière", icon: Wallet }]),
     { href: "/portail/annonces", label: "Annonces et notifications", icon: Megaphone },
     { href: "/portail/messages", label: "Messages de l'établissement", icon: MessagesSquare },

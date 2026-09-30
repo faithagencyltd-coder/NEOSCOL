@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { SchoolHistory } from "@/features/portal/components/school-record";
-import { requirePortal } from "@/features/portal/context";
+import { requirePortalSection } from "@/features/portal/context";
 import { getPortalSchoolRecord } from "@/features/portal/queries";
 import { AcademicRecordTab } from "@/features/university/components/student-tabs";
 import { isHigherOrg, universityConfigOf } from "@/features/university/config";
@@ -19,15 +19,15 @@ export const metadata: Metadata = { title: "Mon parcours" };
  * années, résultats annuels validés et années antérieures importées.
  */
 export default async function PortalPathPage() {
-  const { organization, parent, student } = await requirePortal();
+  const { organization, parent, student } = await requirePortalSection("results");
   if (isHigherOrg(organization.type)) {
     const university = universityConfigOf(organization.type, organization.settings);
-    if (!university || !university.features.student_portal || !student) notFound();
+    if (!university || !university.features[parent ? "parent_portal" : "student_portal"] || !student) notFound();
     const record = await studentAcademicRecord(organization.id, student.id);
     return (
       <>
         <div className="grid gap-1">
-          <h1 className="text-xl font-bold">Mon parcours universitaire</h1>
+          <h1 className="text-xl font-bold">{parent ? `Parcours universitaire de ${student.first_name}` : "Mon parcours universitaire"}</h1>
           <p className="text-sm text-muted-foreground">Inscriptions de toutes les années, crédits capitalisés, stages, mémoire, soutenances et diplômes.</p>
         </div>
         <AcademicRecordTab record={record} config={university} />

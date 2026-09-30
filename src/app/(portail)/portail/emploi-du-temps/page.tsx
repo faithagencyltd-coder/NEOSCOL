@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Card } from "@/components/ui/card";
 import { LockedFeature } from "@/features/portal/components/locked-feature";
-import { requirePortal } from "@/features/portal/context";
+import { requirePortalSection } from "@/features/portal/context";
 import { getPortalTimetable } from "@/features/portal/queries";
 import { isoWeekday, todayIn, WEEKDAYS } from "@/lib/dates";
 import { cn } from "@/lib/utils/cn";
@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils/cn";
 export const metadata: Metadata = { title: "Emploi du temps" };
 
 export default async function PortalTimetablePage() {
-  const { organization, parent, student, status } = await requirePortal();
+  const { organization, parent, student, status } = await requirePortalSection("timetable");
   if (!student) return <EmptyState icon={CalendarClock} title="Aucun dossier rattaché" />;
   const header = (
     <div className="grid gap-1">

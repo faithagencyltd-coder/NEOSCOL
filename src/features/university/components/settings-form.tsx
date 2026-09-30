@@ -12,16 +12,16 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { saveUniversityConfig } from "@/features/university/actions";
-import { ESTABLISHMENT_KINDS, FEATURE_LABELS, RETAKE_RULES, UNIVERSITY_FEATURES, type UniversityConfig } from "@/features/university/config";
+import { ESTABLISHMENT_KINDS, FEATURE_LABELS, PARENT_SECTION_LABELS, PARENT_SECTIONS, RETAKE_RULES, UNIVERSITY_FEATURES, type UniversityConfig } from "@/features/university/config";
 import type { ActionResult } from "@/lib/utils/action-result";
 
-function Toggle({ name, label, hint, defaultChecked }: { name: string; label: string; hint: string; defaultChecked: boolean }) {
+function Toggle({ name, label, hint, defaultChecked }: { name: string; label: string; hint?: string; defaultChecked: boolean }) {
   return (
     <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border p-4 transition-colors hover:border-primary/40">
       <input type="checkbox" name={name} defaultChecked={defaultChecked} className="mt-0.5 size-5 accent-[var(--primary)]" />
       <span className="grid gap-0.5">
         <span className="font-medium">{label}</span>
-        <span className="text-sm text-muted-foreground">{hint}</span>
+        {hint ? <span className="text-sm text-muted-foreground">{hint}</span> : null}
       </span>
     </label>
   );
@@ -60,6 +60,14 @@ export function UniversitySettingsForm({ config }: { config: UniversityConfig })
         <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
           {UNIVERSITY_FEATURES.map((f) => (
             <Toggle key={f} name={`feature_${f}`} label={FEATURE_LABELS[f].label} hint={FEATURE_LABELS[f].hint} defaultChecked={config.features[f]} />
+          ))}
+        </div>
+      </FormSection>
+
+      <FormSection title="Portail parent : informations visibles" description="S'applique quand le « Portail parent » est activé. Les parents ne voient que leur enfant et seulement ce qui est coché ; les résultats restent visibles après publication par le jury uniquement.">
+        <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2" data-testid="parent-sections">
+          {PARENT_SECTIONS.map((k) => (
+            <Toggle key={k} name={`parent_section_${k}`} label={PARENT_SECTION_LABELS[k]} defaultChecked={config.parentSections[k]} />
           ))}
         </div>
       </FormSection>

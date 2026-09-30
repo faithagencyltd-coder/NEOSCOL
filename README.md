@@ -67,6 +67,8 @@ Mot de passe commun : `NeoScol-Demo-2026!`
 | Élève : profil « Élève », matricule `DEMO-26-00001`, né le `12/03/2014`, mot de passe commun | Élève (Kofi) |
 | `formation@demo.neoscol.app` | Administrateur du centre de formation (apprenants, sessions) |
 | `universite@demo.neoscol.app` | Administratrice de l'université (étudiants, promotions, crédits ECTS) |
+| `parent.formation@demo.neoscol.app` | Parent d'une apprenante du centre de formation (portail parent) |
+| `parent.universite@demo.neoscol.app` | Parent d'un étudiant (portail parent universitaire, activé pour la démo) |
 | `superadmin@demo.neoscol.app` | Super administrateur plateforme |
 | `pointage@demo.neoscol.app` | Tablette de pointage (scan des badges) |
 
@@ -227,6 +229,18 @@ désactivée ; les abonnements déjà payés la conservent au même prix.
   niveaux existants ; désactiver un niveau masque ses éléments sans rien supprimer ; centres de formation et
   universités inchangés ; présences et pointage tablette non modifiés.
 - **Tests** : `tests/db/module-scolaire.test.mjs` (12), `tests/e2e/module-scolaire.mjs` (51 contrôles).
+
+## Portails parents (formation professionnelle et université)
+
+- **Centre de formation** : Parents et tuteurs, accès portail depuis la fiche du parent, « Espace parent » mobile
+  (présences, évaluations, parcours de formation, échéancier et paiements, documents). Démo : `parent.formation@…`.
+- **Université** : « Portail parent » **désactivé par défaut** (étudiants souvent majeurs), activable dans
+  Paramètres universitaires, avec le choix des informations visibles (résultats et crédits, notes, présences,
+  paiements, documents, emploi du temps). Désactivé : la base ne renvoie aucune donnée d'étudiant à un compte
+  parent (`app.my_portal_student_ids`) ; section masquée : onglet retiré et adresse directe refusée. Les
+  universités ayant déjà des parents reliés gardent leur portail actif. Menus : Parents et tuteurs, Espace parent,
+  lien du portail parent. Démo : `parent.universite@…`. Portails étudiant et enseignant inchangés.
+- **Tests** : `tests/db/portail-parent-universite.test.mjs` (4), `tests/e2e/portails-parents.mjs` (19 contrôles).
 
 ## NeoScool Console (Super Admin installable)
 

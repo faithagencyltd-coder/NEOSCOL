@@ -245,6 +245,7 @@ export const UNIVERSITY_NAVIGATION: NavSection[] = [
       { href: "/universite/inscription", label: "Inscription administrative", icon: "enrollLearner", anyOf: ["enrollments.manage"], keywords: "inscription réinscription frais filière parcours niveau" },
       { href: "/inscriptions", label: "Inscriptions", icon: "enrollments", anyOf: ["enrollments.read"], keywords: "dossiers inscription validation" },
       { href: "/classes", label: "Promotions", icon: "classes", anyOf: ["academic.read"], keywords: "promotion groupe effectif" },
+      { href: "/parents", label: "Parents et tuteurs", icon: "guardians", anyOf: ["guardians.read"], feature: "parent_portal", keywords: "parent tuteur famille portail parent" },
       { href: "/universite/enseignants", label: "Enseignants", icon: "staff", anyOf: ["staff.read"], keywords: "professeur maître de conférences chargé de cours vacataire grade" },
       { href: "/emploi-du-temps", label: "Emploi du temps", icon: "timetable", anyOf: ["timetable.read", "timetable.manage"], keywords: "cours CM TD TP salles horaires" },
     ],
@@ -312,7 +313,8 @@ export const UNIVERSITY_NAVIGATION: NavSection[] = [
     label: "Portails",
     items: [
       { href: "/portail", label: "Espace étudiant", icon: "portal", anyOf: ["portal.student"], feature: "student_portal", keywords: "portail étudiant" },
-      { href: "/parametres/portails", label: "Lien des portails", icon: "portalLink", anyOf: ["settings.manage"], keywords: "lien connexion étudiants enseignants" },
+      { href: "/portail?espace=parent", label: "Espace parent", icon: "portal", anyOf: ["portal.parent"], feature: "parent_portal", keywords: "portail parent enfant" },
+      { href: "/parametres/portails", label: "Lien des portails", icon: "portalLink", anyOf: ["settings.manage"], keywords: "lien connexion étudiants enseignants parents" },
     ],
   },
   {

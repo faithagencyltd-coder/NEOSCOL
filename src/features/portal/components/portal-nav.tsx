@@ -17,9 +17,12 @@ const MORE: Item = { href: "/portail/plus", label: "Plus", icon: LayoutGrid };
 /** Portail étudiant (université) : résultats, crédits et parcours à la place des notes. */
 const RESULTS: Item = { href: "/portail/resultats", label: "Résultats", icon: GraduationCap };
 
-export function portalItems(parent: boolean, university = false): Item[] {
-  if (university && !parent) return [HOME, TIMETABLE, ATTENDANCE, RESULTS, MORE];
-  return parent ? [HOME, ATTENDANCE, GRADES, FINANCE, MORE] : [HOME, TIMETABLE, ATTENDANCE, GRADES, MORE];
+/** Onglet → information que l'université peut masquer aux parents. */
+const SECTION: Record<string, string> = { [ATTENDANCE.href]: "attendance", [GRADES.href]: "grades", [FINANCE.href]: "finances", [TIMETABLE.href]: "timetable", [RESULTS.href]: "results" };
+
+export function portalItems(parent: boolean, university = false, hidden: readonly string[] = []): Item[] {
+  const items = university ? (parent ? [HOME, ATTENDANCE, RESULTS, FINANCE, MORE] : [HOME, TIMETABLE, ATTENDANCE, RESULTS, MORE]) : parent ? [HOME, ATTENDANCE, GRADES, FINANCE, MORE] : [HOME, TIMETABLE, ATTENDANCE, GRADES, MORE];
+  return items.filter((i) => !SECTION[i.href] || !hidden.includes(SECTION[i.href]!));
 }
 
 function isActive(pathname: string, href: string) {
@@ -27,9 +30,9 @@ function isActive(pathname: string, href: string) {
 }
 
 /** Navigation du portail : barre d'onglets en bas sur téléphone, onglets en haut sur écran large. */
-export function PortalNav({ parent, university = false }: { parent: boolean; university?: boolean }) {
+export function PortalNav({ parent, university = false, hidden = [] }: { parent: boolean; university?: boolean; hidden?: readonly string[] }) {
   const pathname = usePathname();
-  const items = portalItems(parent, university);
+  const items = portalItems(parent, university, hidden);
   return (
     <>
       <nav aria-label="Portail" className="hidden border-b border-border bg-surface md:block">

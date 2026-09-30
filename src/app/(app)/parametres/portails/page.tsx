@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { portalsFor, type PortalKind } from "@/features/auth/portals";
 import { CopyLinkButton, PortalLinkShare } from "@/features/organization/components/portal-link-share";
+import { universityConfigOf } from "@/features/university/config";
 import { requirePermission } from "@/lib/auth/guards";
 import { qrDataUrl } from "@/lib/pdf/qr";
 import { portalLinkUrl } from "@/lib/site-url";
@@ -36,8 +37,11 @@ export default async function PortalLinkSettingsPage() {
   const c = (counts ?? { parents: 0, students: 0, teachers: 0, staff: 0 }) as Counts;
   const local = /\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(url);
   const lan = /\/\/(10\.\d+|192\.168|172\.(1[6-9]|2\d|3[01]))\.\d+\.\d+(:|\/|$)/.test(url);
+  // Université : portail parent seulement s'il est activé (Paramètres universitaires).
+  const university = universityConfigOf(org.type, org.settings);
+  const parentPortal = !university || university.features.parent_portal;
   const rows: { kind: PortalKind; accounts: number; noun: string }[] = [
-    { kind: "parent", accounts: c.parents, noun: "parent(s) avec accès" },
+    ...(parentPortal ? [{ kind: "parent" as const, accounts: c.parents, noun: "parent(s) avec accès" }] : []),
     { kind: "enseignant", accounts: c.teachers, noun: vocabularyFor(org.type).family === "training" ? "formateur(s)" : "enseignant(s)" },
     { kind: "eleve", accounts: c.students, noun: `compte(s) ${vocabularyFor(org.type).student.toLowerCase()}` },
     { kind: "personnel", accounts: c.staff, noun: "compte(s) du personnel" },

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { submitJustification } from "@/features/attendance/actions";
 import { JustificationForm } from "@/features/attendance/components/justification-form";
-import { requirePortal } from "@/features/portal/context";
+import { requirePortalSection } from "@/features/portal/context";
 import { getStudentAttendance, getStudentJustifications } from "@/features/portal/queries";
 import { todayIn } from "@/lib/dates";
 import { ATTENDANCE_STATUS, JUSTIFICATION_STATUS } from "@/lib/labels";
@@ -25,7 +25,7 @@ const FILTERS = [
 
 /** Présences validées — JAMAIS restreintes, même en cas d'impayé. */
 export default async function PortalAttendancePage({ searchParams }: PageProps<"/portail/presences">) {
-  const { organization, student } = await requirePortal();
+  const { organization, student } = await requirePortalSection("attendance");
   if (!student) return <EmptyState icon={ClipboardCheck} title="Aucun dossier rattaché" />;
   const params = await searchParams;
   const filter = FILTERS.find((f) => f.key === param(params, "filtre"))?.key ?? "tout";

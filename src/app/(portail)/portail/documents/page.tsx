@@ -5,7 +5,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Card } from "@/components/ui/card";
 import { DOCUMENT_KIND_LABELS } from "@/features/documents/types";
 import { LockedFeature } from "@/features/portal/components/locked-feature";
-import { requirePortal } from "@/features/portal/context";
+import { requirePortalSection } from "@/features/portal/context";
 import { getStudentIssuedDocuments } from "@/features/portal/queries";
 import { formatDate } from "@/lib/utils/format";
 
@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: "Documents" };
 
 /** Documents officiels émis par l'établissement (copie identique, QR de vérification). */
 export default async function PortalDocumentsPage() {
-  const { organization, parent, student, status } = await requirePortal();
+  const { organization, parent, student, status } = await requirePortalSection("documents");
   if (!student) return <EmptyState icon={FileCheck2} title="Aucun dossier rattaché" />;
   const header = (
     <div className="grid gap-1">

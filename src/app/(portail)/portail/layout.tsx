@@ -17,7 +17,8 @@ import { vocabularyFor } from "@/lib/vocabulary";
 
 /** Portail parent / élève : interface mobile (bleu nuit, blanc, cyan), navigation en bas d'écran. */
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
-  const { context, organization, parent, students, student } = await requirePortal();
+  const { context, organization, parent, students, student, shows } = await requirePortal();
+  const hidden = (["results", "grades", "attendance", "finances", "documents", "timetable"] as const).filter((s) => !shows(s));
   const notifications = await getRecentNotifications(organization.id);
   const name = displayName(context);
 
@@ -76,7 +77,7 @@ export default async function PortalLayout({ children }: { children: React.React
           {parent && student && students.length > 1 ? <ChildSwitcher students={students} selectedId={student.id} /> : null}
         </div>
       </header>
-      <PortalNav parent={parent} university={isHigherOrg(organization.type)} />
+      <PortalNav parent={parent} university={isHigherOrg(organization.type)} hidden={hidden} />
       <main className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-5 px-4 py-5">{children}</main>
       <NotificationWatcher />
     </div>

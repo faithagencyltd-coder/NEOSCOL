@@ -15,10 +15,12 @@ export type DemoAccountKey =
   | "universite"
   | "formation"
   | "formateur"
+  | "parent-formation"
   | "pointage-formation"
   | "etudiant"
   | "professeur"
   | "scolarite"
+  | "parent-universite"
   | "pointage-universite";
 
 export type DemoAccount = {
@@ -120,6 +122,14 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
     sees: ["Ses cours et l'emploi du temps", "Évaluation des compétences de ses apprenants", "Assiduité de ses apprenants"],
   },
   {
+    key: "parent-formation",
+    email: "parent.formation@demo.neoscol.app",
+    name: "Mariam COULIBALY",
+    role: "Parent (formation)",
+    description: "Mère d'Aminata, apprenante de l'Institut de formation.",
+    sees: ["Portail parent mobile", "Présences, évaluations, parcours de formation", "Échéancier et paiements"],
+  },
+  {
     key: "pointage-formation",
     email: "pointage.formation@demo.neoscol.app",
     name: "Tablette des ateliers",
@@ -152,6 +162,14 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
     sees: ["Résultats et crédits publiés", "Parcours universitaire", "Emploi du temps, présences, paiements"],
   },
   {
+    key: "parent-universite",
+    email: "parent.universite@demo.neoscol.app",
+    name: "Brigitte KONAN",
+    role: "Parent (université)",
+    description: "Mère de Kouamé, étudiant en Licence 1 (portail parent activé par l'université).",
+    sees: ["Résultats publiés et crédits", "Présences, paiements, documents", "Seulement ce que l'université a choisi de montrer"],
+  },
+  {
     key: "pointage-universite",
     email: "pointage.universite@demo.neoscol.app",
     name: "Tablette de l'université",
@@ -167,7 +185,7 @@ export function demoAccount(key: string): DemoAccount | undefined {
 
 /** Module de chaque compte de démonstration (séparation des modules dans un établissement ouvert). */
 export function demoAccountFamily(key: DemoAccountKey): "school" | "training" | "higher" {
-  if (key === "formation" || key === "formateur" || key === "pointage-formation") return "training";
-  if (key === "universite" || key === "etudiant" || key === "professeur" || key === "scolarite" || key === "pointage-universite") return "higher";
+  if (key === "formation" || key === "formateur" || key === "parent-formation" || key === "pointage-formation") return "training";
+  if (key === "universite" || key === "etudiant" || key === "professeur" || key === "scolarite" || key === "parent-universite" || key === "pointage-universite") return "higher";
   return "school";
 }

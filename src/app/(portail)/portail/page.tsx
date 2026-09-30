@@ -22,7 +22,7 @@ export const metadata: Metadata = { title: "Portail" };
 const FEATURE_LABELS = { grades: "Notes", report_cards: "Bulletins", documents: "Documents", timetable: "Emploi du temps" } as const;
 
 export default async function PortalHomePage() {
-  const { organization, parent, student, status } = await requirePortal();
+  const { organization, parent, student, status, shows } = await requirePortal();
   if (!student) {
     return (
       <EmptyState
@@ -95,17 +95,22 @@ export default async function PortalHomePage() {
       ) : null}
 
       <section aria-label="Indicateurs" className="stagger grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Absences (30 j)" value={absences} tone={absences ? "danger" : "success"} />
-        <Stat label="Retards (30 j)" value={lates} tone={lates ? "warning" : "success"} />
-        <Stat label="Absences non justifiées" value={unjustified} tone={unjustified ? "danger" : "success"} />
-        {parent && status ? (
+        {shows("attendance") ? (
+          <>
+            <Stat label="Absences (30 j)" value={absences} tone={absences ? "danger" : "success"} />
+            <Stat label="Retards (30 j)" value={lates} tone={lates ? "warning" : "success"} />
+            <Stat label="Absences non justifiées" value={unjustified} tone={unjustified ? "danger" : "success"} />
+          </>
+        ) : null}
+        {parent && status && shows("finances") ? (
           <Stat label="Reste à payer" value={{ amount: status.balance, currency }} tone={status.balance > 0 ? "warning" : "success"} />
-        ) : (
+        ) : shows("grades") ? (
           <Stat label="Notes publiées" value={status?.features.grades ? "—" : grades.length} tone="primary" />
-        )}
+        ) : null}
       </section>
 
       <div className="stagger grid grid-cols-1 gap-5 md:grid-cols-2">
+        {shows("timetable") ? (
         <Card>
           <CardHeader className="flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -135,7 +140,9 @@ export default async function PortalHomePage() {
             )}
           </CardContent>
         </Card>
+        ) : null}
 
+        {shows("attendance") ? (
         <Card>
           <CardHeader className="flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -162,7 +169,9 @@ export default async function PortalHomePage() {
             )}
           </CardContent>
         </Card>
+        ) : null}
 
+        {shows("grades") ? (
         <Card>
           <CardHeader className="flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -193,6 +202,7 @@ export default async function PortalHomePage() {
             )}
           </CardContent>
         </Card>
+        ) : null}
 
         <Card>
           <CardHeader className="flex-row items-center justify-between">
@@ -223,12 +233,12 @@ export default async function PortalHomePage() {
       <nav aria-label="Accès rapides" className="stagger grid grid-cols-2 gap-3 sm:grid-cols-4">
         {vocabulary.family === "school" ? (
           <QuickLink href="/portail/notes?onglet=bulletins" icon={FileText} label="Bulletins" />
-        ) : (
-          <QuickLink href="/portail/parcours" icon={FileText} label="Mon parcours" />
-        )}
-        <QuickLink href="/portail/documents" icon={ShieldCheck} label="Documents" />
-        <QuickLink href="/portail/emploi-du-temps" icon={CalendarClock} label="Emploi du temps" />
-        {parent ? <QuickLink href="/portail/finances" icon={Wallet} label="Finances" /> : <QuickLink href="/portail/annonces" icon={Megaphone} label="Annonces" />}
+        ) : shows("results") ? (
+          <QuickLink href="/portail/parcours" icon={FileText} label={parent ? "Parcours" : "Mon parcours"} />
+        ) : null}
+        {shows("documents") ? <QuickLink href="/portail/documents" icon={ShieldCheck} label="Documents" /> : null}
+        {shows("timetable") ? <QuickLink href="/portail/emploi-du-temps" icon={CalendarClock} label="Emploi du temps" /> : null}
+        {parent && shows("finances") ? <QuickLink href="/portail/finances" icon={Wallet} label="Finances" /> : <QuickLink href="/portail/annonces" icon={Megaphone} label="Annonces" />}
       </nav>
     </>
   );

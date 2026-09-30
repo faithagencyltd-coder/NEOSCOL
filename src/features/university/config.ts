@@ -12,7 +12,7 @@ export function isHigherOrg(type: string | null | undefined): boolean {
 
 export const UNIVERSITY_FEATURES = [
   "faculties", "departments", "groups", "semesters", "credits", "ranking", "internships", "theses",
-  "defenses", "badges", "scan", "student_portal", "teacher_portal", "payments", "documents",
+  "defenses", "badges", "scan", "student_portal", "teacher_portal", "parent_portal", "payments", "documents",
 ] as const;
 export type UniversityFeature = (typeof UNIVERSITY_FEATURES)[number];
 
@@ -30,6 +30,7 @@ export const FEATURE_LABELS: Record<UniversityFeature, { label: string; hint: st
   scan: { label: "Scan des présences", hint: "Tablette « SCANNER VOTRE BADGE »." },
   student_portal: { label: "Portail étudiant", hint: "Résultats, crédits, parcours, paiements, documents." },
   teacher_portal: { label: "Portail enseignant", hint: "Enseignements, étudiants, présences, notes." },
+  parent_portal: { label: "Portail parent", hint: "Désactivé par défaut. Les parents suivent leur enfant (informations choisies ci-dessous)." },
   payments: { label: "Paiements", hint: "Frais universitaires, tranches, reçus." },
   documents: { label: "Documents", hint: "Attestations, relevés, PV, diplômes." },
 };
@@ -56,12 +57,26 @@ export type UniversityConfig = {
   rules: UniversityRules;
   teacherRanks: string[];
   decisions: Record<string, string>;
+  parentSections: Record<ParentSection, boolean>;
 };
 
 const DEFAULT_FEATURES: Record<UniversityFeature, boolean> = {
   faculties: true, departments: true, groups: false, semesters: true, credits: true, ranking: false, internships: true,
-  theses: true, defenses: true, badges: true, scan: true, student_portal: true, teacher_portal: true, payments: true, documents: true,
+  theses: true, defenses: true, badges: true, scan: true, student_portal: true, teacher_portal: true, parent_portal: false, payments: true, documents: true,
 };
+
+/** Informations que l'université choisit de montrer aux parents (portail parent). */
+export const PARENT_SECTIONS = ["results", "grades", "attendance", "finances", "documents", "timetable"] as const;
+export type ParentSection = (typeof PARENT_SECTIONS)[number];
+export const PARENT_SECTION_LABELS: Record<ParentSection, string> = {
+  results: "Résultats, crédits et parcours",
+  grades: "Notes des évaluations",
+  attendance: "Présences et absences",
+  finances: "Paiements et reliquats",
+  documents: "Documents officiels",
+  timetable: "Emploi du temps",
+};
+const DEFAULT_PARENT_SECTIONS: Record<ParentSection, boolean> = { results: true, grades: true, attendance: true, finances: true, documents: true, timetable: true };
 const DEFAULT_RULES: UniversityRules = {
   pass_mark: 10, ue_compensation: true, semester_compensation: true, semester_weighting: "credits", eliminatory_mark: null,
   absent_as_zero: true, retake_rule: "best", retake_cap: 10, year_pass_ratio: 1, conditional_pass_ratio: 0.75,
@@ -82,6 +97,7 @@ export function universityConfigOf(type: string | null | undefined, settings: un
     rules: { ...DEFAULT_RULES, ...((raw.rules ?? {}) as Partial<UniversityRules>) },
     teacherRanks: Array.isArray(raw.teacher_ranks) ? (raw.teacher_ranks as string[]) : ["Professeur titulaire", "Maître de conférences", "Chargé de cours", "Vacataire", "Intervenant"],
     decisions: { ...DEFAULT_DECISIONS, ...((raw.decisions ?? {}) as Record<string, string>) },
+    parentSections: { ...DEFAULT_PARENT_SECTIONS, ...((raw.parent_portal_sections ?? {}) as Partial<Record<ParentSection, boolean>>) },
   };
 }
 

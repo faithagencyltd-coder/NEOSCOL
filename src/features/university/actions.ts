@@ -11,7 +11,7 @@ import { dbErrorMessage } from "@/lib/utils/db-error";
 import { readBoolean, readFields } from "@/lib/utils/form-data";
 import { isUuid } from "@/lib/utils/search-params";
 
-import { isHigherOrg, UNIVERSITY_FEATURES } from "./config";
+import { isHigherOrg, PARENT_SECTIONS, UNIVERSITY_FEATURES } from "./config";
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { error: "Date invalide." });
 const uuid = z.string().refine(isUuid, { error: "Sélection invalide." });
@@ -859,12 +859,14 @@ export async function saveUniversityConfig(_: ActionResult | null, formData: For
   if (!p.ok) return p.result;
   const d = p.data;
   const features = Object.fromEntries(UNIVERSITY_FEATURES.map((f) => [f, readBoolean(formData, `feature_${f}`)]));
+  const parentSections = Object.fromEntries(PARENT_SECTIONS.map((k) => [k, readBoolean(formData, `parent_section_${k}`)]));
   const supabase = await createClient();
   const { error } = await supabase.rpc("set_university_config", {
     p_org: auth.context.organization.id,
     p_config: {
       establishment_kind: d.establishment_kind,
       features,
+      parent_portal_sections: parentSections,
       rules: {
         pass_mark: d.pass_mark,
         retake_rule: d.retake_rule,

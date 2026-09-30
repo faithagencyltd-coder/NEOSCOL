@@ -401,7 +401,8 @@ export function ResultsTab({
   record: AcademicRecord;
   showRank: boolean;
   transcriptHref?: (periodId: string) => string;
-  notesHref?: string;
+  /** null : pas de lien vers les notes (masquées aux parents par l'université). */
+  notesHref?: string | null;
   emptyHint?: string;
 }) {
   const semesters = [...record.semesters].sort((a, b) =>
@@ -506,13 +507,15 @@ export function ResultsTab({
           </Card>
         );
       })}
-      <p className="text-xs text-muted-foreground">
-        Les notes détaillées par évaluation sont dans{" "}
-        <Link href={notesHref} className="text-primary underline-offset-2 hover:underline">
-          Notes
-        </Link>
-        .
-      </p>
+      {notesHref ? (
+        <p className="text-xs text-muted-foreground">
+          Les notes détaillées par évaluation sont dans{" "}
+          <Link href={notesHref} className="text-primary underline-offset-2 hover:underline">
+            Notes
+          </Link>
+          .
+        </p>
+      ) : null}
     </div>
   );
 }

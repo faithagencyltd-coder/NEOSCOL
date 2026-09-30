@@ -6,7 +6,7 @@ import { TabNav } from "@/components/shared/tab-nav";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { LockedFeature } from "@/features/portal/components/locked-feature";
-import { requirePortal } from "@/features/portal/context";
+import { requirePortalSection } from "@/features/portal/context";
 import { getStudentGrades, getStudentReportCards } from "@/features/portal/queries";
 import { assessmentKindLabel } from "@/lib/labels";
 import { formatDate, formatNumber } from "@/lib/utils/format";
@@ -31,7 +31,7 @@ function average(grades: Grade[]): number | null {
 }
 
 export default async function PortalGradesPage({ searchParams }: PageProps<"/portail/notes">) {
-  const { organization, parent, student, status } = await requirePortal();
+  const { organization, parent, student, status } = await requirePortalSection("grades");
   if (!student) return <EmptyState icon={NotebookPen} title="Aucun dossier rattaché" />;
   // Séparation des modules : pas de bulletin dans un centre de formation ni à l'université (relevés et résultats dédiés).
   const withReportCards = vocabularyFor(organization.type).family === "school";

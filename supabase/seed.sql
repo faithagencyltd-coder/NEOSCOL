@@ -1157,3 +1157,26 @@ begin
   perform set_config('request.jwt.claims', '', true);
 end;
 $$;
+
+-- Comptes parents de démonstration : formation professionnelle et université ----------
+-- (portail parent universitaire activé pour la démonstration ; désactivé par défaut ailleurs)
+select pg_temp.demo_user('00000000-0000-4000-a000-000000000019', 'parent.formation@demo.neoscol.app', 'Mariam', 'COULIBALY', '+2250750000001');
+select pg_temp.demo_user('00000000-0000-4000-a000-000000000020', 'parent.universite@demo.neoscol.app', 'Brigitte', 'KONAN', '+2250720000009');
+update public.guardians g
+   set user_id = '00000000-0000-4000-a000-000000000019', email = 'parent.formation@demo.neoscol.app'
+ where g.organization_id = '10000000-0000-4000-a000-000000000002' and g.first_name = 'Mariam' and g.last_name = 'COULIBALY';
+select pg_temp.grant_role('10000000-0000-4000-a000-000000000002', '00000000-0000-4000-a000-000000000019', 'parent');
+with g as (
+  insert into public.guardians (organization_id, user_id, first_name, last_name, sex, phone, email, profession, city)
+  values ('10000000-0000-4000-a000-000000000003', '00000000-0000-4000-a000-000000000020', 'Brigitte', 'KONAN', 'F', '+2250720000009',
+          'parent.universite@demo.neoscol.app', 'Infirmière', 'Yamoussoukro')
+  returning id
+)
+insert into public.student_guardians (organization_id, student_id, guardian_id, relationship, is_primary, is_financial_responsible)
+select '10000000-0000-4000-a000-000000000003', s.id, g.id, 'mother', true, true
+  from g, public.students s
+ where s.organization_id = '10000000-0000-4000-a000-000000000003' and s.first_name = 'Kouamé' and s.last_name = 'KONAN';
+select pg_temp.grant_role('10000000-0000-4000-a000-000000000003', '00000000-0000-4000-a000-000000000020', 'parent');
+update public.organizations
+   set settings = jsonb_set(settings, '{university,features,parent_portal}', 'true'::jsonb, true)
+ where id = '10000000-0000-4000-a000-000000000003';
