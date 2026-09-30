@@ -56,8 +56,12 @@ const staffOf = async (email) =>
 const director = await staffOf("direction@demo.neoscol.app");
 const secretary = await staffOf("secretariat@demo.neoscol.app");
 const orgName = (await q1("select name from organizations where id = $1", [DEMO])).name;
+const startedAt = new Date();
 const reset = async () => {
   await db.query("delete from voice_checkin_settings where organization_id = $1", [DEMO]);
+  // Scans de ce test (badges inconnus, doublons…) retirés : ils pollueraient « Derniers scans » des autres suites.
+  await db.query("update badge_scans set lesson_unlock_id = null where organization_id = $1 and scanned_at >= $2", [DEMO, startedAt]);
+  await db.query("delete from badge_scans where organization_id = $1 and scanned_at >= $2", [DEMO, startedAt]);
   await db.query("update countries set settings = $1 where code = 'CI'", [ciSettings]);
   await db.query("delete from staff_attendance where staff_id = any($1) and work_date = (now() at time zone 'Africa/Abidjan')::date", [[director.id, secretary.id]]);
 };
