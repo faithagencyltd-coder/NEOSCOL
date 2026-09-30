@@ -86,7 +86,7 @@ describe("Publics et envois", () => {
       assert.equal(r.pending, 0);
       const [done] = await q("select status, sent, failed from message_campaigns where id = $1", [id]);
       assert.deepEqual(done, { status: "done", sent: batch.length - 1, failed: 1 });
-      const audit = await q("select action from audit_logs where entity_id = $1 order by created_at", [id]);
+      const audit = await q("select action from audit_logs where entity_id = $1 order by created_at, id", [id]);
       assert.deepEqual(audit.map((a) => a.action), ["communication.campaign_created", "communication.campaign_sent"]);
 
       // Isolation : un autre établissement ne voit rien et ne peut pas réutiliser le modèle.

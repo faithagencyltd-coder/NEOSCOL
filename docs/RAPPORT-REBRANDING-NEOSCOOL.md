@@ -56,7 +56,7 @@ Nouvelle migration `20261014003700_rebranding_neoscool.sql` :
 
 - libellés des permissions `billing.read` et `billing.manage` ;
 - descriptions des formules d'abonnement et des moyens de paiement ;
-- commentaire de `students.origin` ;
+- commentaires de `students.origin`, `students.legacy_matricule` et de la table `subscription_plans` ;
 - 6 fonctions redéfinies à l'identique, seuls les messages visibles changent :
   `app.billing_apply_payment`, `app.country_connect_columns_error`, `app.require_platform_admin`,
   `public.billing_cancel`, `public.country_connect_import`, `public.save_message_template`.
@@ -101,6 +101,20 @@ Aucun asset supprimé. L'emblème SVG existant est conservé (décision validée
    « NeoScol (reseau local) », pour qu'elle ne reste pas en double sur les postes déjà configurés.
 3. Mot de passe de démonstration `NeoScol-Demo-2026!`.
 4. Identifiants techniques du tableau ci-dessus.
+
+## Vérification de la base (après remise à zéro)
+
+Aucune occurrence « NéoScol » dans les fonctions, commentaires, valeurs par défaut, contraintes,
+vues, permissions, formules, établissements ou annonces. Deux lignes du journal d'audit, écrites
+par les migrations historiques (avant / après d'une formule), sont conservées : c'est un historique.
+
+## Constat hors périmètre (non corrigé ici)
+
+`scan_badge_core` compare `v_time >= ts.starts_at - v_open_before` sur des heures : la soustraction
+repasse par minuit. Un cours qui commence entre 00:00 et 00:30 n'est donc pas trouvé à l'entrée
+(« Aucun cours prévu »). Le défaut existait avant le rebranding et ne concerne que les cours de
+début de nuit. Correctif proposé, dans une migration dédiée :
+`v_time >= ts.starts_at - least(v_open_before, ts.starts_at - time '00:00')`.
 
 ## Éléments nécessitant encore une intervention humaine
 

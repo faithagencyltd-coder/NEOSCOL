@@ -16,6 +16,9 @@ update public.subscription_plans set description = replace(description, 'NéoSco
 update public.payment_providers set description = replace(description, 'NéoScol', 'NEOSCOOL') where description like '%NéoScol%';
 
 comment on column public.students.origin is 'native : créé dans NEOSCOOL ; import : migration d''un fichier ; manual_history : ancien élève saisi manuellement.';
+comment on column public.students.legacy_matricule is 'Matricule attribué par l''ancien système de l''établissement (le matricule NEOSCOOL reste permanent).';
+comment on table public.subscription_plans is
+  'Formules NEOSCOOL. Les prix sont copiés sur les abonnements et les factures : les modifier n''a aucun effet rétroactif.';
 
 -- app.billing_apply_payment(uuid, text, uuid, text)
 CREATE OR REPLACE FUNCTION app.billing_apply_payment(p_tx uuid, p_method text, p_recorded_by uuid, p_note text DEFAULT NULL::text)
