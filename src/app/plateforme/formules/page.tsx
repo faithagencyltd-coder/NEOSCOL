@@ -158,7 +158,7 @@ export default async function PlatformPlansPage() {
                     description="Le nouveau prix s'applique aux nouvelles souscriptions, aux essais qui passent au paiement et aux changements de formule. Les abonnés actuels gardent leur prix (jamais rétroactif). Le prix annuel = 12 mois moins la remise, arrondi à la centaine."
                     trigger={
                       <Button size="sm" variant="secondary">
-                        <BadgeDollarSign aria-hidden /> Prix
+                        <BadgeDollarSign aria-hidden /> Modifier le prix
                       </Button>
                     }
                     submitLabel="Enregistrer le nouveau prix"

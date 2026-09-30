@@ -59,6 +59,7 @@ console.log("\n=== 2. Administrateur : bouton push, tableau de bord configurable
 
   await page.goto(`${base}/tableau-de-bord`);
   const announcements = page.getByText("Communications en cours de l'établissement");
+  await announcements.first().waitFor({ timeout: 20000 }).catch(() => {});
   check(await announcements.isVisible(), "bloc Annonces affiché par défaut");
   await page.getByTestId("dashboard-customize").click();
   const dialog = page.getByRole("dialog");

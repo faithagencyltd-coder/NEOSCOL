@@ -45,6 +45,7 @@ try {
   await pf.getByText("Reste à payer").first().waitFor({ timeout: 20000 }).catch(() => {});
   check((await text(pf)).includes("Reste à payer"), "parent de formation : situation financière");
   await pf.goto(`${base}/portail/parcours`);
+  await pf.getByText(/Parcours d/).first().waitFor({ timeout: 20000 }).catch(() => {});
   check((await text(pf)).includes("Parcours de Aminata") || (await text(pf)).includes("Parcours d"), "parent de formation : parcours de formation");
   await pf.screenshot({ path: `${out}/01-parent-formation.png`, fullPage: true });
 
