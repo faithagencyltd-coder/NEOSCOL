@@ -1,4 +1,4 @@
-import { Megaphone, Pencil, Send } from "lucide-react";
+import { BellRing, Megaphone, Pencil, Send } from "lucide-react";
 import type { Metadata } from "next";
 
 import { EmptyState } from "@/components/shared/empty-state";
@@ -10,6 +10,7 @@ import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { ANNOUNCEMENT_TONES, CAMPAIGN_STATUSES, moduleLabel, MODULES } from "@/features/platform/communication";
 import { saveAnnouncement } from "@/features/platform/communication-actions";
 import { CampaignForm } from "@/features/platform/components/campaign-form";
+import { MessageTemplateEditor, type MessageTemplate } from "@/features/platform/components/message-template-editor";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, formatDateTime, formatNumber } from "@/lib/utils/format";
 
@@ -77,10 +78,11 @@ function announcementFields(a?: Announcement): QuickField[] {
 /** Communication de la plateforme : annonces (bandeau) et envois groupés aux directions. */
 export default async function PlatformCommunicationPage() {
   const supabase = await createClient();
-  const [{ data: announcements }, { data: campaigns }, { data: email }] = await Promise.all([
+  const [{ data: announcements }, { data: campaigns }, { data: email }, { data: templates }] = await Promise.all([
     supabase.from("platform_announcements").select("*").order("created_at", { ascending: false }).limit(50),
     supabase.from("platform_campaigns").select("*").order("created_at", { ascending: false }).limit(30),
     supabase.from("platform_integrations").select("enabled, secret_hint").eq("provider", "brevo_email").maybeSingle(),
+    supabase.from("platform_message_templates").select("*").order("sort_order"),
   ]);
   const list = (announcements ?? []) as Announcement[];
   const emailConfigured = Boolean(email?.enabled && email?.secret_hint);
@@ -171,6 +173,52 @@ export default async function PlatformCommunicationPage() {
         <CardContent>
           <CampaignForm emailConfigured={emailConfigured} />
         </CardContent>
+      </Card>
+
+      <Card className="overflow-hidden">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BellRing className="size-5 text-primary" aria-hidden /> Messages automatiques
+          </CardTitle>
+          <CardDescription>
+            Messages envoyés automatiquement aux responsables des établissements (essai, renouvellement, impayés, paiements).
+            Modifiez le texte, utilisez des variables ou désactivez un message ; sans modification, le texte d&apos;origine est utilisé.
+          </CardDescription>
+        </CardHeader>
+        <Table data-testid="template-list">
+          <THead>
+            <tr>
+              <TH>Message</TH>
+              <TH>Texte envoyé</TH>
+              <TH>État</TH>
+              <TH className="text-right">Modifier</TH>
+            </tr>
+          </THead>
+          <tbody>
+            {((templates ?? []) as MessageTemplate[]).map((t) => (
+              <TR key={t.code}>
+                <TD>
+                  <span className="grid max-w-xs">
+                    <span className="font-semibold">{t.label}</span>
+                    <span className="text-xs text-muted-foreground">{t.description}</span>
+                  </span>
+                </TD>
+                <TD>
+                  <span className="grid max-w-md text-sm">
+                    <span className="font-medium">{t.title ?? t.default_title}</span>
+                    <span className="line-clamp-2 text-xs text-muted-foreground">{t.body ?? t.default_body}</span>
+                  </span>
+                </TD>
+                <TD>
+                  {!t.enabled ? <Badge tone="neutral">Désactivé</Badge> : t.title ? <Badge tone="info">Personnalisé</Badge> : <Badge tone="success">Texte d&apos;origine</Badge>}
+                </TD>
+                <TD className="text-right">
+                  <MessageTemplateEditor template={t} />
+                </TD>
+              </TR>
+            ))}
+          </tbody>
+        </Table>
       </Card>
 
       <Card className="overflow-hidden">

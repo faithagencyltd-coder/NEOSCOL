@@ -129,3 +129,23 @@ export async function startCampaign(_: ActionResult | null, formData: FormData):
   }
   return { ok: !notConfigured || channels.includes("in_app"), message: `Envoi terminé : ${parts.join(" · ")}.` };
 }
+
+/** Message automatique : texte personnalisé, désactivation ou retour au texte d'origine. */
+export async function saveMessageTemplate(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await requirePlatformAdmin();
+  if (!auth.ok) return auth;
+  const reset = formData.get("intent") === "reset";
+  const title = reset ? "" : String(formData.get("title") ?? "").trim();
+  const body = reset ? "" : String(formData.get("body") ?? "").trim();
+  if (!reset && (!title || !body)) return { ok: false, message: "Le titre et le texte sont obligatoires." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("platform_save_message_template", {
+    p_code: String(formData.get("code") ?? ""),
+    p_title: title,
+    p_body: body,
+    p_enabled: formData.get("enabled") === "on",
+  });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  revalidatePath("/plateforme/communication");
+  return { ok: true, message: reset ? "Texte d'origine rétabli." : "Message enregistré." };
+}

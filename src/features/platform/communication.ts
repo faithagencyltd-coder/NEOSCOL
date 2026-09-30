@@ -53,3 +53,22 @@ export function campaignEmailHtml(subject: string, body: string, recipientName?:
 <p style="font-size:12px;color:#5b6785;margin:16px 4px">${footer}</p>
 </div></body></html>`;
 }
+
+/** Variables des messages automatiques, avec un exemple pour l'aperçu. */
+export const TEMPLATE_VARIABLES: Record<string, { label: string; example: string }> = {
+  etablissement: { label: "Nom de l'établissement", example: "Collège Les Palmiers" },
+  formule: { label: "Formule", example: "Module Scolaire" },
+  jours: { label: "Jours restants", example: "3" },
+  date_fin: { label: "Date de fin", example: "15/10/2026" },
+  date_restriction: { label: "Date de passage en lecture seule", example: "25/10/2026" },
+  date_expiration: { label: "Date d'expiration", example: "14/12/2026" },
+  montant: { label: "Montant", example: "15 000 F CFA" },
+  facture: { label: "Numéro de facture", example: "NSC-2026-000123" },
+};
+
+/** Même règle que la base : {variable} remplacée, variable inconnue laissée telle quelle. */
+export function renderTemplate(text: string, vars: Record<string, string>): string {
+  return text.replace(/\{([a-z_]+)\}/g, (match, key: string) => (key in vars ? vars[key]! : match));
+}
+
+export const exampleVars = (names: string[]) => Object.fromEntries(names.filter((n) => TEMPLATE_VARIABLES[n]).map((n) => [n, TEMPLATE_VARIABLES[n]!.example]));

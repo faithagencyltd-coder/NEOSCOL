@@ -5540,6 +5540,59 @@ export type Database = {
           
         ]
       }
+      platform_message_templates: {
+        Row: {
+          body: string | null
+          code: string
+          default_body: string
+          default_title: string
+          description: string
+          enabled: boolean
+          label: string
+          sort_order: number
+          title: string | null
+          updated_at: string
+          updated_by: string | null
+          variables: string[]
+        }
+        Insert: {
+          body?: string | null
+          code: string
+          default_body: string
+          default_title: string
+          description: string
+          enabled?: boolean
+          label: string
+          sort_order?: number
+          title?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          variables?: string[]
+        }
+        Update: {
+          body?: string | null
+          code?: string
+          default_body?: string
+          default_title?: string
+          description?: string
+          enabled?: boolean
+          label?: string
+          sort_order?: number
+          title?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          variables?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_message_templates_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       platform_security_settings: {
         Row: {
           captcha_after_failures: number
@@ -9943,6 +9996,15 @@ export type Database = {
           p_notify?: boolean
         }
         Returns: Json
+      }
+      platform_save_message_template: {
+        Args: {
+          p_code: string
+          p_title: string
+          p_body: string
+          p_enabled: boolean
+        }
+        Returns: undefined
       }
       platform_save_promo: {
         Args: {

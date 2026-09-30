@@ -109,6 +109,26 @@ try {
   check(notGot.n === 0, "l'enseignant ne la reçoit pas");
   await sa.screenshot({ path: `${out}/03-envoi-groupe.png`, fullPage: true });
 
+  console.log("\n=== 3 bis. Messages automatiques ===");
+  await sa.getByRole("button", { name: "Modifier le message « Rappel de fin d'essai »" }).click();
+  dialog = sa.getByRole("dialog");
+  await dialog.getByLabel("Titre *").fill("{etablissement} : plus que {jours} jour(s)");
+  await dialog.getByLabel("Texte *").fill("Bonjour, votre essai se termine le ");
+  await dialog.getByRole("button", { name: "{date_fin}" }).click();
+  const preview = await dialog.getByTestId("template-preview").innerText();
+  check(preview.includes("Collège Les Palmiers : plus que 3 jour(s)") && preview.includes("se termine le 15/10/2026"), "aperçu avec un exemple (variables cliquables)");
+  await dialog.getByRole("button", { name: "Enregistrer" }).click();
+  await dialog.waitFor({ state: "detached", timeout: 15000 });
+  const tplRow = sa.getByTestId("template-list").getByRole("row").filter({ hasText: "Rappel de fin d'essai" });
+  await tplRow.getByText("Personnalisé").waitFor({ timeout: 15000 });
+  const saved = await q1("select title, body from platform_message_templates where code = 'trial_reminder'");
+  check(saved.title === "{etablissement} : plus que {jours} jour(s)" && saved.body.endsWith("{date_fin}"), "texte personnalisé enregistré");
+  await sa.screenshot({ path: `${out}/03b-messages-automatiques.png`, fullPage: true });
+  await sa.getByRole("button", { name: "Modifier le message « Rappel de fin d'essai »" }).click();
+  await sa.getByRole("dialog").getByRole("button", { name: "Rétablir le texte d'origine" }).click();
+  await tplRow.getByText("Texte d'origine").waitFor({ timeout: 15000 });
+  check((await q1("select title from platform_message_templates where code = 'trial_reminder'")).title === null, "texte d'origine rétabli");
+
   console.log("\n=== 4. Accès refusé et mobile ===");
   const res = await admin.goto(`${base}/plateforme/communication`);
   check(res?.status() === 404, "établissement : console introuvable");
@@ -123,6 +143,7 @@ try {
   console.log("EXCEPTION", e);
 } finally {
   await db.query("update platform_announcements set is_active = false where title in ($1, $2)", [ALL, DIR]).catch(() => null);
+  await db.query("update platform_message_templates set title = null, body = null, enabled = true where code = 'trial_reminder'").catch(() => null);
   await db.end();
   await browser.close();
   writeFileSync(`${out}/problems.json`, JSON.stringify(problems, null, 2));

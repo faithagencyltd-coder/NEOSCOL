@@ -29,3 +29,12 @@ describe("Cases cochées", () => {
     assert.deepEqual(c.checkedValues(f, "module", c.MODULES), ["school"]);
   });
 });
+
+describe("Messages automatiques : variables", () => {
+  test("variables remplacées, inconnues laissées telles quelles", () => {
+    assert.equal(c.renderTemplate("{etablissement} : J-{jours} {x}", { etablissement: "Lycée A", jours: "3" }), "Lycée A : J-3 {x}");
+  });
+  test("exemple d'aperçu limité aux variables connues", () => {
+    assert.deepEqual(Object.keys(c.exampleVars(["formule", "inconnue"])), ["formule"]);
+  });
+});
