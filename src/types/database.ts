@@ -5292,6 +5292,104 @@ export type Database = {
           }
         ]
       }
+      platform_announcement_dismissals: {
+        Row: {
+          announcement_id: string
+          dismissed_at: string
+          user_id: string
+        }
+        Insert: {
+          announcement_id: string
+          dismissed_at?: string
+          user_id: string
+        }
+        Update: {
+          announcement_id?: string
+          dismissed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_announcement_dismissals_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "platform_announcements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "platform_announcement_dismissals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      platform_announcements: {
+        Row: {
+          audience: string
+          body: string
+          created_at: string
+          created_by: string | null
+          dismissible: boolean
+          ends_at: string | null
+          id: string
+          is_active: boolean
+          link_label: string | null
+          link_url: string | null
+          modules: string[]
+          notified_count: number
+          starts_at: string
+          title: string
+          tone: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: string
+          body: string
+          created_at?: string
+          created_by?: string | null
+          dismissible?: boolean
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          link_label?: string | null
+          link_url?: string | null
+          modules?: string[]
+          notified_count?: number
+          starts_at?: string
+          title: string
+          tone?: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          dismissible?: boolean
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          link_label?: string | null
+          link_url?: string | null
+          modules?: string[]
+          notified_count?: number
+          starts_at?: string
+          title?: string
+          tone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_announcements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       platform_billing_settings: {
         Row: {
           checkout_expiry_hours: number
@@ -5327,6 +5425,74 @@ export type Database = {
           {
             foreignKeyName: "platform_billing_settings_updated_by_fkey"
             columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      platform_campaigns: {
+        Row: {
+          body: string
+          channels: string[]
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          email_failed: number
+          email_not_configured: number
+          email_sent: number
+          id: string
+          in_app_count: number
+          include_demo: boolean
+          modules: string[]
+          organizations_count: number
+          recipients_count: number
+          status: string
+          statuses: string[]
+          subject: string
+        }
+        Insert: {
+          body: string
+          channels: string[]
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          email_failed?: number
+          email_not_configured?: number
+          email_sent?: number
+          id?: string
+          in_app_count?: number
+          include_demo?: boolean
+          modules?: string[]
+          organizations_count?: number
+          recipients_count?: number
+          status?: string
+          statuses?: string[]
+          subject: string
+        }
+        Update: {
+          body?: string
+          channels?: string[]
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          email_failed?: number
+          email_not_configured?: number
+          email_sent?: number
+          id?: string
+          in_app_count?: number
+          include_demo?: boolean
+          modules?: string[]
+          organizations_count?: number
+          recipients_count?: number
+          status?: string
+          statuses?: string[]
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_campaigns_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -9148,6 +9314,20 @@ export type Database = {
         }
         Returns: string
       }
+      current_platform_announcements: {
+        Args: {
+          p_org: string
+        }
+        Returns: {
+          id: string
+          title: string
+          body: string
+          tone: string
+          link_url: string
+          link_label: string
+          dismissible: boolean
+        }[]
+      }
       dashboard_overview: {
         Args: {
           p_organization_id: string
@@ -9206,6 +9386,12 @@ export type Database = {
         Args: {
           p_deliberation_id: string
           p_reason: string
+        }
+        Returns: undefined
+      }
+      dismiss_platform_announcement: {
+        Args: {
+          p_id: string
         }
         Returns: undefined
       }
@@ -9599,6 +9785,14 @@ export type Database = {
         Args: never
         Returns: Json
       }
+      platform_campaign_preview: {
+        Args: {
+          p_modules: string[]
+          p_statuses: string[]
+          p_include_demo?: boolean
+        }
+        Returns: Json
+      }
       platform_country_overview: {
         Args: never
         Returns: {
@@ -9614,6 +9808,15 @@ export type Database = {
           p_reason?: string
         }
         Returns: Json
+      }
+      platform_finish_campaign: {
+        Args: {
+          p_id: string
+          p_sent: number
+          p_failed: number
+          p_not_configured: number
+        }
+        Returns: undefined
       }
       platform_issue_invoice: {
         Args: {
@@ -9723,6 +9926,24 @@ export type Database = {
         }
         Returns: number
       }
+      platform_save_announcement: {
+        Args: {
+          p_id: string
+          p_title: string
+          p_body: string
+          p_tone: string
+          p_modules: string[]
+          p_audience: string
+          p_link_url: string
+          p_link_label: string
+          p_starts_at: string
+          p_ends_at: string
+          p_is_active: boolean
+          p_dismissible: boolean
+          p_notify?: boolean
+        }
+        Returns: Json
+      }
       platform_save_promo: {
         Args: {
           p_id: string
@@ -9788,6 +10009,17 @@ export type Database = {
           p_org: string
           p_features: Json
           p_reason: string
+        }
+        Returns: Json
+      }
+      platform_start_campaign: {
+        Args: {
+          p_subject: string
+          p_body: string
+          p_modules: string[]
+          p_statuses: string[]
+          p_channels: string[]
+          p_include_demo?: boolean
         }
         Returns: Json
       }

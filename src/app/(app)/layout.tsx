@@ -12,6 +12,7 @@ import { WordingProvider } from "@/components/shared/wording";
 import { visibleNavigation } from "@/config/navigation";
 import { schoolConfigOf } from "@/features/academic/school";
 import { universityConfigOf } from "@/features/university/config";
+import { PlatformAnnouncements } from "@/features/announcements/components/platform-announcements";
 import { EmailVerificationBanner } from "@/features/auth/components/email-verification-banner";
 import { Module4SpaceBar } from "@/features/billing/components/module4-space-bar";
 import { SubscriptionBanner } from "@/features/billing/components/subscription-banner";
@@ -85,6 +86,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </Link>
           </div>
         ) : null}
+        <PlatformAnnouncements organizationId={context.organization.id} />
         <Module4SpaceBar organizationId={context.organization.id} />
         <EmailVerificationBanner organizationId={context.organization.id} />
         <SubscriptionBanner organizationId={context.organization.id} canBill={can(context, "billing.read")} />
