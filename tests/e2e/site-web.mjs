@@ -41,10 +41,26 @@ async function fillDialog(page, values) {
   }
   return dialog;
 }
+/**
+ * Le contenu public est mis en cache et rafraîchi à chaque enregistrement dans
+ * la console. Les remises à zéro de ce test passent directement par la base :
+ * un enregistrement (sans modification) des réglages rafraîchit le cache.
+ */
+async function refreshSiteCache() {
+  const page = await login("superadmin@demo.neoscol.app");
+  await page.goto(`${base}/plateforme/site-web`);
+  await page.getByRole("button", { name: "Modifier", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Enregistrer" }).click();
+  await dialog.waitFor({ state: "detached" });
+  await page.context().close();
+}
 const run = String(Date.now()).slice(-5);
 const NAME = `Directrice Test ${run}`;
 
 try {
+  await db.query("update platform_site_settings set whatsapp = null, whatsapp_label = null, whatsapp_message = null, whatsapp_position = 'right', home_sections = '{}' where id = 1");
+  await refreshSiteCache();
   console.log("\n=== 1. Visiteur : accueil ===");
   const v = await visitor();
   const res = await v.goto(`${base}/`);
@@ -184,6 +200,7 @@ try {
   await db.query("update platform_site_settings set whatsapp = null, whatsapp_label = null, whatsapp_message = null, whatsapp_position = 'right', home_sections = '{}' where id = 1").catch(() => null);
   await db.query("update site_social_links set is_active = false where url like $1", [`%neoscool-${run}`]).catch(() => null);
   await db.query("update site_country_profiles set institutional_systems = '[]', education_context = null where country_code = 'BJ'").catch(() => null);
+  await refreshSiteCache().catch(() => null);
   await db.end();
   await browser.close();
   writeFileSync(`${out}/problems.json`, JSON.stringify(problems, null, 2));
