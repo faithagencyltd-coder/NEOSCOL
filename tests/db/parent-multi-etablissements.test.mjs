@@ -1,4 +1,4 @@
-// Parent avec des enfants dans deux établissements Neoscool : un seul compte,
+// Parent avec des enfants dans deux établissements NeoScool : un seul compte,
 // chaque établissement ne montre que ses propres enfants (portail par établissement).
 import { after, describe, test } from "node:test";
 import assert from "node:assert/strict";

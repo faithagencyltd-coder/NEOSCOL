@@ -37,7 +37,7 @@ export default async function PlatformTeachersPage() {
             <Settings2 className="size-5 text-primary" aria-hidden /> Abonnement enseignant supplémentaire
           </CardTitle>
           <CardDescription>
-            Un enseignant garde un seul compte Neoscool pour tous ses établissements. Décidez si, à partir du 2e établissement, un abonnement unique est demandé : il couvre ensuite tous les établissements suivants.
+            Un enseignant garde un seul compte NeoScool pour tous ses établissements. Décidez si, à partir du 2e établissement, un abonnement unique est demandé : il couvre ensuite tous les établissements suivants.
             {current.enabled ? (
               <>
                 {" "}

@@ -14,7 +14,7 @@ type Row = { key: string; label: string; hint: string; enabled: boolean; locked?
 
 /**
  * Interrupteurs des fonctionnalités. `mode="org"` : réglage de l'établissement
- * (les arrêts forcés par Neoscool sont affichés verrouillés) ; `mode="platform"` :
+ * (les arrêts forcés par NeoScool sont affichés verrouillés) ; `mode="platform"` :
  * arrêt forcé par le Super Admin, motif obligatoire.
  */
 export function FeaturesForm({
@@ -51,7 +51,7 @@ export function FeaturesForm({
                   {r.label}
                   {mode === "org" && r.locked ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-2 text-xs text-warning">
-                      <Lock className="size-3" aria-hidden /> Arrêtée par Neoscool
+                      <Lock className="size-3" aria-hidden /> Arrêtée par NeoScool
                     </span>
                   ) : null}
                 </span>

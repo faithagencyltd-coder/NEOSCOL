@@ -6,7 +6,7 @@ import { crc32, deflateRawSync } from "node:zlib";
  * Classeur Excel (.xlsx, Office Open XML) minimal et sans dépendance : une ou
  * plusieurs feuilles, première ligne en gras, textes en chaînes en ligne et
  * nombres en valeurs numériques. Ouvert par Excel, LibreOffice et Google Sheets,
- * et relu par l'import de Neoscool (read-excel-file).
+ * et relu par l'import de NeoScool (read-excel-file).
  */
 export type SheetCell = string | number | null | undefined;
 export type Sheet = { name: string; rows: SheetCell[][]; widths?: number[] };

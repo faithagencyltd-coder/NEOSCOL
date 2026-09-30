@@ -14,7 +14,7 @@ async function requirePlatformAdmin(): Promise<{ ok: true } | { ok: false; messa
   if (!context) return { ok: false, message: "Votre session a expiré. Reconnectez-vous." };
   const supabase = await createClient();
   const { data } = await supabase.rpc("is_platform_admin");
-  return data ? { ok: true } : { ok: false, message: "Réservé à l'administration de la plateforme Neoscool." };
+  return data ? { ok: true } : { ok: false, message: "Réservé à l'administration de la plateforme NeoScool." };
 }
 
 function refresh() {

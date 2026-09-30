@@ -21,7 +21,7 @@ function readFeatures(formData: FormData): Record<string, boolean> {
 export async function saveOrganizationFeatures(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const auth = await authorize("settings.manage");
   if (!auth.ok) return auth;
-  // Une fonctionnalité arrêtée par Neoscool n'est pas envoyée (case désactivée) : son réglage reste inchangé.
+  // Une fonctionnalité arrêtée par NeoScool n'est pas envoyée (case désactivée) : son réglage reste inchangé.
   const supabase = await createClient();
   const { error } = await supabase.rpc("save_org_features", { p_org: auth.context.organization.id, p_features: readFeatures(formData) });
   if (error) return { ok: false, message: dbErrorMessage(error) };

@@ -78,7 +78,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <div role="status" className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-info-soft px-4 py-2 text-center text-sm font-medium text-info">
             <Landmark className="size-4" aria-hidden />
             {context.accessNotices.invitations > 0
-              ? `${context.accessNotices.invitations} invitation(s) d'un autre établissement Neoscool à accepter avec votre compte actuel.`
+              ? `${context.accessNotices.invitations} invitation(s) d'un autre établissement NeoScool à accepter avec votre compte actuel.`
               : `${context.accessNotices.restricted} établissement(s) en attente de l'abonnement multi-établissements.`}
             <Link href="/mes-etablissements" className="font-semibold underline-offset-4 hover:underline">
               Voir mes établissements

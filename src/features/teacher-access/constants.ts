@@ -7,8 +7,8 @@ export const ACCESS_STATE: Record<string, { label: string; tone: Tone; hint: str
   active: { label: "Abonnement actif", tone: "success", hint: "Couvert par votre abonnement unique jusqu'à la fin de la période payée." },
   grace: { label: "Délai de grâce", tone: "warning", hint: "La période payée est terminée : renouvelez pour garder l'accès." },
   expired: { label: "Abonnement expiré", tone: "danger", hint: "Accès suspendu jusqu'au renouvellement. Votre compte et votre premier établissement ne sont pas concernés." },
-  suspended: { label: "Suspendu par Neoscool", tone: "danger", hint: "Contactez l'administration Neoscool pour rétablir l'accès." },
-  exempt: { label: "Accès offert", tone: "info", hint: "Accès accordé sans paiement par l'administration Neoscool." },
+  suspended: { label: "Suspendu par NeoScool", tone: "danger", hint: "Contactez l'administration NeoScool pour rétablir l'accès." },
+  exempt: { label: "Accès offert", tone: "info", hint: "Accès accordé sans paiement par l'administration NeoScool." },
 };
 
 export const PAYMENT_STATUS: Record<string, { label: string; tone: Tone }> = {

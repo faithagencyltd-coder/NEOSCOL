@@ -185,7 +185,7 @@ console.log("\n=== 5. Super Admin : paiements, suspension, rétablissement ===")
   check(await toast(admin, /Abonnement suspendu/), "abonnement suspendu");
   await teacher.goto(`${base}/mes-etablissements`);
   t = await teacher.getByTestId("establishment-card").filter({ hasText: orgB.name }).innerText();
-  check(t.includes("Suspendu par Neoscool") && t.includes("Paiement contesté"), "enseignant : suspendu avec motif");
+  check(t.includes("Suspendu par NeoScool") && t.includes("Paiement contesté"), "enseignant : suspendu avec motif");
   const p = await q1("select is_active from profiles where id = $1", [teacherId]);
   const ms = await q1("select count(*)::int as n from memberships where user_id = $1 and status = 'active'", [teacherId]);
   check(p.is_active && ms.n === 3, "compte principal et adhésions conservés");

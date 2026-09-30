@@ -30,7 +30,7 @@ export default async function SettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Fonctionnalités</CardTitle>
-          <CardDescription>Activez ou désactivez les fonctionnalités de l&apos;établissement. Une fonctionnalité arrêtée par Neoscool ne peut pas être réactivée ici.</CardDescription>
+          <CardDescription>Activez ou désactivez les fonctionnalités de l&apos;établissement. Une fonctionnalité arrêtée par NeoScool ne peut pas être réactivée ici.</CardDescription>
         </CardHeader>
         <CardContent>
           <FeaturesForm

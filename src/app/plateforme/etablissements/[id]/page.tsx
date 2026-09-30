@@ -48,7 +48,7 @@ export default async function PlatformOrganizationFeaturesPage({ params }: PageP
             rows={FEATURE_FLAGS.map((f) => ({
               ...f,
               enabled: !featureLockedByPlatform(organization, f.key),
-              hint: `${f.hint} ${featureLockedByPlatform(organization, f.key) ? "— arrêtée par Neoscool." : featureEnabled(organization, f.key) ? "— active dans l'établissement." : "— désactivée par l'établissement."}`,
+              hint: `${f.hint} ${featureLockedByPlatform(organization, f.key) ? "— arrêtée par NeoScool." : featureEnabled(organization, f.key) ? "— active dans l'établissement." : "— désactivée par l'établissement."}`,
             }))}
           />
         </CardContent>

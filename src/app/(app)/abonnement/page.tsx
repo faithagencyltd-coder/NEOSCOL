@@ -405,7 +405,7 @@ export default async function SubscriptionPage({ searchParams }: PageProps<"/abo
           {context.organization.type !== "school_group" ? (
             <p className="rounded-2xl border border-border bg-surface p-4 text-sm text-muted-foreground">
               Votre établissement a aussi une école, un centre de formation ou une université ? Le <strong className="text-foreground">Module 4 — Multi-modules</strong>{" "}
-              réunit ces activités sous un seul abonnement, chacune dans son propre espace. Contactez Neoscool pour passer au Module 4 : vos données sont conservées.
+              réunit ces activités sous un seul abonnement, chacune dans son propre espace. Contactez NeoScool pour passer au Module 4 : vos données sont conservées.
             </p>
           ) : null}
         </section>

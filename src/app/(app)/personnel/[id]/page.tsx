@@ -322,7 +322,7 @@ export default async function StaffMemberPage({ params, searchParams }: PageProp
                   </div>
                   {account?.status === "invited" ? (
                     <div className="rounded-xl bg-warning-soft px-3 py-2 text-warning">
-                      Invitation envoyée au compte Neoscool existant : en attente d&apos;acceptation par l&apos;enseignant (aucun second compte créé).
+                      Invitation envoyée au compte NeoScool existant : en attente d&apos;acceptation par l&apos;enseignant (aucun second compte créé).
                     </div>
                   ) : null}
                   {account ? (

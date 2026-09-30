@@ -23,7 +23,7 @@ export const metadata: Metadata = { title: "Mes établissements" };
 const fmt = (d: string | null | undefined) => (d ? formatDate(d, "fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "—");
 
 /**
- * Compte unique Neoscool : tous les établissements du compte, les invitations
+ * Compte unique NeoScool : tous les établissements du compte, les invitations
  * à accepter et, si le Super Admin l'exige, l'abonnement d'accès supplémentaire
  * (paiement, renouvellement, état). Tout est calculé et contrôlé en base.
  */
@@ -45,7 +45,7 @@ export default async function MyEstablishmentsPage() {
     <div className="grid min-w-0 gap-6 [&>*]:min-w-0">
       <PageHeader
         title="Mes établissements"
-        description="Un seul compte Neoscool pour tous les établissements où vous travaillez. Vos droits sont propres à chaque établissement."
+        description="Un seul compte NeoScool pour tous les établissements où vous travaillez. Vos droits sont propres à chaque établissement."
       />
 
       {invitations.length > 0 ? (

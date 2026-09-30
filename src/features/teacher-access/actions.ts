@@ -71,7 +71,7 @@ export async function startTeacherAccessCheckout(_: ActionResult | null, formDat
       reference: checkout.reference,
       amount: checkout.amount,
       currency: checkout.currency,
-      description: `Neoscool — abonnement enseignant multi-établissements (${months})`,
+      description: `NeoScool — abonnement enseignant multi-établissements (${months})`,
       itemName: `Abonnement multi-établissements (${months})`,
       storeName: "NeoScool",
       returnUrl,
