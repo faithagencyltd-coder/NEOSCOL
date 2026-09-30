@@ -5,7 +5,8 @@
   "description": "Vidéos Motion Design NeoScool (Remotion) : module scolaire, formation professionnelle, université.",
   "scripts": {
     "studio": "remotion studio",
-    "render": "node scripts/render-all.mjs"
+    "render": "node scripts/render-all.mjs",
+    "render:film": "node scripts/render-film.mjs"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.530",

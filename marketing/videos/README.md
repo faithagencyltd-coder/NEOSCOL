@@ -22,3 +22,29 @@ des **captures réelles** de l'application en mode démonstration (données fict
 
 Le texte de la voix off, les scènes et les captures utilisées sont modifiables
 dans `src/voiceover.json` et `src/videos.ts`.
+
+## Film officiel « Le fil NeoScool » (module scolaire)
+
+Une journée d'école racontée en 20 scènes, uniquement avec des fonctions
+présentes dans l'application et des captures réelles (établissement de
+démonstration, données fictives). Aucune personne n'est inventée : les plans
+filmés prévus au dossier s'intercaleront au montage ; en attendant, chaque moment
+est annoncé par l'heure, le lieu et l'acteur.
+
+| Composition | Format | Durée |
+| --- | --- | --- |
+| `film-scolaire-16x9` | 1920 × 1080 | ≈ 3 min (20 scènes) |
+| `film-60s-16x9` / `film-60s-9x16` | 16:9 / 9:16 | ≈ 60 s |
+| `film-30s-16x9` / `film-30s-9x16` | 16:9 / 9:16 | ≈ 30 s |
+| `logo-6s-16x9` / `logo-6s-9x16` | 16:9 / 9:16 | 6 s |
+| `logo-2s-16x9` | 16:9 | 2 s |
+
+1. Captures complémentaires (base de démo fraîche) :
+   `node marketing/videos/scripts/capture-film.mjs` (après `capture.mjs`).
+2. Voix off : texte dans `src/film/script.json`, synthèse
+   `python3 scripts/film-voice.py <dossier du modèle Kokoro>` (écrit
+   `public/voix/film/` et `src/film/durees.json`).
+3. Musique et effets sonores originaux : `python3 scripts/film-music.py`.
+4. Montage : storyboard et versions courtes dans `src/film/cuts.json`, contenu
+   des scènes dans `src/film/scenes.ts`, animation dans `src/film/Film.tsx`.
+   Rendu de toutes les versions : `npm run render:film` (sortie dans `out/`).

@@ -1,0 +1,22 @@
+[
+  { "id": "s01", "text": "Une école ne fonctionne pas avec des informations isolées." },
+  { "id": "s02", "text": "Chaque matin, des centaines de vies se croisent dans un même lieu. Des classes, des matières, des salles… une organisation entière." },
+  { "id": "s03", "text": "Pour la direction, la journée commence par une vision claire : les effectifs, les encaissements, les absences, les alertes. Tout, en un regard." },
+  { "id": "s04", "text": "Une famille arrive. L'inscription se fait en quelques minutes : le dossier est créé, la classe attribuée, la facture préparée. Et la carte scolaire est déjà prête." },
+  { "id": "s05", "text": "L'enseignant présente son badge. La tablette l'accueille, et son cours s'ouvre." },
+  { "id": "s06", "text": "Son emploi du temps le suit partout, sur son téléphone." },
+  { "id": "s07", "text": "En classe, l'appel prend quelques secondes. Un absent ? Sa famille le sait aussitôt." },
+  { "id": "s08", "text": "Le soir, les notes sont saisies… ou importées directement d'Excel, contrôlées ligne par ligne." },
+  { "id": "s09", "text": "Moyennes, rangs, appréciations : les bulletins se construisent seuls, selon les règles de l'établissement. Il ne reste qu'à publier." },
+  { "id": "s10", "text": "Au guichet, chaque paiement donne un reçu officiel. Le reliquat est mis à jour instantanément. Plus aucun reçu perdu." },
+  { "id": "s11", "text": "Une annonce, un rappel, une relance : l'établissement parle à chaque famille, par SMS, e-mail ou WhatsApp." },
+  { "id": "s12", "text": "Pour les parents, tout arrive au bon moment, sur leur téléphone : les absences, les notes, les bulletins, les paiements." },
+  { "id": "s13", "text": "Et l'élève suit son propre parcours, au même endroit." },
+  { "id": "s14", "text": "Chaque document porte un QR code. Un scan suffit pour prouver qu'il est authentique." },
+  { "id": "s15", "text": "La direction pilote avec des indicateurs fiables, et peut même poser sa question à l'assistant." },
+  { "id": "s16", "text": "D'une année à l'autre, rien ne se perd : l'historique de chaque élève reste intact, chaque action est tracée." },
+  { "id": "s17", "text": "Et si internet coupe ? L'appel continue. Tout se synchronise dès le retour du réseau." },
+  { "id": "s18", "text": "Chaque inscription, chaque présence, chaque note et chaque document participe à une même histoire." },
+  { "id": "s19", "text": "Avec NeoScool, ces informations restent connectées." },
+  { "id": "s20", "text": "NeoScool. La gestion scolaire, autrement." }
+]
