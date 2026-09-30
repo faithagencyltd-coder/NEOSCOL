@@ -1,8 +1,8 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Building2, Check, CreditCard, FlaskConical, Gift, Lock, Receipt, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, BadgePercent, Building2, Check, CreditCard, FlaskConical, Gift, Lock, Receipt, ShieldCheck } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 
 import { notifyResult } from "@/components/motion/animated-toast";
 import { ActionForm } from "@/components/shared/action-form";
@@ -10,7 +10,7 @@ import { SubmitButton } from "@/components/shared/submit-button";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { changeTrialPlan, startSubscriptionCheckout } from "@/features/billing/actions";
+import { changeTrialPlan, previewPromo, startSubscriptionCheckout, type PromoPreview } from "@/features/billing/actions";
 import { IntervalToggle, PlanPrice, type Interval } from "@/features/billing/components/pricing-grid";
 import { PLAN_ACCENTS } from "@/features/billing/constants";
 import type { PlanWithFeatures } from "@/features/billing/queries";
@@ -51,11 +51,23 @@ export function CheckoutWizard({
     notifyResult(result);
     return result;
   }, null);
+  const [promoInput, setPromoInput] = useState("");
+  const [promoCode, setPromoCode] = useState("");
+  const [preview, setPreview] = useState<PromoPreview | null>(null);
+  const [checking, startChecking] = useTransition();
   const plan = plans.find((p) => p.code === planCode) ?? plans[0]!;
   const yearly = interval === "YEARLY";
   const list = yearly ? plan.annual_list_price : plan.monthly_price;
-  const total = yearly ? plan.annual_price : plan.monthly_price;
-  const discount = list - total;
+  const discount = list - (yearly ? plan.annual_price : plan.monthly_price);
+  // Montant réel calculé en base : tarif négocié éventuel, puis offre ou code promo.
+  const total = preview ? preview.amount : yearly ? plan.annual_price : plan.monthly_price;
+  useEffect(() => {
+    let active = true;
+    previewPromo(planCode, interval, promoCode).then((p) => active && setPreview(p)).catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [planCode, interval, promoCode]);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
@@ -158,11 +170,43 @@ export function CheckoutWizard({
                     <dd className={cn("text-right font-medium", label === "Réduction annuelle" && yearly && "text-success")}>{value}</dd>
                   </div>
                 ))}
+                {preview?.negotiated ? (
+                  <div className="flex justify-between gap-4 border-b border-border/70 pb-2">
+                    <dt className="text-muted-foreground">Tarif négocié</dt>
+                    <dd className="text-right font-medium text-success">{formatMoney(preview.base, plan.currency)}</dd>
+                  </div>
+                ) : null}
+                {preview?.ok && preview.discount ? (
+                  <div className="flex justify-between gap-4 border-b border-border/70 pb-2" data-testid="promo-line">
+                    <dt className="text-muted-foreground">{preview.auto ? `Offre : ${preview.name}` : `Code ${preview.code}`}</dt>
+                    <dd className="text-right font-medium text-success">- {formatMoney(preview.discount, plan.currency)}</dd>
+                  </div>
+                ) : null}
                 <div className="flex items-baseline justify-between gap-4 pt-1">
                   <dt className="font-semibold">Total</dt>
                   <dd className="font-display text-2xl font-bold tabular-nums">{formatMoney(total, plan.currency)}</dd>
                 </div>
               </dl>
+              <div className="grid gap-2 rounded-xl border border-dashed border-border p-3">
+                <label htmlFor="promo" className="flex items-center gap-2 text-sm font-medium">
+                  <BadgePercent className="size-4 text-primary" aria-hidden /> Code promo
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    id="promo"
+                    value={promoInput}
+                    onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                    maxLength={30}
+                    placeholder="Ex. : RENTREE2026"
+                    className="h-10 min-w-0 flex-1 rounded-xl border border-border bg-surface px-3 text-sm uppercase"
+                  />
+                  <Button type="button" variant="secondary" disabled={checking || !promoInput.trim()} onClick={() => startChecking(() => setPromoCode(promoInput.trim()))}>
+                    Appliquer
+                  </Button>
+                </div>
+                {promoCode && preview && !preview.ok ? <p className="text-xs text-danger">{preview.message ?? "Code promo non applicable."}</p> : null}
+                {promoCode && preview?.ok && !preview.auto ? <p className="text-xs text-success">Code {preview.code} appliqué.</p> : null}
+              </div>
               {trial.active ? (
                 <p className="rounded-xl bg-primary-soft/70 p-3 text-xs text-primary">
                   <Gift className="mr-1 inline size-3.5" aria-hidden />
@@ -221,6 +265,7 @@ export function CheckoutWizard({
                 <input type="hidden" name="plan" value={plan.code} />
                 <input type="hidden" name="interval" value={interval} />
                 <input type="hidden" name="gateway" value={gateway} />
+                <input type="hidden" name="promo" value={preview?.ok && !preview.auto ? (preview.code ?? "") : ""} />
                 <SubmitButton size="lg" className="w-full uppercase tracking-wide" pendingLabel="Redirection vers le paiement…" disabled={payment.options.length === 0}>
                   <CreditCard aria-hidden /> Payer mon abonnement — {formatMoney(total, plan.currency)}
                 </SubmitButton>

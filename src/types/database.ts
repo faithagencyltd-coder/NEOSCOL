@@ -4391,6 +4391,56 @@ export type Database = {
           }
         ]
       }
+      negotiated_prices: {
+        Row: {
+          annual_price: number
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          monthly_price: number
+          note: string | null
+          organization_id: string
+          plan_code: string
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          annual_price: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          monthly_price: number
+          note?: string | null
+          organization_id: string
+          plan_code: string
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          annual_price?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          monthly_price?: number
+          note?: string | null
+          organization_id?: string
+          plan_code?: string
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "negotiated_prices_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       notification_deliveries: {
         Row: {
           attempts: number
@@ -5733,6 +5783,117 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff_members"
             referencedColumns: ["organization_id", "id"]
+          }
+        ]
+      }
+      promo_codes: {
+        Row: {
+          auto_apply: boolean
+          code: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          discount_type: string
+          discount_value: number
+          ends_at: string | null
+          id: string
+          intervals: string[] | null
+          is_active: boolean
+          max_uses: number | null
+          name: string
+          plan_codes: string[] | null
+          starts_at: string
+          updated_at: string
+        }
+        Insert: {
+          auto_apply?: boolean
+          code: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          ends_at?: string | null
+          id?: string
+          intervals?: string[] | null
+          is_active?: boolean
+          max_uses?: number | null
+          name: string
+          plan_codes?: string[] | null
+          starts_at?: string
+          updated_at?: string
+        }
+        Update: {
+          auto_apply?: boolean
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          ends_at?: string | null
+          id?: string
+          intervals?: string[] | null
+          is_active?: boolean
+          max_uses?: number | null
+          name?: string
+          plan_codes?: string[] | null
+          starts_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          
+        ]
+      }
+      promo_redemptions: {
+        Row: {
+          amount_before: number
+          created_at: string
+          discount: number
+          id: string
+          invoice_id: string
+          organization_id: string
+          promo_id: string
+        }
+        Insert: {
+          amount_before: number
+          created_at?: string
+          discount: number
+          id?: string
+          invoice_id: string
+          organization_id: string
+          promo_id: string
+        }
+        Update: {
+          amount_before?: number
+          created_at?: string
+          discount?: number
+          id?: string
+          invoice_id?: string
+          organization_id?: string
+          promo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_redemptions_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: true
+            referencedRelation: "subscription_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_redemptions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_redemptions_promo_id_fkey"
+            columns: ["promo_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
           }
         ]
       }
@@ -7327,6 +7488,7 @@ export type Database = {
           issued_at: string
           kind: string
           list_amount: number
+          negotiated: boolean
           organization_id: string
           paid_at: string | null
           payment_method: string | null
@@ -7337,6 +7499,8 @@ export type Database = {
           plan_code: string
           plan_id: string
           plan_name: string
+          promo_code: string | null
+          promo_discount: number
           status: string
           subscription_id: string
           unit_annual_price: number
@@ -7356,6 +7520,7 @@ export type Database = {
           issued_at?: string
           kind?: string
           list_amount: number
+          negotiated?: boolean
           organization_id: string
           paid_at?: string | null
           payment_method?: string | null
@@ -7366,6 +7531,8 @@ export type Database = {
           plan_code: string
           plan_id: string
           plan_name: string
+          promo_code?: string | null
+          promo_discount?: number
           status?: string
           subscription_id: string
           unit_annual_price: number
@@ -7385,6 +7552,7 @@ export type Database = {
           issued_at?: string
           kind?: string
           list_amount?: number
+          negotiated?: boolean
           organization_id?: string
           paid_at?: string | null
           payment_method?: string | null
@@ -7395,6 +7563,8 @@ export type Database = {
           plan_code?: string
           plan_id?: string
           plan_name?: string
+          promo_code?: string | null
+          promo_discount?: number
           status?: string
           subscription_id?: string
           unit_annual_price?: number
@@ -8669,6 +8839,18 @@ export type Database = {
           enrollment: string
         }[]
       }
+      active_offers: {
+        Args: never
+        Returns: {
+          name: string
+          description: string
+          discount_type: string
+          discount_value: number
+          plan_codes: string[]
+          intervals: string[]
+          ends_at: string
+        }[]
+      }
       add_student_guardian: {
         Args: {
           p_student_id: string
@@ -8772,6 +8954,15 @@ export type Database = {
         }
         Returns: Json
       }
+      billing_preview_promo: {
+        Args: {
+          p_org: string
+          p_plan_code: string
+          p_interval: string
+          p_code?: string
+        }
+        Returns: Json
+      }
       billing_process_lifecycle: {
         Args: never
         Returns: Json
@@ -8789,6 +8980,17 @@ export type Database = {
           p_interval: string
           p_provider: string
           p_mode: string
+        }
+        Returns: Json
+      }
+      billing_start_checkout_offer: {
+        Args: {
+          p_org: string
+          p_plan_code: string
+          p_interval: string
+          p_provider: string
+          p_mode: string
+          p_code?: string
         }
         Returns: Json
       }
@@ -9488,6 +9690,24 @@ export type Database = {
         }
         Returns: number
       }
+      platform_save_promo: {
+        Args: {
+          p_id: string
+          p_code: string
+          p_name: string
+          p_description: string
+          p_discount_type: string
+          p_discount_value: number
+          p_plan_codes: string[]
+          p_intervals: string[]
+          p_starts_at: string
+          p_ends_at: string
+          p_max_uses: number
+          p_auto_apply: boolean
+          p_is_active: boolean
+        }
+        Returns: string
+      }
       platform_save_teacher_access_settings: {
         Args: {
           p_enabled: boolean
@@ -9515,6 +9735,18 @@ export type Database = {
           p_email: number
           p_sms: number
           p_whatsapp: number
+        }
+        Returns: undefined
+      }
+      platform_set_negotiated_price: {
+        Args: {
+          p_org: string
+          p_plan_code: string
+          p_monthly: number
+          p_annual: number
+          p_note: string
+          p_valid_until: string
+          p_active: boolean
         }
         Returns: undefined
       }
@@ -9623,6 +9855,13 @@ export type Database = {
           p_reason: string
         }
         Returns: Json
+      }
+      platform_update_plan_trial: {
+        Args: {
+          p_plan: string
+          p_trial_days: number
+        }
+        Returns: undefined
       }
       platform_update_security_settings: {
         Args: {

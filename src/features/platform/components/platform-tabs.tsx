@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftRight, Building2, CreditCard, Gem, Globe2, Layers, PlugZap, ShieldCheck, Sigma, Users, Wallet } from "lucide-react";
+import { ArrowLeftRight, BadgePercent, Building2, CreditCard, Gem, Globe2, Layers, PlugZap, ShieldCheck, Sigma, Users, Wallet } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -12,6 +12,7 @@ const TABS = [
   { href: "/plateforme/paiements", label: "Paiements", icon: CreditCard },
   { href: "/plateforme/paiements-en-ligne", label: "Paiements en ligne", icon: Wallet },
   { href: "/plateforme/formules", label: "Formules", icon: Layers },
+  { href: "/plateforme/offres", label: "Offres", icon: BadgePercent },
   { href: "/plateforme/enseignants", label: "Enseignants multi-établissements", icon: Users },
   { href: "/plateforme/pays", label: "Pays", icon: Globe2 },
   { href: "/plateforme/regles", label: "Règles académiques", icon: Sigma },

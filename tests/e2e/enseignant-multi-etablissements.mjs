@@ -222,6 +222,7 @@ console.log("\n=== 7. Portail apprenant : établissement, classe, parcours ===")
   check(t.includes("Nationalité") || t.includes("Lieu de naissance"), "portail : profil détaillé");
   await shot(s, "11-portail-plus");
   await s.goto(`${base}/portail/parcours`);
+  await s.getByText("Parcours dans l'établissement").first().waitFor({ timeout: 15000 }).catch(() => {});
   t = await text(s);
   check(t.includes("Parcours dans l'établissement") && /20\d\d-20\d\d/.test(t), "portail : historique des années");
   await shot(s, "12-portail-parcours");

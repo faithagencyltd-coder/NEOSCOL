@@ -1,4 +1,4 @@
-import { BadgeDollarSign, Check, History, Layers, X } from "lucide-react";
+import { BadgeDollarSign, Check, Gift, History, Layers, X } from "lucide-react";
 import type { Metadata } from "next";
 
 import { QuickFormDialog } from "@/components/shared/quick-form-dialog";
@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { FEATURE_LABELS, PLAN_ACCENTS } from "@/features/billing/constants";
 import { listPlans } from "@/features/billing/queries";
 import { updatePlan, updatePlanPrices } from "@/features/platform/billing-actions";
+import { updatePlanTrial } from "@/features/platform/offer-actions";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateTime, formatMoney } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
@@ -91,6 +92,19 @@ export default async function PlatformPlansPage() {
                   </ul>
                 </details>
               ) : null}
+              <QuickFormDialog
+                title={`Essai gratuit — ${plan.name}`}
+                description="Durée de l'essai gratuit proposé aux nouveaux établissements (0 = pas d'essai). Les essais en cours ne changent pas."
+                trigger={
+                  <Button size="sm" variant="secondary">
+                    <Gift aria-hidden /> Essai : {plan.trial_days} j
+                  </Button>
+                }
+                submitLabel="Enregistrer la durée"
+                action={updatePlanTrial}
+                hidden={{ plan_id: plan.id }}
+                fields={[{ name: "trial_days", label: "Durée de l'essai (jours)", type: "number", required: true, min: 0, max: 90, defaultValue: String(plan.trial_days) }]}
+              />
               <QuickFormDialog
                 title={`Prix de la formule ${plan.name}`}
                 description="Le nouveau prix s'applique aux nouvelles souscriptions, aux essais qui passent au paiement et aux changements de formule. Les abonnés actuels gardent leur prix (jamais rétroactif). Le prix annuel = 12 mois moins la remise, arrondi à la centaine."

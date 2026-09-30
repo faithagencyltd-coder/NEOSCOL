@@ -51,12 +51,13 @@ export async function startSubscriptionCheckout(_: ActionResult | null, formData
   if (!admin) return { ok: false, message: "Configuration serveur incomplète (clé de service Supabase absente)." };
 
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("billing_start_checkout", {
+  const { data, error } = await supabase.rpc("billing_start_checkout_offer", {
     p_org: auth.organizationId,
     p_plan_code: choice.data.plan,
     p_interval: choice.data.interval,
     p_provider: setup.code,
     p_mode: setup.mode,
+    p_code: String(formData.get("promo") ?? "").trim() || undefined,
   });
   if (error || !data) return { ok: false, message: dbErrorMessage(error, "Création du paiement impossible.") };
   const checkout = data as { transaction_id: string; reference: string; amount: number; currency: string; invoice_number: string; plan_name: string; interval: string };
@@ -197,4 +198,17 @@ export async function declareOfflinePayment(_: ActionResult | null, formData: Fo
   if (error) return { ok: false, message: dbErrorMessage(error) };
   revalidatePath(`/abonnement/transfert/${reference}`);
   return { ok: true, message: "Paiement déclaré : NeoScool le vérifie et active votre abonnement dès validation." };
+}
+
+export type PromoPreview = { ok: boolean; negotiated?: boolean; code?: string; name?: string; auto?: boolean; base: number; discount?: number; amount: number; message?: string | null };
+
+/** Aperçu d'une réduction (code saisi ou offre automatique) : aucune écriture. */
+export async function previewPromo(plan: string, interval: string, code: string): Promise<PromoPreview | null> {
+  const auth = await billingContext("billing.read");
+  if (!auth.ok) return null;
+  const choice = choiceSchema.safeParse({ plan, interval });
+  if (!choice.success) return null;
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("billing_preview_promo", { p_org: auth.organizationId, p_plan_code: choice.data.plan, p_interval: choice.data.interval, p_code: code.trim().slice(0, 30) || undefined });
+  return (data as PromoPreview | null) ?? null;
 }

@@ -1,10 +1,12 @@
-import { BadgeCheck, CalendarClock, CreditCard, Database, ShieldCheck, Smartphone } from "lucide-react";
+import { BadgeCheck, BadgePercent, CalendarClock, CreditCard, Database, ShieldCheck, Smartphone } from "lucide-react";
 import type { Metadata } from "next";
 
 import { PricingGrid } from "@/features/billing/components/pricing-grid";
 import { PublicShell } from "@/features/billing/components/public-shell";
 import { listPlans } from "@/features/billing/queries";
 import { TRIAL_DAYS } from "@/features/billing/constants";
+import { createClient } from "@/lib/supabase/server";
+import { formatDate, formatMoney } from "@/lib/utils/format";
 
 export const metadata: Metadata = {
   title: "Tarifs",
@@ -21,6 +23,9 @@ const FAQ = [
 /** Page publique des tarifs : 5 formules officielles, mensuel ou annuel -30 %. */
 export default async function PricingPage() {
   const plans = await listPlans();
+  const { data: offers } = await (await createClient()).rpc("active_offers");
+  // Durée d'essai réglée par le Super Admin (la plus fréquente des formules proposées).
+  const trialDays = plans.length ? Math.max(...plans.filter((p) => p.is_active).map((p) => p.trial_days)) : TRIAL_DAYS;
   return (
     <PublicShell>
       <section className="relative -mt-px bg-gradient-to-br from-[#0b2559] via-[#0e3a82] to-[#0e4a9a] pb-10 pt-6 text-center text-white">
@@ -28,11 +33,28 @@ export default async function PricingPage() {
           <p className="anim-fade-up text-xs font-semibold uppercase tracking-widest text-cyan-300">Tarifs NeoScool</p>
           <h1 className="anim-fade-up text-3xl font-bold leading-tight [--delay:80ms] sm:text-4xl">Une formule adaptée à chaque établissement</h1>
           <p className="anim-fade-up text-base text-sky-100/85 [--delay:160ms]">
-            De l&apos;école maternelle à l&apos;université. <strong className="text-white">Essai gratuit de {TRIAL_DAYS} jours</strong> sur toutes les formules, sans paiement.
+            De l&apos;école maternelle à l&apos;université. <strong className="text-white">Essai gratuit {trialDays > 0 ? `de ${trialDays} jours` : ""}</strong> sur toutes les formules, sans paiement.
           </p>
         </div>
       </section>
       <main className="mx-auto grid max-w-7xl gap-12 px-4 py-8 sm:px-8">
+        {offers?.length ? (
+          <section aria-label="Offres en cours" className="grid gap-3" data-testid="active-offers">
+            {offers.map((o) => (
+              <div key={o.name} className="flex flex-wrap items-center gap-3 rounded-2xl border border-orange-300 bg-orange-50 p-4 text-orange-900">
+                <BadgePercent className="size-6 shrink-0" aria-hidden />
+                <div className="grid">
+                  <span className="font-semibold">
+                    {o.name} : {o.discount_type === "percent" ? `-${o.discount_value} %` : `-${formatMoney(o.discount_value, "XOF")}`}
+                    {o.ends_at ? ` jusqu'au ${formatDate(o.ends_at)}` : ""}
+                  </span>
+                  {o.description ? <span className="text-sm">{o.description}</span> : null}
+                  <span className="text-xs">Réduction appliquée automatiquement au paiement.</span>
+                </div>
+              </div>
+            ))}
+          </section>
+        ) : null}
         <PricingGrid plans={plans} mode="public" />
 
         <section aria-label="Inclus dans toutes les formules" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
