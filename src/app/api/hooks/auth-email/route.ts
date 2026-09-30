@@ -7,7 +7,7 @@ import { verifyStandardWebhook } from "@/lib/messaging/webhook";
 /**
  * « Send Email Hook » de Supabase Auth : les e-mails d'authentification
  * (confirmation d'adresse, mot de passe oublié, invitation, lien magique,
- * changement d'adresse) partent par l'intégration e-mail de NEOSCOOL (Brevo).
+ * changement d'adresse) partent par l'intégration e-mail de NeoScool (Brevo).
  * Signature « Standard Webhooks » vérifiée avec SEND_EMAIL_HOOK_SECRET.
  * Activation : supabase/config.toml ([auth.hook.send_email]) ou tableau de bord Supabase.
  */
@@ -17,12 +17,12 @@ type HookPayload = {
 };
 
 const SUBJECTS: Record<string, { subject: string; intro: string; cta: string }> = {
-  signup: { subject: "Confirmez votre adresse e-mail — NEOSCOOL", intro: "Confirmez votre adresse pour activer votre compte NEOSCOOL.", cta: "Confirmer mon adresse" },
-  recovery: { subject: "Réinitialisation de votre mot de passe — NEOSCOOL", intro: "Vous avez demandé à réinitialiser votre mot de passe.", cta: "Choisir un nouveau mot de passe" },
-  invite: { subject: "Invitation à rejoindre NEOSCOOL", intro: "Vous êtes invité(e) à rejoindre votre établissement sur NEOSCOOL.", cta: "Accepter l'invitation" },
-  magiclink: { subject: "Votre lien de connexion — NEOSCOOL", intro: "Voici votre lien de connexion à NEOSCOOL.", cta: "Me connecter" },
-  email_change: { subject: "Confirmez votre nouvelle adresse — NEOSCOOL", intro: "Confirmez le changement d'adresse e-mail de votre compte NEOSCOOL.", cta: "Confirmer la nouvelle adresse" },
-  reauthentication: { subject: "Code de vérification — NEOSCOOL", intro: "Voici votre code de vérification.", cta: "" },
+  signup: { subject: "Confirmez votre adresse e-mail — NeoScool", intro: "Confirmez votre adresse pour activer votre compte NeoScool.", cta: "Confirmer mon adresse" },
+  recovery: { subject: "Réinitialisation de votre mot de passe — NeoScool", intro: "Vous avez demandé à réinitialiser votre mot de passe.", cta: "Choisir un nouveau mot de passe" },
+  invite: { subject: "Invitation à rejoindre NeoScool", intro: "Vous êtes invité(e) à rejoindre votre établissement sur NeoScool.", cta: "Accepter l'invitation" },
+  magiclink: { subject: "Votre lien de connexion — NeoScool", intro: "Voici votre lien de connexion à NeoScool.", cta: "Me connecter" },
+  email_change: { subject: "Confirmez votre nouvelle adresse — NeoScool", intro: "Confirmez le changement d'adresse e-mail de votre compte NeoScool.", cta: "Confirmer la nouvelle adresse" },
+  reauthentication: { subject: "Code de vérification — NeoScool", intro: "Voici votre code de vérification.", cta: "" },
 };
 
 const escape = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
@@ -35,7 +35,7 @@ function render(action: string, link: string, token: string, name?: string) {
     : "";
   const html = `<!doctype html><html lang="fr"><body style="font-family:Arial,sans-serif;background:#f4f7fb;padding:24px;color:#0b1f4d">
 <div style="max-width:520px;margin:auto;background:#fff;border-radius:16px;padding:28px">
-<h1 style="font-size:20px;margin:0 0 16px">NEOSCOOL</h1><p>${hello}</p><p>${t.intro}</p>${button}
+<h1 style="font-size:20px;margin:0 0 16px"><span style="color:#f7931e">.</span><span style="color:#0b2e6f">Neo</span><span style="color:#1666e0">Scool</span></h1><p>${hello}</p><p>${t.intro}</p>${button}
 <p>Code : <strong style="font-size:18px;letter-spacing:3px">${escape(token)}</strong></p>
 <p style="color:#64748b;font-size:12px">Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail : rien ne sera modifié.</p></div></body></html>`;
   const text = `${hello}\n\n${t.intro}\n${t.cta ? `${t.cta} : ${link}\n` : ""}Code : ${token}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail.`;

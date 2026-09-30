@@ -1,4 +1,4 @@
-# Audit NEOSCOOL — master prompt global (plateforme internationale)
+# Audit NeoScool — master prompt global (plateforme internationale)
 
 Date : 29/09/2026. Cet audit porte sur le projet réel ; aucun code n'a été écrit pour ce prompt avant validation (§ 93).
 
@@ -25,9 +25,9 @@ Taille du projet :
 | 10 | Modules | Modules 1 à 4 (scolaire, formation, université, multi-modules). Vocabulaire dynamique déjà en place (élève, étudiant, apprenant) via `vocabularyFor(type)`. | La terminologie devient configurable (§ 13–14) |
 | 11 | Abonnements | Formules, fonctionnalités par formule (`subscription_features`), prix figés sur chaque facture (historique conservé), essai de 20 jours, lecture seule sans suppression. | Base du catalogue dynamique (§ 26–27) |
 | 12 | Paiements | Interface `PaymentProvider` (PayDunya, simulation en test seulement), webhook idempotent, vérification serveur, paiement manuel. | Adaptateurs par pays (§ 21, 60–62) |
-| 13 | Comptabilité | Finances de l'établissement (factures, reçus, dépenses) strictement séparées des revenus NEOSCOOL. | Conservée (§ 45) |
+| 13 | Comptabilité | Finances de l'établissement (factures, reçus, dépenses) strictement séparées des revenus NeoScool. | Conservée (§ 45) |
 | 14–15 | Communication et SMS | Intégrations Brevo, Twilio, WhatsApp officiel. Quotas et journal d'envoi. Annonces et messagerie internes. | Ajout d'une portée par pays et de la tarification des SMS (§ 23) |
-| 16 | Portails | Portails élève, étudiant, apprenant, parent (multi-enfants), personnel, enseignant, formateur, kiosque de pointage, NEOSCOOL Console. | Conservés (§ 31) |
+| 16 | Portails | Portails élève, étudiant, apprenant, parent (multi-enfants), personnel, enseignant, formateur, kiosque de pointage, NeoScool Console. | Conservés (§ 31) |
 | 17 | Documents | Document Studio, PDF avec QR de vérification, numérotation, documents figés, révocation. | Conservé ; il restera à le rendre bilingue |
 | 18 | Archives | Cycle de vie élève, historique, années académiques, données historiques importées. Aucune suppression. | Complété par l'archivage d'une année (§ 40) |
 | 19 | Hors ligne | Application installable et page hors ligne ; aucune file de synchronisation. | **Manquant** (§ 37–38) |
@@ -54,7 +54,7 @@ Sont également déjà présents :
 6. **Feature flags multi-niveaux (§ 47–48)** : ils existent seulement au niveau de l'établissement (`settings.features`). Il manque les niveaux global, pays, organisation, formule et utilisateur, avec une résolution contrôlée en base.
 7. **Publication, versions et rollback des configurations (§ 49–51)** : absents.
 8. **Tarification par pays, formule, devise et période (§ 24, 76)** : les prix sont fixés par formule, pour une seule devise.
-9. **Fournisseurs et tarifs SMS par pays (§ 23)** : les intégrations sont globales. Il manque la portée par pays et le tarif fournisseur ou NEOSCOOL.
+9. **Fournisseurs et tarifs SMS par pays (§ 23)** : les intégrations sont globales. Il manque la portée par pays et le tarif fournisseur ou NeoScool.
 10. **Hors ligne avec file de synchronisation (§ 37–38, 79)** : absent. Premier cas utile : l'appel des présences et le pointage sans réseau.
 11. **Archivage d'une année et réinscription N → N+1 (§ 40–41, 81)** : les éléments existent, mais il manque l'assistant de clôture et d'archivage de l'année.
 12. **Structures académiques et règles par pays (§ 66–67)** : les structures sont configurables par établissement, mais il n'existe pas de modèles par pays et par type gérés par le Super Admin. Cela rejoint le moteur académique multi-pays (P7).
@@ -80,7 +80,7 @@ Sont également déjà présents :
 | Étape | Contenu | Tests prévus par le prompt |
 |---|---|---|
 | **I1** | Pays et devises en base, écran « Pays » du Super Admin, formulaires reliés (fin des listes codées en dur), fuseau, indicatif, formats et devise par établissement | § 68, 70, 83 |
-| **I2** | Fondation i18n et sélecteur FR / EN. Traduction complète : authentification, pages publiques, menus, NEOSCOOL Console (Super Admin) et portails | § 69, 82 (partiel) |
+| **I2** | Fondation i18n et sélecteur FR / EN. Traduction complète : authentification, pages publiques, menus, NeoScool Console (Super Admin) et portails | § 69, 82 (partiel) |
 | **I3** | Traduction du reste de l'application, module par module : scolaire, formation, université, finances, documents PDF, e-mails et SMS | § 82 (complet) |
 | **I4** | Catalogue dynamique modules, fonctionnalités et prix par pays et devise ; feature flags multi-niveaux ; versions, publication et rollback | § 75, 76 |
 | **I5** | Communication par pays (fournisseurs, tarifs SMS), rappels d'impayés avec paiement du coût SMS | § 78 |

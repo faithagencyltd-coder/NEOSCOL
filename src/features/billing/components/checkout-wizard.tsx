@@ -134,7 +134,7 @@ export function CheckoutWizard({
                 ))}
               </dl>
               <p className="text-xs text-muted-foreground">
-                Ces informations figurent sur vos factures NEOSCOOL.{" "}
+                Ces informations figurent sur vos factures NeoScool.{" "}
                 <Link href="/parametres/etablissement" className="font-semibold text-primary hover:underline">
                   Les modifier
                 </Link>
@@ -193,7 +193,7 @@ export function CheckoutWizard({
                   <Lock className="size-4 shrink-0 text-success" aria-hidden /> L&apos;abonnement est activé uniquement après confirmation du paiement par nos serveurs.
                 </li>
                 <li className="flex gap-2">
-                  <Receipt className="size-4 shrink-0 text-success" aria-hidden /> Une facture NEOSCOOL numérotée est créée et reste disponible en PDF.
+                  <Receipt className="size-4 shrink-0 text-success" aria-hidden /> Une facture NeoScool numérotée est créée et reste disponible en PDF.
                 </li>
               </ul>
               <ActionForm dispatch={payAction} pending={paying} className="grid gap-3">

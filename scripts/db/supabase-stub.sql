@@ -2,7 +2,7 @@
 -- Émulation MINIMALE de l'environnement Supabase pour les tests locaux.
 -- N'est jamais appliqué sur un vrai projet Supabase : il reproduit uniquement
 -- les rôles, le schéma auth (uid/jwt) et le schéma storage dont dépendent
--- les migrations NEOSCOOL.
+-- les migrations NeoScool.
 -- =============================================================================
 do $$
 begin

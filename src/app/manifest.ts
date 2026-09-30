@@ -1,10 +1,10 @@
 import type { MetadataRoute } from "next";
 
-/** Manifeste PWA : NEOSCOOL s'installe sur ordinateur, tablette et téléphone. */
+/** Manifeste PWA : NeoScool s'installe sur ordinateur, tablette et téléphone. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "NEOSCOOL — Gestion scolaire et de formation",
-    short_name: "NEOSCOOL",
+    name: "NeoScool — Gestion scolaire et de formation",
+    short_name: "NeoScool",
     description: "Plus qu'un logiciel, une vision pour l'éducation.",
     lang: "fr",
     start_url: "/",

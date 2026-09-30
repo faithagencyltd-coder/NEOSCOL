@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ============================================================================
-   NEOSCOOL — jetons du design system (clair / sombre)
+   NeoScool — jetons du design system (clair / sombre)
    ========================================================================== */
 :root {
   --background: #f4f7fc;
@@ -273,7 +273,7 @@ h2,
 
 
 /* ============================================================================
-   NEOSCOOL — système d'animation (design system)
+   NeoScool — système d'animation (design system)
    Toutes les animations de l'application passent par ces classes et keyframes.
    Durées : 150–300 ms (interactions), 300–500 ms (transitions), ≤ 800 ms (succès).
    prefers-reduced-motion : désactivé globalement (règle plus haut + fin de fichier).

@@ -111,7 +111,7 @@ export const TEMPLATE_VARIABLES: { key: string; label: string; sample: string }[
   { key: "formation.nom", label: "Filière / formation", sample: "Enseignement général" },
   { key: "formation.duree", label: "Durée de la formation (heures)", sample: "480" },
   { key: "annee.nom", label: "Année scolaire", sample: "2026-2027" },
-  { key: "etablissement.nom", label: "Établissement", sample: "Collège NEOSCOOL" },
+  { key: "etablissement.nom", label: "Établissement", sample: "Collège NeoScool" },
   { key: "signataire.nom", label: "Signataire", sample: "M. Koné" },
   { key: "signataire.fonction", label: "Fonction du signataire", sample: "Directeur" },
   { key: "date", label: "Date du jour", sample: "23 septembre 2026" },

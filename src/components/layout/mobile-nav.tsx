@@ -30,7 +30,7 @@ export function MobileNav({ sections, organizationName }: { sections: NavSection
             </Dialog.Close>
           </div>
           <Dialog.Title className="px-3 text-sm font-medium text-white">{organizationName}</Dialog.Title>
-          <Dialog.Description className="sr-only">Navigation principale de NEOSCOOL</Dialog.Description>
+          <Dialog.Description className="sr-only">Navigation principale de NeoScool</Dialog.Description>
           <SidebarNav sections={sections} onNavigate={() => setOpen(false)} />
         </Dialog.Content>
       </Dialog.Portal>

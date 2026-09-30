@@ -12,17 +12,17 @@ import { requireSession } from "@/lib/auth/guards";
 import { displayName } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 
-/** « NEOSCOOL Console » : application installable distincte (manifeste propre, portée /plateforme). */
+/** « NeoScool Console » : application installable distincte (manifeste propre, portée /plateforme). */
 export const metadata: Metadata = {
-  title: { template: "%s · NEOSCOOL Console", default: "NEOSCOOL Console" },
+  title: { template: "%s · NeoScool Console", default: "NeoScool Console" },
   manifest: "/console.webmanifest",
-  applicationName: "NEOSCOOL Console",
-  appleWebApp: { capable: true, title: "NEOSCOOL Console", statusBarStyle: "black-translucent" },
+  applicationName: "NeoScool Console",
+  appleWebApp: { capable: true, title: "NeoScool Console", statusBarStyle: "black-translucent" },
   icons: { apple: "/icons/console-192.png" },
 };
 export const viewport: Viewport = { themeColor: "#07142b" };
 
-/** Console du Super Administrateur NEOSCOOL (PLATFORM CONSOLE). */
+/** Console du Super Administrateur NeoScool (PLATFORM CONSOLE). */
 export default async function PlatformLayout({ children }: { children: React.ReactNode }) {
   const context = await requireSession();
   const supabase = await createClient();
@@ -36,7 +36,7 @@ export default async function PlatformLayout({ children }: { children: React.Rea
           <Logo inverted tagline />
           <div className="flex items-center gap-2">
           <div className="hidden rounded-xl bg-white/95 px-1 text-foreground sm:block [&_p]:px-2 [&_p]:py-1 [&_p]:text-xs">
-            <InstallAppButton label="Installer NEOSCOOL Console" appName="NEOSCOOL Console" />
+            <InstallAppButton label="Installer NeoScool Console" appName="NeoScool Console" />
           </div>
           <div className="rounded-xl bg-white text-foreground">
             <UserMenu name={displayName(context)} email={context.user.email} roleLabel="Super administrateur" organizations={context.organizations} activeOrganizationId={context.organization?.id ?? ""} />
@@ -45,7 +45,7 @@ export default async function PlatformLayout({ children }: { children: React.Rea
         </div>
         <div className="mx-auto grid max-w-7xl gap-1 px-4 pt-2 sm:px-8">
           <p className="text-xs font-semibold uppercase tracking-widest text-cyan-300">Platform console</p>
-          <h1 className="text-3xl font-bold">Plateforme NEOSCOOL</h1>
+          <h1 className="text-3xl font-bold">Plateforme NeoScool</h1>
           <p className="pb-4 text-white/75">Établissements, abonnements, paiements, formules, intégrations et sécurité. Les données de chaque établissement restent strictement séparées.</p>
           <PlatformTabs />
         </div>

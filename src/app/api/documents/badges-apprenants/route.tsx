@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
   const pages = ids.length ? await learnerBadgePages(req, ids) : [];
   if (pages.length === 0) return errorResponse(409, `Aucun badge actif dans cette ${group} : générez d'abord les badges.`);
   const pdf = await renderToBuffer(
-    <Document title={`Badges de la ${group}`} author="NEOSCOOL" language="fr">
+    <Document title={`Badges de la ${group}`} author="NeoScool" language="fr">
       {pages}
     </Document>,
   );

@@ -1,5 +1,5 @@
 /**
- * Catalogue des champs NEOSCOOL pour la migration des données historiques et
+ * Catalogue des champs NeoScool pour la migration des données historiques et
  * reconnaissance automatique des colonnes d'un fichier (Excel / CSV).
  * Partagé entre l'interface (assistant) et le serveur (analyse).
  */
@@ -70,7 +70,7 @@ const STUDENT_FIELDS: ImportField[] = [
 
 const STUDENT_REF: ImportField = {
   key: "student_ref",
-  label: "Matricule (NEOSCOOL ou ancien)",
+  label: "Matricule (NeoScool ou ancien)",
   group: "Élève",
   oneOf: "student",
   hint: "Sinon : nom + prénom (+ date de naissance)",

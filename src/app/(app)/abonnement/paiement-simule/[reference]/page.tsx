@@ -38,7 +38,7 @@ export default async function SimulatedCheckoutPage({ params }: PageProps<"/abon
           <span className="flex size-14 items-center justify-center rounded-2xl bg-primary-soft text-primary">
             <Smartphone className="size-7" aria-hidden />
           </span>
-          <p className="text-sm text-muted-foreground">Paiement à « NEOSCOOL »</p>
+          <p className="text-sm text-muted-foreground">Paiement à « NeoScool »</p>
           <p className="font-display text-3xl font-bold tabular-nums">{formatMoney(tx.amount, tx.currency)}</p>
           <p className="text-xs text-muted-foreground">
             {tx.invoice?.plan_name} · {tx.invoice?.billing_interval === "YEARLY" ? "annuel" : "mensuel"} · facture {tx.invoice?.invoice_number} · {tx.internal_reference}
@@ -61,7 +61,7 @@ export default async function SimulatedCheckoutPage({ params }: PageProps<"/abon
           <p className="rounded-xl bg-surface-muted p-3 text-center text-sm">Ce paiement est déjà traité ({tx.status}).</p>
         )}
         <p className="text-center text-xs text-muted-foreground">
-          L&apos;issue choisie est enregistrée côté « fournisseur », puis NEOSCOOL la vérifie par le même circuit qu&apos;une notification réelle.
+          L&apos;issue choisie est enregistrée côté « fournisseur », puis NeoScool la vérifie par le même circuit qu&apos;une notification réelle.
         </p>
       </div>
     </Card>

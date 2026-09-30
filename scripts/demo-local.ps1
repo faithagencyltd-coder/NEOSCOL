@@ -1,4 +1,4 @@
-# NEOSCOOL — démonstration locale en une commande (Windows / PowerShell).
+# NeoScool — démonstration locale en une commande (Windows / PowerShell).
 #   Prérequis : Node.js >= 20.9 et Docker Desktop démarré.
 #   Usage     : npm run demo:windows            (première fois : 5 à 10 min)
 #               npm run demo:windows -- -Reset  (remet les données de démonstration à zéro)
@@ -45,7 +45,7 @@ CRON_SECRET=demo-local-$secret
 NEOSCOL_DEMO_MODE=1
 "@ | Set-Content -Encoding UTF8 .env.local
 
-Say "NEOSCOOL démarre : ouvrez http://localhost:3000"
+Say "NeoScool démarre : ouvrez http://localhost:3000"
 Write-Host "  Choisissez un rôle sur la page de connexion (mode démonstration)."
 Write-Host "  Mot de passe commun : NeoScol-Demo-2026!   ·   Code SMS parent : 123456"
 Write-Host "  Arrêt : Ctrl+C (puis « npx supabase stop » pour arrêter la base)."

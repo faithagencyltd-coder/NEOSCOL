@@ -34,7 +34,7 @@ async function requirePlatformAdmin(): Promise<{ ok: true; userId: string; email
   if (!context) return { ok: false, message: "Votre session a expiré. Reconnectez-vous." };
   const supabase = await createClient();
   const { data } = await supabase.rpc("is_platform_admin");
-  return data ? { ok: true, userId: context.user.id, email: context.user.email ?? null } : { ok: false, message: "Réservé à l'administration de la plateforme NEOSCOOL." };
+  return data ? { ok: true, userId: context.user.id, email: context.user.email ?? null } : { ok: false, message: "Réservé à l'administration de la plateforme NeoScool." };
 }
 
 const refresh = () => revalidatePath("/plateforme/integrations");
@@ -120,9 +120,9 @@ export async function testIntegration(_: ActionResult | null, formData: FormData
           senderEmail: config.sender_email ?? "",
           senderName: config.sender_name,
           to,
-          subject: "Test NEOSCOOL — e-mail",
-          html: "<p>Ceci est un e-mail de test envoyé depuis la console NEOSCOOL. L'intégration Brevo fonctionne.</p>",
-          text: "Ceci est un e-mail de test envoyé depuis la console NEOSCOOL. L'intégration Brevo fonctionne.",
+          subject: "Test NeoScool — e-mail",
+          html: "<p>Ceci est un e-mail de test envoyé depuis la console NeoScool. L'intégration Brevo fonctionne.</p>",
+          text: "Ceci est un e-mail de test envoyé depuis la console NeoScool. L'intégration Brevo fonctionne.",
         });
         await logTest("email", provider, to, auth.userId, result);
         if (result.ok) result = { ok: true, message: `E-mail de test envoyé à ${maskRecipient(to)}.` };
@@ -135,10 +135,10 @@ export async function testIntegration(_: ActionResult | null, formData: FormData
       if (result.ok && recipient) {
         const to = normalizePhone(recipient);
         if (!to) return { ok: false, message: "Numéro de test invalide (format international : +229…)." };
-        const text = "Test NEOSCOOL : l'envoi de SMS fonctionne.";
+        const text = "Test NeoScool : l'envoi de SMS fonctionne.";
         result =
           provider === "brevo_sms"
-            ? await brevoSendSms({ apiKey: secret, sender: config.sender ?? "NEOSCOOL", to, content: text })
+            ? await brevoSendSms({ apiKey: secret, sender: config.sender ?? "NeoScool", to, content: text })
             : await twilioSendSms({ accountSid: config.account_sid ?? "", authToken: secret, from: config.from ?? "", to, body: text });
         await logTest("sms", provider, to, auth.userId, result);
         if (result.ok) result = { ok: true, message: `SMS de test envoyé à ${maskRecipient(to)}.` };

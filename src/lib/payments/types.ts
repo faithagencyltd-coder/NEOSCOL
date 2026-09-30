@@ -1,5 +1,5 @@
 /**
- * Abstraction des fournisseurs de paiement des abonnements NEOSCOOL.
+ * Abstraction des fournisseurs de paiement des abonnements NeoScool.
  * La logique d'abonnement (base de données) ne dépend que de ce contrat :
  * ajouter CinetPay, FedaPay… revient à écrire une nouvelle implémentation.
  *
@@ -9,7 +9,7 @@
 export type PaymentMode = "test" | "live";
 
 export type CheckoutRequest = {
-  /** Référence NEOSCOOL unique (NEO-AAAA-000001). */
+  /** Référence NeoScool unique (NEO-AAAA-000001). */
   reference: string;
   /** Montant entier en XOF, calculé par la base de données. */
   amount: number;
@@ -35,7 +35,7 @@ export type VerifiedPayment = {
   providerTransactionId: string;
   amount: number | null;
   currency: string | null;
-  /** Référence NEOSCOOL renvoyée par le fournisseur (custom_data), si disponible. */
+  /** Référence NeoScool renvoyée par le fournisseur (custom_data), si disponible. */
   reference: string | null;
   method: string | null;
   raw: Record<string, unknown>;

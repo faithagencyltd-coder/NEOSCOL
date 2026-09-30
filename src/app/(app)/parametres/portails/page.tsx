@@ -65,7 +65,7 @@ export default async function PortalLinkSettingsPage() {
 
       {local ? (
         <Alert tone="warning" title="Adresse locale">
-          Ce lien utilise l&apos;adresse de cet ordinateur ({new URL(url).host}) : il ne fonctionne que sur ce poste ou ce réseau. Une fois NEOSCOOL
+          Ce lien utilise l&apos;adresse de cet ordinateur ({new URL(url).host}) : il ne fonctionne que sur ce poste ou ce réseau. Une fois NeoScool
           en ligne (adresse définie par NEXT_PUBLIC_SITE_URL), le lien affiché ici devient partageable partout.
         </Alert>
       ) : lan ? (

@@ -127,7 +127,7 @@ export default async function DemoPage() {
             <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-cyan-300">
               <PlayCircle className="size-4" aria-hidden /> Mode démonstration
             </p>
-            <h1 className="text-3xl font-bold sm:text-4xl">Explorez NEOSCOOL avec chaque rôle</h1>
+            <h1 className="text-3xl font-bold sm:text-4xl">Explorez NeoScool avec chaque rôle</h1>
             <p className="text-white/80">
               Chaque bouton ouvre une vraie session : vous voyez exactement ce que ce rôle a le droit de voir et de faire. Les données sont
               fictives ({currentAccount ? `connecté : ${currentAccount.role} — ${currentAccount.name}` : "non connecté"}).

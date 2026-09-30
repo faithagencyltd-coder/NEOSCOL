@@ -203,7 +203,7 @@ export function snapshotPages(snapshot: DocumentSnapshot, images: DocImages, ver
 
 export async function renderPages(pages: ReactElement[], title: string): Promise<Buffer> {
   return renderToBuffer(
-    <Document title={title} author="NEOSCOOL" creator="NEOSCOOL" producer="NEOSCOOL" language="fr">
+    <Document title={title} author="NeoScool" creator="NeoScool" producer="NeoScool" language="fr">
       {pages}
     </Document>,
   );

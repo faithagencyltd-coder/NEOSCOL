@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     })),
   );
   const pdf = await renderToBuffer(
-    <Document title="Badges du personnel" author="NEOSCOOL" language="fr">
+    <Document title="Badges du personnel" author="NeoScool" language="fr">
       {pages.map(({ badge, images, qr }) => (
         <StaffBadgePage
           key={badge.id}

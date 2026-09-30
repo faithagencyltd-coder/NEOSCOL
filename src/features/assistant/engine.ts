@@ -8,7 +8,7 @@ import { anthropicClient, ASSISTANT_MODEL } from "@/lib/ai/anthropic";
 export type AssistantTurn = { role: "user" | "assistant"; content: string };
 export type AssistantAnswer = { answer: string; tools: string[]; provider: "claude" | "local"; usage?: { input: number; output: number } };
 
-const SYSTEM = `Tu es l'assistant de NEOSCOOL, logiciel de gestion scolaire. Tu réponds en français, de façon concise et factuelle.
+const SYSTEM = `Tu es l'assistant de NeoScool, logiciel de gestion scolaire. Tu réponds en français, de façon concise et factuelle.
 Tu n'as accès aux données QUE par les outils fournis ; ils s'exécutent avec les droits de l'utilisateur connecté.
 Si un outil répond « Accès refusé » ou ne renvoie rien, dis-le simplement : ne devine jamais de données.
 Tu ne modifies rien : tu consultes, résumes, repères des anomalies et proposes des actions à faire dans l'application.`;

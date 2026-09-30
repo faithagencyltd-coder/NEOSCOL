@@ -110,7 +110,7 @@ await admin.getByText("Vérification terminée").waitFor({ timeout: 15000 });
 t = await text(admin);
 check(t.includes("4 ligne(s) lue(s) : 2 valide(s), 2 en erreur"), "vérification : 2 valides, 2 erreurs");
 check(t.includes("format non conforme") && t.includes("introuvable"), "erreurs expliquées (format, élève introuvable)");
-check(t.includes("identité NEOSCOOL conservée"), "nom différent signalé, identité conservée");
+check(t.includes("identité NeoScool conservée"), "nom différent signalé, identité conservée");
 check((await q1("select count(national_id)::int as n from students where organization_id = $1", [DEMO])).n === 0, "vérification : aucune écriture en base");
 await shot(admin, "02-verification");
 await admin.getByRole("button", { name: /Enregistrer les 2 identifiant/ }).click();

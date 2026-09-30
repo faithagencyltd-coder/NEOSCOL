@@ -36,9 +36,9 @@ const request = {
   reference: "NEO-2026-000042",
   amount: 126000,
   currency: "XOF",
-  description: "Abonnement NEOSCOOL Collège & Lycée — annuel",
-  itemName: "NEOSCOOL Collège & Lycée (12 mois)",
-  storeName: "NEOSCOOL",
+  description: "Abonnement NeoScool Collège & Lycée — annuel",
+  itemName: "NeoScool Collège & Lycée (12 mois)",
+  storeName: "NeoScool",
   returnUrl: "https://app.test/abonnement/retour?ref=NEO-2026-000042",
   cancelUrl: "https://app.test/abonnement/retour?ref=NEO-2026-000042&annule=1",
   callbackUrl: "https://app.test/api/webhooks/payments/paydunya",
@@ -58,7 +58,7 @@ describe("PayDunya", () => {
       [KEYS.masterKey, KEYS.privateKey, KEYS.token],
     );
     assert.equal(calls[0].body.invoice.total_amount, 126000);
-    assert.equal(calls[0].body.store.name, "NEOSCOOL");
+    assert.equal(calls[0].body.store.name, "NeoScool");
     assert.equal(calls[0].body.actions.callback_url, request.callbackUrl);
     assert.equal(calls[0].body.custom_data.reference, "NEO-2026-000042");
     assert.deepEqual(session, { providerTransactionId: "test_abc", checkoutUrl: "https://paydunya.com/sandbox-checkout/invoice/test_abc", raw: { response_code: "00", token: "test_abc", description: null } });

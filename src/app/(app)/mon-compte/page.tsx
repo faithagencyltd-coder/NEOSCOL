@@ -81,8 +81,8 @@ export default async function AccountPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Application NEOSCOOL</CardTitle>
-            <CardDescription>Installez NEOSCOOL sur cet ordinateur, cette tablette ou ce téléphone (sans magasin d&apos;applications).</CardDescription>
+            <CardTitle>Application NeoScool</CardTitle>
+            <CardDescription>Installez NeoScool sur cet ordinateur, cette tablette ou ce téléphone (sans magasin d&apos;applications).</CardDescription>
           </CardHeader>
           <CardContent>
             <InstallAppButton />

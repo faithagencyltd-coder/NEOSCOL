@@ -148,7 +148,7 @@ export function LegacyStudentForm({ v }: { v: Vocabulary }) {
         </div>
       </FormSection>
 
-      <FormSection title="Scolarité dans l'établissement" description="Le matricule NEOSCOOL est attribué automatiquement ; l'ancien matricule est conservé.">
+      <FormSection title="Scolarité dans l'établissement" description="Le matricule NeoScool est attribué automatiquement ; l'ancien matricule est conservé.">
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField id="legacy_matricule" label="Ancien matricule">
             <Input id="legacy_matricule" name="legacy_matricule" maxLength={60} onChange={() => setConfirm(false)} />

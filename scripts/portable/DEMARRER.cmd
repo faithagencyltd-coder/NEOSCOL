@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 cd /d "%~dp0"
-title NEOSCOOL - demonstration locale
+title NeoScool - demonstration locale
 where node >nul 2>nul
 if errorlevel 1 (
   echo.

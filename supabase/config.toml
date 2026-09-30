@@ -171,7 +171,7 @@ enable_refresh_token_rotation = true
 # Allows refresh tokens to be reused after expiry, up to the specified interval in seconds.
 # Requires enable_refresh_token_rotation = true.
 refresh_token_reuse_interval = 10
-# NEOSCOOL : aucune inscription publique, les comptes sont créés par l'établissement.
+# NeoScool : aucune inscription publique, les comptes sont créés par l'établissement.
 enable_signup = false
 # Allow/disallow anonymous sign-ins to your project.
 enable_anonymous_sign_ins = false
@@ -287,7 +287,7 @@ max_frequency = "1s"
 # enabled = true
 # uri = "pg-functions://<database>/<schema>/<hook_name>"
 
-# NEOSCOOL : e-mails d'authentification envoyés par l'intégration e-mail de la plateforme
+# NeoScool : e-mails d'authentification envoyés par l'intégration e-mail de la plateforme
 # (Super Admin → Intégrations → Brevo). À activer une fois Brevo configuré et testé ;
 # le même secret doit être défini côté application (SEND_EMAIL_HOOK_SECRET).
 # [auth.hook.send_email]

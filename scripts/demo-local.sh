@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# NEOSCOOL — démonstration locale en une commande (macOS / Linux).
+# NeoScool — démonstration locale en une commande (macOS / Linux).
 #   Prérequis : Node.js ≥ 20.9 et Docker Desktop démarré.
 #   Usage     : npm run demo          (première fois : 5 à 10 min, téléchargement des images)
 #               npm run demo -- --reset   (remet les données de démonstration à zéro)
@@ -48,7 +48,7 @@ CRON_SECRET=demo-local-$(node -e 'console.log(require("crypto").randomBytes(12).
 NEOSCOL_DEMO_MODE=1
 ENV
 
-say "NEOSCOOL démarre : ouvrez ${SITE_URL}"
+say "NeoScool démarre : ouvrez ${SITE_URL}"
 echo "  Choisissez un rôle sur la page de connexion (mode démonstration)."
 echo "  Mot de passe commun : NeoScol-Demo-2026!   ·   Code SMS parent : 123456"
 echo "  Arrêt : Ctrl+C (puis « npx supabase stop » pour arrêter la base)."

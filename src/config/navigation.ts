@@ -189,7 +189,7 @@ export const NAVIGATION: NavSection[] = [
     items: [
       { href: "/structure", label: "Année scolaire", icon: "year", anyOf: ["academic.manage"], keywords: "années périodes niveaux filières salles" },
       { href: "/parametres/etablissement", label: "Établissement", icon: "school", anyOf: ["settings.manage"], keywords: "identité logo couleurs cachet signature coordonnées en-tête" },
-      { href: "/abonnement", label: "Mon abonnement", icon: "subscription", anyOf: ["billing.read"], keywords: "abonnement NEOSCOOL formule facture paiement essai renouveler tarif" },
+      { href: "/abonnement", label: "Mon abonnement", icon: "subscription", anyOf: ["billing.read"], keywords: "abonnement NeoScool formule facture paiement essai renouveler tarif" },
       { href: "/parametres", label: "Configuration", icon: "settings", anyOf: ["settings.manage"], keywords: "impayés restrictions rappels pointage notes verrouillage" },
       { href: "/bulletins/configuration", label: "Modèle de bulletin", icon: "templates", anyOf: ["report_cards.manage"], keywords: "bulletin colonnes coefficients modèle" },
       { href: "/parametres/messages-vocaux", label: "Messages vocaux", icon: "settings", anyOf: ["voice_checkin.manage"], keywords: "voice check-in voix annonce arrivée pointage tablette synthèse vocale" },

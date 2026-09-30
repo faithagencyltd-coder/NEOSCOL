@@ -52,7 +52,7 @@ export async function startTotpEnrollment(): Promise<ActionResult<EnrollData>> {
   if (factors?.totp.some((f) => f.status === "verified")) return { ok: false, message: "La double authentification est déjà activée." };
   // Tentatives inachevées : supprimées pour repartir d'un QR code neuf.
   for (const f of factors?.all ?? []) if (f.status !== "verified") await supabase.auth.mfa.unenroll({ factorId: f.id });
-  const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName: `NEOSCOOL ${new Date().toISOString().slice(0, 10)}`, issuer: "NEOSCOOL" });
+  const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName: `NeoScool ${new Date().toISOString().slice(0, 10)}`, issuer: "NeoScool" });
   if (error || !data) return { ok: false, message: "Activation impossible pour le moment. Réessayez." };
   return { ok: true, data: { factorId: data.id, qr: data.totp.qr_code, secret: data.totp.secret } };
 }

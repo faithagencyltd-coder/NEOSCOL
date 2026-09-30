@@ -1,6 +1,14 @@
-# Rapport — rebranding NéoScol → NEOSCOOL
+# Rapport — rebranding NéoScol → NeoScool
 
-Nouvelle marque : **NEOSCOOL** · Slogan officiel : « Plus qu'un logiciel, une vision pour l'éducation. »
+Nouvelle marque : **NeoScool** · Slogan officiel : « Plus qu'un logiciel, une vision pour l'éducation. »
+
+Écriture validée (d'après le logo fourni) :
+
+- logo et emplacements de logo : **« .NeoScool »** stylé (point orange, « Neo » foncé, « Scool » bleu) ;
+- phrases, titres, e-mails, PDF, PWA : **« NeoScool »**, sans le point (comme dans les maquettes) ;
+- expéditeur SMS : `NeoScool` (les opérateurs n'acceptent pas le point).
+
+Une première étape avait posé « NEOSCOOL » en capitales ; elle est entièrement remplacée.
 
 Méthode : audit, rapport, plan, validation, puis modification fichier par fichier sur une liste
 de fichiers audités. Aucun remplacement global aveugle. Aucun identifiant technique renommé.
@@ -8,24 +16,32 @@ Aucune migration existante modifiée. Aucune donnée supprimée.
 
 ## Branding remplacé
 
-- Interface : titres de fenêtre (`%s · NEOSCOOL`), logo texte, en-têtes, pages publiques
+- Interface : titres de fenêtre (`%s · NeoScool`), logo, en-têtes, pages publiques
   (tarifs, inscription, démo, vérification, hors ligne, configuration), connexion, console
-  Super Admin (« NEOSCOOL Console »), abonnement, messages d'erreur, assistant.
+  Super Admin (« NeoScool Console »), abonnement, messages d'erreur, assistant.
 - Slogan officiel sous le logo (barre latérale, pages publiques, console, vérification).
-- Page de connexion : `NEO` + `SCOOL` en dégradé, à la place de `Néo` + `Scol`.
-- Facture d'abonnement PDF : en-tête `NEO` + `SCOOL`.
+- Logo : emblème officiel (extrait du logo fourni) et nom « .NeoScool » stylé, partout où le logo
+  apparaît (barre latérale, connexion, pages publiques, console, portails, vérification).
+- Page de connexion : grand titre « .NeoScool » à la place de `Néo` + `Scol`.
+- Facture d'abonnement PDF et en-tête des e-mails : « .NeoScool » aux couleurs du logo.
+- Icônes de l'application (PWA, écran d'accueil iPhone) : emblème officiel sur fond blanc.
 
 ## Fichiers modifiés
 
 - `src/` et `public/` : 64 fichiers audités un par un. Seuls les textes visibles, les commentaires
   et les métadonnées ont changé.
-- `supabase/migrations/20261014003700_rebranding_neoscool.sql` : nouvelle migration.
+- `supabase/migrations/20261014003700_rebranding_neoscool.sql` puis
+  `supabase/migrations/20261015003800_marque_neoscool.sql` : nouvelles migrations.
+- `public/assets/neoscool/logo/` : logo fourni (`neoscool-logo.webp`, inchangé) et emblème détouré
+  (`neoscool-mark.png`, 512 × 512, fond transparent).
+- `public/icons/` : `icon-192`, `icon-512`, `maskable-512`, `apple-touch-icon` régénérées depuis
+  l'emblème ; les anciennes sont conservées dans `public/icons/anciennes/`.
 - `supabase/seed.sql` : 5 lignes (en-tête, 2 noms d'établissements de démo, pied de page, annonce).
 - `supabase/config.toml`, `scripts/db/supabase-stub.sql`, `.env.example` : commentaires uniquement.
 - `.devcontainer/devcontainer.json` : nom affiché.
 - Documentation et démonstration : `README.md`, `docs/*.md`, `scripts/demo-local.{sh,ps1}`.
 - Paquet portable : `scripts/portable/*` (LISEZ-MOI, guide, lanceur, `.cmd`, `construire.sh`).
-  Les zips s'appellent `NEOSCOOL-*.zip` et s'extraient dans `C:\NEOSCOOL`.
+  Les zips s'appellent `NeoScool-*.zip` et s'extraient dans `C:\NeoScool`.
 - Tests : textes attendus mis à jour (unitaires, base de données, E2E).
 
 ## Fichiers volontairement non modifiés
@@ -52,7 +68,8 @@ Aucune migration existante modifiée. Aucune donnée supprimée.
 
 ## Base de données
 
-Nouvelle migration `20261014003700_rebranding_neoscool.sql` :
+Migrations `20261014003700_rebranding_neoscool.sql` (NéoScol → NEOSCOOL) puis
+`20261015003800_marque_neoscool.sql` (NEOSCOOL → NeoScool, sans modifier la précédente) :
 
 - libellés des permissions `billing.read` et `billing.manage` ;
 - descriptions des formules d'abonnement et des moyens de paiement ;
@@ -70,28 +87,30 @@ intégrations (un nom d'expéditeur « NéoScol » saisi par le Super Admin rest
 ## Abonnements, modules, badges, QR, pointage
 
 - Abonnements et tarifs : montants, formules, essai de 20 jours et Module 4 inchangés. Seuls les
-  textes changent (« Abonnement NEOSCOOL… », « Facture NEOSCOOL »).
+  textes changent (« Abonnement NeoScool… », « Facture NeoScool »).
 - Modules : aucun changement fonctionnel.
-- Badges : la mention visible sur la carte 3D devient NEOSCOOL. Le contenu des QR est inchangé :
+- Badges : la mention visible sur la carte 3D devient NeoScool. Le contenu des QR est inchangé :
   les badges déjà imprimés restent valides.
 - Pointage : kiosque et messages vocaux inchangés.
 
 ## Documents, e-mails, PWA, SEO
 
-- Documents : l'auteur, le créateur et le producteur des PDF deviennent NEOSCOOL. Les documents
+- Documents : l'auteur, le créateur et le producteur des PDF deviennent NeoScool. Les documents
   déjà émis ne sont pas modifiés.
 - E-mails : sujets et en-têtes des e-mails d'authentification, e-mail d'activation, pied des envois
-  (« via NEOSCOOL »), e-mail de test des intégrations, nom d'expéditeur par défaut.
-- SMS : l'expéditeur par défaut devient `NEOSCOOL` (8 caractères, format accepté).
-- MFA : l'émetteur TOTP devient NEOSCOOL pour les nouveaux enrôlements. Les applications
+  (« via NeoScool »), e-mail de test des intégrations, nom d'expéditeur par défaut.
+- SMS : l'expéditeur par défaut devient `NeoScool` (8 caractères, format accepté).
+- MFA : l'émetteur TOTP devient NeoScool pour les nouveaux enrôlements. Les applications
   d'authentification déjà configurées continuent de fonctionner (l'émetteur n'est qu'un libellé).
 - PWA : `name`, `short_name` et `description` avec le slogan, pour l'application et pour la console.
 - SEO : titre par défaut, modèle de titre et description avec le slogan.
 
 ## Assets
 
-Aucun asset supprimé. L'emblème SVG existant est conservé (décision validée).
-**LOGO NEOSCOOL À FOURNIR** pour un logo graphique dédié. Aucun faux logo n'a été créé.
+Aucun asset supprimé. Logo officiel fourni et intégré tel quel ; l'emblème est détouré depuis ce
+fichier (aucun logo redessiné). L'ancien emblème vectoriel reste dans le code
+(`LogoMarkHistorique`) et les anciennes icônes dans `public/icons/anciennes/`.
+L'icône de la NeoScool Console (application distincte) n'est pas changée.
 
 ## Anciennes occurrences restantes
 
@@ -118,7 +137,6 @@ début de nuit. Correctif proposé, dans une migration dédiée :
 
 ## Éléments nécessitant encore une intervention humaine
 
-- Logo graphique NEOSCOOL (LOGO NEOSCOOL À FOURNIR).
 - Photo réelle de la page de connexion, sans texte incrusté, à placer dans
   `public/assets/neoscool/login/neoscool-login-hero.jpg`.
 - En production : renommer le nom d'expéditeur des intégrations Brevo et Twilio dans la console

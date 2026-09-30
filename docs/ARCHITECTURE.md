@@ -1,8 +1,8 @@
-# NEOSCOOL — Document de conception
+# NeoScool — Document de conception
 
 > « Plus qu'un logiciel, une vision pour l'éducation. »
 
-Ce document est la référence technique de NEOSCOOL. Il est écrit **avant** le
+Ce document est la référence technique de NeoScool. Il est écrit **avant** le
 développement des modules métier et doit être tenu à jour à chaque décision
 structurante. Les décisions sont numérotées (`D-xx`) pour pouvoir y faire
 référence dans le code et les revues.
@@ -40,7 +40,7 @@ Sommaire
 
 ### 1.1 Vision
 
-NEOSCOOL est un **SaaS multi-établissements** qui centralise la gestion
+NeoScool est un **SaaS multi-établissements** qui centralise la gestion
 administrative, pédagogique, financière et documentaire d'un établissement
 d'enseignement. Le même produit doit servir des structures très différentes ;
 la conception repose donc sur un **noyau commun configurable** plutôt que sur
@@ -90,7 +90,7 @@ dans deux écoles d'un même groupe).
 ```
 ┌──────────────────────────── Navigateur / PWA ─────────────────────────────┐
 │  Next.js (React Server Components + Client Components)                     │
-│  Tailwind CSS · design system NEOSCOOL · palette de commandes · SW (PWA)    │
+│  Tailwind CSS · design system NeoScool · palette de commandes · SW (PWA)    │
 └───────────────▲───────────────────────────────────────────────▲────────────┘
                 │ HTML/RSC, Server Actions                        │ Realtime (WS)
 ┌───────────────┴──────────────── Serveur Next.js ───────────────┴───────────┐

@@ -1,4 +1,4 @@
-// ABONNEMENTS NEOSCOOL — parcours complet de bout en bout (navigateur + base).
+// ABONNEMENTS NeoScool — parcours complet de bout en bout (navigateur + base).
 //
 // Prérequis : application démarrée (BASE_URL) avec PAYMENT_PROVIDER=simulation
 // (mode test, aucun argent réel), base migrée + seed (DATABASE_URL). Exemple :
@@ -91,7 +91,7 @@ await shot(page, "04-inscription");
 await page.getByRole("button", { name: /Commencer mon essai gratuit/i }).click();
 await page.waitForURL(/abonnement\?bienvenue=1/, { timeout: 60000 });
 let t = await text(page);
-check(t.includes("Bienvenue sur NEOSCOOL") && t.includes("Il vous reste 20 jours d'essai"), "essai affiché : « Il vous reste 20 jours d'essai »");
+check(t.includes("Bienvenue sur NeoScool") && t.includes("Il vous reste 20 jours d'essai"), "essai affiché : « Il vous reste 20 jours d'essai »");
 const org = await q1("select o.id, o.code, s.status, p.code plan, s.billing_interval, extract(epoch from s.trial_end - s.trial_start)/86400 as days from organizations o join subscriptions s on s.organization_id = o.id join subscription_plans p on p.id = s.plan_id join memberships m on m.organization_id = o.id join auth.users u on u.id = m.user_id where u.email = $1", [email]);
 check(org?.status === "TRIALING" && Number(org.days) === 20, "base : TRIALING, trial_end = trial_start + 20 jours");
 check(org?.plan === "MODULE_SCOLAIRE" && org.billing_interval === "YEARLY", "base : formule et périodicité choisies à l'inscription");

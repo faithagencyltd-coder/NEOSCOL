@@ -8,7 +8,7 @@ import type { Database } from "@/types/database";
 // /acces : lien des portails d'un établissement (identité publique + formulaires de connexion).
 // /api/cron : protégé par CRON_SECRET (pas de session utilisateur).
 // /api/webhooks : notifications des fournisseurs de paiement (revérifiées auprès du fournisseur).
-// /tarifs, /pricing, /inscription : offre NEOSCOOL et création d'un établissement (essai gratuit).
+// /tarifs, /pricing, /inscription : offre NeoScool et création d'un établissement (essai gratuit).
 const PUBLIC_PATHS = [
   "/connexion", "/acces", "/mot-de-passe-oublie", "/auth", "/verifier", "/configuration", "/api/cron", "/api/webhooks", "/api/hooks",
   "/verification-email", "/console.webmanifest",

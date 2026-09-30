@@ -1,4 +1,4 @@
-# NEOSCOOL
+# NeoScool
 
 > Plus qu'un logiciel, une vision pour l'éducation.
 
@@ -145,9 +145,9 @@ Menu **Établissement › Données historiques** (permission `students.import`) 
 - Toutes les données sont rattachées à l'établissement et protégées par RLS (tests : `tests/db/migration.test.mjs`).
 - Fichiers d'exemple : [`docs/exemples/`](docs/exemples) ; modèles CSV téléchargeables depuis l'écran.
 
-## Abonnements NEOSCOOL (SaaS)
+## Abonnements NeoScool (SaaS)
 
-Paiement de l'abonnement **par l'établissement à NEOSCOOL** — totalement distinct des finances de
+Paiement de l'abonnement **par l'établissement à NeoScool** — totalement distinct des finances de
 l'établissement (scolarité, reçus, dépenses), qui ne partagent ni table ni permission.
 
 - **Formules officielles** (XOF) : Module Scolaire et Centre de formation 15 000/mois (126 000/an),
@@ -216,14 +216,14 @@ désactivée ; les abonnements déjà payés la conservent au même prix.
   universités inchangés ; présences et pointage tablette non modifiés.
 - **Tests** : `tests/db/module-scolaire.test.mjs` (12), `tests/e2e/module-scolaire.mjs` (51 contrôles).
 
-## NEOSCOOL Console (Super Admin installable)
+## NeoScool Console (Super Admin installable)
 
 La console `/plateforme` s'installe comme une application distincte, avec :
 - sa propre icône et sa propre fenêtre ;
-- le nom « NEOSCOOL Console » ;
+- le nom « NeoScool Console » ;
 - des raccourcis : Établissements, Abonnements, Intégrations, Sécurité.
 
-Pour l'installer, ouvrir la console dans Chrome ou Edge sur l'ordinateur, puis cliquer sur « Installer NEOSCOOL Console » (en-tête de la console ou menu du navigateur). La mise à jour est automatique, car l'application est le site lui-même. Aucune donnée n'est stockée sur l'ordinateur : les pages ne sont jamais mises en cache.
+Pour l'installer, ouvrir la console dans Chrome ou Edge sur l'ordinateur, puis cliquer sur « Installer NeoScool Console » (en-tête de la console ou menu du navigateur). La mise à jour est automatique, car l'application est le site lui-même. Aucune donnée n'est stockée sur l'ordinateur : les pages ne sont jamais mises en cache.
 
 Le manifeste propre est servi par `src/app/console.webmanifest/route.ts` (`id` et portée `/plateforme`).
 

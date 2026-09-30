@@ -3,7 +3,7 @@ import type { Tone } from "@/lib/labels";
 /** Durée commerciale de l'essai gratuit (la valeur appliquée est celle de la formule en base : subscription_plans.trial_days). */
 export const TRIAL_DAYS = 20;
 
-/** Libellés des abonnements NEOSCOOL (SYSTÈME A). Les valeurs sont fixées par la base. */
+/** Libellés des abonnements NeoScool (SYSTÈME A). Les valeurs sont fixées par la base. */
 export const SUBSCRIPTION_STATUS: Record<string, { label: string; tone: Tone; description: string }> = {
   TRIALING: { label: "Essai gratuit", tone: "info", description: "Toutes les fonctionnalités de la formule sont accessibles pendant l'essai." },
   ACTIVE: { label: "Actif", tone: "success", description: "Abonnement payé et en cours." },
@@ -47,7 +47,7 @@ export const INVOICE_KIND: Record<string, string> = {
   subscription: "Souscription",
   renewal: "Renouvellement",
   plan_change: "Changement de formule",
-  manual: "Émise par NEOSCOOL",
+  manual: "Émise par NeoScool",
 };
 
 export const EVENT_LABELS: Record<string, string> = {

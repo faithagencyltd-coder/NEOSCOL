@@ -66,5 +66,5 @@ export const RULE_SOURCE: Record<string, string> = {
   organization: "Règles de l'établissement",
   country: "Modèle du pays",
   platform: "Modèle de la plateforme",
-  default: "Règles par défaut de NEOSCOOL",
+  default: "Règles par défaut de NeoScool",
 };

@@ -1,5 +1,5 @@
 -- =============================================================================
--- NEOSCOOL — DONNÉES DE DÉMONSTRATION
+-- NeoScool — DONNÉES DE DÉMONSTRATION
 --
 -- ⚠ Toutes les données ci-dessous sont FICTIVES. Les établissements créés sont
 -- marqués organizations.is_demo = true et l'interface affiche un bandeau
@@ -74,17 +74,17 @@ insert into public.platform_admins (user_id) values ('00000000-0000-4000-a000-00
 -- Établissements (le provisionnement crée rôles, formulaires et modèles) -------------
 insert into public.organizations (id, name, short_name, code, slug, type, email, phone, address, city, is_demo)
 values
-  ('10000000-0000-4000-a000-000000000001', 'Groupe Scolaire Démo NEOSCOOL', 'GS Démo', 'DEMO', 'demo',
+  ('10000000-0000-4000-a000-000000000001', 'Groupe Scolaire Démo NeoScool', 'GS Démo', 'DEMO', 'demo',
    'school_complex', 'contact@demo.neoscol.app', '+225 27 00 00 00 00', 'Boulevard de la Démonstration', 'Abidjan', true),
   ('10000000-0000-4000-a000-000000000002', 'Institut Démo de Formation Professionnelle', 'IDFP Démo', 'DEMOF', 'demo-formation',
    'vocational_center', 'contact@formation.demo.neoscol.app', '+225 27 00 00 00 01', 'Rue des Métiers', 'Bouaké', true),
-  ('10000000-0000-4000-a000-000000000003', 'Université Démo NEOSCOOL', 'UDN', 'DEMOU', 'demo-universite',
+  ('10000000-0000-4000-a000-000000000003', 'Université Démo NeoScool', 'UDN', 'DEMOU', 'demo-universite',
    'university', 'scolarite@universite.demo.neoscol.app', '+225 27 00 00 00 02', 'Campus de la Démonstration', 'Yamoussoukro', true);
 
 update public.organization_branding
    set signatory_name = 'Jean-Marc KOUASSI', signatory_title = 'Directeur des études',
        header_text = 'Établissement de démonstration — données fictives',
-       footer_text = 'NEOSCOOL · Plus qu''un logiciel, une vision pour l''éducation.'
+       footer_text = 'NeoScool · Plus qu''un logiciel, une vision pour l''éducation.'
  where organization_id = '10000000-0000-4000-a000-000000000001';
 
 select pg_temp.grant_role('10000000-0000-4000-a000-000000000001', '00000000-0000-4000-a000-000000000002', 'org_admin');
@@ -349,7 +349,7 @@ begin
   join public.expense_categories c on c.organization_id = v_org and c.name = x.category;
 
   insert into public.announcements (organization_id, title, body, is_pinned, published_at, author_name)
-  values (v_org, 'Bienvenue sur NEOSCOOL (démonstration)',
+  values (v_org, 'Bienvenue sur NeoScool (démonstration)',
           'Cet établissement est un environnement de démonstration : toutes les données sont fictives.',
           true, now(), 'Direction');
   insert into public.announcements (organization_id, title, body, audience, published_at, author_name)

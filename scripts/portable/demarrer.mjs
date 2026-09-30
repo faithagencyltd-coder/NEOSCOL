@@ -1,11 +1,11 @@
-// NEOSCOOL — lanceur du paquet portable (Windows, sans Docker).
+// NeoScool — lanceur du paquet portable (Windows, sans Docker).
 //
 // Démarre, depuis le dossier du paquet :
 //   1. PostgreSQL embarqué (données dans ./donnees), initialisé au premier lancement
-//      avec le schéma NEOSCOOL et les données de démonstration ;
+//      avec le schéma NeoScool et les données de démonstration ;
 //   2. le serveur d'authentification (GoTrue) et l'API REST (PostgREST) ;
 //   3. une passerelle locale (/auth/v1 et /rest/v1), comme Supabase ;
-//   4. l'application NEOSCOOL, puis ouvre le navigateur.
+//   4. l'application NeoScool, puis ouvre le navigateur.
 // La base, l'authentification et l'API n'écoutent que sur cet ordinateur (127.0.0.1).
 // L'application écoute sur le réseau local : tout appareil connecté au même Wi-Fi
 // (téléphone, tablette, autre ordinateur) l'ouvre via http://<adresse du poste>:3000.
@@ -136,7 +136,7 @@ async function sql(database, text) {
 }
 
 async function installSchema() {
-  info("Création de la base NEOSCOOL…");
+  info("Création de la base NeoScool…");
   await sql("postgres", `create database ${DB_NAME}`);
   await sql(
     DB_NAME,
@@ -151,7 +151,7 @@ async function installSchema() {
   await sql(DB_NAME, readFileSync(join(dir, "supabase-stub.sql"), "utf8"));
   const files = readdirSync(join(dir, "migrations")).filter((f) => f.endsWith(".sql")).sort();
   for (const [i, file] of files.entries()) {
-    process.stdout.write(`\r  Schéma NEOSCOOL : ${i + 1}/${files.length}   `);
+    process.stdout.write(`\r  Schéma NeoScool : ${i + 1}/${files.length}   `);
     await sql(DB_NAME, readFileSync(join(dir, "migrations", file), "utf8"));
   }
   console.log("");
@@ -251,7 +251,7 @@ function startGateway() {
 function shutdown(code = 0) {
   if (stopping) return;
   stopping = true;
-  console.log("\nArrêt de NEOSCOOL…");
+  console.log("\nArrêt de NeoScool…");
   for (const child of children) {
     try {
       child.kill();
@@ -281,14 +281,14 @@ async function main() {
     console.error(`Node.js ${process.version} est trop ancien : installez la version 20.9 ou plus (https://nodejs.org).`);
     process.exit(1);
   }
-  console.log("\x1b[1;34m\n  NEOSCOOL — démonstration locale\x1b[0m");
+  console.log("\x1b[1;34m\n  NeoScool — démonstration locale\x1b[0m");
 
   // Paquet livré en plusieurs .zip à extraire dans le même dossier.
   const parts = [
-    [join(ROOT, "app", "server.js"), "NEOSCOOL-1-application.zip"],
-    [join(PG_BIN, `postgres${EXE}`), "NEOSCOOL-2-postgresql.zip"],
-    [join(RUNTIME, "auth", `auth${EXE}`), "NEOSCOOL-3-services.zip"],
-    [join(RUNTIME, "postgrest", `postgrest${EXE}`), "NEOSCOOL-3-services.zip"],
+    [join(ROOT, "app", "server.js"), "NeoScool-1-application.zip"],
+    [join(PG_BIN, `postgres${EXE}`), "NeoScool-2-postgresql.zip"],
+    [join(RUNTIME, "auth", `auth${EXE}`), "NeoScool-3-services.zip"],
+    [join(RUNTIME, "postgrest", `postgrest${EXE}`), "NeoScool-3-services.zip"],
   ];
   const missing = [...new Set(parts.filter(([file]) => !existsSync(file)).map(([, zip]) => zip))];
   if (missing.length) {
@@ -304,8 +304,8 @@ async function main() {
   }
   mkdirSync(LOGS, { recursive: true });
 
-  for (const [name, port] of [["NEOSCOOL", PORTS.app], ["authentification", PORTS.auth], ["API", PORTS.rest], ["passerelle", PORTS.gateway]]) {
-    if (!(await portFree(port))) fail(`le port ${port} (${name}) est déjà utilisé : fermez l'autre fenêtre NEOSCOOL ou le programme qui l'utilise.`);
+  for (const [name, port] of [["NeoScool", PORTS.app], ["authentification", PORTS.auth], ["API", PORTS.rest], ["passerelle", PORTS.gateway]]) {
+    if (!(await portFree(port))) fail(`le port ${port} (${name}) est déjà utilisé : fermez l'autre fenêtre NeoScool ou le programme qui l'utilise.`);
   }
 
   say("Démarrage de la base de données");
@@ -352,7 +352,7 @@ async function main() {
   const url = `http://localhost:${PORTS.app}`;
   await waitFor(() => httpOk(`${url}/connexion`), "L'application", 120);
 
-  console.log(`\n\x1b[1;32m  NEOSCOOL est prêt : ${url}\x1b[0m`);
+  console.log(`\n\x1b[1;32m  NeoScool est prêt : ${url}\x1b[0m`);
   if (lanAddresses.length) {
     console.log(`\x1b[1;36m  Sur les autres appareils du même Wi-Fi (téléphone, tablette, PC) :\x1b[0m`);
     for (const address of lanAddresses) console.log(`\x1b[1;36m      http://${address}:${PORTS.app}\x1b[0m`);

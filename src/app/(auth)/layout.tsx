@@ -1,6 +1,6 @@
 import { Building2, CheckCircle2, GraduationCap, Landmark, School, ShieldCheck, Wallet, Wrench } from "lucide-react";
 
-import { LogoMark } from "@/components/shared/logo";
+import { BrandName, LogoMark } from "@/components/shared/logo";
 
 const SECTORS = [
   { label: "Écoles", icon: School },
@@ -45,9 +45,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <LogoMark inverted className="size-16" />
           </span>
           <span className="grid gap-1">
-            <span className="font-display text-5xl font-bold tracking-tight">
-              NEO<span className="bg-gradient-to-r from-sky-300 to-cyan-300 bg-clip-text text-transparent">SCOOL</span>
-            </span>
+            <BrandName inverted className="text-5xl" />
             <span className="text-base text-sky-100/85">
               Plus qu&apos;un logiciel, une <strong className="text-white">vision</strong> pour{" "}
               <span className="relative text-sky-300">
@@ -112,10 +110,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="mb-6 flex w-full max-w-lg items-center justify-between">
           <span className="flex items-center gap-2.5 lg:hidden">
             <LogoMark className="size-10" />
-            <span className="font-display text-xl font-bold text-[#0b1f4d] dark:text-white">NEOSCOOL</span>
+            <BrandName className="text-xl" />
           </span>
           <span className="ml-auto hidden items-center gap-3 text-sm sm:flex">
-            <span className="font-display font-semibold text-primary">NEOSCOOL</span>
+            <BrandName className="font-semibold" />
             <span className="h-4 w-px bg-border" aria-hidden />
             <span className="text-muted-foreground">Votre réussite, notre priorité</span>
             <span aria-hidden className="h-0.5 w-8 rounded-full bg-amber-400" />
