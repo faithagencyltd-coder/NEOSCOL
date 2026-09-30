@@ -196,6 +196,12 @@ utilisées par tous les établissements (migration `20261004002600_integrations.
   Flutterwave, Paystack, Stripe, Wave et « Paiement par transfert » (tout autre moyen, validé dans Paiements).
   Plusieurs passerelles peuvent être proposées (le client choisit), mode test ou réel, clés chiffrées côté serveur,
   adresse de notification à copier chez le fournisseur. Aucune modification de code pour changer de fournisseur.
+- **Agrégateur personnalisé** (Paiements en ligne › « Ajouter un agrégateur ») : pour un fournisseur inconnu, le Super Admin
+  décrit l'API (adresses test/réel, authentification, création et vérification d'un paiement, statuts, notification),
+  éventuellement pré-remplie par l'assistant IA à partir de la documentation collée. Clés chiffrées à part ; un **test
+  réussi** (paiement d'essai créé puis vérifié, jamais payé) est obligatoire avant de le proposer, et après toute
+  modification. HTTPS et adresses publiques uniquement (`PAYMENT_CUSTOM_ALLOW_LOCAL=1` pour les tests locaux).
+  Suppression définitive s'il n'a jamais servi, sinon archivage (paiements conservés). Test : `tests/e2e/agregateur-personnalise.mjs`.
 - **Variables historiques** (utilisées seulement tant qu'aucune passerelle n'est proposée) : `PAYMENT_PROVIDER`, `PAYDUNYA_MODE`,
   `PAYDUNYA_MASTER_KEY`, `PAYDUNYA_PRIVATE_KEY`, `PAYDUNYA_PUBLIC_KEY`, `PAYDUNYA_TOKEN`, `PAYMENT_WEBHOOK_SECRET`.
 - **Tests** : `npm run db:test` (dont `tests/db/billing.test.mjs`), `npm run test:unit` (fournisseurs, secrets),

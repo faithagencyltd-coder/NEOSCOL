@@ -216,6 +216,7 @@ console.log("\n=== 7. Portail apprenant : établissement, classe, parcours ===")
 {
   const s = await login("eleve@demo.neoscol.app", { width: 390, height: 844 });
   await s.goto(`${base}/portail/plus`);
+  await s.getByText("Mon établissement").first().waitFor({ timeout: 20000 }).catch(() => {});
   let t = await text(s);
   check(t.includes("Mon établissement") && t.includes(orgA.name), "portail : fiche de l'établissement");
   check(t.includes("Mon parcours scolaire"), "portail : lien vers le parcours scolaire");

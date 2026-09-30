@@ -1595,6 +1595,41 @@ export type Database = {
           
         ]
       }
+      custom_payment_gateways: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          definition: Json
+          provider: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          definition: Json
+          provider: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          definition?: Json
+          provider?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_payment_gateways_provider_fkey"
+            columns: ["provider"]
+            isOneToOne: true
+            referencedRelation: "payment_providers"
+            referencedColumns: ["code"]
+          }
+        ]
+      }
       dashboard_preferences: {
         Row: {
           hidden: string[]
@@ -10472,6 +10507,12 @@ export type Database = {
         }
         Returns: Json
       }
+      platform_delete_custom_gateway: {
+        Args: {
+          p_code: string
+        }
+        Returns: string
+      }
       platform_delete_plan: {
         Args: {
           p_plan: string
@@ -10636,6 +10677,15 @@ export type Database = {
           p_sort: number
         }
         Returns: undefined
+      }
+      platform_save_custom_gateway: {
+        Args: {
+          p_code: string
+          p_name: string
+          p_description: string
+          p_definition: Json
+        }
+        Returns: string
       }
       platform_save_message_template: {
         Args: {

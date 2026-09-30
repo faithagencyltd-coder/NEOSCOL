@@ -1,6 +1,7 @@
 "use client";
 
-import { CheckCircle2, Copy, CreditCard, KeyRound, Landmark, PlugZap, XCircle } from "lucide-react";
+import { Archive, CheckCircle2, Copy, CreditCard, KeyRound, Landmark, Pencil, PlugZap, Puzzle, Trash2, XCircle } from "lucide-react";
+import Link from "next/link";
 import { useActionState, useState } from "react";
 
 import { notifyResult } from "@/components/motion/animated-toast";
@@ -12,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { saveGateway, testGateway } from "@/features/platform/gateway-actions";
+import { deleteCustomGateway, saveGateway, testGateway } from "@/features/platform/gateway-actions";
 import type { GatewayDefinition } from "@/lib/payments/gateways";
 import type { ActionResult } from "@/lib/utils/action-result";
 import { cn } from "@/lib/utils/cn";
@@ -28,6 +29,8 @@ export type GatewayView = {
   secretHint: string | null;
   webhookUrl: string;
   lastTest: { at: string; ok: boolean; message: string | null } | null;
+  /** Agrégateur ajouté par le Super Admin. */
+  custom?: { editHref: string; archived: boolean };
 };
 
 function useNotified(action: (s: ActionResult | null, f: FormData) => Promise<ActionResult>) {
@@ -42,15 +45,16 @@ function useNotified(action: (s: ActionResult | null, f: FormData) => Promise<Ac
 export function GatewayCard({ gateway }: { gateway: GatewayView }) {
   const [saveState, save, saving] = useNotified(saveGateway);
   const [testState, test, testing] = useNotified(testGateway);
+  const [deleteState, remove, removing] = useNotified(deleteCustomGateway);
   const [copied, setCopied] = useState(false);
   const { def } = gateway;
   const id = (k: string) => `${def.code}-${k}`;
   const offline = def.code === "offline";
   const configured = offline ? Boolean(gateway.instructions) : Boolean(gateway.secretHint);
-  const Icon = offline ? Landmark : CreditCard;
+  const Icon = offline ? Landmark : gateway.custom ? Puzzle : CreditCard;
 
   return (
-    <article className="grid gap-4 rounded-3xl border border-border bg-surface p-5 shadow-sm" data-testid={`gateway-${def.code}`} aria-labelledby={id("title")}>
+    <article id={`gateway-${def.code}`} className="grid scroll-mt-24 gap-4 rounded-3xl border border-border bg-surface p-5 shadow-sm" data-testid={`gateway-${def.code}`} aria-labelledby={id("title")}>
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-2xl", gateway.enabled ? "bg-success-soft text-success" : "bg-primary-soft text-primary")}>
@@ -64,12 +68,39 @@ export function GatewayCard({ gateway }: { gateway: GatewayView }) {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
+          {gateway.custom ? <Badge tone="neutral">{gateway.custom.archived ? "Archivé" : "Ajouté par vous"}</Badge> : null}
           {gateway.isDefault ? <Badge tone="info">Par défaut</Badge> : null}
           <Badge tone={gateway.enabled ? "success" : configured ? "warning" : "neutral"}>
             {gateway.enabled ? `Proposé aux clients · ${gateway.mode === "live" ? "réel" : "test"}` : configured ? "Configuré, non proposé" : "Non configuré"}
           </Badge>
         </div>
       </header>
+
+      {gateway.custom ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href={gateway.custom.editHref} className="inline-flex h-8 items-center gap-1.5 rounded-xl border border-border px-3 text-sm font-medium hover:bg-surface-muted">
+            <Pencil className="size-4" aria-hidden /> Modifier la définition
+          </Link>
+          {!gateway.custom.archived ? (
+            <ActionForm
+              dispatch={(fd) => {
+                if (window.confirm(`Supprimer ${def.name} ? S'il a déjà servi, il sera archivé (paiements conservés).`)) remove(fd);
+              }}
+              pending={removing}
+            >
+              <input type="hidden" name="code" value={def.code} />
+              <SubmitButton variant="ghost" size="sm" className="text-danger" pendingLabel="Suppression…">
+                <Trash2 aria-hidden /> Supprimer
+              </SubmitButton>
+            </ActionForm>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+              <Archive className="size-3.5" aria-hidden /> Paiements passés conservés ; « Modifier la définition » puis enregistrer pour le réactiver.
+            </span>
+          )}
+          {deleteState && !deleteState.ok ? <Alert tone="danger" className="w-full">{deleteState.message}</Alert> : null}
+        </div>
+      ) : null}
 
       <ActionForm dispatch={save} pending={saving} className="grid gap-4">
         <input type="hidden" name="provider" value={def.code} />

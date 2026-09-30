@@ -4,6 +4,8 @@ import { decryptSecret, encryptionKeyFrom } from "@/lib/messaging/crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import { CinetPayProvider } from "./cinetpay";
+import { CustomHttpProvider } from "./custom";
+import { customDefinitionSchema, type CustomDefinition } from "./custom-definition";
 import { FedaPayProvider } from "./fedapay";
 import { FlutterwaveProvider } from "./flutterwave";
 import { gatewayDefinition } from "./gateways";
@@ -73,8 +75,27 @@ export function readGatewaySecrets(ciphertext: string | null): Record<string, st
   }
 }
 
+export type CustomGateway = { code: string; name: string; description: string | null; isActive: boolean; definition: CustomDefinition };
+
+/** Agrégateur ajouté par le Super Admin (définition revalidée à chaque lecture). */
+export async function loadCustomGateway(code: string): Promise<CustomGateway | null> {
+  if (!code.startsWith("custom_")) return null;
+  const admin = createAdminClient();
+  if (!admin) return null;
+  const { data } = await admin.from("custom_payment_gateways").select("provider, definition, payment_providers(name, description, is_active)").eq("provider", code).maybeSingle();
+  if (!data) return null;
+  const parsed = customDefinitionSchema.safeParse(data.definition);
+  if (!parsed.success) return null;
+  const p = data.payment_providers as unknown as { name: string; description: string | null; is_active: boolean } | null;
+  return { code, name: p?.name ?? code, description: p?.description ?? null, isActive: p?.is_active ?? false, definition: parsed.data };
+}
+
 /** Construit le fournisseur d'une passerelle à partir de sa configuration. */
-export function buildProvider(code: string, mode: PaymentMode, config: Record<string, string>, secrets: Record<string, string>, baseUrl: string): PaymentProvider {
+export function buildProvider(code: string, mode: PaymentMode, config: Record<string, string>, secrets: Record<string, string>, baseUrl: string, custom?: CustomGateway | null): PaymentProvider {
+  if (code.startsWith("custom_")) {
+    if (!custom) throw new PaymentProviderError("Agrégateur personnalisé introuvable ou définition invalide.");
+    return new CustomHttpProvider({ code, name: custom.name, mode, definition: custom.definition, config, secrets });
+  }
   switch (code) {
     case "paydunya":
       return new PayDunyaProvider({ mode, masterKey: secrets.master_key ?? "", privateKey: secrets.private_key ?? "", token: secrets.token ?? "" });
@@ -97,8 +118,8 @@ export function buildProvider(code: string, mode: PaymentMode, config: Record<st
   }
 }
 
-function labelFor(code: string, mode: PaymentMode) {
-  const name = gatewayDefinition(code)?.name ?? code;
+function labelFor(code: string, mode: PaymentMode, customName?: string) {
+  const name = customName ?? gatewayDefinition(code)?.name ?? code;
   return mode === "test" ? `${name} (mode test)` : name;
 }
 
@@ -114,8 +135,9 @@ export async function providerFor(code: string, baseUrl: string): Promise<Paymen
   if (row && (row.secret_ciphertext || code === "offline")) {
     const mode: PaymentMode = row.mode === "live" ? "live" : "test";
     try {
-      const provider = buildProvider(code, mode, (row.config ?? {}) as Record<string, string>, readGatewaySecrets(row.secret_ciphertext), baseUrl);
-      return { enabled: true, provider, code, mode, label: labelFor(code, mode) };
+      const custom = await loadCustomGateway(code);
+      const provider = buildProvider(code, mode, (row.config ?? {}) as Record<string, string>, readGatewaySecrets(row.secret_ciphertext), baseUrl, custom);
+      return { enabled: true, provider, code, mode, label: labelFor(code, mode, custom?.name) };
     } catch (e) {
       return { enabled: false, reason: e instanceof PaymentProviderError ? e.message : "Passerelle mal configurée." };
     }
