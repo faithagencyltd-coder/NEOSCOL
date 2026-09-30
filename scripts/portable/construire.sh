@@ -36,9 +36,16 @@ cp -r "$ROOT/node_modules" "$BUILD/"
 echo "▶ Assemblage dans $OUT"
 rm -rf "$OUT" && mkdir -p "$OUT"/{app,runtime/auth,runtime/postgrest,runtime/postgres,base}
 cp -r "$BUILD/.next/standalone/." "$OUT/app/"
-cp -r "$BUILD/.next/static" "$OUT/app/.next/static"
-cp -r "$BUILD/public" "$OUT/app/public"
+# Contenu copié DANS les dossiers : le serveur autonome peut déjà créer app/public (polices tracées),
+# et « cp -r public app/public » les rangerait alors dans app/public/public (images introuvables).
+mkdir -p "$OUT/app/.next/static" "$OUT/app/public"
+cp -r "$BUILD/.next/static/." "$OUT/app/.next/static/"
+cp -r "$BUILD/public/." "$OUT/app/public/"
 rm -rf "$BUILD"
+# Contrôle : les images publiques doivent être servies depuis app/public.
+for f in sw.js site/captures/s-dashboard.webp; do
+  [[ -f "$OUT/app/public/$f" ]] || { echo "✘ fichier public manquant : $f" >&2; exit 1; }
+done
 if [[ "$TARGET" == "windows" ]]; then
   # Module d'images : binaires Windows à la place de ceux de Linux.
   rm -rf "$OUT"/app/node_modules/@img/sharp-linux* "$OUT"/app/node_modules/@img/sharp-libvips-linux*
