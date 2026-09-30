@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { FeaturesForm } from "@/features/organization/components/features-form";
 import { saveOrganizationFeatures } from "@/features/organization/feature-actions";
 import { requirePermission } from "@/lib/auth/guards";
-import { FEATURE_FLAGS, featureEnabled, featureLockedByPlatform } from "@/lib/features";
+import { FEATURE_FLAGS, featureEnabled, featureExcludedByPlan, featureLockedByPlatform } from "@/lib/features";
 import { vocabularyFor } from "@/lib/vocabulary";
 
 export const metadata: Metadata = { title: "Paramètres" };
@@ -36,7 +36,7 @@ export default async function SettingsPage() {
           <FeaturesForm
             mode="org"
             action={saveOrganizationFeatures}
-            rows={FEATURE_FLAGS.map((f) => ({ ...f, enabled: featureEnabled(context.organization, f.key), locked: featureLockedByPlatform(context.organization, f.key) }))}
+            rows={FEATURE_FLAGS.map((f) => ({ ...f, enabled: featureEnabled(context.organization, f.key), locked: featureLockedByPlatform(context.organization, f.key) || featureExcludedByPlan(context.organization, f.key), lockReason: featureExcludedByPlan(context.organization, f.key) ? "Non incluse dans votre formule" : undefined }))}
           />
         </CardContent>
       </Card>

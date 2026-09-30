@@ -108,7 +108,8 @@ export function SignupForm({
               required
               value={orgType}
               onChange={(e) => {
-                const suggested = TYPES.find(([value]) => value === e.target.value)?.[2];
+                // Formule proposée à ce type par le Super Admin (ordre de la console), sinon celle du module.
+                const suggested = plans.find((p) => p.org_types?.includes(e.target.value))?.code ?? TYPES.find(([value]) => value === e.target.value)?.[2];
                 // Module 4 ⇔ « plusieurs activités » : la formule suit toujours ce choix.
                 if (suggested && (!planTouched || e.target.value === "school_group" || multi)) setPlanCode(suggested);
                 setOrgType(e.target.value);
@@ -243,11 +244,13 @@ export function SignupForm({
               else if (orgType === "school_group") setOrgType("");
             }}
           >
-            {plans.map((p) => (
-              <option key={p.code} value={p.code}>
-                {p.name}
-              </option>
-            ))}
+            {plans
+              .filter((p) => !orgType || p.code === planCode || p.org_types?.includes(orgType))
+              .map((p) => (
+                <option key={p.code} value={p.code}>
+                  {p.name}
+                </option>
+              ))}
           </Select>
         </FormField>
         <IntervalToggle value={interval} onChange={setBillingInterval} />

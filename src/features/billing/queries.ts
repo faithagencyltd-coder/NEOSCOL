@@ -6,8 +6,13 @@ export type PlanWithFeatures = {
   id: string;
   code: string;
   name: string;
+  name_en: string | null;
   description: string | null;
+  description_en: string | null;
   audience: string | null;
+  highlights: string[];
+  highlights_en: string[];
+  org_types: string[];
   monthly_price: number;
   annual_price: number;
   annual_list_price: number;
@@ -25,7 +30,7 @@ export async function listPlans(): Promise<PlanWithFeatures[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("subscription_plans")
-    .select("id, code, name, description, audience, monthly_price, annual_price, annual_list_price, annual_savings, annual_discount_percent, currency, trial_days, is_active, sort_order, features:subscription_features(feature_code, enabled, limit_value)")
+    .select("id, code, name, name_en, description, description_en, audience, highlights, highlights_en, org_types, monthly_price, annual_price, annual_list_price, annual_savings, annual_discount_percent, currency, trial_days, is_active, sort_order, features:subscription_features(feature_code, enabled, limit_value)")
     .order("sort_order");
   return (data ?? []) as unknown as PlanWithFeatures[];
 }

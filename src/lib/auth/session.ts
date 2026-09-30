@@ -14,7 +14,10 @@ export type Persona = "staff" | "teacher" | "parent" | "student";
 export type OrganizationSummary = Pick<
   Tables<"organizations">,
   "id" | "name" | "short_name" | "code" | "type" | "currency" | "locale" | "timezone" | "is_demo" | "settings"
->;
+> & {
+  /** Options de la formule souscrite (null : pas d'abonnement propre, aucune restriction). */
+  plan_features?: Record<string, boolean> | null;
+};
 
 export type SessionContext = {
   user: { id: string; email: string | null; phone: string | null };
@@ -49,7 +52,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext | null> 
     supabase
       .from("memberships")
       .select(
-        "status, organization:organizations(id, name, short_name, code, type, currency, locale, timezone, is_demo, settings), membership_roles(role:roles(persona, name))",
+        "status, organization:organizations(id, name, short_name, code, type, currency, locale, timezone, is_demo, settings, plan_features), membership_roles(role:roles(persona, name))",
       )
       .eq("user_id", user.id)
       .in("status", ["active", "invited"]),

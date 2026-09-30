@@ -8304,10 +8304,14 @@ export type Database = {
           created_at: string
           currency: string
           description: string | null
+          description_en: string | null
+          highlights: Json
+          highlights_en: Json
           id: string
           is_active: boolean
           monthly_price: number
           name: string
+          name_en: string | null
           org_types: Database["public"]["Enums"]["organization_type"][]
           sort_order: number
           trial_days: number
@@ -8323,10 +8327,14 @@ export type Database = {
           created_at?: string
           currency?: string
           description?: string | null
+          description_en?: string | null
+          highlights?: Json
+          highlights_en?: Json
           id?: string
           is_active?: boolean
           monthly_price: number
           name: string
+          name_en?: string | null
           org_types?: Database["public"]["Enums"]["organization_type"][]
           sort_order?: number
           trial_days?: number
@@ -8342,10 +8350,14 @@ export type Database = {
           created_at?: string
           currency?: string
           description?: string | null
+          description_en?: string | null
+          highlights?: Json
+          highlights_en?: Json
           id?: string
           is_active?: boolean
           monthly_price?: number
           name?: string
+          name_en?: string | null
           org_types?: Database["public"]["Enums"]["organization_type"][]
           sort_order?: number
           trial_days?: number
@@ -10137,6 +10149,12 @@ export type Database = {
           content: string
         }[]
       }
+      plan_features: {
+        Args: {
+          o: string
+        }
+        Returns: Json
+      }
       platform_add_org_admin: {
         Args: {
           p_organization_id: string
@@ -10185,6 +10203,20 @@ export type Database = {
           p_reason?: string
         }
         Returns: Json
+      }
+      platform_delete_plan: {
+        Args: {
+          p_plan: string
+        }
+        Returns: undefined
+      }
+      platform_duplicate_plan: {
+        Args: {
+          p_plan: string
+          p_code: string
+          p_name: string
+        }
+        Returns: string
       }
       platform_finish_campaign: {
         Args: {
@@ -10346,6 +10378,28 @@ export type Database = {
         }
         Returns: undefined
       }
+      platform_save_plan: {
+        Args: {
+          p_plan: string
+          p_code: string
+          p_name: string
+          p_name_en: string
+          p_description: string
+          p_description_en: string
+          p_audience: string
+          p_highlights: Json
+          p_highlights_en: Json
+          p_org_types: Database["public"]["Enums"]["organization_type"][]
+          p_sort_order: number
+          p_is_active: boolean
+          p_features: Json
+          p_monthly_price?: number
+          p_annual_discount_percent?: number
+          p_trial_days?: number
+          p_currency?: string
+        }
+        Returns: string
+      }
       platform_save_promo: {
         Args: {
           p_id: string
@@ -10496,6 +10550,13 @@ export type Database = {
           p_reason: string
         }
         Returns: Json
+      }
+      platform_set_plan_active: {
+        Args: {
+          p_plan: string
+          p_active: boolean
+        }
+        Returns: undefined
       }
       platform_start_campaign: {
         Args: {

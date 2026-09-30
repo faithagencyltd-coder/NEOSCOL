@@ -131,11 +131,12 @@ export function PricingGrid({
                 <p className="inline-flex w-fit items-center gap-1.5 rounded-xl bg-primary-soft/70 px-2.5 py-1 text-xs font-semibold text-primary">
                   <Gift className="size-3.5" aria-hidden /> Essai gratuit {plan.trial_days} jours
                 </p>
-                <ul className="grid gap-1.5 text-xs">
-                  {features.map((f) => (
-                    <li key={f.feature_code} className="flex items-start gap-2">
+                <ul className="grid gap-1.5 text-xs" data-testid={`plan-points-${plan.code}`}>
+                  {/* Avantages rédigés dans la console (Super Admin › Formules) ; sinon, les options incluses. */}
+                  {(plan.highlights?.length ? plan.highlights : features.map((f) => FEATURE_LABELS[f.feature_code] ?? f.feature_code)).map((point) => (
+                    <li key={point} className="flex items-start gap-2">
                       <Check className="mt-0.5 size-3.5 shrink-0 text-success" aria-hidden />
-                      <span>{FEATURE_LABELS[f.feature_code] ?? f.feature_code}</span>
+                      <span>{point}</span>
                     </li>
                   ))}
                 </ul>

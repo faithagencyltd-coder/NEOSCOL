@@ -88,6 +88,7 @@ export const FEATURE_LABELS: Record<string, string> = {
   students: "Élèves, étudiants, apprenants",
   teachers: "Enseignants et personnel",
   parents: "Parents et portail famille",
+  student_portal: "Portail élève / apprenant / étudiant",
   finance: "Finances de l'établissement",
   attendance: "Présences et pointage",
   grades: "Notes et évaluations",
@@ -97,9 +98,42 @@ export const FEATURE_LABELS: Record<string, string> = {
   reports: "Rapports et exports",
   assistant: "Assistant intelligent",
   communication: "Annonces et messagerie",
+  sms: "Envoi de SMS",
+  voice_checkin: "Messages vocaux de la tablette",
   pwa: "Application mobile (PWA)",
   multi_establishment: "Plusieurs espaces : école, formation, université",
 };
+
+/** Options réellement appliquées : un établissement n'y accède que si sa formule les inclut. */
+export const APPLIED_FEATURES = new Set(["parents", "student_portal", "communication", "assistant", "voice_checkin", "sms", "multi_establishment"]);
+
+/** Types d'établissement proposés dans la console, groupés par module. */
+export const PLAN_ORG_TYPES: { module: string; types: { value: string; label: string }[] }[] = [
+  {
+    module: "Scolaire",
+    types: [
+      { value: "primary_school", label: "École primaire" },
+      { value: "middle_school", label: "Collège" },
+      { value: "high_school", label: "Lycée" },
+      { value: "private_school", label: "École privée" },
+      { value: "school_complex", label: "Complexe scolaire" },
+    ],
+  },
+  {
+    module: "Formation professionnelle",
+    types: [
+      { value: "vocational_center", label: "Centre de formation professionnelle" },
+      { value: "technical_center", label: "Centre technique" },
+    ],
+  },
+  {
+    module: "Université",
+    types: [
+      { value: "university", label: "Université" },
+      { value: "institute", label: "Institut / école supérieure" },
+    ],
+  },
+];
 
 /** Module 4 : domaines sélectionnables (1, 2 ou 3) — déterminent les espaces accessibles, jamais le prix. */
 export const MODULE4_COMPONENTS = [
@@ -110,18 +144,14 @@ export const MODULE4_COMPONENTS = [
 export type Module4Component = (typeof MODULE4_COMPONENTS)[number]["key"];
 export const MULTI_MODULES_PLAN = "MULTI_MODULES";
 
-/** Formule propre à chaque module (séparation des modules). */
-const MODULE_PLAN: Record<"school" | "training" | "higher", string> = { school: "MODULE_SCOLAIRE", training: "CENTRE_FORMATION", higher: "UNIVERSITE" };
-
 /**
- * Formules proposées à un établissement : celle de son module (et sa formule
- * actuelle si elle diffère encore) ; Module 4 seulement pour un établissement
- * principal multi-modules. Le contrôle reste fait en base.
+ * Formules proposées à un établissement : celles que le Super Admin propose à
+ * son type (Super Admin › Formules), plus sa formule actuelle si elle a été
+ * retirée depuis. Module 4 seulement pour un établissement principal. Le contrôle
+ * est refait en base.
  */
-export function plansForOrganization<T extends { code: string; is_active: boolean }>(plans: T[], organizationType: string, currentPlanCode?: string | null): T[] {
-  if (organizationType === "school_group") return plans.filter((p) => p.is_active && p.code === MULTI_MODULES_PLAN);
-  const family = ["university", "institute"].includes(organizationType) ? "higher" : ["vocational_center", "technical_center"].includes(organizationType) ? "training" : "school";
-  return plans.filter((p) => p.is_active && p.code !== MULTI_MODULES_PLAN && (p.code === MODULE_PLAN[family] || p.code === currentPlanCode));
+export function plansForOrganization<T extends { code: string; is_active: boolean; org_types?: string[] | null }>(plans: T[], organizationType: string, currentPlanCode?: string | null): T[] {
+  return plans.filter((p) => p.code === currentPlanCode || (p.is_active && (p.org_types ?? []).includes(organizationType)));
 }
 
 export const PLAN_ACCENTS: Record<string, string> = {

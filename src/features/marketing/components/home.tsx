@@ -86,8 +86,8 @@ export async function PricingCards({ locale, limit }: { locale: Locale; limit?: 
         <Reveal as="li" key={p.id} delay={i * 60} className="flex flex-col gap-4 rounded-3xl border border-[#0b2559]/10 bg-white p-6 shadow-[0_24px_48px_-32px_rgba(11,37,89,0.45)]">
           <span className={cn("h-1.5 w-14 rounded-full bg-gradient-to-r", PLAN_ACCENTS[p.code] ?? "from-[#0b2559] to-[#1d63ed]")} />
           <div>
-            <h3 className="font-display text-xl font-semibold text-[#0b2559]">{p.name}</h3>
-            {p.audience ? <p className="text-sm text-[#0b2559]/60">{p.audience}</p> : null}
+            <h3 className="font-display text-xl font-semibold text-[#0b2559]">{locale === "en" ? (p.name_en ?? p.name) : p.name}</h3>
+            {locale === "fr" && p.audience ? <p className="text-sm text-[#0b2559]/60">{p.audience}</p> : null}
           </div>
           <p className="font-display text-3xl font-semibold text-[#0b2559]">
             {formatMoney(p.monthly_price, p.currency)} <span className="text-sm font-medium text-[#0b2559]/55">{t.perMonth}</span>
@@ -95,6 +95,15 @@ export async function PricingCards({ locale, limit }: { locale: Locale; limit?: 
           <p className="text-sm text-[#0b2559]/65">
             {formatMoney(p.annual_price, p.currency)} {t.perYear}
           </p>
+          {(locale === "en" ? p.highlights_en : p.highlights).length ? (
+            <ul className="grid gap-1.5 text-sm text-[#0b2559]/75">
+              {(locale === "en" ? p.highlights_en : p.highlights).map((h) => (
+                <li key={h} className="flex items-start gap-2">
+                  <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-[#1d63ed]" /> {h}
+                </li>
+              ))}
+            </ul>
+          ) : null}
           {p.trial_days > 0 ? <p className="mt-auto text-sm font-semibold text-emerald-700">{t.trial(p.trial_days)}</p> : null}
         </Reveal>
       ))}

@@ -176,3 +176,142 @@ export async function updatePlanPrices(_: ActionResult | null, formData: FormDat
     message: `Nouveau prix enregistré : ${result.monthly_price.toLocaleString("fr-FR")} F / mois, ${result.annual_price.toLocaleString("fr-FR")} F / an. Les abonnés actuels gardent leur prix.`,
   };
 }
+
+// -----------------------------------------------------------------------------
+// Formules : création, modification, duplication, retrait, suppression.
+// -----------------------------------------------------------------------------
+const PLAN_FEATURE_CODES = ["students", "teachers", "parents", "student_portal", "finance", "attendance", "grades", "bulletins", "documents", "qr", "reports", "assistant", "communication", "sms", "voice_checkin", "pwa", "multi_establishment"];
+const PLAN_ORG_TYPE_VALUES = ["primary_school", "middle_school", "high_school", "private_school", "school_complex", "vocational_center", "technical_center", "university", "institute", "school_group"] as const;
+type PlanOrgType = (typeof PLAN_ORG_TYPE_VALUES)[number];
+
+const lines = (value: FormDataEntryValue | null) =>
+  String(value ?? "")
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .slice(0, 8);
+
+function planForm(formData: FormData) {
+  return {
+    name: String(formData.get("name") ?? "").trim(),
+    name_en: String(formData.get("name_en") ?? "").trim(),
+    description: String(formData.get("description") ?? "").slice(0, 1000),
+    description_en: String(formData.get("description_en") ?? "").slice(0, 1000),
+    audience: String(formData.get("audience") ?? "").slice(0, 200),
+    highlights: lines(formData.get("highlights")),
+    highlights_en: lines(formData.get("highlights_en")),
+    org_types: PLAN_ORG_TYPE_VALUES.filter((t) => formData.get(`org_type_${t}`) === "on") as PlanOrgType[],
+    sort_order: Number(formData.get("sort_order") ?? 50) || 50,
+    is_active: formData.get("is_active") === "on",
+    features: Object.fromEntries(PLAN_FEATURE_CODES.filter((c) => formData.get(`present_${c}`) === "1").map((c) => [c, formData.get(`feature_${c}`) === "on"])),
+  };
+}
+
+function refreshPlans() {
+  refresh();
+  revalidatePath("/tarifs");
+  revalidatePath("/en/pricing");
+  revalidatePath("/inscription");
+  revalidatePath("/abonnement", "layout");
+}
+
+/** Nouvelle formule (prix, essai, options, types d'établissement). */
+export async function createPlan(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await requirePlatformAdmin();
+  if (!auth.ok) return auth;
+  const form = planForm(formData);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("platform_save_plan", {
+    p_plan: null as unknown as string,
+    p_code: String(formData.get("code") ?? "").trim().toUpperCase(),
+    p_name: form.name,
+    p_name_en: form.name_en,
+    p_description: form.description,
+    p_description_en: form.description_en,
+    p_audience: form.audience,
+    p_highlights: form.highlights,
+    p_highlights_en: form.highlights_en,
+    p_org_types: form.org_types,
+    p_sort_order: form.sort_order,
+    p_is_active: form.is_active,
+    p_features: form.features,
+    p_monthly_price: Number(formData.get("monthly_price") ?? 0),
+    p_annual_discount_percent: Number(formData.get("annual_discount_percent") ?? 30),
+    p_trial_days: Number(formData.get("trial_days") ?? 20),
+  });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  refreshPlans();
+  return { ok: true, message: form.is_active ? "Formule créée et proposée aux établissements concernés." : "Formule créée (non proposée tant qu'elle n'est pas activée)." };
+}
+
+/** Modification complète d'une formule (le prix se change à part, avec historique). */
+export async function savePlan(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await requirePlatformAdmin();
+  if (!auth.ok) return auth;
+  const planId = String(formData.get("plan_id") ?? "");
+  if (!isUuid(planId)) return { ok: false, message: "Formule introuvable." };
+  const form = planForm(formData);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("platform_save_plan", {
+    p_plan: planId,
+    p_code: "",
+    p_name: form.name,
+    p_name_en: form.name_en,
+    p_description: form.description,
+    p_description_en: form.description_en,
+    p_audience: form.audience,
+    p_highlights: form.highlights,
+    p_highlights_en: form.highlights_en,
+    p_org_types: form.org_types,
+    p_sort_order: form.sort_order,
+    p_is_active: form.is_active,
+    p_features: form.features,
+  });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  refreshPlans();
+  return { ok: true, message: "Formule mise à jour. Les abonnements existants gardent leur prix." };
+}
+
+/** Retirer des offres (abonnés actuels inchangés) ou réactiver. */
+export async function setPlanActive(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await requirePlatformAdmin();
+  if (!auth.ok) return auth;
+  const planId = String(formData.get("plan_id") ?? "");
+  if (!isUuid(planId)) return { ok: false, message: "Formule introuvable." };
+  const active = formData.get("active") === "true";
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("platform_set_plan_active", { p_plan: planId, p_active: active });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  refreshPlans();
+  return { ok: true, message: active ? "Formule de nouveau proposée." : "Formule retirée des offres. Les abonnés actuels la gardent." };
+}
+
+/** Copie d'une formule (retirée, à relire avant de la proposer). */
+export async function duplicatePlan(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await requirePlatformAdmin();
+  if (!auth.ok) return auth;
+  const planId = String(formData.get("plan_id") ?? "");
+  if (!isUuid(planId)) return { ok: false, message: "Formule introuvable." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("platform_duplicate_plan", {
+    p_plan: planId,
+    p_code: String(formData.get("code") ?? "").trim().toUpperCase(),
+    p_name: String(formData.get("name") ?? "").trim(),
+  });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  refreshPlans();
+  return { ok: true, message: "Copie créée : relisez-la puis activez-la pour la proposer." };
+}
+
+/** Suppression définitive (seulement une formule qui n'a jamais servi). */
+export async function deletePlan(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await requirePlatformAdmin();
+  if (!auth.ok) return auth;
+  const planId = String(formData.get("plan_id") ?? "");
+  if (!isUuid(planId)) return { ok: false, message: "Formule introuvable." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("platform_delete_plan", { p_plan: planId });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  refreshPlans();
+  return { ok: true, message: "Formule supprimée." };
+}

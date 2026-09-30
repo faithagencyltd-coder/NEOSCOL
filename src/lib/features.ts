@@ -21,6 +21,21 @@ function flags(organization: OrganizationSummary, key: "features" | "platform_fe
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
 }
 
+/** Option de la formule correspondant à une fonctionnalité (les autres ne dépendent pas de la formule). */
+const PLAN_FEATURE: Partial<Record<FeatureFlag, string>> = {
+  parent_portal: "parents",
+  student_portal: "student_portal",
+  messaging: "communication",
+  assistant: "assistant",
+  voice_checkin: "voice_checkin",
+};
+
+/** Fonctionnalité non incluse dans la formule souscrite (Super Admin › Formules). */
+export function featureExcludedByPlan(organization: OrganizationSummary, flag: FeatureFlag): boolean {
+  const code = PLAN_FEATURE[flag];
+  return Boolean(code && organization.plan_features && organization.plan_features[code] === false);
+}
+
 /** Arrêt forcé par le Super Admin pour cet établissement (prime sur son propre réglage). */
 export function featureLockedByPlatform(organization: OrganizationSummary, flag: FeatureFlag): boolean {
   return flags(organization, "platform_features")[flag] === false;
@@ -32,6 +47,6 @@ export function featureLockedByPlatform(organization: OrganizationSummary, flag:
  * Activée par défaut.
  */
 export function featureEnabled(organization: OrganizationSummary, flag: FeatureFlag): boolean {
-  if (featureLockedByPlatform(organization, flag)) return false;
+  if (featureLockedByPlatform(organization, flag) || featureExcludedByPlan(organization, flag)) return false;
   return flags(organization, "features")[flag] !== false;
 }

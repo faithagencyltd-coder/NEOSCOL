@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { ActionResult } from "@/lib/utils/action-result";
 
-type Row = { key: string; label: string; hint: string; enabled: boolean; locked?: boolean };
+type Row = { key: string; label: string; hint: string; enabled: boolean; locked?: boolean; lockReason?: string };
 
 /**
  * Interrupteurs des fonctionnalités. `mode="org"` : réglage de l'établissement
@@ -51,7 +51,7 @@ export function FeaturesForm({
                   {r.label}
                   {mode === "org" && r.locked ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-2 text-xs text-warning">
-                      <Lock className="size-3" aria-hidden /> Arrêtée par NeoScool
+                      <Lock className="size-3" aria-hidden /> {r.lockReason ?? "Arrêtée par NeoScool"}
                     </span>
                   ) : null}
                 </span>
