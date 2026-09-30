@@ -90,7 +90,7 @@ export async function lessonNow(q, { teacherUser, className, subjectCode }) {
     `select cs.id as class_subject_id, cs.class_id, cs.teacher_id, c.academic_year_id, c.organization_id,
             (now() at time zone o.timezone)::date as today,
             extract(isodow from (now() at time zone o.timezone))::int as weekday,
-            greatest((now() at time zone o.timezone)::time - interval '10 minutes', time '00:00')::time as starts_at,
+            greatest((now() at time zone o.timezone) - interval '10 minutes', date_trunc('day', now() at time zone o.timezone))::time::time as starts_at,
             least((now() at time zone o.timezone) + interval '50 minutes', date_trunc('day', now() at time zone o.timezone) + interval '23:59:59')::time as ends_at
      from class_subjects cs join classes c on c.id = cs.class_id join subjects s on s.id = cs.subject_id
      join organizations o on o.id = c.organization_id

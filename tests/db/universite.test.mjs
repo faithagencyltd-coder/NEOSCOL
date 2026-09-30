@@ -232,7 +232,7 @@ describe("Université — scan, isolation", () => {
       const [info] = await q(
         `select cs.id, cs.teacher_id, c.academic_year_id, c.id as class_id,
                 extract(isodow from now() at time zone o.timezone)::int wd,
-                greatest((now() at time zone o.timezone)::time - interval '5 minutes', time '00:00')::time s,
+                greatest((now() at time zone o.timezone) - interval '5 minutes', date_trunc('day', now() at time zone o.timezone))::time::time s,
                 least((now() at time zone o.timezone) + interval '90 minutes', date_trunc('day', now() at time zone o.timezone) + interval '23:59')::time e
          from class_subjects cs join classes c on c.id = cs.class_id join organizations o on o.id = c.organization_id
          join subjects su on su.id = cs.subject_id where c.code = 'L1INF' and su.code = 'INF101'`,

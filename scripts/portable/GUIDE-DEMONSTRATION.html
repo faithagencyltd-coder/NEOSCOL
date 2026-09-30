@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NéoScol — Guide de démonstration</title>
+<style>
+  :root { --nuit: #0b2559; --bleu: #1d63ed; --orange: #f59e0b; --vert: #059669; --gris: #5b6477; --fond: #f4f6fb; --carte: #fff; --bord: #e3e8f2; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", system-ui, -apple-system, sans-serif; color: #1f2937; background: var(--fond); line-height: 1.55; }
+  header { background: linear-gradient(135deg, var(--nuit), var(--bleu)); color: #fff; padding: 32px 20px; }
+  header h1 { margin: 0 0 6px; font-size: 28px; }
+  header p { margin: 0; opacity: .9; }
+  main { max-width: 980px; margin: 0 auto; padding: 20px 16px 60px; }
+  nav.toc { background: var(--carte); border: 1px solid var(--bord); border-radius: 14px; padding: 14px 18px; margin: -34px 0 20px; position: relative; box-shadow: 0 6px 24px rgba(11,37,89,.08); }
+  nav.toc ol { margin: 6px 0 0; padding-left: 20px; columns: 2; column-gap: 28px; }
+  nav.toc a { color: var(--bleu); text-decoration: none; }
+  section { background: var(--carte); border: 1px solid var(--bord); border-radius: 14px; padding: 18px 22px; margin: 18px 0; }
+  h2 { margin: 0 0 4px; color: var(--nuit); font-size: 21px; }
+  h3 { margin: 18px 0 6px; font-size: 16px; color: var(--nuit); }
+  .qui { color: var(--gris); margin: 0 0 10px; }
+  code, kbd { background: #eef2f9; border-radius: 6px; padding: 1px 6px; font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--bord); vertical-align: top; }
+  th { color: var(--gris); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  ol.pas li { margin: 5px 0; }
+  .note { border-left: 4px solid var(--orange); background: #fff7e6; padding: 10px 12px; border-radius: 8px; margin: 12px 0; font-size: 14px; }
+  .ok { border-left: 4px solid var(--vert); background: #ecfdf5; padding: 10px 12px; border-radius: 8px; margin: 12px 0; font-size: 14px; }
+  .tag { display: inline-block; background: #e8efff; color: var(--bleu); border-radius: 999px; padding: 0 9px; font-size: 12px; font-weight: 600; margin-left: 6px; }
+  @media (max-width: 640px) { nav.toc ol { columns: 1; } header h1 { font-size: 23px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>NéoScol — Guide de démonstration et de manipulation</h1>
+  <p>Tout voir, du Super Admin à la tablette de pointage. Données entièrement fictives, installation locale.</p>
+</header>
+<main>
+<nav class="toc" aria-label="Sommaire">
+  <strong>Sommaire</strong>
+  <ol>
+    <li><a href="#demarrer">Démarrer</a></li>
+    <li><a href="#comptes">Comptes de démonstration</a></li>
+    <li><a href="#superadmin">Super Admin (console de la plateforme)</a></li>
+    <li><a href="#admin">Administrateur d'établissement</a></li>
+    <li><a href="#direction">Direction</a></li>
+    <li><a href="#secretariat">Secrétariat</a></li>
+    <li><a href="#comptable">Comptabilité</a></li>
+    <li><a href="#enseignant">Enseignant</a></li>
+    <li><a href="#tablette">Tablette de pointage</a></li>
+    <li><a href="#portails">Parent et élève (portails)</a></li>
+    <li><a href="#universite">Université</a></li>
+    <li><a href="#formation">Formation professionnelle</a></li>
+    <li><a href="#module4">Module 4 (plusieurs domaines)</a></li>
+    <li><a href="#horsligne">Tester le mode hors ligne</a></li>
+    <li><a href="#reel">Ce qui demande un vrai fournisseur</a></li>
+  </ol>
+</nav>
+
+<section id="demarrer">
+  <h2>1. Démarrer</h2>
+  <ol class="pas">
+    <li>Double-cliquez sur <code>DEMARRER.cmd</code> (voir <code>LISEZ-MOI.txt</code> pour l'installation).</li>
+    <li>Le navigateur s'ouvre sur <code>http://localhost:3000</code>. La page de connexion propose un <strong>accès rapide</strong> par rôle (mode démonstration) ; vous pouvez aussi saisir un compte ci-dessous.</li>
+    <li>Mot de passe commun : <code>NeoScol-Demo-2026!</code></li>
+    <li>Pour changer de rôle : menu du compte (en haut à droite) → Déconnexion, puis un autre profil.</li>
+    <li>Pour tout remettre à zéro : <code>REINITIALISER.cmd</code>.</li>
+  </ol>
+  <div class="ok">Astuce : ouvrez deux navigateurs (ou une fenêtre privée) pour voir en même temps, par exemple, la tablette de pointage et l'enseignant.</div>
+</section>
+
+<section id="comptes">
+  <h2>2. Comptes de démonstration</h2>
+  <table>
+    <thead><tr><th>Profil</th><th>Identifiant</th><th>Ce qu'il voit</th></tr></thead>
+    <tbody>
+      <tr><td>Super Admin <span class="tag">plateforme</span></td><td><code>superadmin@demo.neoscol.app</code></td><td>Console de la plateforme : établissements, abonnements, pays, intégrations, sécurité.</td></tr>
+      <tr><td>Administrateur</td><td><code>admin@demo.neoscol.app</code></td><td>Tout l'établissement « Groupe Scolaire Démo NéoScol ».</td></tr>
+      <tr><td>Direction</td><td><code>direction@demo.neoscol.app</code></td><td>Pédagogie, bulletins, validation, pointage du personnel.</td></tr>
+      <tr><td>Secrétariat</td><td><code>secretariat@demo.neoscol.app</code></td><td>Élèves, inscriptions, parents, justificatifs.</td></tr>
+      <tr><td>Comptabilité</td><td><code>comptable@demo.neoscol.app</code></td><td>Factures, paiements, dépenses (pas les notes).</td></tr>
+      <tr><td>Enseignant</td><td><code>enseignant@demo.neoscol.app</code></td><td>Ses cours, l'appel, les notes de ses classes.</td></tr>
+      <tr><td>Tablette de pointage</td><td><code>pointage@demo.neoscol.app</code></td><td>Borne « Scannez votre badge ».</td></tr>
+      <tr><td>Parent</td><td>Téléphone <code>+2250700000001</code>, code SMS <code>123456</code></td><td>Portail mobile (Kofi et Aya).</td></tr>
+      <tr><td>Élève</td><td><code>eleve@demo.neoscol.app</code> (ou matricule <code>DEMO-26-00001</code>, né le 12/03/2014)</td><td>Portail élève.</td></tr>
+      <tr><td>Université</td><td><code>universite@demo.neoscol.app</code>, <code>scolarite@…</code>, <code>professeur@…</code>, <code>etudiant@…</code>, <code>pointage.universite@…</code></td><td>Université Démo (Module 3).</td></tr>
+      <tr><td>Formation professionnelle</td><td><code>formation@demo.neoscol.app</code>, <code>formateur@…</code>, <code>pointage.formation@…</code></td><td>Institut de formation (Module 2).</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="superadmin">
+  <h2>3. Super Admin — console de la plateforme</h2>
+  <p class="qui">Compte <code>superadmin@demo.neoscol.app</code> → la console <code>/plateforme</code> s'ouvre (installable comme application « NéoScol Console »).</p>
+  <h3>Établissements et abonnements</h3>
+  <ol class="pas">
+    <li><strong>Établissements</strong> : liste de tous les clients, création d'un établissement et de son premier administrateur.</li>
+    <li><strong>Abonnements</strong> : essais de 20 jours, formules actives, impayés ; <strong>Paiements</strong> : enregistrer un paiement manuel, factures PDF.</li>
+    <li><strong>Formules</strong> : Module Scolaire, Formation professionnelle, Université, Module 4 (30 000 F / mois) — prix modifiables.</li>
+  </ol>
+  <h3>Pays, devises et règles</h3>
+  <ol class="pas">
+    <li><strong>Pays</strong> → « Ajouter un pays » : code, devise, fuseau, langue, format de l'identifiant national (ex. INE), <em>Voice Check-in disponible</em>. Aucun code à modifier.</li>
+    <li><strong>Règles académiques</strong> : modèle de calcul national (moyenne annuelle, décisions, mentions), versions, publication et retour arrière.</li>
+    <li><strong>Country Connect</strong> : formats des fichiers officiels par pays (import / export).</li>
+  </ol>
+  <h3>Intégrations et sécurité</h3>
+  <ol class="pas">
+    <li><strong>Intégrations</strong> : Brevo (e-mail, SMS), Twilio, WhatsApp (Meta), Turnstile, <strong>Claude (assistant IA)</strong>. Les clés sont chiffrées et jamais réaffichées ; bouton « Tester ».</li>
+    <li>Quotas mensuels par établissement (SMS, e-mails, WhatsApp) et <strong>quota IA</strong> ; consommation du mois.</li>
+    <li><strong>Sécurité</strong> : verrouillage après échecs, anti-robot, double authentification obligatoire pour les rôles sensibles, comptes verrouillés, sessions.</li>
+  </ol>
+</section>
+
+<section id="admin">
+  <h2>4. Administrateur d'établissement</h2>
+  <p class="qui">Compte <code>admin@demo.neoscol.app</code> — tous les modules de l'établissement.</p>
+  <h3>Scolarité</h3>
+  <ol class="pas">
+    <li><strong>Tableau de bord</strong> : indicateurs réels (effectifs, présences, finances).</li>
+    <li><strong>Élèves</strong> : fiche 360° (identité, parents, notes, présences, finances, documents) ; <strong>Inscriptions</strong> : assistant en étapes, validation qui crée la facture.</li>
+    <li><strong>Données historiques</strong> : import Excel/CSV des anciens élèves avec détection des doublons.</li>
+    <li><strong>Country Connect</strong> : identifiant national des élèves, export au format officiel, import vérifié puis appliqué.</li>
+    <li><strong>Classes, Séries, Matières, Structure, Emploi du temps</strong>.</li>
+  </ol>
+  <h3>Résultats et fin d'année</h3>
+  <ol class="pas">
+    <li><strong>Règles de calcul</strong> : moyenne annuelle (pondération ou formule), décisions et mentions ; simulateur.</li>
+    <li><strong>Résultats annuels</strong> : calcul, décision du conseil (avec motif), validation qui fige les résultats.</li>
+    <li><strong>Passage d'année</strong> : préparer 2027-2028 (classes, périodes, tarifs copiés), réinscriptions groupées selon les décisions, clôture, archives CSV.</li>
+  </ol>
+  <h3>Communication</h3>
+  <ol class="pas">
+    <li><strong>Annonces</strong> et <strong>Messagerie</strong>.</li>
+    <li><strong>Centre d'envois</strong> : créez un modèle SMS avec <code>{destinataire}</code>, <code>{eleve_prenom}</code>, <code>{solde}</code> → « Parents d'élèves en impayé » → « Aperçu » (message réel, numéros masqués) → « Envoyer ». Sans fournisseur activé, chaque destinataire est marqué « canal non configuré » (aucun faux envoi).</li>
+    <li>Relance automatique des impayés : « Régler » → modèle + fréquence.</li>
+  </ol>
+  <h3>Autres</h3>
+  <ol class="pas">
+    <li><strong>Finances</strong>, <strong>Documents</strong> (Document Studio, modèles), <strong>Rapports</strong>, <strong>Audit</strong>, <strong>Rôles</strong>, <strong>Utilisateurs</strong>.</li>
+    <li><strong>Messages vocaux</strong> (Configuration) : activez, personnalisez « Bonjour {prenom}… », cliquez « Écouter ».</li>
+    <li><strong>Assistant</strong> : « fiche DEMO-26-00001 », « Où en est le passage à l'année suivante ? », « Liste les impayés » — il ne voit que ce que vous avez le droit de voir.</li>
+    <li><strong>Mon badge</strong> (carte 3D, QR tournant), <strong>Sécurité</strong> (double authentification, appareils connectés), <strong>Abonnement</strong>.</li>
+  </ol>
+</section>
+
+<section id="direction">
+  <h2>5. Direction</h2>
+  <p class="qui">Compte <code>direction@demo.neoscol.app</code>.</p>
+  <ol class="pas">
+    <li>Bulletins : calcul, appréciations, publication, PDF par classe.</li>
+    <li>Pointage du personnel : arrivées, retards, historique des scans (y compris ceux faits hors ligne).</li>
+    <li>Centre d'envois, passage d'année, messages vocaux (droits de la direction).</li>
+  </ol>
+</section>
+
+<section id="secretariat">
+  <h2>6. Secrétariat</h2>
+  <p class="qui">Compte <code>secretariat@demo.neoscol.app</code>.</p>
+  <ol class="pas">
+    <li>Nouvelle inscription, fiche élève, parents, comptes portail.</li>
+    <li>Justificatifs d'absence à valider.</li>
+    <li>À constater : pas d'accès au centre d'envois ni au passage d'année (réservés à la direction).</li>
+  </ol>
+</section>
+
+<section id="comptable">
+  <h2>7. Comptabilité</h2>
+  <p class="qui">Compte <code>comptable@demo.neoscol.app</code>.</p>
+  <ol class="pas">
+    <li>Factures, encaissement d'un paiement → reçu PDF ; dépenses ; impayés.</li>
+    <li>Payer la facture de Kofi : ses restrictions de portail se lèvent immédiatement.</li>
+  </ol>
+</section>
+
+<section id="enseignant">
+  <h2>8. Enseignant</h2>
+  <p class="qui">Compte <code>enseignant@demo.neoscol.app</code> (Ibrahim OUATTARA, mathématiques 6e A / 6e B).</p>
+  <ol class="pas">
+    <li><strong>Mes cours</strong> : l'appel reste verrouillé tant que le badge n'a pas été scanné sur la tablette.</li>
+    <li>Scannez son badge sur la tablette (section suivante), puis revenez : faites l'appel et validez-le (les familles sont prévenues).</li>
+    <li><strong>Notes</strong> : nouvelle évaluation, saisie en grille, validation.</li>
+    <li><strong>Mon badge</strong> : QR tournant (toutes les 30 s), plein écran.</li>
+  </ol>
+</section>
+
+<section id="tablette">
+  <h2>9. Tablette de pointage (et messages vocaux)</h2>
+  <p class="qui">Compte <code>pointage@demo.neoscol.app</code> — idéalement sur une tablette ou un téléphone du même Wi-Fi.</p>
+  <ol class="pas">
+    <li>Présentez un badge devant la caméra, ou collez son code dans « Code du badge » (le code figure sur le badge PDF : Personnel → badge).</li>
+    <li>Arrivée, retard, départ, cours débloqué : l'écran affiche le résultat vérifié par le serveur.</li>
+    <li>Si les <strong>messages vocaux</strong> sont activés (Administrateur → Messages vocaux), la tablette annonce l'arrivée, le retard ou le refus. Bouton « Voix activée / coupée ».</li>
+  </ol>
+</section>
+
+<section id="portails">
+  <h2>10. Parent et élève (portails mobiles)</h2>
+  <ol class="pas">
+    <li>Parent : connexion par téléphone <code>+2250700000001</code>, code <code>123456</code>. Enfants, présences, notes, bulletins, factures, messages.</li>
+    <li>Kofi est en impayé : certaines rubriques sont restreintes jusqu'au paiement (les présences restent toujours visibles).</li>
+    <li>Élève : <code>eleve@demo.neoscol.app</code> — emploi du temps, notes, badge.</li>
+  </ol>
+</section>
+
+<section id="universite">
+  <h2>11. Université (Module 3)</h2>
+  <p class="qui">Comptes <code>universite@</code>, <code>scolarite@</code>, <code>professeur@</code>, <code>etudiant@</code>, <code>pointage.universite@demo.neoscol.app</code>.</p>
+  <ol class="pas">
+    <li>Structure (facultés, départements, filières, parcours), UE et crédits ECTS, inscriptions.</li>
+    <li>Résultats, rattrapages, délibérations du jury, relevés et diplômes PDF, stages, mémoires, soutenances.</li>
+    <li>Scan des étudiants et enseignants sur la tablette de l'université.</li>
+  </ol>
+</section>
+
+<section id="formation">
+  <h2>12. Formation professionnelle (Module 2)</h2>
+  <p class="qui">Comptes <code>formation@</code>, <code>formateur@</code>, <code>pointage.formation@demo.neoscol.app</code>.</p>
+  <ol class="pas">
+    <li>Formations libres, sessions, groupes facultatifs, apprenants, paiements échelonnés.</li>
+    <li>Badges apprenants et formateurs ; scan « Scanner votre badge » : entrée, retard, sortie, temps de présence.</li>
+  </ol>
+</section>
+
+<section id="module4">
+  <h2>13. Module 4 (plusieurs domaines, 30 000 F / mois)</h2>
+  <ol class="pas">
+    <li>Déconnectez-vous, ouvrez <code>/tarifs</code> puis « Commencer » sur le Module 4 (ou <code>/inscription</code>).</li>
+    <li>Choisissez les domaines (scolaire, formation, université) : un espace est créé par domaine, sous un seul abonnement, avec un sélecteur d'espace.</li>
+  </ol>
+</section>
+
+<section id="horsligne">
+  <h2>14. Tester le mode hors ligne</h2>
+  <ol class="pas">
+    <li>Sur la tablette de pointage ou sur l'appel d'un enseignant, coupez le Wi-Fi de l'appareil (ou mode avion).</li>
+    <li>Scannez / validez : « Hors ligne — gardé sur l'appareil » (aucun nom stocké).</li>
+    <li>Rallumez le Wi-Fi : l'envoi est automatique et enregistré à l'heure réelle de la saisie, sans doublon.</li>
+  </ol>
+</section>
+
+<section id="reel">
+  <h2>15. Ce qui demande un vrai fournisseur</h2>
+  <div class="note">
+    NéoScol ne simule jamais un envoi ou un paiement réel :
+    <ul>
+      <li><strong>SMS, e-mails, WhatsApp</strong> : clés à saisir par le Super Admin dans Intégrations (Brevo, Twilio, Meta). Sans clé : « canal non configuré ».</li>
+      <li><strong>Assistant IA</strong> : sans clé Claude, il répond avec son moteur local (questions guidées) ; avec la clé, en langage naturel.</li>
+      <li><strong>Paiements en ligne</strong> : ce paquet utilise le mode « simulation » clairement signalé ; en production, PayDunya.</li>
+      <li><strong>Voix</strong> : fournie par l'appareil (qualité selon la tablette ou l'ordinateur).</li>
+    </ul>
+  </div>
+</section>
+</main>
+</body>
+</html>

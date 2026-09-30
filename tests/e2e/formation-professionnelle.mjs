@@ -231,7 +231,7 @@ text = await scan(firstToken);
 check(/SORTIE/.test(text) && /Présence/.test(text), "2e scan : SORTIE + temps de présence");
 await ageScans();
 // Retard : le cours a commencé il y a 25 minutes.
-await db.query("update timetable_slots set starts_at = greatest((now() at time zone $2)::time - interval '25 minutes', time '00:00') where class_id = $1", [sessionId, ORG.timezone]);
+await db.query("update timetable_slots set starts_at = greatest((now() at time zone $2) - interval '25 minutes', date_trunc('day', now() at time zone $2))::time where class_id = $1", [sessionId, ORG.timezone]);
 await db.query("delete from learner_attendance where student_id = $1", [learner.id]);
 text = await scan(firstToken);
 check(/EN RETARD — 2\d MINUTES/.test(text), "retard calculé : EN RETARD — X MINUTES");

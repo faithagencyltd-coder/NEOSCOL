@@ -194,6 +194,9 @@ function authEnv() {
     GOTRUE_SMS_MAX_FREQUENCY: "1s",
     GOTRUE_RATE_LIMIT_SMS_SENT: "1000",
     GOTRUE_LOG_LEVEL: "warn",
+    // Double authentification (applications TOTP) : page « Sécurité ».
+    GOTRUE_MFA_TOTP_ENROLL_ENABLED: "true",
+    GOTRUE_MFA_TOTP_VERIFY_ENABLED: "true",
   };
 }
 

@@ -33,7 +33,7 @@ async function courseNow(q, startedMinutesAgo, { groupId = null, roomName = "Sal
   const [info] = await q(
     `select c.id as class_id, c.academic_year_id, cs.id as class_subject_id, cs.teacher_id, r.id as room_id,
             extract(isodow from (now() at time zone o.timezone))::int as weekday,
-            greatest((now() at time zone o.timezone)::time - make_interval(mins => $2), time '00:00')::time as starts_at,
+            greatest((now() at time zone o.timezone) - make_interval(mins => $2), date_trunc('day', now() at time zone o.timezone))::time::time as starts_at,
             least((now() at time zone o.timezone) + interval '90 minutes', date_trunc('day', now() at time zone o.timezone) + interval '23:59:59')::time as ends_at
      from classes c join organizations o on o.id = c.organization_id
      join class_subjects cs on cs.class_id = c.id join subjects s on s.id = cs.subject_id and s.code = 'WORD'

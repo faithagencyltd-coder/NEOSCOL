@@ -108,7 +108,7 @@ const cs = (await db.query("select cs.id from class_subjects cs join subjects s 
 check(Boolean(cs), "3. Anglais affecté à Fatoumata DIALLO en 6e A (coef. 2)");
 // 4. Emploi du temps : créneau maintenant (les créneaux du jour de la 6e A sont libérés pour éviter un conflit)
 const now = (await db.query(`select extract(isodow from now() at time zone 'Africa/Abidjan')::int wd,
-  to_char(greatest((now() at time zone 'Africa/Abidjan')::time - interval '10 minutes', time '00:00'), 'HH24:MI') s,
+  to_char(greatest((now() at time zone 'Africa/Abidjan') - interval '10 minutes', date_trunc('day', now() at time zone 'Africa/Abidjan'))::time, 'HH24:MI') s,
   to_char(least((now() at time zone 'Africa/Abidjan') + interval '50 minutes', date_trunc('day', now() at time zone 'Africa/Abidjan') + interval '23:59'), 'HH24:MI') e,
   to_char((now() at time zone 'Africa/Abidjan')::date, 'YYYY-MM-DD') today`)).rows[0];
 await db.query("delete from timetable_slots where weekday=$1 and class_id=$2", [now.wd, klass]);
