@@ -102,6 +102,8 @@ ouvre directement un portail.
 
 `GET /api/cron/rappels` avec l'en-tête `Authorization: Bearer $CRON_SECRET` envoie les rappels
 d'échéance et d'impayé (une fois par jour, via Vercel Cron, pg_cron ou tout ordonnanceur).
+`GET /api/cron/notifications` (même en-tête, toutes les minutes) envoie les notifications push en attente
+(clés VAPID générées dans la console : Intégrations → Notifications push).
 
 ## Commandes
 

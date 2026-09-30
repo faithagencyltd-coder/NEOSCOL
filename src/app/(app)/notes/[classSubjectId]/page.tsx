@@ -1,4 +1,4 @@
-import { ClipboardList, Lock } from "lucide-react";
+import { ClipboardList, FileSpreadsheet, Lock } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { QuickFormDialog } from "@/components/shared/quick-form-dialog";
 import { TabNav } from "@/components/shared/tab-nav";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { getPeriods } from "@/features/academic/queries";
@@ -64,6 +65,16 @@ export default async function GradeBookPage({ params, searchParams }: PageProps<
             Coefficient {book.coefficient}
             {book.teacher ? ` · ${book.teacher.first_name} ${book.teacher.last_name}` : ""}
           </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="secondary">
+            <a href={`/api/notes/carnets/${book.id}/export`}>
+              <FileSpreadsheet aria-hidden /> Exporter le carnet (Excel)
+            </a>
+          </Button>
+          <Button asChild variant="ghost">
+            <a href={`/api/notes/carnets/${book.id}/export?format=csv`}>CSV</a>
+          </Button>
         </div>
         {canEdit && current && !current.is_locked ? (
           <QuickFormDialog

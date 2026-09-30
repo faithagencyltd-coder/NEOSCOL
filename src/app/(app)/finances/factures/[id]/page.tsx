@@ -1,16 +1,17 @@
-import { Ban, BellRing, FileDown, Receipt } from "lucide-react";
+import { Ban, BadgePercent, BellRing, FileDown, Receipt } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ConfirmAction } from "@/components/shared/confirm-action";
+import { QuickFormDialog } from "@/components/shared/quick-form-dialog";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
-import { cancelInvoice, cancelPayment, sendReminder } from "@/features/finance/actions";
+import { applyInvoiceDiscount, cancelInvoice, cancelPayment, sendReminder } from "@/features/finance/actions";
 import { PaymentDialog } from "@/features/finance/components/payment-dialog";
 import { getInvoice } from "@/features/finance/queries";
 import { requirePermission } from "@/lib/auth/guards";
@@ -85,6 +86,32 @@ export default async function InvoicePage({ params, searchParams }: PageProps<"/
               confirmLabel="Envoyer"
               action={sendReminder}
               fields={{ invoice_id: invoice.id }}
+            />
+          ) : null}
+          {invoice.status !== "cancelled" && remaining > 0 && can(context, "finance.invoices.manage") ? (
+            <QuickFormDialog
+              title="Accorder une remise"
+              description="Bourse, fratrie, enfant du personnel, geste commercial… La remise réduit le total et le reste à payer ; l'échéancier est réduit en partant de la dernière tranche. Motif obligatoire, opération journalisée."
+              trigger={
+                <Button variant="secondary">
+                  <BadgePercent aria-hidden /> Remise
+                </Button>
+              }
+              submitLabel="Appliquer la remise"
+              action={applyInvoiceDiscount}
+              hidden={{ invoice_id: invoice.id }}
+              fields={[
+                {
+                  name: "line_id",
+                  label: "Ligne concernée",
+                  type: "select",
+                  options: invoice.invoice_lines.map((l) => ({ value: l.id, label: `${l.description} — ${money(l.amount)}` })),
+                  defaultValue: [...invoice.invoice_lines].sort((a, b) => Number(b.amount) - Number(a.amount))[0]?.id,
+                  wide: true,
+                },
+                { name: "amount", label: `Montant de la remise (${context.organization.currency})`, type: "number", required: true, min: 1, max: remaining },
+                { name: "reason", label: "Motif", required: true, placeholder: "Bourse, fratrie, enfant du personnel…" },
+              ]}
             />
           ) : null}
           {issued && Number(balance?.paid ?? 0) === 0 && can(context, "finance.invoices.manage") ? (

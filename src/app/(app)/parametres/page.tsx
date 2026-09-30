@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 
 import { PageHeader } from "@/components/shared/page-header";
 import { SettingsForm } from "@/features/portal/components/settings-form";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FeaturesForm } from "@/features/organization/components/features-form";
+import { saveOrganizationFeatures } from "@/features/organization/feature-actions";
 import { requirePermission } from "@/lib/auth/guards";
+import { FEATURE_FLAGS, featureEnabled, featureLockedByPlatform } from "@/lib/features";
 import { vocabularyFor } from "@/lib/vocabulary";
 
 export const metadata: Metadata = { title: "Paramètres" };
@@ -23,6 +27,19 @@ export default async function SettingsPage() {
   return (
     <div className="grid gap-6">
       <PageHeader title="Paramètres de l'établissement" description="Règles appliquées immédiatement par la base de données (portails, rappels, pointage, notes)." />
+      <Card>
+        <CardHeader>
+          <CardTitle>Fonctionnalités</CardTitle>
+          <CardDescription>Activez ou désactivez les fonctionnalités de l&apos;établissement. Une fonctionnalité arrêtée par Neoscool ne peut pas être réactivée ici.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <FeaturesForm
+            mode="org"
+            action={saveOrganizationFeatures}
+            rows={FEATURE_FLAGS.map((f) => ({ ...f, enabled: featureEnabled(context.organization, f.key), locked: featureLockedByPlatform(context.organization, f.key) }))}
+          />
+        </CardContent>
+      </Card>
       <SettingsForm
         currency={context.organization.currency}
         family={vocabularyFor(context.organization.type).family}

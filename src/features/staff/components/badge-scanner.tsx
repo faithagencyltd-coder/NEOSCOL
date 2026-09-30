@@ -508,6 +508,11 @@ export function BadgeScanner({
                 {muted ? <VolumeX className="size-5" aria-hidden /> : <Volume2 className="size-5" aria-hidden />}
                 {muted ? "Voix coupée" : "Voix activée"}
               </button>
+            ) : voice?.available ? (
+              // Tablette parlante disponible mais désactivée : indiquer où l'activer.
+              <span className="flex h-12 items-center gap-2 rounded-2xl border border-dashed border-white/20 px-4 text-sm text-[#c7d3f0]" data-testid="voice-hint">
+                <VolumeX className="size-5" aria-hidden /> Voix désactivée — l&apos;administration l&apos;active dans Paramètres › Messages vocaux
+              </span>
             ) : null}
             <button
               type="button"

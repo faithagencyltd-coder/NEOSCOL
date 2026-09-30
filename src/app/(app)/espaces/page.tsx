@@ -1,4 +1,4 @@
-import { ArrowRight, Building2, CalendarClock, CheckCircle2, CreditCard, Lock, XCircle } from "lucide-react";
+import { ArrowRight, BarChart3, Building2, CalendarClock, CheckCircle2, CreditCard, Lock, XCircle } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -9,6 +9,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { switchOrganization } from "@/features/auth/actions";
 import { CreateSpaceButton, Module4ComponentsForm } from "@/features/billing/components/module4-forms";
 import { COMPONENT_ICONS } from "@/features/billing/components/module4-space-bar";
@@ -16,6 +17,7 @@ import { INTERVAL_LABELS, MODULE4_COMPONENTS, SUBSCRIPTION_STATUS } from "@/feat
 import { module4Overview } from "@/features/billing/module4";
 import { requireOrganization } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
+import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils/cn";
 import { formatDate, formatMoney } from "@/lib/utils/format";
 
@@ -36,6 +38,10 @@ export default async function SpacesPage() {
   const interval = INTERVAL_LABELS[overview.interval] ?? INTERVAL_LABELS.MONTHLY!;
   const price = overview.interval === "YEARLY" ? overview.annual_price : overview.monthly_price;
   const endAt = trialing || !overview.current_period_end ? overview.trial_end : overview.current_period_end;
+  type GroupStat = { organization_id: string; name: string; students: number; staff: number; invoiced: number; paid: number; balance: number; overdue: number };
+  const stats: GroupStat[] = isGroup && (can(context, "settings.manage") || can(context, "reports.read"))
+    ? (((await (await createClient()).rpc("group_consolidated_stats", { p_group: overview.group.id })).data ?? []) as unknown as GroupStat[])
+    : [];
   const fmt = (d: string | null | undefined) => (d ? formatDate(d, "fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "—");
 
   return (
@@ -144,6 +150,52 @@ export default async function SpacesPage() {
           );
         })}
       </ul>
+
+      {isGroup && stats.length > 0 ? (
+        <Card className="anim-fade-up overflow-hidden" data-testid="group-stats">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="size-5 text-primary" aria-hidden /> Vue consolidée du groupe
+            </CardTitle>
+            <CardDescription>Effectifs et finances de chaque espace et du groupe entier (chiffres agrégés, année en cours).</CardDescription>
+          </CardHeader>
+          <Table>
+            <THead>
+              <tr className="border-t border-border">
+                <TH>Espace</TH>
+                <TH className="text-right">Inscrits</TH>
+                <TH className="text-right">Personnel</TH>
+                <TH className="text-right">Facturé</TH>
+                <TH className="text-right">Encaissé</TH>
+                <TH className="text-right">Reste à payer</TH>
+                <TH className="text-right">Dont en retard</TH>
+              </tr>
+            </THead>
+            <tbody>
+              {stats.map((row) => (
+                <TR key={row.organization_id}>
+                  <TD className="font-medium">{row.name}</TD>
+                  <TD className="text-right tabular-nums">{row.students}</TD>
+                  <TD className="text-right tabular-nums">{row.staff}</TD>
+                  <TD className="text-right tabular-nums">{formatMoney(Number(row.invoiced), overview.currency)}</TD>
+                  <TD className="text-right tabular-nums">{formatMoney(Number(row.paid), overview.currency)}</TD>
+                  <TD className="text-right tabular-nums">{formatMoney(Number(row.balance), overview.currency)}</TD>
+                  <TD className="text-right tabular-nums text-danger">{formatMoney(Number(row.overdue), overview.currency)}</TD>
+                </TR>
+              ))}
+              <TR className="bg-surface-muted/60 font-semibold">
+                <TD>Total du groupe</TD>
+                <TD className="text-right tabular-nums">{stats.reduce((n, r) => n + Number(r.students), 0)}</TD>
+                <TD className="text-right tabular-nums">{stats.reduce((n, r) => n + Number(r.staff), 0)}</TD>
+                <TD className="text-right tabular-nums">{formatMoney(stats.reduce((n, r) => n + Number(r.invoiced), 0), overview.currency)}</TD>
+                <TD className="text-right tabular-nums">{formatMoney(stats.reduce((n, r) => n + Number(r.paid), 0), overview.currency)}</TD>
+                <TD className="text-right tabular-nums">{formatMoney(stats.reduce((n, r) => n + Number(r.balance), 0), overview.currency)}</TD>
+                <TD className="text-right tabular-nums text-danger">{formatMoney(stats.reduce((n, r) => n + Number(r.overdue), 0), overview.currency)}</TD>
+              </TR>
+            </tbody>
+          </Table>
+        </Card>
+      ) : null}
 
       {!isGroup ? (
         <Alert tone="info">

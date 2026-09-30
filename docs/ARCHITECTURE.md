@@ -568,7 +568,14 @@ Storage privés) :
   (`audit.read`), journal en lecture seule.
 - **Tâches planifiées** : `GET /api/cron/rappels` (en-tête
   `Authorization: Bearer CRON_SECRET`) → `send_invoice_reminders` par
-  établissement.
+  établissement ; `GET /api/cron/notifications` (même en-tête, toutes les
+  minutes) → envoi des notifications push en attente.
+- **Notifications push** : clés VAPID générées dans la console (Intégrations →
+  Notifications push, clé privée chiffrée) ; chaque utilisateur active le push
+  par appareil (`push_subscriptions`, RLS : ses appareils seulement) ; toute
+  notification d'un utilisateur abonné crée un envoi `push` (un seul par
+  notification), réservé puis envoyé par le serveur (`claim_push_deliveries`,
+  rôle service uniquement) ; appareil expiré (404/410) retiré.
 
 ---
 

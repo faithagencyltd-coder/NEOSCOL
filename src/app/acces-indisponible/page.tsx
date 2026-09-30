@@ -13,8 +13,9 @@ import { createClient } from "@/lib/supabase/server";
 export const metadata: Metadata = { title: "Accès indisponible" };
 
 /** Compte valide mais sans établissement actif (adhésion suspendue, compte désactivé…). */
-export default async function AccessUnavailablePage() {
+export default async function AccessUnavailablePage({ searchParams }: PageProps<"/acces-indisponible">) {
   await requireSession();
+  const portalOff = (await searchParams).portail === "desactive";
   // Super administrateur sans établissement : console de la plateforme.
   const { data: platformAdmin } = await (await createClient()).rpc("is_platform_admin");
   if (platformAdmin) redirect("/plateforme");
@@ -26,10 +27,11 @@ export default async function AccessUnavailablePage() {
           <ShieldOff className="size-6" aria-hidden />
         </span>
         <div className="grid gap-1">
-          <h1 className="text-lg font-semibold">Aucun établissement accessible</h1>
+          <h1 className="text-lg font-semibold">{portalOff ? "Portail désactivé" : "Aucun établissement accessible"}</h1>
           <p className="text-sm text-muted-foreground">
-            Votre compte n&apos;est rattaché à aucun établissement actif, ou votre accès a été suspendu. Contactez
-            l&apos;administration de votre établissement.
+            {portalOff
+              ? "Ce portail est désactivé pour votre établissement. Vos données sont conservées ; contactez l'administration de l'établissement."
+              : "Votre compte n'est rattaché à aucun établissement actif, ou votre accès a été suspendu. Contactez l'administration de votre établissement."}
           </p>
         </div>
         <form action={signOut}>

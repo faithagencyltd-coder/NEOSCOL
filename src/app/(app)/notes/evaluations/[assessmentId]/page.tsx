@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Lock, LockOpen, ShieldCheck, Trash2 } from "lucide-react";
+import { Eye, EyeOff, FileDown, FileSpreadsheet, Lock, LockOpen, ShieldCheck, Trash2 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { canEditGradeBook } from "@/features/grades/access";
 import { deleteAssessment, setAssessmentPublished, setGradesValidated } from "@/features/grades/actions";
+import { GradeImportDialog } from "@/features/grades/components/grade-import-dialog";
 import { GradeSheet } from "@/features/grades/components/grade-sheet";
 import { getAssessmentSheet } from "@/features/grades/queries";
 import { requireOrganization } from "@/lib/auth/guards";
@@ -155,7 +156,23 @@ export default async function AssessmentPage({ params }: PageProps<"/notes/evalu
       ) : null}
       {!isTeacherOfSubject && !locked ? <Alert tone="info">Consultation seule : vous n&apos;enseignez pas cette matière.</Alert> : null}
 
+      {/* Échange avec Excel / CSV : export (sert aussi de modèle) et import contrôlé ligne par ligne. */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Button asChild variant="secondary">
+          <a href={`/api/notes/evaluations/${assessment.id}/export`}>
+            <FileSpreadsheet aria-hidden /> Exporter (Excel)
+          </a>
+        </Button>
+        <Button asChild variant="ghost">
+          <a href={`/api/notes/evaluations/${assessment.id}/export?format=csv`}>
+            <FileDown aria-hidden /> CSV
+          </a>
+        </Button>
+        {canEdit ? <GradeImportDialog assessmentId={assessment.id} /> : null}
+      </div>
+
       <GradeSheet
+        key={assessment.grades.map((g) => `${g.student_id}:${g.score}:${g.is_absent}:${g.is_exempt}`).join("|")}
         assessmentId={assessment.id}
         maxScore={assessment.max_score}
         students={students}

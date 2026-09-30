@@ -9,18 +9,24 @@ export const dashboardOverviewSchema = z.object({
   enrollments_pending: z.number().optional(),
   enrollments_validated: z.number().optional(),
   reenrollments_validated: z.number().optional(),
-  enrollments_by_class: z.array(z.object({ class: z.string(), count: z.number() })).optional(),
+  enrollments_by_class: z
+    .array(z.object({ class: z.string(), count: z.number() }))
+    .optional(),
   classes: z.number().optional(),
   teachers: z.number().optional(),
   currency: z.string().optional(),
   payments_month: z.number().optional(),
   outstanding_total: z.number().optional(),
   overdue_invoices: z.number().optional(),
-  payments_by_month: z.array(z.object({ month: z.string(), amount: z.number() })).optional(),
+  payments_by_month: z
+    .array(z.object({ month: z.string(), amount: z.number() }))
+    .optional(),
   absences_today: z.number().optional(),
   absences_week: z.number().optional(),
   lates_week: z.number().optional(),
-  average_by_class: z.array(z.object({ class: z.string(), average: z.number() })).optional(),
+  average_by_class: z
+    .array(z.object({ class: z.string(), average: z.number() }))
+    .optional(),
   recent_activity: z
     .array(
       z.object({

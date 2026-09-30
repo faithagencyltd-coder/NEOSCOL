@@ -1595,6 +1595,42 @@ export type Database = {
           
         ]
       }
+      dashboard_preferences: {
+        Row: {
+          hidden: string[]
+          organization_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          hidden?: string[]
+          organization_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          hidden?: string[]
+          organization_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dashboard_preferences_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dashboard_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       defenses: {
         Row: {
           created_at: string
@@ -4359,6 +4395,7 @@ export type Database = {
         Row: {
           attempts: number
           channel: string
+          claimed_at: string | null
           created_at: string
           destination: string | null
           id: string
@@ -4372,6 +4409,7 @@ export type Database = {
         Insert: {
           attempts?: number
           channel: string
+          claimed_at?: string | null
           created_at?: string
           destination?: string | null
           id?: string
@@ -4385,6 +4423,7 @@ export type Database = {
         Update: {
           attempts?: number
           channel?: string
+          claimed_at?: string | null
           created_at?: string
           destination?: string | null
           id?: string
@@ -5632,6 +5671,50 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff_members"
             referencedColumns: ["organization_id", "id"]
+          }
+        ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          failure_count: number
+          id: string
+          last_success_at: string | null
+          p256dh: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          failure_count?: number
+          id?: string
+          last_success_at?: string | null
+          p256dh: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          failure_count?: number
+          id?: string
+          last_success_at?: string | null
+          p256dh?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           }
         ]
       }
@@ -7387,6 +7470,60 @@ export type Database = {
           }
         ]
       }
+      subscription_plan_price_history: {
+        Row: {
+          annual_discount_percent: number
+          annual_price: number
+          changed_at: string
+          changed_by: string | null
+          id: number
+          monthly_price: number
+          old_annual_price: number
+          old_monthly_price: number
+          plan_id: string
+          reason: string
+        }
+        Insert: {
+          annual_discount_percent: number
+          annual_price: number
+          changed_at?: string
+          changed_by?: string | null
+          id?: number
+          monthly_price: number
+          old_annual_price: number
+          old_monthly_price: number
+          plan_id: string
+          reason: string
+        }
+        Update: {
+          annual_discount_percent?: number
+          annual_price?: number
+          changed_at?: string
+          changed_by?: string | null
+          id?: number
+          monthly_price?: number
+          old_annual_price?: number
+          old_monthly_price?: number
+          plan_id?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_plan_price_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_plan_price_history_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       subscription_plans: {
         Row: {
           annual_discount_percent: number
@@ -8484,6 +8621,15 @@ export type Database = {
         }
         Returns: string
       }
+      apply_invoice_discount: {
+        Args: {
+          p_invoice: string
+          p_line: string
+          p_amount: number
+          p_reason: string
+        }
+        Returns: Json
+      }
       assistant_quota: {
         Args: {
           p_org: string
@@ -8578,6 +8724,19 @@ export type Database = {
           p_reason: string
         }
         Returns: undefined
+      }
+      claim_push_deliveries: {
+        Args: {
+          p_limit?: number
+        }
+        Returns: {
+          delivery_id: string
+          user_id: string
+          title: string
+          body: string
+          link: string
+          organization_name: string
+        }[]
       }
       close_academic_year: {
         Args: {
@@ -8849,6 +9008,12 @@ export type Database = {
           p_user_id: string
         }
         Returns: undefined
+      }
+      group_consolidated_stats: {
+        Args: {
+          p_group: string
+        }
+        Returns: Json
       }
       historical_overview: {
         Args: {
@@ -9256,6 +9421,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      platform_set_org_features: {
+        Args: {
+          p_org: string
+          p_features: Json
+          p_reason: string
+        }
+        Returns: Json
+      }
       platform_teacher_access_payments: {
         Args: {
           p_limit?: number
@@ -9329,6 +9502,15 @@ export type Database = {
           p_features: Json
         }
         Returns: undefined
+      }
+      platform_update_plan_prices: {
+        Args: {
+          p_plan: string
+          p_monthly_price: number
+          p_annual_discount_percent: number
+          p_reason: string
+        }
+        Returns: Json
       }
       platform_update_security_settings: {
         Args: {
@@ -9469,6 +9651,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      push_public_key: {
+        Args: never
+        Returns: string
+      }
       record_assistant_usage: {
         Args: {
           p_org: string
@@ -9496,6 +9682,15 @@ export type Database = {
           p_period_id: string
         }
         Returns: number
+      }
+      register_push_subscription: {
+        Args: {
+          p_endpoint: string
+          p_p256dh: string
+          p_auth: string
+          p_user_agent?: string
+        }
+        Returns: string
       }
       reopen_attendance_session: {
         Args: {
@@ -9576,6 +9771,13 @@ export type Database = {
         }
         Returns: string
       }
+      save_dashboard_preferences: {
+        Args: {
+          p_org: string
+          p_hidden: string[]
+        }
+        Returns: string[]
+      }
       save_grades: {
         Args: {
           p_assessment_id: string
@@ -9596,6 +9798,13 @@ export type Database = {
           p_active?: boolean
         }
         Returns: string
+      }
+      save_org_features: {
+        Args: {
+          p_org: string
+          p_features: Json
+        }
+        Returns: Json
       }
       save_voice_checkin_settings: {
         Args: {

@@ -4,7 +4,10 @@ import { PageHeader } from "@/components/shared/page-header";
 import { MessageCenter } from "@/features/communication/components/message-center";
 import { NewThreadDialog } from "@/features/communication/components/thread-ui";
 import { getThreadMessages, listMessageContacts, listMyThreads } from "@/features/communication/queries";
+import { notFound } from "next/navigation";
+
 import { requireOrganization } from "@/lib/auth/guards";
+import { featureEnabled } from "@/lib/features";
 import { can } from "@/lib/auth/session";
 import { isUuid, param } from "@/lib/utils/search-params";
 
@@ -17,6 +20,7 @@ export const metadata: Metadata = { title: "Messagerie" };
  */
 export default async function MessagesPage({ searchParams }: PageProps<"/messages">) {
   const context = await requireOrganization();
+  if (!featureEnabled(context.organization, "messaging")) notFound();
   const orgId = context.organization.id;
   const fil = param(await searchParams, "fil");
   const canWrite = can(context, "communication.message");

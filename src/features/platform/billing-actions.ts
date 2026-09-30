@@ -141,3 +141,38 @@ export async function runBillingLifecycle(): Promise<ActionResult> {
     message: `Traitement effectué : ${r.status_changes} changement(s) de statut, ${r.notifications} notification(s), ${r.renewal_invoices} facture(s) de renouvellement, ${r.expired_checkouts} paiement(s) abandonné(s).`,
   };
 }
+
+const priceSchema = z.object({
+  plan_id: z.uuid({ error: "Formule invalide." }),
+  monthly_price: z.coerce.number({ error: "Prix invalide." }).int({ error: "Prix entier (sans décimales)." }).min(100, { error: "Prix mensuel trop bas." }).max(100_000_000),
+  annual_discount_percent: z.coerce.number({ error: "Remise invalide." }).min(0, { error: "Remise : 0 à 60 %." }).max(60, { error: "Remise : 0 à 60 %." }),
+  reason: z.string().trim().min(3, { error: "Le motif est obligatoire." }).max(500),
+});
+
+/** Nouveau prix d'une formule : jamais rétroactif (les abonnés gardent leur prix), historisé et audité en base. */
+export async function updatePlanPrices(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await requirePlatformAdmin();
+  if (!auth.ok) return auth;
+  const parsed = priceSchema.safeParse({
+    plan_id: formData.get("plan_id"),
+    monthly_price: formData.get("monthly_price"),
+    annual_discount_percent: formData.get("annual_discount_percent"),
+    reason: formData.get("reason"),
+  });
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Données invalides." };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("platform_update_plan_prices", {
+    p_plan: parsed.data.plan_id,
+    p_monthly_price: parsed.data.monthly_price,
+    p_annual_discount_percent: parsed.data.annual_discount_percent,
+    p_reason: parsed.data.reason,
+  });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  refresh();
+  revalidatePath("/tarifs");
+  const result = data as { monthly_price: number; annual_price: number };
+  return {
+    ok: true,
+    message: `Nouveau prix enregistré : ${result.monthly_price.toLocaleString("fr-FR")} F / mois, ${result.annual_price.toLocaleString("fr-FR")} F / an. Les abonnés actuels gardent leur prix.`,
+  };
+}

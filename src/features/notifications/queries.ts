@@ -21,7 +21,10 @@ export async function getRecentNotifications(organizationId: string) {
 }
 
 /** Centre de notifications : toutes les notifications de l'utilisateur (RLS : les siennes uniquement). */
-export async function listNotifications(organizationId: string, filters: { unread?: boolean; type?: string }) {
+export async function listNotifications(
+  organizationId: string,
+  filters: { unread?: boolean; type?: string },
+) {
   const supabase = await createClient();
   let query = supabase
     .from("notifications")
@@ -29,6 +32,8 @@ export async function listNotifications(organizationId: string, filters: { unrea
     .eq("organization_id", organizationId);
   if (filters.unread) query = query.is("read_at", null);
   if (filters.type) query = query.like("type", `${filters.type}%`);
-  const { data } = await query.order("created_at", { ascending: false }).limit(200);
+  const { data } = await query
+    .order("created_at", { ascending: false })
+    .limit(200);
   return data ?? [];
 }

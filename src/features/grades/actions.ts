@@ -140,3 +140,58 @@ export async function setGradesValidated(_: ActionResult | null, formData: FormD
   revalidatePath(`/notes/evaluations/${assessmentId}`);
   return { ok: true, message: validate ? "Notes validées : elles sont désormais verrouillées." : "Notes rouvertes pour correction." };
 }
+
+export type GradeImportPreview = {
+  applied: boolean;
+  counts: { ok: number; skip: number; error: number; missing: number };
+  lines: { line: number; matricule: string; name: string; status: "ok" | "skip" | "error"; message: string; value: string }[];
+};
+
+/**
+ * Import des notes d'une évaluation depuis Excel (.xlsx) ou CSV : 1) aperçu
+ * ligne par ligne (erreurs, notes inchangées), 2) enregistrement des lignes
+ * valides par save_grades — les droits et verrous restent appliqués par la base.
+ */
+export async function importGradeSheet(_: ActionResult<GradeImportPreview> | null, formData: FormData): Promise<ActionResult<GradeImportPreview>> {
+  const auth = await authorize("grades.enter", "grades.manage");
+  if (!auth.ok) return auth;
+  const assessmentId = String(formData.get("assessment_id") ?? "");
+  if (!isUuid(assessmentId)) return { ok: false, message: "Évaluation introuvable." };
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) return { ok: false, message: "Choisissez un fichier Excel (.xlsx) ou CSV." };
+  const apply = formData.get("mode") === "apply";
+  const { getAssessmentSheet } = await import("@/features/grades/queries");
+  const { parseImportFile } = await import("@/features/migration/parse");
+  const { checkGradeImport } = await import("@/features/grades/transfer");
+  const sheet = await getAssessmentSheet(auth.context.organization.id, assessmentId);
+  if (!sheet) return { ok: false, message: "Évaluation introuvable." };
+  const parsed = await parseImportFile(file);
+  if (!parsed.ok) return { ok: false, message: parsed.message };
+  const checked = checkGradeImport(parsed.table, sheet.students, Number(sheet.assessment.max_score));
+  if (!checked.ok) return { ok: false, message: checked.message };
+  const preview = { counts: checked.counts, lines: checked.lines.slice(0, 500) };
+  if (!apply) {
+    return {
+      ok: true,
+      message: `${checked.counts.ok} note(s) prête(s), ${checked.counts.error} erreur(s), ${checked.counts.skip} inchangée(s). Vérifiez puis confirmez.`,
+      data: { applied: false, ...preview },
+    };
+  }
+  if (checked.grades.length === 0) return { ok: false, message: "Aucune note valide à enregistrer." };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("save_grades", { p_assessment_id: assessmentId, p_grades: checked.grades });
+  if (error) return { ok: false, message: dbErrorMessage(error, "L'import des notes a échoué.") };
+  await supabase.rpc("log_event", {
+    p_organization_id: auth.context.organization.id,
+    p_action: "grades.imported",
+    p_entity_type: "assessments",
+    p_entity_id: assessmentId,
+    p_summary: `Import de ${data ?? 0} note(s) depuis ${file.name.slice(0, 80)} (${sheet.assessment.title})`,
+  });
+  revalidatePath(`/notes/evaluations/${assessmentId}`);
+  return {
+    ok: true,
+    message: `${data ?? 0} note(s) importée(s)${checked.counts.error ? ` ; ${checked.counts.error} ligne(s) en erreur ignorée(s)` : ""}.`,
+    data: { applied: true, ...preview },
+  };
+}

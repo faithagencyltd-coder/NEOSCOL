@@ -32,7 +32,11 @@ const ENTITY_LABELS: Record<string, string> = {
   role_permissions: "Permission de rôle",
 };
 
-const VERB_LABELS: Record<string, string> = { insert: "créé(e)", update: "modifié(e)", delete: "supprimé(e)" };
+const VERB_LABELS: Record<string, string> = {
+  insert: "créé(e)",
+  update: "modifié(e)",
+  delete: "supprimé(e)",
+};
 
 const APP_EVENTS: Record<string, string> = {
   "auth.login": "Connexion",
@@ -41,9 +45,14 @@ const APP_EVENTS: Record<string, string> = {
   "auth.switch_organization": "Changement d'établissement",
 };
 
-export function activityLabel(action: string, entityType: string | null): string {
+export function activityLabel(
+  action: string,
+  entityType: string | null,
+): string {
   if (APP_EVENTS[action]) return APP_EVENTS[action];
   const verb = action.split(".").pop() ?? "";
-  const entity = entityType ? (ENTITY_LABELS[entityType] ?? entityType) : action;
+  const entity = entityType
+    ? (ENTITY_LABELS[entityType] ?? entityType)
+    : action;
   return `${entity} ${VERB_LABELS[verb] ?? verb}`;
 }

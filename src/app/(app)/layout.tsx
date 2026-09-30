@@ -20,6 +20,7 @@ import { getRecentNotifications } from "@/features/notifications/queries";
 import { requireOrganization } from "@/lib/auth/guards";
 import { can, displayName } from "@/lib/auth/session";
 import { isDemoMode } from "@/lib/demo";
+import { featureEnabled } from "@/lib/features";
 import { vocabularyFor } from "@/lib/vocabulary";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -30,6 +31,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     organizationType: context.organization.type,
     school: schoolConfigOf(context.organization.settings),
     university: universityConfigOf(context.organization.type, context.organization.settings),
+    hidden: [
+      ...(featureEnabled(context.organization, "messaging") ? [] : ["/messages"]),
+      ...(featureEnabled(context.organization, "assistant") ? [] : ["/assistant"]),
+    ],
   });
   const notifications = await getRecentNotifications(context.organization.id);
   const name = displayName(context);

@@ -8,6 +8,7 @@ import {
   Megaphone,
   Pin,
   School,
+  SlidersHorizontal,
   Users,
   Wallet,
 } from "lucide-react";
@@ -16,8 +17,21 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { QuickFormDialog } from "@/components/shared/quick-form-dialog";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { saveDashboardPreferences } from "@/features/dashboard/actions";
+import {
+  DASHBOARD_BLOCKS,
+  type DashboardBlock,
+} from "@/features/dashboard/blocks";
 import { activityLabel } from "@/features/dashboard/components/activity-label";
 import { HorizontalBars } from "@/features/dashboard/components/bar-chart";
 import { DonutChart } from "@/features/dashboard/components/donut-chart";
@@ -34,15 +48,24 @@ import {
 import { todayIn } from "@/lib/dates";
 import { requireOrganization } from "@/lib/auth/guards";
 import { can, displayName, isPortalOnly } from "@/lib/auth/session";
+import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils/cn";
-import { formatDate, formatDateTime, formatMoney, formatNumber } from "@/lib/utils/format";
+import {
+  formatDate,
+  formatDateTime,
+  formatMoney,
+  formatNumber,
+} from "@/lib/utils/format";
 import { adaptWording, vocabularyFor } from "@/lib/vocabulary";
 import { isHigherOrg } from "@/features/university/config";
 import { W } from "@/components/shared/wording";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
 
-const METHOD_LABELS: Record<string, { label: string; tone: "neutral" | "warning" | "primary" | "info" }> = {
+const METHOD_LABELS: Record<
+  string,
+  { label: string; tone: "neutral" | "warning" | "primary" | "info" }
+> = {
   cash: { label: "Espèces", tone: "neutral" },
   mobile_money: { label: "Mobile Money", tone: "warning" },
   bank_transfer: { label: "Virement", tone: "primary" },
@@ -51,13 +74,18 @@ const METHOD_LABELS: Record<string, { label: string; tone: "neutral" | "warning"
   other: { label: "Autre", tone: "neutral" },
 };
 
-const STATUS_COLORS = { paid: "#16a34a", partial: "#f59e0b", unpaid: "#dc2626" } as const;
+const STATUS_COLORS = {
+  paid: "#16a34a",
+  partial: "#f59e0b",
+  unpaid: "#dc2626",
+} as const;
 
 export default async function DashboardPage() {
   const context = await requireOrganization();
   const v = vocabularyFor(context.organization.type);
   // Compte « tablette de pointage » : directement l'écran de scan.
-  if (context.permissions.size === 1 && can(context, "staff_attendance.scan")) redirect("/pointage");
+  if (context.permissions.size === 1 && can(context, "staff_attendance.scan"))
+    redirect("/pointage");
   // Parents et élèves : portail mobile dédié.
   if (isPortalOnly(context)) redirect("/portail");
   // Module 3 : les établissements d'enseignement supérieur ont leur tableau de bord universitaire.
@@ -69,14 +97,32 @@ export default async function DashboardPage() {
   const canFinance = can(context, "finance.read");
 
   const today = todayIn(organization.timezone);
-  const [overview, announcements, teaching, invoiceSummary, payments, lessons] = await Promise.all([
+  const supabase = await createClient();
+  const [
+    overview,
+    announcements,
+    teaching,
+    invoiceSummary,
+    payments,
+    lessons,
+    { data: preferences },
+  ] = await Promise.all([
     getDashboardOverview(organization.id),
     getVisibleAnnouncements(organization.id),
-    isTeacher ? getMyTeaching(organization.id, context.user.id) : Promise.resolve([]),
+    isTeacher
+      ? getMyTeaching(organization.id, context.user.id)
+      : Promise.resolve([]),
     canFinance ? getInvoiceSummary(organization.id) : Promise.resolve(null),
     canFinance ? getRecentPayments(organization.id) : Promise.resolve([]),
     isTeacher ? getMyLessons(today, today) : Promise.resolve([]),
+    supabase
+      .from("dashboard_preferences")
+      .select("hidden")
+      .eq("organization_id", organization.id)
+      .eq("user_id", context.user.id)
+      .maybeSingle(),
   ]);
+  const hidden = new Set<string>(preferences?.hidden ?? []);
 
   const currency = overview.currency ?? organization.currency;
   const money = (value: number) => formatMoney(value, currency);
@@ -104,7 +150,10 @@ export default async function DashboardPage() {
     overview.classes !== undefined && {
       label: v.classes,
       value: { count: overview.classes },
-      hint: overview.teachers !== undefined ? `${overview.teachers} ${v.teachers.toLowerCase()}` : undefined,
+      hint:
+        overview.teachers !== undefined
+          ? `${overview.teachers} ${v.teachers.toLowerCase()}`
+          : undefined,
       icon: School,
       tone: "info" as const,
     },
@@ -118,7 +167,8 @@ export default async function DashboardPage() {
       label: "Reste à encaisser",
       value: { amount: overview.outstanding_total, currency },
       hint: `${overview.overdue_invoices ?? 0} facture(s) en retard`,
-      hintTone: (overview.overdue_invoices ?? 0) > 0 ? ("danger" as const) : undefined,
+      hintTone:
+        (overview.overdue_invoices ?? 0) > 0 ? ("danger" as const) : undefined,
       icon: AlertTriangle,
       tone: "danger" as const,
     },
@@ -148,7 +198,9 @@ export default async function DashboardPage() {
       href: undefined,
     },
   ].filter((alert) => alert !== false);
-  const showAlerts = overview.enrollments_pending !== undefined || overview.overdue_invoices !== undefined;
+  const showAlerts =
+    overview.enrollments_pending !== undefined ||
+    overview.overdue_invoices !== undefined;
 
   const byClass = (overview.enrollments_by_class ?? []).map((row) => ({
     label: row.class,
@@ -160,23 +212,66 @@ export default async function DashboardPage() {
     value: row.average,
     display: `${row.average.toFixed(2).replace(".", ",")} / 20`,
   }));
-  const invoiceTotal = invoiceSummary ? invoiceSummary.paid + invoiceSummary.partial + invoiceSummary.unpaid : 0;
+  const offered: DashboardBlock[] = [
+    ...(stats.length > 0 ? (["stats"] as const) : []),
+    ...(canFinance ? (["finance"] as const) : []),
+    ...(overview.recent_activity ? (["activity"] as const) : []),
+    ...(showAlerts ? (["alerts"] as const) : []),
+    ...(isTeacher ? (["lessons"] as const) : []),
+    ...(teaching.length > 0 ? (["teaching"] as const) : []),
+    ...(byClass.length > 0 ? (["by_class"] as const) : []),
+    ...(averages.length > 0 ? (["averages"] as const) : []),
+    "announcements",
+  ];
+  const show = (block: DashboardBlock) => !hidden.has(block);
+  const invoiceTotal = invoiceSummary
+    ? invoiceSummary.paid + invoiceSummary.partial + invoiceSummary.unpaid
+    : 0;
 
   return (
     <div className="grid gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="grid gap-1">
           <p className="text-sm text-muted-foreground">
-            Tableau de bord{context.roleNames[0] ? ` · ${context.roleNames[0]}` : ""}
+            Tableau de bord
+            {context.roleNames[0] ? ` · ${context.roleNames[0]}` : ""}
           </p>
-          <h1 className="text-2xl font-semibold sm:text-[26px]">Bonjour, {displayName(context).split(" ")[0]}</h1>
+          <h1 className="text-2xl font-semibold sm:text-[26px]">
+            Bonjour, {displayName(context).split(" ")[0]}
+          </h1>
         </div>
-        <p className="inline-flex h-10 items-center rounded-xl border border-border bg-surface px-3.5 text-sm font-medium first-letter:uppercase">
-          {formatDate(new Date(), "fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
-        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="inline-flex h-10 items-center rounded-xl border border-border bg-surface px-3.5 text-sm font-medium first-letter:uppercase">
+            {formatDate(new Date(), "fr-FR", {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </p>
+          <QuickFormDialog
+            title="Personnaliser le tableau de bord"
+            description="Choisissez les blocs affichés. Vos droits d'accès ne changent pas."
+            trigger={
+              <Button variant="secondary" data-testid="dashboard-customize">
+                <SlidersHorizontal aria-hidden /> Personnaliser
+              </Button>
+            }
+            action={saveDashboardPreferences}
+            hidden={{ offered: offered.join(",") }}
+            fields={DASHBOARD_BLOCKS.filter((b) => offered.includes(b.key)).map(
+              (b) => ({
+                name: `show_${b.key}`,
+                label: adaptWording(b.label, v),
+                type: "checkbox" as const,
+                defaultValue: show(b.key) ? "true" : "false",
+              }),
+            )}
+          />
+        </div>
       </div>
 
-      {stats.length > 0 ? (
+      {show("stats") && stats.length > 0 ? (
         <div className="stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {stats.map((stat) => (
             <StatCard key={stat.label} {...stat} />
@@ -184,12 +279,17 @@ export default async function DashboardPage() {
         </div>
       ) : null}
 
-      {canFinance ? (
-        <div className="anim-fade-up grid gap-4 lg:grid-cols-3" style={{ "--delay": "120ms" } as React.CSSProperties}>
+      {show("finance") && canFinance ? (
+        <div
+          className="anim-fade-up grid gap-4 lg:grid-cols-3"
+          style={{ "--delay": "120ms" } as React.CSSProperties}
+        >
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Encaissements récents</CardTitle>
-              <CardDescription>Derniers paiements enregistrés par la comptabilité</CardDescription>
+              <CardDescription>
+                Derniers paiements enregistrés par la comptabilité
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {payments.length === 0 ? (
@@ -202,23 +302,39 @@ export default async function DashboardPage() {
                         <th className="pb-2 font-semibold">Reçu</th>
                         <th className="pb-2 font-semibold">Date</th>
                         <th className="pb-2 font-semibold">Mode</th>
-                        <th className="pb-2 text-right font-semibold">Montant</th>
+                        <th className="pb-2 text-right font-semibold">
+                          Montant
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {payments.map((payment) => {
-                        const method = METHOD_LABELS[payment.method] ?? { label: payment.method, tone: "neutral" as const };
+                        const method = METHOD_LABELS[payment.method] ?? {
+                          label: payment.method,
+                          tone: "neutral" as const,
+                        };
                         return (
-                          <tr key={payment.id} className="border-t border-border">
-                            <td className="py-3 font-semibold text-primary">{payment.number}</td>
-                            <td className="py-3 text-muted-foreground">{formatDate(payment.paid_at, "fr-FR", { dateStyle: "short", timeZone: tz })}</td>
+                          <tr
+                            key={payment.id}
+                            className="border-t border-border"
+                          >
+                            <td className="py-3 font-semibold text-primary">
+                              {payment.number}
+                            </td>
+                            <td className="py-3 text-muted-foreground">
+                              {formatDate(payment.paid_at, "fr-FR", {
+                                dateStyle: "short",
+                                timeZone: tz,
+                              })}
+                            </td>
                             <td className="py-3">
                               <Badge tone={method.tone}>{method.label}</Badge>
                             </td>
                             <td
                               className={cn(
                                 "py-3 text-right font-semibold tabular-nums",
-                                payment.status === "cancelled" && "text-muted-foreground line-through",
+                                payment.status === "cancelled" &&
+                                  "text-muted-foreground line-through",
                               )}
                             >
                               {money(payment.amount)}
@@ -230,15 +346,27 @@ export default async function DashboardPage() {
                   </table>
                   <ul className="stagger grid gap-2 sm:hidden">
                     {payments.map((payment) => (
-                      <li key={payment.id} className="flex items-center justify-between gap-3 rounded-xl border border-border p-3">
+                      <li
+                        key={payment.id}
+                        className="flex items-center justify-between gap-3 rounded-xl border border-border p-3"
+                      >
                         <div className="grid min-w-0">
-                          <span className="truncate text-sm font-semibold text-primary">{payment.number}</span>
+                          <span className="truncate text-sm font-semibold text-primary">
+                            {payment.number}
+                          </span>
                           <span className="text-xs text-muted-foreground">
-                            {formatDate(payment.paid_at, "fr-FR", { dateStyle: "short", timeZone: tz })} ·{" "}
-                            {METHOD_LABELS[payment.method]?.label ?? payment.method}
+                            {formatDate(payment.paid_at, "fr-FR", {
+                              dateStyle: "short",
+                              timeZone: tz,
+                            })}{" "}
+                            ·{" "}
+                            {METHOD_LABELS[payment.method]?.label ??
+                              payment.method}
                           </span>
                         </div>
-                        <span className="shrink-0 text-sm font-semibold tabular-nums">{money(payment.amount)}</span>
+                        <span className="shrink-0 text-sm font-semibold tabular-nums">
+                          {money(payment.amount)}
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -247,37 +375,59 @@ export default async function DashboardPage() {
             </CardContent>
           </Card>
           {invoiceSummary ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Situation des factures</CardTitle>
-              <CardDescription>Factures émises de l&apos;établissement</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4">
-              <DonutChart
-                total={invoiceTotal}
-                unit="factures"
-                caption={`${invoiceTotal} factures : ${invoiceSummary.paid} soldées, ${invoiceSummary.partial} partielles, ${invoiceSummary.unpaid} impayées`}
-                segments={[
-                  { label: "Soldées", value: invoiceSummary.paid, color: STATUS_COLORS.paid },
-                  { label: "Partielles", value: invoiceSummary.partial, color: STATUS_COLORS.partial },
-                  { label: "Impayées", value: invoiceSummary.unpaid, color: STATUS_COLORS.unpaid },
-                ]}
-              />
-              <p className="text-sm text-muted-foreground">
-                Reste à encaisser : <strong className="text-foreground">{money(invoiceSummary.outstanding)}</strong>
-              </p>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Situation des factures</CardTitle>
+                <CardDescription>
+                  Factures émises de l&apos;établissement
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-4">
+                <DonutChart
+                  total={invoiceTotal}
+                  unit="factures"
+                  caption={`${invoiceTotal} factures : ${invoiceSummary.paid} soldées, ${invoiceSummary.partial} partielles, ${invoiceSummary.unpaid} impayées`}
+                  segments={[
+                    {
+                      label: "Soldées",
+                      value: invoiceSummary.paid,
+                      color: STATUS_COLORS.paid,
+                    },
+                    {
+                      label: "Partielles",
+                      value: invoiceSummary.partial,
+                      color: STATUS_COLORS.partial,
+                    },
+                    {
+                      label: "Impayées",
+                      value: invoiceSummary.unpaid,
+                      color: STATUS_COLORS.unpaid,
+                    },
+                  ]}
+                />
+                <p className="text-sm text-muted-foreground">
+                  Reste à encaisser :{" "}
+                  <strong className="text-foreground">
+                    {money(invoiceSummary.outstanding)}
+                  </strong>
+                </p>
+              </CardContent>
+            </Card>
           ) : null}
         </div>
       ) : null}
 
-      <div className="anim-fade-up grid gap-4 lg:grid-cols-3" style={{ "--delay": "180ms" } as React.CSSProperties}>
-        {overview.recent_activity ? (
+      <div
+        className="anim-fade-up grid gap-4 lg:grid-cols-3"
+        style={{ "--delay": "180ms" } as React.CSSProperties}
+      >
+        {show("activity") && overview.recent_activity ? (
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Activité récente</CardTitle>
-              <CardDescription>Dernières opérations du journal d&apos;audit</CardDescription>
+              <CardDescription>
+                Dernières opérations du journal d&apos;audit
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {overview.recent_activity.length === 0 ? (
@@ -285,12 +435,22 @@ export default async function DashboardPage() {
               ) : (
                 <ul className="stagger divide-y divide-border">
                   {overview.recent_activity.map((entry) => (
-                    <li key={entry.id} className="flex items-start justify-between gap-3 py-2.5 text-sm">
+                    <li
+                      key={entry.id}
+                      className="flex items-start justify-between gap-3 py-2.5 text-sm"
+                    >
                       <div className="min-w-0">
-                        <p className="font-semibold">{activityLabel(entry.action, entry.entity_type)}</p>
-                        <p className="truncate text-xs text-muted-foreground">{entry.actor_email ?? "Système"}</p>
+                        <p className="font-semibold">
+                          {activityLabel(entry.action, entry.entity_type)}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {entry.actor_email ?? "Système"}
+                        </p>
                       </div>
-                      <time className="shrink-0 text-xs text-muted-foreground" dateTime={entry.created_at}>
+                      <time
+                        className="shrink-0 text-xs text-muted-foreground"
+                        dateTime={entry.created_at}
+                      >
                         {formatDateTime(entry.created_at, "fr-FR", tz)}
                       </time>
                     </li>
@@ -301,7 +461,7 @@ export default async function DashboardPage() {
           </Card>
         ) : null}
 
-        {showAlerts ? (
+        {show("alerts") && showAlerts ? (
           <Card>
             <CardHeader>
               <CardTitle>Alertes importantes</CardTitle>
@@ -310,7 +470,8 @@ export default async function DashboardPage() {
             <CardContent>
               {alerts.length === 0 ? (
                 <p className="flex items-center gap-2.5 rounded-xl bg-success-soft p-3 text-sm font-medium text-success">
-                  <CheckCircle2 className="size-[18px]" aria-hidden /> Aucune alerte en cours.
+                  <CheckCircle2 className="size-[18px]" aria-hidden /> Aucune
+                  alerte en cours.
                 </p>
               ) : (
                 <ul className="stagger grid gap-2.5">
@@ -320,13 +481,20 @@ export default async function DashboardPage() {
                       className={cn(
                         "flex items-center gap-3 rounded-xl p-3 text-sm font-medium transition-transform duration-200 hover:translate-x-1",
                         alert.tone === "danger" && "bg-danger-soft text-danger",
-                        alert.tone === "warning" && "bg-warning-soft text-warning",
+                        alert.tone === "warning" &&
+                          "bg-warning-soft text-warning",
                         alert.tone === "info" && "bg-primary-soft text-primary",
                       )}
                     >
-                      <AlertTriangle className="size-[18px] shrink-0" aria-hidden />
+                      <AlertTriangle
+                        className="size-[18px] shrink-0"
+                        aria-hidden
+                      />
                       {alert.href ? (
-                        <Link href={alert.href} className="flex-1 text-foreground hover:underline">
+                        <Link
+                          href={alert.href}
+                          className="flex-1 text-foreground hover:underline"
+                        >
                           {alert.label}
                         </Link>
                       ) : (
@@ -341,15 +509,20 @@ export default async function DashboardPage() {
         ) : null}
       </div>
 
-      {isTeacher ? (
+      {show("lessons") && isTeacher ? (
         <Card>
           <CardHeader>
             <CardTitle>Mes cours aujourd&apos;hui</CardTitle>
-            <CardDescription>L&apos;appel s&apos;ouvre après le scan de votre badge à l&apos;administration</CardDescription>
+            <CardDescription>
+              L&apos;appel s&apos;ouvre après le scan de votre badge à
+              l&apos;administration
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {lessons.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Aucun cours prévu aujourd&apos;hui.</p>
+              <p className="text-sm text-muted-foreground">
+                Aucun cours prévu aujourd&apos;hui.
+              </p>
             ) : (
               <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                 {lessons.map((lesson) => (
@@ -365,7 +538,11 @@ export default async function DashboardPage() {
                         <span className="font-semibold">
                           {lesson.class_name} · {lesson.subject_name}
                         </span>
-                        {lesson.room_name ? <span className="text-xs text-muted-foreground">{lesson.room_name}</span> : null}
+                        {lesson.room_name ? (
+                          <span className="text-xs text-muted-foreground">
+                            {lesson.room_name}
+                          </span>
+                        ) : null}
                       </span>
                       <StatusBadge value={lesson.status} map={LESSON_STATUS} />
                     </Link>
@@ -377,23 +554,32 @@ export default async function DashboardPage() {
         </Card>
       ) : null}
 
-      <div className="anim-fade-up grid gap-4 lg:grid-cols-2" style={{ "--delay": "240ms" } as React.CSSProperties}>
-        {teaching.length > 0 ? (
+      <div
+        className="anim-fade-up grid gap-4 lg:grid-cols-2"
+        style={{ "--delay": "240ms" } as React.CSSProperties}
+      >
+        {show("teaching") && teaching.length > 0 ? (
           <Card>
             <CardHeader>
               <CardTitle>Mes enseignements</CardTitle>
-              <CardDescription>Classes et matières qui vous sont affectées</CardDescription>
+              <CardDescription>
+                Classes et matières qui vous sont affectées
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="stagger divide-y divide-border">
                 {teaching.map((item) => (
-                  <li key={item.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                  <li
+                    key={item.id}
+                    className="flex items-center justify-between gap-3 py-2.5 text-sm"
+                  >
                     <div className="flex min-w-0 items-center gap-3">
                       <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
                         <BookOpen className="size-4" aria-hidden />
                       </span>
                       <span className="truncate">
-                        <span className="font-semibold">{item.className}</span> · {item.subjectName}
+                        <span className="font-semibold">{item.className}</span>{" "}
+                        · {item.subjectName}
                       </span>
                     </div>
                     <Badge>
@@ -406,59 +592,90 @@ export default async function DashboardPage() {
           </Card>
         ) : null}
 
-        {byClass.length > 0 ? (
+        {show("by_class") && byClass.length > 0 ? (
           <Card>
             <CardHeader>
               <CardTitle>Effectifs par classe</CardTitle>
-              <CardDescription>Inscriptions validées de l&apos;année en cours</CardDescription>
+              <CardDescription>
+                Inscriptions validées de l&apos;année en cours
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <HorizontalBars data={byClass} caption={adaptWording("Effectifs par classe", v)} />
+              <HorizontalBars
+                data={byClass}
+                caption={adaptWording("Effectifs par classe", v)}
+              />
             </CardContent>
           </Card>
         ) : null}
 
-        {averages.length > 0 ? (
+        {show("averages") && averages.length > 0 ? (
           <Card>
             <CardHeader>
               <CardTitle>Moyennes par classe</CardTitle>
-              <CardDescription>Évaluations notées, ramenées sur 20</CardDescription>
+              <CardDescription>
+                Évaluations notées, ramenées sur 20
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <HorizontalBars data={averages} caption={adaptWording("Moyennes par classe sur 20", v)} />
+              <HorizontalBars
+                data={averages}
+                caption={adaptWording("Moyennes par classe sur 20", v)}
+              />
             </CardContent>
           </Card>
         ) : null}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Annonces</CardTitle>
-            <CardDescription>Communications en cours de l&apos;établissement</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {announcements.length === 0 ? (
-              <EmptyState icon={Megaphone} title="Aucune annonce" description="Les annonces publiées apparaîtront ici." />
-            ) : (
-              <ul className="stagger grid gap-3">
-                {announcements.map((announcement) => (
-                  <li key={announcement.id} className="flex gap-3 rounded-xl border border-border p-3">
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
-                      {announcement.is_pinned ? <Pin className="size-4" aria-label="Épinglée" /> : <Megaphone className="size-4" aria-hidden />}
-                    </span>
-                    <div className="grid gap-0.5">
-                      <p className="text-sm font-semibold">{announcement.title}</p>
-                      <p className="text-sm text-muted-foreground">{announcement.body}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {announcement.author_name ?? "Établissement"}
-                        {announcement.published_at ? ` · ${formatDate(announcement.published_at)}` : ""}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+        {show("announcements") ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Annonces</CardTitle>
+              <CardDescription>
+                Communications en cours de l&apos;établissement
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {announcements.length === 0 ? (
+                <EmptyState
+                  icon={Megaphone}
+                  title="Aucune annonce"
+                  description="Les annonces publiées apparaîtront ici."
+                />
+              ) : (
+                <ul className="stagger grid gap-3">
+                  {announcements.map((announcement) => (
+                    <li
+                      key={announcement.id}
+                      className="flex gap-3 rounded-xl border border-border p-3"
+                    >
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+                        {announcement.is_pinned ? (
+                          <Pin className="size-4" aria-label="Épinglée" />
+                        ) : (
+                          <Megaphone className="size-4" aria-hidden />
+                        )}
+                      </span>
+                      <div className="grid gap-0.5">
+                        <p className="text-sm font-semibold">
+                          {announcement.title}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {announcement.body}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {announcement.author_name ?? "Établissement"}
+                          {announcement.published_at
+                            ? ` · ${formatDate(announcement.published_at)}`
+                            : ""}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        ) : null}
       </div>
     </div>
   );

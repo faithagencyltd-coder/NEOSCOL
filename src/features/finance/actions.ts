@@ -128,6 +128,24 @@ export async function cancelInvoice(_: ActionResult | null, formData: FormData):
   return { ok: true, message: "Facture annulée." };
 }
 
+/** Remise sur une facture (bourse, fratrie, enfant du personnel…) : motif obligatoire, échéancier ajusté, journalisé. */
+export async function applyInvoiceDiscount(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const auth = await authorize("finance.invoices.manage");
+  if (!auth.ok) return auth;
+  const id = String(formData.get("invoice_id") ?? "");
+  const line = String(formData.get("line_id") ?? "");
+  const amount = Number(String(formData.get("amount") ?? "").replace(/\s/g, "").replace(",", "."));
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (!isUuid(id)) return { ok: false, message: "Facture introuvable." };
+  if (!Number.isFinite(amount) || amount <= 0) return { ok: false, message: "Montant de la remise invalide." };
+  if (reason.length < 3) return { ok: false, message: "Le motif de la remise est obligatoire." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("apply_invoice_discount", { p_invoice: id, p_line: isUuid(line) ? line : (null as never), p_amount: amount, p_reason: reason });
+  if (error) return { ok: false, message: dbErrorMessage(error, "Remise impossible.") };
+  refresh(id);
+  return { ok: true, message: "Remise appliquée : total, reste à payer et échéancier mis à jour." };
+}
+
 export async function sendReminders(): Promise<ActionResult> {
   const auth = await authorize("finance.invoices.manage");
   if (!auth.ok) return auth;

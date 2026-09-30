@@ -100,6 +100,9 @@ export default async function PlatformPage() {
                   <TD>{o.status === "active" ? <Badge tone="success">Actif</Badge> : <Badge tone="danger">Suspendu</Badge>}</TD>
                   <TD>
                     <span className="flex justify-end gap-2">
+                      <Button asChild size="sm" variant="secondary">
+                        <a href={`/plateforme/etablissements/${o.id}`}>Fonctionnalités</a>
+                      </Button>
                       <AddAdminDialog organizationId={o.id} name={o.name} />
                       <ConfirmAction
                         trigger={

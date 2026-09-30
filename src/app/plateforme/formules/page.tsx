@@ -1,4 +1,4 @@
-import { Check, Layers, X } from "lucide-react";
+import { BadgeDollarSign, Check, History, Layers, X } from "lucide-react";
 import type { Metadata } from "next";
 
 import { QuickFormDialog } from "@/components/shared/quick-form-dialog";
@@ -7,20 +7,25 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { FEATURE_LABELS, PLAN_ACCENTS } from "@/features/billing/constants";
 import { listPlans } from "@/features/billing/queries";
-import { updatePlan } from "@/features/platform/billing-actions";
+import { updatePlan, updatePlanPrices } from "@/features/platform/billing-actions";
 import { createClient } from "@/lib/supabase/server";
-import { formatMoney } from "@/lib/utils/format";
+import { formatDateTime, formatMoney } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
 
 export const metadata: Metadata = { title: "Formules — Plateforme" };
 
 /**
- * Formules officielles : activation, description, fonctionnalités. Les prix
- * officiels sont figés ; les abonnements conservent le prix de leur souscription.
+ * Formules officielles : activation, description, fonctionnalités et PRIX
+ * (modifiables par le Super Admin, avec historique). Jamais rétroactif : les
+ * abonnements conservent le prix de leur souscription.
  */
 export default async function PlatformPlansPage() {
   const supabase = await createClient();
-  const [plans, { data: subs }] = await Promise.all([listPlans(), supabase.from("subscriptions").select("plan_id, status, is_demo")]);
+  const [plans, { data: subs }, { data: history }] = await Promise.all([
+    listPlans(),
+    supabase.from("subscriptions").select("plan_id, status, is_demo"),
+    supabase.from("subscription_plan_price_history").select("id, plan_id, old_monthly_price, monthly_price, annual_price, reason, changed_at").order("changed_at", { ascending: false }).limit(100),
+  ]);
   const count = (planId: string) => (subs ?? []).filter((s) => s.plan_id === planId && !s.is_demo);
   const codes = Object.keys(FEATURE_LABELS);
   return (
@@ -69,9 +74,43 @@ export default async function PlatformPlansPage() {
                   </li>
                 ))}
               </ul>
+              {(history ?? []).some((h) => h.plan_id === plan.id) ? (
+                <details className="rounded-xl border border-border p-2 text-xs">
+                  <summary className="flex cursor-pointer items-center gap-1.5 font-semibold">
+                    <History className="size-3.5" aria-hidden /> Historique des prix
+                  </summary>
+                  <ul className="mt-1.5 grid gap-1 text-muted-foreground">
+                    {(history ?? [])
+                      .filter((h) => h.plan_id === plan.id)
+                      .slice(0, 5)
+                      .map((h) => (
+                        <li key={h.id}>
+                          {formatDateTime(h.changed_at)} : {formatMoney(h.old_monthly_price, plan.currency)} → {formatMoney(h.monthly_price, plan.currency)} / mois — {h.reason}
+                        </li>
+                      ))}
+                  </ul>
+                </details>
+              ) : null}
+              <QuickFormDialog
+                title={`Prix de la formule ${plan.name}`}
+                description="Le nouveau prix s'applique aux nouvelles souscriptions, aux essais qui passent au paiement et aux changements de formule. Les abonnés actuels gardent leur prix (jamais rétroactif). Le prix annuel = 12 mois moins la remise, arrondi à la centaine."
+                trigger={
+                  <Button size="sm">
+                    <BadgeDollarSign aria-hidden /> Modifier le prix
+                  </Button>
+                }
+                submitLabel="Enregistrer le nouveau prix"
+                action={updatePlanPrices}
+                hidden={{ plan_id: plan.id }}
+                fields={[
+                  { name: "monthly_price", label: `Prix mensuel (${plan.currency})`, type: "number", required: true, min: 100, defaultValue: String(plan.monthly_price) },
+                  { name: "annual_discount_percent", label: "Remise annuelle (%)", type: "number", required: true, min: 0, max: 60, step: "0.5", defaultValue: String(Number(plan.annual_discount_percent)) },
+                  { name: "reason", label: "Motif du changement", type: "textarea", required: true, wide: true },
+                ]}
+              />
               <QuickFormDialog
                 title={`Modifier la formule ${plan.name}`}
-                description="Les prix officiels ne sont pas modifiables ici ; une évolution de prix ne serait jamais rétroactive."
+                description="Activation, description et fonctionnalités incluses. Le prix se modifie avec « Modifier le prix »."
                 trigger={
                   <Button variant="secondary" size="sm">
                     <Layers aria-hidden /> Modifier

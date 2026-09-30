@@ -20,13 +20,13 @@ export const GRAPH_API = "https://graph.facebook.com";
 export const TURNSTILE_VERIFY = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 export const DEFAULT_GRAPH_VERSION = "v21.0";
 
-export type IntegrationProvider = "brevo_email" | "brevo_sms" | "twilio_sms" | "whatsapp_meta" | "turnstile" | "anthropic";
+export type IntegrationProvider = "brevo_email" | "brevo_sms" | "twilio_sms" | "whatsapp_meta" | "turnstile" | "anthropic" | "web_push";
 
 type Field = { key: string; label: string; hint?: string; required?: boolean; pattern?: RegExp; placeholder?: string };
 export type ProviderDefinition = {
   code: IntegrationProvider;
   label: string;
-  channel: "email" | "sms" | "whatsapp" | "antibot" | "ai";
+  channel: "email" | "sms" | "whatsapp" | "antibot" | "ai" | "push";
   description: string;
   docs: string;
   fields: Field[];
@@ -100,6 +100,18 @@ export const PROVIDERS: ProviderDefinition[] = [
     docs: "Console Anthropic → API Keys → Create Key. Le quota mensuel de questions par établissement se règle plus bas.",
     fields: [],
     secret: { label: "Clé API Claude", hint: "Commence par « sk-ant- ». Jamais affichée dans le navigateur." },
+  },
+  {
+    code: "web_push",
+    label: "Notifications push (Web Push)",
+    channel: "push",
+    description: "Notifications sur les téléphones et ordinateurs des utilisateurs qui les activent (paiements, absences, notes, bulletins…), même application fermée.",
+    docs: "Norme VAPID : utilisez « Générer des clés » (recommandé) ou collez une paire existante. Le contact est transmis aux services push (Google, Mozilla, Apple).",
+    fields: [
+      { key: "public_key", label: "Clé publique VAPID", required: true, pattern: /^[A-Za-z0-9_-]{80,100}$/, placeholder: "BNc…" },
+      { key: "subject", label: "Contact (mailto: ou https:)", required: true, pattern: /^(mailto:[^\s@]+@[^\s@]+\.[^\s@]+|https:\/\/\S+)$/, placeholder: "mailto:support@votre-domaine.com" },
+    ],
+    secret: { label: "Clé privée VAPID", hint: "43 caractères. Jamais affichée dans le navigateur." },
   },
 ];
 

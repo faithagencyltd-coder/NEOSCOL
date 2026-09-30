@@ -4,7 +4,11 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { getSessionContext } from "@/lib/auth/session";
-import { encryptionKeyFrom, encryptSecret, secretHint } from "@/lib/messaging/crypto";
+import {
+  encryptionKeyFrom,
+  encryptSecret,
+  secretHint,
+} from "@/lib/messaging/crypto";
 import {
   brevoCheck,
   brevoSendEmail,
@@ -24,17 +28,32 @@ import {
 import { loadIntegration } from "@/lib/messaging/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { anthropicCheck } from "@/lib/ai/anthropic";
+import {
+  checkVapid,
+  generateVapidKeys,
+  loadVapid,
+  sendPushToUser,
+} from "@/lib/push/server";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/utils/action-result";
 import { dbErrorMessage } from "@/lib/utils/db-error";
 import { isUuid } from "@/lib/utils/search-params";
 
-async function requirePlatformAdmin(): Promise<{ ok: true; userId: string; email: string | null } | { ok: false; message: string }> {
+async function requirePlatformAdmin(): Promise<
+  | { ok: true; userId: string; email: string | null }
+  | { ok: false; message: string }
+> {
   const context = await getSessionContext();
-  if (!context) return { ok: false, message: "Votre session a expiré. Reconnectez-vous." };
+  if (!context)
+    return { ok: false, message: "Votre session a expiré. Reconnectez-vous." };
   const supabase = await createClient();
   const { data } = await supabase.rpc("is_platform_admin");
-  return data ? { ok: true, userId: context.user.id, email: context.user.email ?? null } : { ok: false, message: "Réservé à l'administration de la plateforme NeoScool." };
+  return data
+    ? { ok: true, userId: context.user.id, email: context.user.email ?? null }
+    : {
+        ok: false,
+        message: "Réservé à l'administration de la plateforme NeoScool.",
+      };
 }
 
 const refresh = () => revalidatePath("/plateforme/integrations");
@@ -44,22 +63,38 @@ const refresh = () => revalidatePath("/plateforme/integrations");
  * d'être transmise à la base ; elle n'est jamais renvoyée au navigateur.
  * Champ clé vide = clé inchangée.
  */
-export async function saveIntegration(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+export async function saveIntegration(
+  _: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const auth = await requirePlatformAdmin();
   if (!auth.ok) return auth;
-  const provider = String(formData.get("provider") ?? "") as IntegrationProvider;
+  const provider = String(
+    formData.get("provider") ?? "",
+  ) as IntegrationProvider;
   const def = providerDefinition(provider);
   if (!def) return { ok: false, message: "Intégration inconnue." };
-  const input = Object.fromEntries(def.fields.map((f) => [f.key, String(formData.get(`config_${f.key}`) ?? "")]));
+  const input = Object.fromEntries(
+    def.fields.map((f) => [
+      f.key,
+      String(formData.get(`config_${f.key}`) ?? ""),
+    ]),
+  );
   const clean = sanitizeConfig(provider, input);
   if (!clean.ok) return { ok: false, message: clean.error };
   const secret = String(formData.get("secret") ?? "").trim();
   const clear = formData.get("clear_secret") === "on";
-  if (secret && (secret.length < 8 || secret.length > 500 || /\s/.test(secret))) return { ok: false, message: `${def.secret.label} : valeur invalide.` };
+  if (secret && (secret.length < 8 || secret.length > 500 || /\s/.test(secret)))
+    return { ok: false, message: `${def.secret.label} : valeur invalide.` };
   let ciphertext: string | null = null;
   if (secret && !clear) {
     const key = encryptionKeyFrom(process.env);
-    if (!key) return { ok: false, message: "Chiffrement indisponible : la clé de service Supabase (ou INTEGRATIONS_ENCRYPTION_KEY) manque sur le serveur." };
+    if (!key)
+      return {
+        ok: false,
+        message:
+          "Chiffrement indisponible : la clé de service Supabase (ou INTEGRATIONS_ENCRYPTION_KEY) manque sur le serveur.",
+      };
     ciphertext = encryptSecret(secret, key);
   }
   const supabase = await createClient();
@@ -73,10 +108,19 @@ export async function saveIntegration(_: ActionResult | null, formData: FormData
   });
   if (error) return { ok: false, message: dbErrorMessage(error) };
   refresh();
-  return { ok: true, message: `${def.label} : configuration enregistrée${ciphertext ? " (clé chiffrée)" : ""}.` };
+  return {
+    ok: true,
+    message: `${def.label} : configuration enregistrée${ciphertext ? " (clé chiffrée)" : ""}.`,
+  };
 }
 
-async function logTest(channel: "email" | "sms" | "whatsapp", provider: string, recipient: string, userId: string, r: ProviderResult) {
+async function logTest(
+  channel: "email" | "sms" | "whatsapp",
+  provider: string,
+  recipient: string,
+  userId: string,
+  r: ProviderResult,
+) {
   const admin = createAdminClient();
   if (!admin) return;
   await admin.from("message_deliveries").insert({
@@ -97,14 +141,25 @@ async function logTest(channel: "email" | "sms" | "whatsapp", provider: string, 
  * auprès du fournisseur, puis, si un destinataire est donné, envoi réel d'un
  * message de test. Résultat enregistré et journalisé.
  */
-export async function testIntegration(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+export async function testIntegration(
+  _: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const auth = await requirePlatformAdmin();
   if (!auth.ok) return auth;
-  const provider = String(formData.get("provider") ?? "") as IntegrationProvider;
+  const provider = String(
+    formData.get("provider") ?? "",
+  ) as IntegrationProvider;
   const def = providerDefinition(provider);
   if (!def) return { ok: false, message: "Intégration inconnue." };
-  const integration = await loadIntegration(provider, { requireEnabled: false });
-  if (!integration) return { ok: false, message: "Enregistrez d'abord la clé secrète de cette intégration." };
+  const integration = await loadIntegration(provider, {
+    requireEnabled: false,
+  });
+  if (!integration)
+    return {
+      ok: false,
+      message: "Enregistrez d'abord la clé secrète de cette intégration.",
+    };
   const { config, secret } = integration;
   const recipient = String(formData.get("recipient") ?? "").trim();
 
@@ -114,7 +169,8 @@ export async function testIntegration(_: ActionResult | null, formData: FormData
       result = await brevoCheck(secret);
       const to = recipient || auth.email || "";
       if (result.ok && to) {
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return { ok: false, message: "Adresse e-mail de test invalide." };
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to))
+          return { ok: false, message: "Adresse e-mail de test invalide." };
         result = await brevoSendEmail({
           apiKey: secret,
           senderEmail: config.sender_email ?? "",
@@ -125,35 +181,81 @@ export async function testIntegration(_: ActionResult | null, formData: FormData
           text: "Ceci est un e-mail de test envoyé depuis la console NeoScool. L'intégration Brevo fonctionne.",
         });
         await logTest("email", provider, to, auth.userId, result);
-        if (result.ok) result = { ok: true, message: `E-mail de test envoyé à ${maskRecipient(to)}.` };
+        if (result.ok)
+          result = {
+            ok: true,
+            message: `E-mail de test envoyé à ${maskRecipient(to)}.`,
+          };
       }
       break;
     }
     case "brevo_sms":
     case "twilio_sms": {
-      result = provider === "brevo_sms" ? await brevoCheck(secret) : await twilioCheck(config.account_sid ?? "", secret);
+      result =
+        provider === "brevo_sms"
+          ? await brevoCheck(secret)
+          : await twilioCheck(config.account_sid ?? "", secret);
       if (result.ok && recipient) {
         const to = normalizePhone(recipient);
-        if (!to) return { ok: false, message: "Numéro de test invalide (format international : +229…)." };
+        if (!to)
+          return {
+            ok: false,
+            message: "Numéro de test invalide (format international : +229…).",
+          };
         const text = "Test NeoScool : l'envoi de SMS fonctionne.";
         result =
           provider === "brevo_sms"
-            ? await brevoSendSms({ apiKey: secret, sender: config.sender ?? "NeoScool", to, content: text })
-            : await twilioSendSms({ accountSid: config.account_sid ?? "", authToken: secret, from: config.from ?? "", to, body: text });
+            ? await brevoSendSms({
+                apiKey: secret,
+                sender: config.sender ?? "NeoScool",
+                to,
+                content: text,
+              })
+            : await twilioSendSms({
+                accountSid: config.account_sid ?? "",
+                authToken: secret,
+                from: config.from ?? "",
+                to,
+                body: text,
+              });
         await logTest("sms", provider, to, auth.userId, result);
-        if (result.ok) result = { ok: true, message: `SMS de test envoyé à ${maskRecipient(to)}.` };
+        if (result.ok)
+          result = {
+            ok: true,
+            message: `SMS de test envoyé à ${maskRecipient(to)}.`,
+          };
       }
       break;
     }
     case "whatsapp_meta": {
-      result = await whatsappCheck(secret, config.phone_number_id ?? "", config.api_version);
+      result = await whatsappCheck(
+        secret,
+        config.phone_number_id ?? "",
+        config.api_version,
+      );
       if (result.ok && recipient) {
         const to = normalizePhone(recipient);
-        if (!to) return { ok: false, message: "Numéro WhatsApp de test invalide (format international : +229…)." };
+        if (!to)
+          return {
+            ok: false,
+            message:
+              "Numéro WhatsApp de test invalide (format international : +229…).",
+          };
         // « hello_world » : modèle de test fourni par Meta sur tout compte WhatsApp Business.
-        result = await whatsappSendTemplate({ accessToken: secret, phoneNumberId: config.phone_number_id ?? "", apiVersion: config.api_version, to, template: "hello_world", language: "en_US" });
+        result = await whatsappSendTemplate({
+          accessToken: secret,
+          phoneNumberId: config.phone_number_id ?? "",
+          apiVersion: config.api_version,
+          to,
+          template: "hello_world",
+          language: "en_US",
+        });
         await logTest("whatsapp", provider, to, auth.userId, result);
-        if (result.ok) result = { ok: true, message: `Message WhatsApp de test (modèle hello_world) envoyé à ${maskRecipient(to)}.` };
+        if (result.ok)
+          result = {
+            ok: true,
+            message: `Message WhatsApp de test (modèle hello_world) envoyé à ${maskRecipient(to)}.`,
+          };
       }
       break;
     }
@@ -163,33 +265,149 @@ export async function testIntegration(_: ActionResult | null, formData: FormData
     case "anthropic":
       result = await anthropicCheck(secret);
       break;
+    case "web_push": {
+      const vapid = await loadVapid({ requireEnabled: false });
+      const invalid = vapid
+        ? checkVapid(vapid)
+        : "Clé publique ou contact manquant.";
+      if (invalid || !vapid) {
+        result = { ok: false, error: `Clés VAPID invalides : ${invalid}` };
+        break;
+      }
+      // Envoi réel vers les appareils du Super Admin qui ont activé les notifications.
+      const sent = await sendPushToUser(
+        auth.userId,
+        {
+          title: "Test NeoScool",
+          body: "Les notifications push fonctionnent.",
+          link: "/plateforme/integrations",
+        },
+        vapid,
+      );
+      result =
+        sent.devices === 0
+          ? {
+              ok: true,
+              message:
+                "Clés valides. Activez les notifications sur cet appareil (menu Notifications) pour recevoir un test réel.",
+            }
+          : sent.sent > 0
+            ? {
+                ok: true,
+                message: `Notification de test envoyée sur ${sent.sent} appareil(s).`,
+              }
+            : {
+                ok: false,
+                error: `Envoi refusé par le service push : ${sent.error ?? "échec"}`,
+              };
+      break;
+    }
     default:
       return { ok: false, message: "Intégration inconnue." };
   }
 
-  const message = result.ok ? (result.message ?? "Connexion au fournisseur réussie.") : result.error;
+  const message = result.ok
+    ? (result.message ?? "Connexion au fournisseur réussie.")
+    : result.error;
   const supabase = await createClient();
-  await supabase.rpc("platform_record_integration_test", { p_provider: provider, p_ok: result.ok, p_message: message });
+  await supabase.rpc("platform_record_integration_test", {
+    p_provider: provider,
+    p_ok: result.ok,
+    p_message: message,
+  });
   refresh();
   return result.ok ? { ok: true, message } : { ok: false, message };
 }
 
-const limit = z.coerce.number().int({ error: "Nombre entier attendu." }).min(0).max(1_000_000);
-
-export async function saveMessagingDefaults(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+/**
+ * Génère une paire de clés VAPID sur le serveur : la clé privée est chiffrée
+ * immédiatement et n'est jamais montrée. Après un remplacement, chaque appareil
+ * abonné se réabonne automatiquement avec la nouvelle clé à sa prochaine visite.
+ */
+export async function generatePushKeys(
+  _: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const auth = await requirePlatformAdmin();
   if (!auth.ok) return auth;
-  const parsed = z.object({ email: limit, sms: limit, whatsapp: limit }).safeParse({ email: formData.get("email"), sms: formData.get("sms"), whatsapp: formData.get("whatsapp") });
-  if (!parsed.success) return { ok: false, message: "Quotas invalides (nombres entiers positifs)." };
+  const key = encryptionKeyFrom(process.env);
+  if (!key)
+    return {
+      ok: false,
+      message:
+        "Chiffrement indisponible : la clé de service Supabase (ou INTEGRATIONS_ENCRYPTION_KEY) manque sur le serveur.",
+    };
+  const subject =
+    String(formData.get("subject") ?? "").trim() ||
+    (auth.email ? `mailto:${auth.email}` : "");
+  const clean = sanitizeConfig("web_push", {
+    public_key: "B".repeat(87),
+    subject,
+  });
+  if (!clean.ok)
+    return {
+      ok: false,
+      message: "Indiquez un contact valide (mailto:adresse ou https://…).",
+    };
+  const pair = generateVapidKeys();
   const supabase = await createClient();
-  const { error } = await supabase.rpc("platform_update_messaging_settings", { p_email: parsed.data.email, p_sms: parsed.data.sms, p_whatsapp: parsed.data.whatsapp });
+  const { error } = await supabase.rpc("platform_update_integration", {
+    p_provider: "web_push",
+    p_enabled: formData.get("enabled") === "on",
+    p_config: { public_key: pair.publicKey, subject: clean.config.subject },
+    p_secret_ciphertext: encryptSecret(pair.privateKey, key),
+    p_secret_hint: secretHint(pair.privateKey),
+    p_clear_secret: false,
+  });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  refresh();
+  return {
+    ok: true,
+    message:
+      "Nouvelles clés VAPID générées et chiffrées. Les appareils déjà abonnés se réabonnent à leur prochaine visite.",
+  };
+}
+
+const limit = z.coerce
+  .number()
+  .int({ error: "Nombre entier attendu." })
+  .min(0)
+  .max(1_000_000);
+
+export async function saveMessagingDefaults(
+  _: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const auth = await requirePlatformAdmin();
+  if (!auth.ok) return auth;
+  const parsed = z
+    .object({ email: limit, sms: limit, whatsapp: limit })
+    .safeParse({
+      email: formData.get("email"),
+      sms: formData.get("sms"),
+      whatsapp: formData.get("whatsapp"),
+    });
+  if (!parsed.success)
+    return {
+      ok: false,
+      message: "Quotas invalides (nombres entiers positifs).",
+    };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("platform_update_messaging_settings", {
+    p_email: parsed.data.email,
+    p_sms: parsed.data.sms,
+    p_whatsapp: parsed.data.whatsapp,
+  });
   if (error) return { ok: false, message: dbErrorMessage(error) };
   refresh();
   return { ok: true, message: "Quotas mensuels par défaut enregistrés." };
 }
 
 /** Quota d'un établissement ; champ vide = valeur par défaut de la plateforme. */
-export async function saveOrganizationQuota(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+export async function saveOrganizationQuota(
+  _: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const auth = await requirePlatformAdmin();
   if (!auth.ok) return auth;
   const org = String(formData.get("organization_id") ?? "");
@@ -198,12 +416,18 @@ export async function saveOrganizationQuota(_: ActionResult | null, formData: Fo
     const raw = String(formData.get(name) ?? "").trim();
     if (!raw) return { ok: true as const, value: null };
     const v = limit.safeParse(raw);
-    return v.success ? { ok: true as const, value: v.data } : { ok: false as const };
+    return v.success
+      ? { ok: true as const, value: v.data }
+      : { ok: false as const };
   };
   const email = read("email");
   const sms = read("sms");
   const whatsapp = read("whatsapp");
-  if (!email.ok || !sms.ok || !whatsapp.ok) return { ok: false, message: "Quotas invalides (nombres entiers positifs ou vide)." };
+  if (!email.ok || !sms.ok || !whatsapp.ok)
+    return {
+      ok: false,
+      message: "Quotas invalides (nombres entiers positifs ou vide).",
+    };
   const supabase = await createClient();
   const { error } = await supabase.rpc("platform_set_messaging_quota", {
     p_org: org,
@@ -217,33 +441,68 @@ export async function saveOrganizationQuota(_: ActionResult | null, formData: Fo
 }
 
 /** Quota mensuel de questions traitées par Claude : par défaut (sans établissement) ou dérogation (vide = défaut). */
-export async function saveAiQuota(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+export async function saveAiQuota(
+  _: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const auth = await requirePlatformAdmin();
   if (!auth.ok) return auth;
   const org = String(formData.get("organization_id") ?? "");
   const raw = String(formData.get("ai_limit") ?? "").trim();
   const parsed = raw ? limit.safeParse(raw) : null;
-  if (parsed && !parsed.success) return { ok: false, message: "Quota invalide (nombre entier positif)." };
-  if (!isUuid(org) && !parsed) return { ok: false, message: "Quota par défaut obligatoire." };
+  if (parsed && !parsed.success)
+    return { ok: false, message: "Quota invalide (nombre entier positif)." };
+  if (!isUuid(org) && !parsed)
+    return { ok: false, message: "Quota par défaut obligatoire." };
   const supabase = await createClient();
-  const { error } = await supabase.rpc("platform_set_ai_quota", { p_org: (isUuid(org) ? org : null) as string, p_limit: (parsed?.data ?? null) as number });
+  const { error } = await supabase.rpc("platform_set_ai_quota", {
+    p_org: (isUuid(org) ? org : null) as string,
+    p_limit: (parsed?.data ?? null) as number,
+  });
   if (error) return { ok: false, message: dbErrorMessage(error) };
   refresh();
-  return { ok: true, message: isUuid(org) ? "Quota IA de l'établissement enregistré." : "Quota IA mensuel par défaut enregistré." };
+  return {
+    ok: true,
+    message: isUuid(org)
+      ? "Quota IA de l'établissement enregistré."
+      : "Quota IA mensuel par défaut enregistré.",
+  };
 }
 
-export async function saveWhatsappTemplate(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+export async function saveWhatsappTemplate(
+  _: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const auth = await requirePlatformAdmin();
   if (!auth.ok) return auth;
   const parsed = z
     .object({
-      name: z.string().trim().toLowerCase().regex(/^[a-z0-9_]{1,512}$/, { error: "Nom du modèle : minuscules, chiffres et « _ » (comme chez Meta)." }),
-      language: z.string().trim().regex(/^[a-z]{2}(_[A-Z]{2})?$/, { error: "Langue : fr, en_US…" }),
+      name: z
+        .string()
+        .trim()
+        .toLowerCase()
+        .regex(/^[a-z0-9_]{1,512}$/, {
+          error:
+            "Nom du modèle : minuscules, chiffres et « _ » (comme chez Meta).",
+        }),
+      language: z
+        .string()
+        .trim()
+        .regex(/^[a-z]{2}(_[A-Z]{2})?$/, { error: "Langue : fr, en_US…" }),
       description: z.string().trim().max(300).optional(),
       variables: z.coerce.number().int().min(0).max(20),
     })
-    .safeParse({ name: formData.get("name"), language: formData.get("language"), description: String(formData.get("description") ?? "") || undefined, variables: formData.get("variables") ?? 0 });
-  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Modèle invalide." };
+    .safeParse({
+      name: formData.get("name"),
+      language: formData.get("language"),
+      description: String(formData.get("description") ?? "") || undefined,
+      variables: formData.get("variables") ?? 0,
+    });
+  if (!parsed.success)
+    return {
+      ok: false,
+      message: parsed.error.issues[0]?.message ?? "Modèle invalide.",
+    };
   const supabase = await createClient();
   const { error } = await supabase.rpc("platform_upsert_whatsapp_template", {
     p_name: parsed.data.name,
@@ -254,13 +513,20 @@ export async function saveWhatsappTemplate(_: ActionResult | null, formData: For
   });
   if (error) return { ok: false, message: dbErrorMessage(error) };
   refresh();
-  return { ok: true, message: "Modèle WhatsApp enregistré. Il doit être approuvé chez Meta avec exactement ce nom et cette langue." };
+  return {
+    ok: true,
+    message:
+      "Modèle WhatsApp enregistré. Il doit être approuvé chez Meta avec exactement ce nom et cette langue.",
+  };
 }
 
 // ---------------------------------------------------------------------------
 // Centre de sécurité
 // ---------------------------------------------------------------------------
-export async function saveSecuritySettings(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+export async function saveSecuritySettings(
+  _: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const auth = await requirePlatformAdmin();
   if (!auth.ok) return auth;
   const parsed = z
@@ -269,8 +535,17 @@ export async function saveSecuritySettings(_: ActionResult | null, formData: For
       lockout_minutes: z.coerce.number().int().min(1).max(1440),
       captcha_after: z.coerce.number().int().min(1).max(50),
     })
-    .safeParse({ lockout_threshold: formData.get("lockout_threshold"), lockout_minutes: formData.get("lockout_minutes"), captcha_after: formData.get("captcha_after") });
-  if (!parsed.success) return { ok: false, message: "Valeurs invalides (verrouillage : 3 à 50 échecs, 1 à 1440 minutes)." };
+    .safeParse({
+      lockout_threshold: formData.get("lockout_threshold"),
+      lockout_minutes: formData.get("lockout_minutes"),
+      captcha_after: formData.get("captcha_after"),
+    });
+  if (!parsed.success)
+    return {
+      ok: false,
+      message:
+        "Valeurs invalides (verrouillage : 3 à 50 échecs, 1 à 1440 minutes).",
+    };
   const supabase = await createClient();
   const { error } = await supabase.rpc("platform_update_security_settings", {
     p_lockout_threshold: parsed.data.lockout_threshold,
@@ -284,26 +559,40 @@ export async function saveSecuritySettings(_: ActionResult | null, formData: For
   return { ok: true, message: "Réglages de sécurité enregistrés." };
 }
 
-export async function unlockAccount(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+export async function unlockAccount(
+  _: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const auth = await requirePlatformAdmin();
   if (!auth.ok) return auth;
   const hash = String(formData.get("identifier_hash") ?? "");
-  if (!/^[a-f0-9]{64}$/.test(hash)) return { ok: false, message: "Compte introuvable." };
+  if (!/^[a-f0-9]{64}$/.test(hash))
+    return { ok: false, message: "Compte introuvable." };
   const supabase = await createClient();
-  const { error } = await supabase.rpc("platform_unlock_account", { p_identifier_hash: hash });
+  const { error } = await supabase.rpc("platform_unlock_account", {
+    p_identifier_hash: hash,
+  });
   if (error) return { ok: false, message: dbErrorMessage(error) };
   revalidatePath("/plateforme/securite");
   return { ok: true, message: "Compte déverrouillé." };
 }
 
-export async function revokeUserSessions(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+export async function revokeUserSessions(
+  _: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const auth = await requirePlatformAdmin();
   if (!auth.ok) return auth;
   const user = String(formData.get("user_id") ?? "");
   if (!isUuid(user)) return { ok: false, message: "Compte introuvable." };
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("platform_revoke_user_sessions", { p_user: user });
+  const { data, error } = await supabase.rpc("platform_revoke_user_sessions", {
+    p_user: user,
+  });
   if (error) return { ok: false, message: dbErrorMessage(error) };
   revalidatePath("/plateforme/securite");
-  return { ok: true, message: `${data ?? 0} session(s) fermée(s) : le compte devra se reconnecter.` };
+  return {
+    ok: true,
+    message: `${data ?? 0} session(s) fermée(s) : le compte devra se reconnecter.`,
+  };
 }

@@ -11,6 +11,7 @@ import { can, displayName } from "@/lib/auth/session";
 import { todayIn } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import type { VoiceConfig } from "@/features/voice-checkin/messages";
+import { featureEnabled } from "@/lib/features";
 
 export const metadata: Metadata = { title: "Scanner votre badge" };
 
@@ -37,7 +38,7 @@ export default async function KioskPage() {
       training={training ? { rooms: rooms.map((r) => ({ id: r.id, name: r.name })) } : null}
       university={university}
       offline={training ? undefined : { userId: context.user.id, organizationId: organization.id }}
-      voice={(voice as unknown as VoiceConfig | null) ?? null}
+      voice={voice ? { ...(voice as unknown as VoiceConfig), available: (voice as unknown as VoiceConfig).available && featureEnabled(organization, "voice_checkin") } : null}
       initialScans={scans.map((s) => ({
         id: s.id,
         at: s.scanned_at,

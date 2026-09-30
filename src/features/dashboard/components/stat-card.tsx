@@ -1,6 +1,9 @@
 import type { LucideIcon } from "lucide-react";
 
-import { AnimatedCounter, AnimatedMoney } from "@/components/motion/animated-counter";
+import {
+  AnimatedCounter,
+  AnimatedMoney,
+} from "@/components/motion/animated-counter";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils/cn";
 
@@ -13,7 +16,10 @@ const TONES = {
 } as const;
 
 /** Valeur d'indicateur : texte déjà formaté, nombre ou montant (animés à l'apparition). */
-export type StatValue = string | { count: number } | { amount: number; currency: string };
+export type StatValue =
+  | string
+  | { count: number }
+  | { amount: number; currency: string };
 
 export function StatCard({
   label,
@@ -43,7 +49,13 @@ export function StatCard({
       <div className="grid min-w-0 gap-1">
         <p className="text-sm text-muted-foreground">{label}</p>
         <p className="truncate font-display text-2xl font-semibold tabular-nums">
-          {typeof value === "string" ? value : "amount" in value ? <AnimatedMoney value={value.amount} currency={value.currency} /> : <AnimatedCounter value={value.count} />}
+          {typeof value === "string" ? (
+            value
+          ) : "amount" in value ? (
+            <AnimatedMoney value={value.amount} currency={value.currency} />
+          ) : (
+            <AnimatedCounter value={value.count} />
+          )}
         </p>
         {hint ? (
           <p

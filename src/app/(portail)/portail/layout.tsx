@@ -1,6 +1,7 @@
 import { FlaskConical } from "lucide-react";
 
 import { NotificationWatcher } from "@/components/layout/notification-watcher";
+import { switchOrganization } from "@/features/auth/actions";
 import { NotificationsMenu } from "@/components/layout/notifications-menu";
 import { UserMenu } from "@/components/layout/user-menu";
 import { Logo } from "@/components/shared/logo";
@@ -54,6 +55,24 @@ export default async function PortalLayout({ children }: { children: React.React
             <p className="text-xs font-medium uppercase tracking-wider text-cyan-300">{parent ? "Espace parent" : vocabularyFor(organization.type).studentSpace}</p>
             <p className="truncate text-sm text-white/80">{organization.name}</p>
           </div>
+          {context.organizations.length > 1 ? (
+            <nav aria-label="Établissements" className="-mx-4 flex gap-2 overflow-x-auto px-4" data-testid="portal-org-switcher">
+              {context.organizations.map((o) =>
+                o.id === organization.id ? (
+                  <span key={o.id} className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#0b2559]">
+                    {o.short_name ?? o.name}
+                  </span>
+                ) : (
+                  <form key={o.id} action={switchOrganization}>
+                    <input type="hidden" name="organizationId" value={o.id} />
+                    <button type="submit" className="shrink-0 rounded-full border border-white/25 px-3 py-1 text-xs font-medium text-white/85 hover:bg-white/10">
+                      {o.short_name ?? o.name}
+                    </button>
+                  </form>
+                ),
+              )}
+            </nav>
+          ) : null}
           {parent && student && students.length > 1 ? <ChildSwitcher students={students} selectedId={student.id} /> : null}
         </div>
       </header>

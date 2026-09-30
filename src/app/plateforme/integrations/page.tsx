@@ -69,7 +69,7 @@ export default async function PlatformIntegrationsPage() {
       <div className="grid gap-1">
         <h2 className="text-2xl font-bold">Intégrations</h2>
         <p className="text-sm text-muted-foreground">
-          E-mail, SMS, WhatsApp et anti-robot : configurés une seule fois ici, utilisés par tous les établissements. Sans intégration active, aucun message n&apos;est envoyé
+          E-mail, SMS, WhatsApp, notifications push et anti-robot : configurés une seule fois ici, utilisés par tous les établissements. Sans intégration active, aucun message n&apos;est envoyé
           et l&apos;application continue de fonctionner normalement.
         </p>
       </div>

@@ -390,7 +390,7 @@ function localizedLabel(item: NavItem, v: Vocabulary): string {
 
 export function visibleNavigation(
   permissions: ReadonlySet<Permission>,
-  options: { demo?: boolean; organizationType?: string | null; school?: SchoolConfig | null; university?: UniversityConfig | null } = {},
+  options: { demo?: boolean; organizationType?: string | null; school?: SchoolConfig | null; university?: UniversityConfig | null; hidden?: readonly string[] } = {},
 ): NavSection[] {
   const v = vocabularyFor(options.organizationType);
   const base = options.organizationType === "school_group" ? GROUP_NAVIGATION : v.family === "higher" ? UNIVERSITY_NAVIGATION : NAVIGATION;
@@ -405,6 +405,8 @@ export function visibleNavigation(
       .filter((item) => !item.schoolLevel || Boolean(options.school?.levels.includes(item.schoolLevel)))
       .filter((item) => !item.family || item.family === v.family)
       .filter((item) => !item.feature || Boolean(options.university?.features[item.feature]))
+      // Fonctionnalités arrêtées (établissement ou Super Admin).
+      .filter((item) => !options.hidden?.includes(item.href))
       .map((item) => ({ ...item, label: localizedLabel(item, v) })),
   })).filter((section) => section.items.length > 0);
 }
