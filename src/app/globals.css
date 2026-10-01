@@ -551,3 +551,16 @@ h2,
 .photo-zoom img { transition: transform 900ms var(--ease-out); }
 .photo-zoom:hover img { transform: scale(1.035); }
 @media (prefers-reduced-motion: reduce) { .photo-zoom:hover img { transform: none; } }
+
+/* Barre de navigation (components/motion/navigation-progress) : progression asymptotique, puis achèvement. */
+@keyframes nav-progress-run { 0% { transform: scaleX(0); } 20% { transform: scaleX(0.35); } 60% { transform: scaleX(0.7); } 100% { transform: scaleX(0.9); } }
+
+.nav-progress-run { transform-origin: left; animation: nav-progress-run 8s cubic-bezier(0.1, 0.6, 0.2, 1) forwards; box-shadow: 0 0 10px var(--primary); }
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-progress-run { animation: none; transform: scaleX(0.6); }
+}
+
+/* Menu mobile du site : panneau qui glisse, liens qui apparaissent en cascade. */
+@keyframes sheet-in { from { transform: translateY(-12px); opacity: 0; } }
+.sheet-in { animation: sheet-in 320ms var(--ease-out) both; }

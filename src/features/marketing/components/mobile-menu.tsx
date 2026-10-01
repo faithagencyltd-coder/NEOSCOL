@@ -16,8 +16,11 @@ export function MobileMenu({ labels, nav, sectors, demoHref, loginHref }: { labe
   const [open, setOpen] = useState(false);
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    if (open) window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKey);
     };
   }, [open]);
   return (
@@ -27,22 +30,22 @@ export function MobileMenu({ labels, nav, sectors, demoHref, loginHref }: { labe
       </button>
       {open
         ? createPortal(
-            <div role="dialog" aria-modal="true" aria-label={labels.menu} data-testid="site-mobile-menu" className="anim-fade fixed inset-0 z-[70] flex flex-col overflow-y-auto overscroll-contain bg-[#07142b] p-5 text-white lg:hidden">
+            <div role="dialog" aria-modal="true" aria-label={labels.menu} data-testid="site-mobile-menu" className="anim-fade sheet-in fixed inset-0 z-[70] flex flex-col overflow-y-auto overscroll-contain bg-[#07142b] p-5 text-white lg:hidden">
               <div className="flex justify-end">
-                <button type="button" onClick={() => setOpen(false)} className="flex size-11 items-center justify-center rounded-xl bg-white/10" aria-label={labels.close}>
+                <button type="button" onClick={() => setOpen(false)} className="flex size-11 items-center justify-center rounded-xl bg-white/10 transition-transform duration-200 hover:rotate-90 active:scale-95" aria-label={labels.close}>
                   <X className="size-5" aria-hidden />
                 </button>
               </div>
-              <nav className="mt-4 grid gap-1 text-lg font-semibold">
+              <nav className="stagger mt-4 grid gap-1 text-lg font-semibold">
                 <span className="px-3 pt-2 text-xs uppercase tracking-wider text-sky-200/60">{labels.solutions}</span>
                 {sectors.map((s) => (
-                  <Link key={s.href} href={s.href} onClick={() => setOpen(false)} className="rounded-xl px-3 py-2.5 hover:bg-white/10">
+                  <Link key={s.href} href={s.href} onClick={() => setOpen(false)} className="rounded-xl px-3 py-2.5 transition-colors hover:bg-white/10 active:bg-white/15">
                     {s.label}
                   </Link>
                 ))}
                 <span className="my-2 h-px bg-white/10" />
                 {nav.map((s) => (
-                  <Link key={s.href} href={s.href} onClick={() => setOpen(false)} className="rounded-xl px-3 py-2.5 hover:bg-white/10">
+                  <Link key={s.href} href={s.href} onClick={() => setOpen(false)} className="rounded-xl px-3 py-2.5 transition-colors hover:bg-white/10 active:bg-white/15">
                     {s.label}
                   </Link>
                 ))}

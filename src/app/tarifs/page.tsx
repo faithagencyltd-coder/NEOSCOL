@@ -28,13 +28,13 @@ export default async function PricingPage() {
   const faq = site.faq.length ? site.faq : defaultFaq(trialDays);
   return (
     <PublicShell>
-      <section className="relative -mt-px overflow-hidden bg-gradient-to-br from-[#0b2559] via-[#0e3a82] to-[#0e4a9a] pb-10 pt-6 text-center text-white lg:pb-14 lg:pt-10">
+      <section className="relative -mt-px overflow-hidden bg-gradient-to-br from-[#0b2559] via-[#0e3a82] to-[#0e4a9a] pb-10 pt-6 text-center text-white lg:flex lg:min-h-[20rem] lg:items-center lg:pb-14 lg:pt-10">
         <div aria-hidden className="pointer-events-none absolute -right-20 -top-24 size-[26rem] rounded-full bg-cyan-400/15 blur-3xl" />
         {/* Élève réelle (détourée) : l'établissement, c'est d'abord ses élèves. */}
-        <div className="anim-fade-up pointer-events-none absolute bottom-0 right-[4%] hidden w-56 [--delay:200ms] lg:block xl:w-64">
-          <SitePhoto name="lyceenne-portrait" decorative sizes="256px" className="drop-shadow-[0_20px_30px_rgba(0,0,0,0.35)]" />
+        <div className="anim-fade-up pointer-events-none absolute bottom-0 right-[5%] hidden w-44 [--delay:200ms] lg:block">
+          <SitePhoto name="lyceenne-portrait" decorative sizes="176px" className="drop-shadow-[0_20px_30px_rgba(0,0,0,0.35)]" />
         </div>
-        <div className="relative mx-auto grid max-w-3xl gap-3 px-4">
+        <div className="relative mx-auto grid max-w-3xl gap-3 px-4 lg:w-full">
           <p className="anim-fade-up text-xs font-semibold uppercase tracking-widest text-cyan-300">Tarifs NeoScool</p>
           <h1 className="anim-fade-up text-3xl font-bold leading-tight [--delay:80ms] sm:text-4xl">Une formule adaptée à chaque établissement</h1>
           <p className="anim-fade-up text-base text-sky-100/85 [--delay:160ms]">

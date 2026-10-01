@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, Poppins } from "next/font/google";
+import { Suspense } from "react";
 
 import { AnimatedToaster } from "@/components/motion/animated-toast";
+import { NavigationProgress } from "@/components/motion/navigation-progress";
 import { ServiceWorkerRegistration } from "@/components/shared/pwa";
 import { brandCss } from "@/features/platform/brand";
 import { getSiteSettings } from "@/lib/site-settings";
@@ -38,6 +40,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         </head>
       ) : null}
       <body className="min-h-dvh">
+        <Suspense fallback={null}>
+          <NavigationProgress />
+        </Suspense>
         {children}
         <AnimatedToaster />
         <ServiceWorkerRegistration />

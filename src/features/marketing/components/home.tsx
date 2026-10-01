@@ -150,10 +150,10 @@ export async function HomePage({ locale }: { locale: Locale }) {
             </h1>
             <p className="anim-fade-up max-w-xl text-lg text-[#0b2559]/70 [--delay:160ms] sm:text-xl">{t.hero.subtitle}</p>
             <div className="anim-fade-up flex flex-wrap gap-3 [--delay:240ms]">
-              <Link href="#decouvrir" className="inline-flex items-center gap-2 rounded-2xl bg-[#0b2559] px-5 py-3.5 font-semibold text-white shadow-lg shadow-[#0b2559]/25 transition-transform hover:-translate-y-0.5">
+              <Link href="#decouvrir" className="inline-flex items-center gap-2 rounded-2xl bg-[#0b2559] px-5 py-3.5 font-semibold text-white shadow-lg shadow-[#0b2559]/25 transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]">
                 {t.hero.discover} <ArrowRight className="size-4" aria-hidden />
               </Link>
-              <Link href="#logiciel" className="inline-flex items-center gap-2 rounded-2xl border border-[#0b2559]/15 bg-white px-5 py-3.5 font-semibold text-[#0b2559] transition-colors hover:border-[#1d63ed]/40">
+              <Link href="#logiciel" className="inline-flex items-center gap-2 rounded-2xl border border-[#0b2559]/15 bg-white px-5 py-3.5 font-semibold text-[#0b2559] transition-[colors,transform] hover:border-[#1d63ed]/40 active:scale-[0.98]">
                 {t.hero.software}
               </Link>
               <Link href={`${route("contact", locale)}?demande=demo`} className="inline-flex items-center gap-2 rounded-2xl px-5 py-3.5 font-semibold text-[#1d63ed] hover:bg-[#1d63ed]/5">
@@ -481,7 +481,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
             <SectionTitle eyebrow={t.pricing.eyebrow} title={t.pricing.title} subtitle={t.pricing.subtitle} />
             <PricingCards locale={locale} limit={3} />
             <div className="flex flex-wrap justify-center gap-3">
-              <Link href={route("pricing", locale)} className="rounded-2xl bg-[#0b2559] px-5 py-3 font-semibold text-white">
+              <Link href={route("pricing", locale)} className="rounded-2xl bg-[#0b2559] px-5 py-3 font-semibold text-white transition-transform hover:-translate-y-0.5 active:scale-[0.98]">
                 {t.pricing.see}
               </Link>
               <Link href={route("contact", locale)} className="rounded-2xl border border-[#0b2559]/15 bg-white px-5 py-3 font-semibold text-[#0b2559]">
