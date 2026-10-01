@@ -53,6 +53,7 @@
     <li><a href="#formation">Formation professionnelle</a></li>
     <li><a href="#module4">Module 4 (plusieurs domaines)</a></li>
     <li><a href="#horsligne">Tester le mode hors ligne</a></li>
+    <li><a href="#paiements-familles">Paiement en ligne des familles (parcours complet)</a></li>
     <li><a href="#reel">Ce qui demande un vrai fournisseur</a></li>
   </ol>
 </nav>
@@ -96,7 +97,7 @@
   <ol class="pas">
     <li><strong>Établissements</strong> : liste de tous les clients, création d'un établissement et de son premier administrateur.</li>
     <li><strong>Abonnements</strong> : essais de 20 jours, formules actives, impayés ; <strong>Paiements</strong> : enregistrer un paiement manuel, factures PDF.</li>
-    <li><strong>Formules</strong> : Module Scolaire, Formation professionnelle, Université, Module 4 (30 000 F / mois) — prix modifiables.</li>
+    <li><strong>Formules</strong> : Module Scolaire, Formation professionnelle, Université, Module 4 (30 000 F / mois) — bouton « Modifier le prix » (historique conservé), options incluses appliquées aux établissements.</li>
   </ol>
   <h3>Pays, devises et règles</h3>
   <ol class="pas">
@@ -114,11 +115,14 @@
   <ol class="pas">
     <li><strong>Revenus</strong> : encaissements des 12 derniers mois, par formule et par moyen de paiement, meilleurs clients, impayés en cours, départs ; exports comptables.</li>
     <li><strong>Offres</strong> : durée de l'essai gratuit, codes promo, offres limitées dans le temps, tarif négocié pour un établissement.</li>
-    <li><strong>Paiements en ligne</strong> : agrégateurs de paiement (clés chiffrées) et paiement hors ligne toujours disponible.</li>
+    <li><strong>Paiements en ligne</strong> : agrégateurs de paiement des abonnements (clés chiffrées), paiement hors ligne toujours disponible, et <strong>« Ajouter un agrégateur »</strong> pour un fournisseur absent de la liste (pré-remplissage par l'assistant IA à partir de sa documentation, test obligatoire).</li>
+    <li>Même page, encadré <strong>« Paiements des familles dans les établissements »</strong> : interrupteur global du paiement en ligne des frais par les parents. Désactivé, les établissements et les parents voient « Les paiements en ligne sont actuellement désactivés au niveau global. » — rien n'est supprimé.</li>
+    <li><strong>SMS</strong> : prix d'un SMS, achat minimum, facturation des SMS aux établissements (crédit prépayé).</li>
   </ol>
   <h3>Site web, marque et communication</h3>
   <ol class="pas">
     <li><strong>Site web</strong> : textes FR / EN de la page d'accueil (<code>/</code> et <code>/en</code>), secteurs, pays, numéro WhatsApp, réseaux sociaux, vidéos, témoignages (publiés seulement s'ils sont réels), référencement. Les demandes du formulaire <code>/contact</code> arrivent ici.</li>
+    <li><strong>Site web › Visuels</strong> : photos réelles et illustrations utilisées sur le site, avec leurs emplacements.</li>
     <li><strong>Site et marque</strong> : logo, couleur principale, coordonnées (téléphone, WhatsApp, e-mail, horaires), questions d'aide, Conditions générales et Politique de confidentialité.</li>
     <li><strong>Communication</strong> : bandeaux d'annonce affichés dans les établissements ciblés, campagnes, et textes des messages automatiques (e-mail, SMS).</li>
   </ol>
@@ -146,9 +150,11 @@
     <li><strong>Annonces</strong> et <strong>Messagerie</strong>.</li>
     <li><strong>Centre d'envois</strong> : créez un modèle SMS avec <code>{destinataire}</code>, <code>{eleve_prenom}</code>, <code>{solde}</code> → « Parents d'élèves en impayé » → « Aperçu » (message réel, numéros masqués) → « Envoyer ». Sans fournisseur activé, chaque destinataire est marqué « canal non configuré » (aucun faux envoi).</li>
     <li>Relance automatique des impayés : « Régler » → modèle + fréquence.</li>
+    <li><strong>Crédit SMS</strong> (Communication) : devis avant envoi (nombre de SMS × prix), achat de crédit par paiement simulé, solde consommé à chaque SMS.</li>
   </ol>
   <h3>Autres</h3>
   <ol class="pas">
+    <li><strong>Paiements en ligne</strong> (Paramètres) : activez le paiement des familles, ajoutez un ou plusieurs fournisseurs (voir la section 15), testez la connexion, activez-les.</li>
     <li><strong>Finances</strong>, <strong>Documents</strong> (Document Studio, modèles), <strong>Rapports</strong>, <strong>Audit</strong>, <strong>Rôles</strong>, <strong>Utilisateurs</strong>.</li>
     <li><strong>Messages vocaux</strong> (Configuration) : activez, personnalisez « Bonjour {prenom}… », cliquez « Écouter ».</li>
     <li><strong>Assistant</strong> : « fiche DEMO-26-00001 », « Où en est le passage à l'année suivante ? », « Liste les impayés » — il ne voit que ce que vous avez le droit de voir.</li>
@@ -182,6 +188,7 @@
   <ol class="pas">
     <li>Factures, encaissement d'un paiement → reçu PDF ; dépenses ; impayés.</li>
     <li>Payer la facture de Kofi : ses restrictions de portail se lèvent immédiatement.</li>
+    <li><strong>Finances › Paiements en ligne</strong> : paiements des familles confirmés automatiquement (totaux, par fournisseur et par moyen, recherche par référence), onglet « À traiter », remboursements (« Demander un remboursement » puis « Rembourser »), notifications reçues des fournisseurs, journal. Une notification « Nouveau paiement reçu de … FCFA pour … » arrive à chaque paiement.</li>
   </ol>
 </section>
 
@@ -202,7 +209,8 @@
   <ol class="pas">
     <li>Présentez un badge devant la caméra, ou collez son code dans « Code du badge » (le code figure sur le badge PDF : Personnel → badge).</li>
     <li>Arrivée, retard, départ, cours débloqué : l'écran affiche le résultat vérifié par le serveur.</li>
-    <li>Si les <strong>messages vocaux</strong> sont activés (Administrateur → Messages vocaux), la tablette annonce l'arrivée, le retard ou le refus. Bouton « Voix activée / coupée ».</li>
+    <li>Si les <strong>messages vocaux</strong> sont activés (Administrateur → Messages vocaux), la tablette annonce l'arrivée, le retard ou le refus. Bouton « Voix activée / coupée » et choix de la voix parmi celles de l'appareil.</li>
+    <li>Au scan, la photo de la personne s'affiche avec le résultat.</li>
   </ol>
 </section>
 
@@ -211,6 +219,7 @@
   <ol class="pas">
     <li>Parent : connexion par téléphone <code>+2250700000001</code>, code <code>123456</code>. Enfants, présences, notes, bulletins, factures, messages.</li>
     <li>Kofi est en impayé : certaines rubriques sont restreintes jusqu'au paiement (les présences restent toujours visibles).</li>
+    <li><strong>Finances</strong> : synthèse (total, payé, reste, en attente) et, si l'établissement l'a activé, bouton <strong>« PAYER MAINTENANT »</strong> sur chaque facture (voir la section 15). Le parent peut aussi se connecter avec <code>parent@demo.neoscol.app</code>.</li>
     <li>Élève : <code>eleve@demo.neoscol.app</code> — emploi du temps, notes, badge.</li>
   </ol>
 </section>
@@ -222,6 +231,7 @@
     <li>Structure (facultés, départements, filières, parcours), UE et crédits ECTS, inscriptions.</li>
     <li>Résultats, rattrapages, délibérations du jury, relevés et diplômes PDF, stages, mémoires, soutenances.</li>
     <li>Scan des étudiants et enseignants sur la tablette de l'université.</li>
+    <li>Portail parent : désactivé par défaut ; activable dans Paramètres universitaires avec le choix des informations visibles. Compte parent : <code>parent.universite@demo.neoscol.app</code>.</li>
   </ol>
 </section>
 
@@ -231,6 +241,7 @@
   <ol class="pas">
     <li>Formations libres, sessions, groupes facultatifs, apprenants, paiements échelonnés.</li>
     <li>Badges apprenants et formateurs ; scan « Scanner votre badge » : entrée, retard, sortie, temps de présence.</li>
+    <li>Portail parent : <code>parent.formation@demo.neoscol.app</code> (présences, notes, finances de l'apprenant).</li>
   </ol>
 </section>
 
@@ -251,14 +262,31 @@
   </ol>
 </section>
 
+<section id="paiements-familles">
+  <h2>15. Paiement en ligne des familles — parcours complet</h2>
+  <p class="qui">Fournisseur de <strong>test</strong> (mode TEST, aucun argent réel) : même chemin qu'un vrai agrégateur, notification et vérification serveur comprises.</p>
+  <ol class="pas">
+    <li><strong>Administrateur</strong> (<code>admin@</code>) → Paramètres › <strong>Paiements en ligne</strong> → cochez « Activer le paiement en ligne pour les familles » → Enregistrer.</li>
+    <li>« <strong>AJOUTER UN FOURNISSEUR</strong> » → Type : « Fournisseur de test NeoScool » → Nom : « Mobile Money (test) » → <strong>ENREGISTRER</strong>.</li>
+    <li>Sur la fiche : <strong>TESTER LA CONNEXION</strong>, puis cochez « ACTIF » et « Fournisseur par défaut » → Appliquer. La fiche affiche aussi la <em>Webhook URL</em> et la <em>Callback URL</em> à déclarer chez un vrai fournisseur.</li>
+    <li>Pour un vrai agrégateur (PayDunya, CinetPay, FedaPay, Flutterwave, Paystack, Stripe, Wave, ou « Autre fournisseur (API à décrire) ») : mêmes étapes avec vos clés de test ; elles sont chiffrées et jamais réaffichées. Sans clés, l'activation est refusée.</li>
+    <li><strong>Parent</strong> (<code>parent@demo.neoscol.app</code>) → Finances → choisissez <strong>Aya</strong> en haut → sur sa facture : <strong>PAYER MAINTENANT</strong>.</li>
+    <li>Choisissez une échéance (ou tout le reste à payer) et le moyen (Mobile Money ou carte) → « Payer … ». La page du fournisseur de test s'ouvre.</li>
+    <li>« <strong>Simuler un paiement réussi</strong> » → retour : « <strong>Paiement reçu avec succès.</strong> » et bouton « Télécharger le reçu » (PDF avec mention PAYÉ, motif, année, QR de vérification). Le solde de la facture est mis à jour.</li>
+    <li>Essayez aussi « Simuler un refus », « Annuler le paiement » ou « Test de sécurité : le fournisseur confirme un autre montant » (refusé et classé « À traiter »).</li>
+    <li><strong>Comptabilité</strong> (<code>comptable@</code>) → cloche : « Nouveau paiement reçu de … FCFA pour Aya BAMBA ». Finances › <strong>Paiements en ligne</strong> : la transaction, le reçu, l'historique ; ouvrez-la → « Vérifier auprès du fournisseur », « DEMANDER UN REMBOURSEMENT » puis « REMBOURSER (automatique) ».</li>
+    <li><strong>Super Admin</strong> → Paiements en ligne → « Désactiver pour tous les établissements » : le bouton disparaît côté parent, le message global s'affiche ; « Activer » remet tout en place.</li>
+  </ol>
+</section>
+
 <section id="reel">
-  <h2>15. Ce qui demande un vrai fournisseur</h2>
+  <h2>16. Ce qui demande un vrai fournisseur</h2>
   <div class="note">
     NeoScool ne simule jamais un envoi ou un paiement réel :
     <ul>
       <li><strong>SMS, e-mails, WhatsApp</strong> : clés à saisir par le Super Admin dans Intégrations (Brevo, Twilio, Meta). Sans clé : « canal non configuré ».</li>
       <li><strong>Assistant IA</strong> : sans clé Claude, il répond avec son moteur local (questions guidées) ; avec la clé, en langage naturel.</li>
-      <li><strong>Paiements en ligne</strong> : ce paquet utilise le mode « simulation » clairement signalé ; en production, PayDunya.</li>
+      <li><strong>Paiements en ligne</strong> : ce paquet utilise le mode « simulation » et le « fournisseur de test » des établissements, clairement signalés (mode TEST, aucun argent réel). Les vrais agrégateurs demandent leurs clés, saisies dans l'application.</li>
       <li><strong>Voix</strong> : fournie par l'appareil (qualité selon la tablette ou l'ordinateur).</li>
     </ul>
   </div>

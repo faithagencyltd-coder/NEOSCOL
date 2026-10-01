@@ -37,7 +37,8 @@ UTILISER SUR LES AUTRES APPAREILS (MÊME WI-FI)
 
 GUIDE COMPLET
   Ouvrez  GUIDE-DEMONSTRATION.html  (double-clic) : parcours pas à pas de chaque
-  profil, du Super Admin à la tablette de pointage.
+  profil, du Super Admin à la tablette de pointage, et le parcours complet du
+  paiement en ligne des familles (section 15, fournisseur de test, aucun argent réel).
 
 COMPTES DE DÉMONSTRATION (mot de passe commun : NeoScol-Demo-2026!)
   - Super Admin       : superadmin@demo.neoscol.app  (console de la plateforme)
@@ -49,7 +50,9 @@ COMPTES DE DÉMONSTRATION (mot de passe commun : NeoScol-Demo-2026!)
   - Tablette pointage : pointage@demo.neoscol.app
   - Université        : universite@demo.neoscol.app
   - Centre formation  : formation@demo.neoscol.app
-  - Parent (SMS)      : +2250700000001, BAMBA Adjoua, code 123456
+  - Parent            : parent@demo.neoscol.app  (ou SMS : +2250700000001, code 123456)
+  - Parent formation  : parent.formation@demo.neoscol.app
+  - Parent université : parent.universite@demo.neoscol.app
   - Élève             : matricule DEMO-26-00001, né le 12/03/2014
 
 ARRÊTER
