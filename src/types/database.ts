@@ -2523,6 +2523,364 @@ export type Database = {
           }
         ]
       }
+      fee_payment_events: {
+        Row: {
+          actor: string | null
+          created_at: string
+          detail: Json
+          id: string
+          kind: string
+          organization_id: string
+          provider_id: string | null
+          summary: string
+          transaction_id: string | null
+        }
+        Insert: {
+          actor?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          kind: string
+          organization_id: string
+          provider_id?: string | null
+          summary: string
+          transaction_id?: string | null
+        }
+        Update: {
+          actor?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          kind?: string
+          organization_id?: string
+          provider_id?: string | null
+          summary?: string
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fee_payment_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_payment_events_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "org_payment_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_payment_events_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "fee_payment_transactions"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      fee_payment_refunds: {
+        Row: {
+          amount: number
+          cancelled_payment_id: string | null
+          external_reference: string | null
+          id: string
+          mode: string
+          note: string | null
+          organization_id: string
+          processed_at: string | null
+          processed_by: string | null
+          reason: string
+          replacement_payment_id: string | null
+          requested_at: string
+          requested_by: string | null
+          status: string
+          transaction_id: string
+        }
+        Insert: {
+          amount: number
+          cancelled_payment_id?: string | null
+          external_reference?: string | null
+          id?: string
+          mode?: string
+          note?: string | null
+          organization_id: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reason: string
+          replacement_payment_id?: string | null
+          requested_at?: string
+          requested_by?: string | null
+          status?: string
+          transaction_id: string
+        }
+        Update: {
+          amount?: number
+          cancelled_payment_id?: string | null
+          external_reference?: string | null
+          id?: string
+          mode?: string
+          note?: string | null
+          organization_id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string
+          replacement_payment_id?: string | null
+          requested_at?: string
+          requested_by?: string | null
+          status?: string
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fee_payment_refunds_cancelled_payment_id_fkey"
+            columns: ["cancelled_payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_payment_refunds_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_payment_refunds_replacement_payment_id_fkey"
+            columns: ["replacement_payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_payment_refunds_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "fee_payment_transactions"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      fee_payment_transactions: {
+        Row: {
+          adapter: string
+          amount: number
+          checkout_url: string | null
+          confirmed_at: string | null
+          created_at: string
+          currency: string
+          expires_at: string
+          failure_reason: string | null
+          guardian_id: string | null
+          id: string
+          installment_id: string | null
+          internal_reference: string
+          invoice_id: string
+          metadata: Json
+          method: string
+          mode: string
+          needs_review: boolean
+          organization_id: string
+          payer_user_id: string | null
+          payment_id: string | null
+          provider_id: string
+          provider_label: string
+          provider_response: Json
+          provider_transaction_id: string | null
+          purpose: string
+          refunded_amount: number
+          review_reason: string | null
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          adapter: string
+          amount: number
+          checkout_url?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          currency: string
+          expires_at: string
+          failure_reason?: string | null
+          guardian_id?: string | null
+          id?: string
+          installment_id?: string | null
+          internal_reference: string
+          invoice_id: string
+          metadata?: Json
+          method: string
+          mode: string
+          needs_review?: boolean
+          organization_id: string
+          payer_user_id?: string | null
+          payment_id?: string | null
+          provider_id: string
+          provider_label: string
+          provider_response?: Json
+          provider_transaction_id?: string | null
+          purpose: string
+          refunded_amount?: number
+          review_reason?: string | null
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          adapter?: string
+          amount?: number
+          checkout_url?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          currency?: string
+          expires_at?: string
+          failure_reason?: string | null
+          guardian_id?: string | null
+          id?: string
+          installment_id?: string | null
+          internal_reference?: string
+          invoice_id?: string
+          metadata?: Json
+          method?: string
+          mode?: string
+          needs_review?: boolean
+          organization_id?: string
+          payer_user_id?: string | null
+          payment_id?: string | null
+          provider_id?: string
+          provider_label?: string
+          provider_response?: Json
+          provider_transaction_id?: string | null
+          purpose?: string
+          refunded_amount?: number
+          review_reason?: string | null
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fee_payment_transactions_guardian_id_fkey"
+            columns: ["guardian_id"]
+            isOneToOne: false
+            referencedRelation: "guardians"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_payment_transactions_installment_id_fkey"
+            columns: ["installment_id"]
+            isOneToOne: false
+            referencedRelation: "installments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_payment_transactions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_payment_transactions_organization_id_invoice_id_fkey"
+            columns: ["organization_id", "invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "fee_payment_transactions_organization_id_payment_id_fkey"
+            columns: ["organization_id", "payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "fee_payment_transactions_organization_id_provider_id_fkey"
+            columns: ["organization_id", "provider_id"]
+            isOneToOne: false
+            referencedRelation: "org_payment_providers"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "fee_payment_transactions_organization_id_student_id_fkey"
+            columns: ["organization_id", "student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "fee_payment_transactions_payer_user_id_fkey"
+            columns: ["payer_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      fee_payment_webhooks: {
+        Row: {
+          error: string | null
+          id: string
+          ip: string | null
+          organization_id: string
+          payload: Json
+          processing_status: string
+          provider_id: string
+          provider_transaction_id: string | null
+          received_at: string
+          transaction_id: string | null
+        }
+        Insert: {
+          error?: string | null
+          id?: string
+          ip?: string | null
+          organization_id: string
+          payload?: Json
+          processing_status?: string
+          provider_id: string
+          provider_transaction_id?: string | null
+          received_at?: string
+          transaction_id?: string | null
+        }
+        Update: {
+          error?: string | null
+          id?: string
+          ip?: string | null
+          organization_id?: string
+          payload?: Json
+          processing_status?: string
+          provider_id?: string
+          provider_transaction_id?: string | null
+          received_at?: string
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fee_payment_webhooks_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_payment_webhooks_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "org_payment_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_payment_webhooks_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "fee_payment_transactions"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       fee_rates: {
         Row: {
           academic_year_id: string
@@ -4664,6 +5022,133 @@ export type Database = {
           }
         ]
       }
+      org_payment_providers: {
+        Row: {
+          adapter: string
+          archived_at: string | null
+          config: Json
+          country: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          custom_definition: Json | null
+          id: string
+          is_active: boolean
+          is_default: boolean
+          label: string
+          last_test_at: string | null
+          last_test_message: string | null
+          last_test_ok: boolean | null
+          methods: string[]
+          mode: string
+          organization_id: string
+          priority: number
+          secret_ciphertext: string | null
+          secret_hint: string | null
+          updated_at: string
+          updated_by: string | null
+          webhook_token: string
+        }
+        Insert: {
+          adapter: string
+          archived_at?: string | null
+          config?: Json
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          custom_definition?: Json | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          label: string
+          last_test_at?: string | null
+          last_test_message?: string | null
+          last_test_ok?: boolean | null
+          methods?: string[]
+          mode?: string
+          organization_id: string
+          priority?: number
+          secret_ciphertext?: string | null
+          secret_hint?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          webhook_token?: string
+        }
+        Update: {
+          adapter?: string
+          archived_at?: string | null
+          config?: Json
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          custom_definition?: Json | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          label?: string
+          last_test_at?: string | null
+          last_test_message?: string | null
+          last_test_ok?: boolean | null
+          methods?: string[]
+          mode?: string
+          organization_id?: string
+          priority?: number
+          secret_ciphertext?: string | null
+          secret_hint?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          webhook_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_payment_providers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      org_payment_settings: {
+        Row: {
+          allow_partial: boolean
+          min_partial_amount: number
+          online_enabled: boolean
+          organization_id: string
+          pending_minutes: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          allow_partial?: boolean
+          min_partial_amount?: number
+          online_enabled?: boolean
+          organization_id: string
+          pending_minutes?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          allow_partial?: boolean
+          min_partial_amount?: number
+          online_enabled?: boolean
+          organization_id?: string
+          pending_minutes?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_payment_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       organization_branding: {
         Row: {
           footer_text: string | null
@@ -5626,6 +6111,29 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           }
+        ]
+      }
+      platform_payment_settings: {
+        Row: {
+          id: number
+          school_payments_enabled: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: number
+          school_payments_enabled?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: number
+          school_payments_enabled?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          
         ]
       }
       platform_security_settings: {
@@ -10119,6 +10627,107 @@ export type Database = {
           installment_plan: Json
         }[]
       }
+      fee_payment_attach: {
+        Args: {
+          p_tx: string
+          p_provider_tx: string
+          p_checkout_url: string
+          p_response?: Json
+        }
+        Returns: undefined
+      }
+      fee_payment_confirm: {
+        Args: {
+          p_provider: string
+          p_provider_tx: string
+          p_reference: string
+          p_amount: number
+          p_currency: string
+          p_method: string
+          p_response: Json
+          p_source?: string
+        }
+        Returns: Json
+      }
+      fee_payment_expire_stale: {
+        Args: {
+          p_org: string
+        }
+        Returns: number
+      }
+      fee_payment_fail: {
+        Args: {
+          p_provider: string
+          p_provider_tx: string
+          p_reference: string
+          p_status: string
+          p_reason: string
+          p_response?: Json
+        }
+        Returns: Json
+      }
+      fee_payment_log_check: {
+        Args: {
+          p_tx: string
+          p_summary: string
+        }
+        Returns: undefined
+      }
+      fee_payment_mark_reviewed: {
+        Args: {
+          p_tx: string
+          p_note: string
+        }
+        Returns: undefined
+      }
+      fee_payment_options: {
+        Args: {
+          p_org: string
+        }
+        Returns: Json
+      }
+      fee_payment_refund_complete: {
+        Args: {
+          p_refund: string
+          p_external_reference: string
+          p_note: string
+          p_automatic?: boolean
+        }
+        Returns: Json
+      }
+      fee_payment_refund_reject: {
+        Args: {
+          p_refund: string
+          p_reason: string
+        }
+        Returns: undefined
+      }
+      fee_payment_refund_request: {
+        Args: {
+          p_tx: string
+          p_amount: number
+          p_reason: string
+        }
+        Returns: string
+      }
+      fee_payment_start: {
+        Args: {
+          p_invoice: string
+          p_installment: string
+          p_amount: number
+          p_provider: string
+          p_method?: string
+        }
+        Returns: Json
+      }
+      fee_payment_stats: {
+        Args: {
+          p_org: string
+          p_from: string
+          p_to: string
+        }
+        Returns: Json
+      }
       find_student_duplicates: {
         Args: {
           p_organization_id: string
@@ -10416,6 +11025,57 @@ export type Database = {
           last_message: string
           unread: boolean
         }[]
+      }
+      org_archive_payment_provider: {
+        Args: {
+          p_provider: string
+        }
+        Returns: undefined
+      }
+      org_record_payment_provider_test: {
+        Args: {
+          p_provider: string
+          p_ok: boolean
+          p_message: string
+        }
+        Returns: undefined
+      }
+      org_save_payment_provider: {
+        Args: {
+          p_org: string
+          p_id: string
+          p_adapter: string
+          p_label: string
+          p_country: string
+          p_currency: string
+          p_methods: string[]
+          p_mode: string
+          p_config: Json
+          p_custom_definition: Json
+          p_secret_ciphertext?: string
+          p_secret_hint?: string
+          p_clear_secret?: boolean
+        }
+        Returns: string
+      }
+      org_save_payment_settings: {
+        Args: {
+          p_org: string
+          p_enabled: boolean
+          p_allow_partial: boolean
+          p_min_partial: number
+          p_pending_minutes: number
+        }
+        Returns: undefined
+      }
+      org_set_payment_provider_state: {
+        Args: {
+          p_provider: string
+          p_active: boolean
+          p_default: boolean
+          p_priority: number
+        }
+        Returns: undefined
       }
       organization_portal: {
         Args: {
@@ -10896,6 +11556,12 @@ export type Database = {
         Args: {
           p_plan: string
           p_active: boolean
+        }
+        Returns: undefined
+      }
+      platform_set_school_payments: {
+        Args: {
+          p_enabled: boolean
         }
         Returns: undefined
       }
