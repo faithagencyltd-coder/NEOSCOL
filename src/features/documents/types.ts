@@ -122,6 +122,8 @@ export type ReceiptSnapshot = {
   organization: DocOrganization;
   student: DocStudent;
   class_name: string | null;
+  /** Année scolaire en cours (absent des reçus émis avant son ajout). */
+  year?: string | null;
   payment: {
     id: string;
     number: string;
@@ -133,6 +135,8 @@ export type ReceiptSnapshot = {
     received_by_name: string | null;
     balance_after: number | null;
     status: string;
+    /** Motif affiché (paiement en ligne : échéance ou solde payé). */
+    purpose?: string | null;
   };
   invoice: { number: string; total: number };
 };

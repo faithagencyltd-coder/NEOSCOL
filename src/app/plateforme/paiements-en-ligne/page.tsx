@@ -2,12 +2,18 @@ import { Plus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { SubmitButton } from "@/components/shared/submit-button";
 import { Alert } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { setSchoolPaymentsGlobal } from "@/features/fee-payments/actions";
+import { FeeForm } from "@/features/fee-payments/components/fee-form";
 import { GatewayCard, type GatewayView } from "@/features/platform/components/gateway-card";
 import { encryptionKeyFrom } from "@/lib/messaging/crypto";
 import { customDefinitionSchema, customGatewayDefinition } from "@/lib/payments/custom-definition";
 import { GATEWAYS, type GatewayDefinition } from "@/lib/payments/gateways";
+import { GLOBAL_OFF_MESSAGE } from "@/lib/payments/school-adapters";
 import { publicBaseUrl } from "@/lib/site-url";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Paiements en ligne — Plateforme" };
@@ -32,6 +38,17 @@ export default async function PlatformGatewaysPage() {
     const parsed = customDefinitionSchema.safeParse(c.definition);
     if (parsed.success) customDefs.push({ ...customGatewayDefinition(c.provider, p?.name ?? c.provider, p?.description ?? null, parsed.data), archived: !p?.is_active });
   }
+
+  // Paiements des familles (frais de scolarité) : interrupteur global, réglages des établissements conservés.
+  const { data: schoolSwitch } = await supabase.from("platform_payment_settings").select("school_payments_enabled, updated_at").eq("id", 1).maybeSingle();
+  const schoolEnabled = schoolSwitch?.school_payments_enabled ?? false;
+  const admin = createAdminClient();
+  const [orgsOn, providersOn] = admin
+    ? await Promise.all([
+        admin.from("org_payment_settings").select("organization_id", { count: "exact", head: true }).eq("online_enabled", true),
+        admin.from("org_payment_providers").select("id", { count: "exact", head: true }).eq("is_active", true),
+      ])
+    : [{ count: null }, { count: null }];
 
   const gateways: GatewayView[] = [...GATEWAYS, ...customDefs].map((def) => {
     const row = rows?.find((r) => r.provider === def.code);
@@ -66,6 +83,28 @@ export default async function PlatformGatewaysPage() {
         <Plus className="size-4" aria-hidden /> Ajouter un agrégateur
       </Link>
       </div>
+      <section className="grid gap-4 rounded-3xl border border-border bg-surface p-5" data-testid="school-payments-global">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="grid gap-1">
+            <h3 className="text-lg font-bold">Paiements des familles dans les établissements</h3>
+            <p className="text-sm text-muted-foreground">
+              Interrupteur global du paiement en ligne des frais (portail parent). Le désactiver ne supprime rien : réglages, fournisseurs, clés,
+              transactions et reçus des établissements sont conservés.
+            </p>
+          </div>
+          <Badge tone={schoolEnabled ? "success" : "danger"}>{schoolEnabled ? "Activés" : "Désactivés"}</Badge>
+        </div>
+        {!schoolEnabled ? <Alert tone="warning">{GLOBAL_OFF_MESSAGE}</Alert> : null}
+        <p className="text-xs text-muted-foreground">
+          {orgsOn.count ?? "—"} établissement(s) avec le paiement en ligne activé · {providersOn.count ?? "—"} fournisseur(s) actif(s).
+        </p>
+        <FeeForm action={setSchoolPaymentsGlobal} className="flex flex-wrap items-center gap-3">
+          <input type="hidden" name="enabled" value={schoolEnabled ? "off" : "on"} />
+          <SubmitButton variant={schoolEnabled ? "danger" : "primary"} pendingLabel="Enregistrement…">
+            {schoolEnabled ? "Désactiver pour tous les établissements" : "Activer pour tous les établissements"}
+          </SubmitButton>
+        </FeeForm>
+      </section>
       {!encryptionReady() ? <Alert tone="danger" title="Chiffrement indisponible">La clé de service Supabase est absente du serveur : impossible d&apos;enregistrer des clés.</Alert> : null}
       {!anyEnabled ? (
         <Alert tone="warning" title="Aucune passerelle proposée pour l'instant">

@@ -184,6 +184,7 @@ export function Signatures({
   date,
   showStamp = true,
   signatory = null,
+  compact = false,
 }: {
   labels: string[];
   organization: DocOrganization;
@@ -192,16 +193,18 @@ export function Signatures({
   showStamp?: boolean;
   /** Nom imprimé sous la dernière signature (signataire officiel). */
   signatory?: string | null;
+  /** Bloc étroit (colonne) : pleine largeur, sans marge haute. */
+  compact?: boolean;
 }) {
   const place = organization.city ? `Fait à ${organization.city}, le ` : "Fait le ";
   return (
-    <View wrap={false} style={{ marginTop: 14 }}>
+    <View wrap={false} style={{ marginTop: compact ? 0 : 14 }}>
       <Text style={{ textAlign: "right", marginBottom: 6 }}>{pdfText(place + pdfDate(date, organization.timezone, true))}</Text>
       <View style={{ flexDirection: "row", justifyContent: labels.length > 1 ? "space-between" : "flex-end", gap: 12 }}>
         {labels.map((label, index) => {
           const main = index === labels.length - 1;
           return (
-            <View key={label} style={{ width: labels.length > 1 ? `${Math.floor(100 / labels.length) - 2}%` : "45%", alignItems: "center" }}>
+            <View key={label} style={{ width: labels.length > 1 ? `${Math.floor(100 / labels.length) - 2}%` : compact ? "100%" : "45%", alignItems: "center" }}>
               <Text style={styles.bold}>{pdfText(label)}</Text>
               <View style={{ height: 56, justifyContent: "center", alignItems: "center", flexDirection: "row", gap: 4 }}>
                 {main && showStamp && images.stamp ? <Image src={images.stamp} style={{ width: 54, height: 54, objectFit: "contain", opacity: 0.85 }} /> : null}

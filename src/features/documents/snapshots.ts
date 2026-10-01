@@ -195,18 +195,21 @@ export async function buildReportCardSnapshots(
 export async function buildReceiptSnapshot(supabase: Client, organization: DocOrganization, paymentId: string): Promise<ReceiptSnapshot | null> {
   const { data: payment } = await supabase
     .from("payments")
-    .select(`id, number, amount, method, reference, payer_name, paid_at, received_by_name, balance_after, status,
+    .select(`id, number, amount, method, reference, payer_name, paid_at, received_by_name, balance_after, status, notes,
              invoice:invoices(number, total), student:students(${STUDENT_FIELDS})`)
     .eq("organization_id", organization.id)
     .eq("id", paymentId)
     .maybeSingle();
   if (!payment?.student || !payment.invoice) return null;
-  const { className } = await currentClass(supabase, organization.id, payment.student.id);
+  const { className, year } = await currentClass(supabase, organization.id, payment.student.id);
+  // Paiement en ligne : « Paiement en ligne NEO-… — <motif> (MODE TEST) » → motif seul.
+  const online = payment.notes?.match(/^Paiement en ligne NEO-\S+ — (.+?)( \(MODE TEST\))?$/);
   return {
     kind: "receipt",
     organization,
     student: docStudent(payment.student as StudentRow),
     class_name: className,
+    year,
     payment: {
       id: payment.id,
       number: payment.number,
@@ -218,6 +221,7 @@ export async function buildReceiptSnapshot(supabase: Client, organization: DocOr
       received_by_name: payment.received_by_name,
       balance_after: num(payment.balance_after),
       status: payment.status,
+      purpose: online ? `${(online[1] ?? "").replace(/ — facture \S+$/, "")} · en ligne${online[2] ? " (MODE TEST)" : ""}` : null,
     },
     invoice: { number: payment.invoice.number, total: Number(payment.invoice.total) },
   };

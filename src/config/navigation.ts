@@ -160,6 +160,7 @@ export const NAVIGATION: NavSection[] = [
       { href: "/finances?onglet=rappels", label: "Rappels d'impayés", icon: "notifications", anyOf: ["finance.read"], keywords: "rappels relances notifications familles" },
       { href: "/finances?onglet=depenses", label: "Dépenses", icon: "expenses", anyOf: ["finance.expenses.read", "finance.expenses.manage"], keywords: "dépenses fournisseurs justificatifs" },
       { href: "/finances?onglet=tarifs", label: "Frais et tarifs", icon: "templates", anyOf: ["finance.read"], keywords: "tarifs frais scolarité échéancier tranches" },
+      { href: "/finances/paiements-en-ligne", label: "Paiements en ligne", icon: "payments", anyOf: ["finance.read"], keywords: "mobile money carte agrégateur transactions remboursements rapprochement en ligne" },
     ],
   },
   {
@@ -192,6 +193,7 @@ export const NAVIGATION: NavSection[] = [
       { href: "/parametres/etablissement", label: "Établissement", icon: "school", anyOf: ["settings.manage"], keywords: "identité logo couleurs cachet signature coordonnées en-tête" },
       { href: "/abonnement", label: "Mon abonnement", icon: "subscription", anyOf: ["billing.read"], keywords: "abonnement NeoScool formule facture paiement essai renouveler tarif" },
       { href: "/parametres", label: "Configuration", icon: "settings", anyOf: ["settings.manage"], keywords: "impayés restrictions rappels pointage notes verrouillage" },
+      { href: "/parametres/paiements", label: "Paiements en ligne", icon: "payments", anyOf: ["finance.online.manage"], keywords: "fournisseur agrégateur mobile money carte clés activation paiement familles" },
       { href: "/bulletins/configuration", label: "Modèle de bulletin", icon: "templates", anyOf: ["report_cards.manage"], keywords: "bulletin colonnes coefficients modèle" , family: "school" },
       { href: "/parametres/cartes", label: "Cartes et badges", icon: "badges", anyOf: ["settings.manage"], keywords: "carte scolaire carte apprenant carte étudiant badge design modèle couleurs verso 3D" },
       { href: "/parametres/messages-vocaux", label: "Messages vocaux", icon: "settings", anyOf: ["voice_checkin.manage"], keywords: "voice check-in voix annonce arrivée pointage tablette synthèse vocale" },
@@ -291,6 +293,7 @@ export const UNIVERSITY_NAVIGATION: NavSection[] = [
       { href: "/finances", label: "Paiements universitaires", icon: "finance", anyOf: ["finance.read"], feature: "payments", keywords: "frais inscription scolarité examen soutenance diplôme" },
       { href: "/finances?onglet=impayes", label: "Reliquats", icon: "overdue", anyOf: ["finance.read"], feature: "payments", keywords: "reste à payer tranches échéances" },
       { href: "/finances?onglet=tarifs", label: "Frais universitaires", icon: "templates", anyOf: ["finance.read"], feature: "payments", keywords: "tarifs tranches échéancier" },
+      { href: "/finances/paiements-en-ligne", label: "Paiements en ligne", icon: "payments", anyOf: ["finance.read"], feature: "payments", keywords: "mobile money carte agrégateur transactions remboursements rapprochement" },
     ],
   },
   {
@@ -329,6 +332,7 @@ export const UNIVERSITY_NAVIGATION: NavSection[] = [
     label: "Paramètres",
     items: [
       { href: "/universite/parametres", label: "Paramètres universitaires", icon: "settings", anyOf: ["settings.manage"], keywords: "fonctionnalités règles calcul compensation rattrapage crédits classement" },
+      { href: "/parametres/paiements", label: "Paiements en ligne", icon: "payments", anyOf: ["finance.online.manage"], feature: "payments", keywords: "fournisseur agrégateur mobile money carte clés activation" },
       { href: "/parametres/cartes", label: "Cartes et badges", icon: "badges", anyOf: ["settings.manage"], keywords: "carte étudiant badge design modèle couleurs verso 3D" },
       { href: "/parametres/etablissement", label: "Établissement", icon: "school", anyOf: ["settings.manage"], keywords: "logo cachet signature coordonnées site web" },
       { href: "/abonnement", label: "Mon abonnement", icon: "subscription", anyOf: ["billing.read"], keywords: "abonnement" },

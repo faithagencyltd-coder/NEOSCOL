@@ -1,14 +1,21 @@
-import { BellRing, Download, Receipt, Wallet } from "lucide-react";
+import { BellRing, CreditCard, Download, Receipt, Wallet } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getFeeOptions, getStudentFeeTransactions } from "@/features/fee-payments/queries";
+import { expireStaleFeePayments } from "@/features/fee-payments/server";
 import { requirePortalSection } from "@/features/portal/context";
 import { getStudentFinance } from "@/features/portal/queries";
 import { todayIn } from "@/lib/dates";
 import { INVOICE_PAYMENT_STATUS, PAYMENT_METHOD } from "@/lib/labels";
+import { GLOBAL_OFF_MESSAGE, methodLabel, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_TONES } from "@/lib/payments/school-adapters";
+import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils/cn";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/utils/format";
 
@@ -23,21 +30,63 @@ const REMINDER_KIND: Record<string, string> = {
 
 /** Situation financière : factures, échéancier, paiements et reçus (jamais restreinte). */
 export default async function PortalFinancePage() {
-  const { organization, student, status } = await requirePortalSection("finances");
+  const { organization, student, status, parent } = await requirePortalSection("finances");
   if (!student) return <EmptyState icon={Wallet} title="Aucun dossier rattaché" />;
-  const { invoices, payments, reminders, installments } = await getStudentFinance(organization.id, student.id);
+  await expireStaleFeePayments(organization.id);
+  const supabase = await createClient();
+  const [{ invoices, payments, reminders, installments }, options, online, { data: year }] = await Promise.all([
+    getStudentFinance(organization.id, student.id),
+    getFeeOptions(organization.id),
+    getStudentFeeTransactions(organization.id, student.id),
+    student.academic_year_id ? supabase.from("academic_years").select("name").eq("id", student.academic_year_id).maybeSingle() : Promise.resolve({ data: null }),
+  ]);
   const currency = organization.currency;
   const money = (v: number | string | null) => formatMoney(Number(v ?? 0), currency);
   const today = todayIn(organization.timezone);
+  const billed = invoices.filter((i) => i.status !== "cancelled");
+  const totalBilled = billed.reduce((sum, i) => sum + Number(i.total ?? 0), 0);
+  const totalPaid = billed.reduce((sum, i) => sum + Number(i.paid ?? 0), 0);
+  // Bouton « Payer maintenant » : parent, paiement ouvert (plateforme + établissement) et au moins un fournisseur actif.
+  const canPay = parent && options.open && options.providers.length > 0;
+  const pendingOnline = online.filter((t) => t.status === "PENDING" || t.status === "PROCESSING");
+  const doneOnline = online.filter((t) => t.status !== "PENDING" && t.status !== "PROCESSING");
 
   return (
     <>
       <div className="grid gap-1">
         <h1 className="text-xl font-bold">Finances</h1>
         <p className="text-sm text-muted-foreground">
-          {student.first_name} {student.last_name} · les paiements sont enregistrés par l&apos;établissement ; le reçu est disponible ici aussitôt.
+          {student.first_name} {student.last_name} · {canPay ? "payez en ligne une échéance ou le solde ; le reçu est disponible ici dès la confirmation." : "les paiements sont enregistrés par l'établissement ; le reçu est disponible ici aussitôt."}
         </p>
       </div>
+
+      {parent && options.org_enabled && !options.global_enabled ? <Alert tone="warning">{GLOBAL_OFF_MESSAGE}</Alert> : null}
+
+      <Card className="grid gap-3 p-4 sm:grid-cols-[1.2fr_1fr_1fr_1fr]" data-testid="portal-finance-summary">
+        <div className="grid gap-0.5">
+          <span className="text-xs font-medium text-muted-foreground">Élève</span>
+          <span className="font-semibold">
+            {student.first_name} {student.last_name}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {student.matricule}
+            {student.class_name ? ` · ${student.class_name}` : ""}
+            {year?.name ? ` · ${year.name}` : ""}
+          </span>
+        </div>
+        <div className="grid gap-0.5">
+          <span className="text-xs font-medium text-muted-foreground">Total facturé</span>
+          <span className="text-lg font-bold tabular-nums">{money(totalBilled)}</span>
+        </div>
+        <div className="grid gap-0.5">
+          <span className="text-xs font-medium text-muted-foreground">Total payé</span>
+          <span className="text-lg font-bold tabular-nums text-success">{money(totalPaid)}</span>
+        </div>
+        <div className="grid gap-0.5">
+          <span className="text-xs font-medium text-muted-foreground">Paiements en attente</span>
+          <span className="text-lg font-bold tabular-nums">{pendingOnline.length}</span>
+        </div>
+      </Card>
 
       <section aria-label="Synthèse" className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Card className="grid gap-1 p-3.5">
@@ -112,9 +161,16 @@ export default async function PortalFinancePage() {
                       })}
                     </ul>
                   ) : null}
-                  <a href={`/api/documents/factures/${inv.invoice_id}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 justify-self-start text-sm font-semibold text-primary hover:underline">
-                    <Download className="size-4" aria-hidden /> Facture (PDF)
-                  </a>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <a href={`/api/documents/factures/${inv.invoice_id}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
+                      <Download className="size-4" aria-hidden /> Facture (PDF)
+                    </a>
+                    {canPay && inv.status === "issued" && Number(inv.balance ?? 0) > 0 ? (
+                      <Link href={`/portail/finances/payer?facture=${inv.invoice_id}`} className={buttonVariants({ size: "sm" })} data-testid="pay-now">
+                        <CreditCard aria-hidden /> PAYER MAINTENANT
+                      </Link>
+                    ) : null}
+                  </div>
                 </div>
               );
             })
@@ -154,6 +210,61 @@ export default async function PortalFinancePage() {
           )}
         </CardContent>
       </Card>
+
+      {online.length > 0 ? (
+        <Card data-testid="portal-online-payments">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="size-4 text-primary" aria-hidden /> Paiements en ligne
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            {pendingOnline.length > 0 ? (
+              <div className="grid gap-2">
+                <h3 className="text-sm font-semibold">En attente de confirmation</h3>
+                <ul className="grid gap-2">
+                  {pendingOnline.map((t) => (
+                    <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-info-soft/40 px-3 py-2 text-sm">
+                      <span className="grid">
+                        <span className="font-semibold tabular-nums">{formatMoney(Number(t.amount), t.currency)}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {t.purpose} · {t.provider_label} · {t.internal_reference}
+                        </span>
+                      </span>
+                      <Link href={`/portail/finances/retour?ref=${t.internal_reference}`} className="text-sm font-semibold text-primary hover:underline">
+                        Vérifier le statut
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {doneOnline.length > 0 ? (
+              <div className="grid gap-2">
+                <h3 className="text-sm font-semibold">Historique</h3>
+                <ul className="divide-y divide-border">
+                  {doneOnline.map((t) => (
+                    <li key={t.id} className="flex flex-wrap items-center gap-3 py-2.5 text-sm">
+                      <span className="grid min-w-0 flex-1">
+                        <span className="font-semibold tabular-nums">{formatMoney(Number(t.amount), t.currency)}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDateTime(t.created_at, "fr-FR", organization.timezone)} · {t.provider_label} · {methodLabel(t.method)} · {t.internal_reference}
+                        </span>
+                      </span>
+                      <Badge tone={PAYMENT_STATUS_TONES[t.status] ?? "neutral"}>{PAYMENT_STATUS_LABELS[t.status] ?? t.status}</Badge>
+                      {t.payment_id ? (
+                        <a href={`/api/documents/recus/${t.payment_id}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 font-semibold text-primary hover:underline">
+                          <Download className="size-4" aria-hidden /> Reçu
+                        </a>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
 
       {reminders.length > 0 ? (
         <Card>

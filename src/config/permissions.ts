@@ -55,6 +55,7 @@ export const PERMISSIONS = [
   "finance.expenses.read",
   "finance.expenses.manage",
   "finance.expenses.delete",
+  "finance.online.manage",
   "documents.read",
   "documents.generate",
   "documents.revoke",

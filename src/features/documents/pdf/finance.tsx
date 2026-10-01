@@ -29,16 +29,21 @@ export function ReceiptPage({ snapshot, images, verification, issuedAt }: { snap
         rows={[
           [vocabularyFor(org.type).student, `${student.last_name} ${student.first_name}`],
           ["Matricule", student.matricule],
-          [vocabularyFor(snapshot.organization.type).klass, snapshot.class_name],
-          ["Facture", snapshot.invoice.number],
+          [vocabularyFor(snapshot.organization.type).klass, [snapshot.class_name, snapshot.year].filter(Boolean).join(" · ") || null],
           ["Versé par", payment.payer_name],
+          [payment.purpose ? "Facture / motif" : "Facture", payment.purpose ? `${snapshot.invoice.number} — ${payment.purpose}` : snapshot.invoice.number],
           ["Mode de paiement", `${PAYMENT_METHOD[payment.method] ?? payment.method}${payment.reference ? ` — réf. ${payment.reference}` : ""}`],
         ]}
       />
-      <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
+      <View style={{ flexDirection: "row", gap: 10, marginTop: 10, alignItems: "flex-start" }}>
         <View style={[styles.box, { flex: 1.3, borderLeftWidth: 3, borderLeftColor: org.accent_color }]}>
           <Text style={{ color: COLORS.muted }}>Montant reçu</Text>
-          <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 18, color: org.primary_color }}>{pdfMoney(payment.amount, currency)}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 18, color: org.primary_color }}>{pdfMoney(payment.amount, currency)}</Text>
+            {payment.status === "completed" ? (
+              <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 10, color: "#15803d", borderWidth: 1, borderColor: "#15803d", borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1, letterSpacing: 1.5 }}>PAYÉ</Text>
+            ) : null}
+          </View>
         </View>
         <View style={[styles.box, { flex: 1 }]}>
           <Text style={{ color: COLORS.muted }}>Total de la facture</Text>
@@ -46,8 +51,10 @@ export function ReceiptPage({ snapshot, images, verification, issuedAt }: { snap
           <Text style={{ color: COLORS.muted, marginTop: 3 }}>Reste à payer après ce versement</Text>
           <Text style={styles.bold}>{pdfMoney(payment.balance_after ?? 0, currency)}</Text>
         </View>
+        <View style={{ flex: 1.1 }}>
+          <Signatures labels={[`Reçu par ${payment.received_by_name ?? "la caisse"}`]} organization={org} images={images} date={issuedAt} showStamp compact />
+        </View>
       </View>
-      <Signatures labels={[`Reçu par ${payment.received_by_name ?? "la caisse"}`]} organization={org} images={images} date={issuedAt} showStamp />
       <DocFooter organization={org} verification={verification} />
     </Page>
   );
