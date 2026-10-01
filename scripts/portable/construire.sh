@@ -42,6 +42,8 @@ mkdir -p "$OUT/app/.next/static" "$OUT/app/public"
 cp -r "$BUILD/.next/static/." "$OUT/app/.next/static/"
 cp -r "$BUILD/public/." "$OUT/app/public/"
 rm -rf "$BUILD"
+# Fichiers de traçage du build (inutiles à l'exécution) : paquet plus léger.
+find "$OUT/app" -name "*.nft.json" -delete
 # Contrôle : les images publiques doivent être servies depuis app/public.
 for f in sw.js site/captures/s-dashboard.webp; do
   [[ -f "$OUT/app/public/$f" ]] || { echo "✘ fichier public manquant : $f" >&2; exit 1; }
