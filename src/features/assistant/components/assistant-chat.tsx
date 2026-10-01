@@ -3,6 +3,7 @@
 import { Bot, Loader2, Send, ShieldCheck, User } from "lucide-react";
 import { useState, useTransition } from "react";
 
+import { AssistantIllustration } from "@/components/illustrations/scenes";
 import { Button } from "@/components/ui/button";
 import { askAssistant } from "@/features/assistant/actions";
 import type { AssistantAnswer, AssistantTurn } from "@/features/assistant/engine";
@@ -63,14 +64,12 @@ export function AssistantChat({ llm }: { llm: boolean }) {
       </div>
       <div className="grid min-h-80 content-start gap-3 rounded-2xl border border-border bg-surface p-4" aria-live="polite">
         {messages.length === 0 ? (
-          <div className="grid justify-items-center gap-3 py-8 text-center">
-            <span className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0b2559] to-[#1d63ed] text-white">
-              <Bot className="size-6" aria-hidden />
-            </span>
+          <div className="grid justify-items-center gap-3 py-4 text-center">
+            <AssistantIllustration className="anim-fade-up w-52" />
             <p className="font-semibold">Posez une question sur votre établissement</p>
             <div className="flex flex-wrap justify-center gap-2">
               {SUGGESTIONS.map((s) => (
-                <button key={s} type="button" onClick={() => send(s)} className="rounded-full border border-border px-3 py-1.5 text-sm hover:border-primary hover:text-primary">
+                <button key={s} type="button" onClick={() => send(s)} className="rounded-full border border-border px-3 py-1.5 text-sm transition-[color,border-color,transform] duration-200 hover:-translate-y-px hover:border-primary hover:text-primary active:scale-[0.97]">
                   {s}
                 </button>
               ))}

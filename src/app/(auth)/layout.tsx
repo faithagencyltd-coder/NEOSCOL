@@ -3,6 +3,7 @@ import { Building2, CheckCircle2, GraduationCap, Landmark, School, ShieldCheck, 
 import Link from "next/link";
 
 import { BrandName, LogoMark } from "@/components/shared/logo";
+import { SitePhoto } from "@/features/marketing/components/site-photo";
 
 const SECTORS = [
   { label: "Écoles", icon: School },
@@ -58,7 +59,13 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </span>
         </div>
 
-        <div className="relative grid max-w-xl gap-6">
+        {/* Élève réelle (photo détourée) : l'humain au cœur de la plateforme. */}
+        <div aria-hidden className="anim-fade-up pointer-events-none absolute bottom-[8.6rem] right-6 w-[31%] max-w-[16rem] [--delay:260ms] xl:right-10">
+          <div className="absolute inset-x-[8%] bottom-[6%] top-[20%] rounded-full bg-cyan-400/25 blur-3xl" />
+          <SitePhoto name="lyceenne-portrait" decorative priority sizes="272px" className="relative drop-shadow-[0_30px_40px_rgba(0,0,0,0.45)]" />
+        </div>
+
+        <div className="relative grid max-w-[60%] gap-6 xl:max-w-xl">
           <h1 className="anim-fade-up text-4xl font-semibold leading-tight [--delay:120ms] xl:text-5xl">
             Gérez aujourd&apos;hui
             <br />

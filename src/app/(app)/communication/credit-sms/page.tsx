@@ -114,7 +114,7 @@ export default async function SmsCreditPage({ searchParams }: PageProps<"/commun
           <CardTitle>Mouvements du crédit</CardTitle>
         </CardHeader>
         {(movements ?? []).length === 0 ? (
-          <EmptyState icon={Wallet} title="Aucun mouvement" description="Les achats, envois et recrédits apparaîtront ici." />
+          <EmptyState icon={Wallet} illustration="payments" title="Aucun mouvement" description="Les achats, envois et recrédits apparaîtront ici." />
         ) : (
           <Table data-testid="sms-movements">
             <THead>

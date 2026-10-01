@@ -516,3 +516,38 @@ h2,
   background-image: linear-gradient(rgba(11, 37, 89, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(11, 37, 89, 0.05) 1px, transparent 1px);
   background-size: 56px 56px;
 }
+
+/* ---------------------------------------------------------------------------
+   Illustrations NEOSCOOL (src/components/illustrations) : mouvements discrets,
+   transform/opacity uniquement, arrêtés si l'utilisateur demande moins de mouvement.
+   --------------------------------------------------------------------------- */
+.ill g, .ill rect, .ill path, .ill circle { transform-box: fill-box; }
+@keyframes ill-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.ill-float { animation: ill-float 5s ease-in-out infinite; }
+.ill-float-slow { animation: ill-float 7.5s ease-in-out infinite -2s; }
+@keyframes ill-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.12); opacity: 0.8; } }
+.ill-pulse { animation: ill-pulse 2.8s ease-in-out infinite; transform-origin: center; }
+@keyframes ill-beam { 0%, 100% { transform: translateY(0); opacity: 0.2; } 50% { transform: translateY(78px); opacity: 1; } }
+.ill-beam { animation: ill-beam 2.6s var(--ease-in-out) infinite; }
+@keyframes ill-twinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.ill-sparkle { animation: ill-twinkle 3.2s ease-in-out infinite; }
+@keyframes ill-bar { from { transform: scaleY(0); } }
+.ill-bar { transform-origin: bottom; animation: ill-bar 900ms var(--ease-out) both; }
+@keyframes ill-bar-x { from { transform: scaleX(0); } }
+.ill-bar-x { transform-origin: left; animation: ill-bar-x 900ms var(--ease-out) both; }
+@keyframes ill-pop { from { opacity: 0; transform: translateY(8px) scale(0.94); } }
+.ill-pop { animation: ill-pop 600ms var(--ease-out) both; }
+@keyframes ill-draw { from { stroke-dashoffset: 320; } to { stroke-dashoffset: 0; } }
+.ill-draw { stroke-dasharray: 320; animation: ill-draw 1.6s var(--ease-out) both; }
+.ill-dash { animation: site-dash 1.4s linear infinite; }
+@keyframes ill-spin { to { transform: rotate(360deg); } }
+.ill-spin { animation: ill-spin 9s linear infinite; transform-origin: center; }
+@media (prefers-reduced-motion: reduce) {
+  .ill-float, .ill-float-slow, .ill-pulse, .ill-beam, .ill-sparkle, .ill-bar, .ill-bar-x, .ill-pop, .ill-draw, .ill-dash, .ill-spin { animation: none !important; }
+  .ill-draw { stroke-dasharray: none; }
+}
+
+/* Photos du site : légère mise à l'échelle au survol (cartes photo), sans décalage de mise en page. */
+.photo-zoom img { transition: transform 900ms var(--ease-out); }
+.photo-zoom:hover img { transform: scale(1.035); }
+@media (prefers-reduced-motion: reduce) { .photo-zoom:hover img { transform: none; } }

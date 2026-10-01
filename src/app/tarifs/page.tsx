@@ -1,10 +1,12 @@
 import { BadgeCheck, BadgePercent, CalendarClock, CreditCard, Database, ShieldCheck, Smartphone } from "lucide-react";
 import type { Metadata } from "next";
 
+import { PaymentsIllustration } from "@/components/illustrations/scenes";
 import { PricingGrid } from "@/features/billing/components/pricing-grid";
 import { PublicShell } from "@/features/billing/components/public-shell";
 import { listPlans } from "@/features/billing/queries";
 import { TRIAL_DAYS } from "@/features/billing/constants";
+import { SitePhoto } from "@/features/marketing/components/site-photo";
 import { defaultFaq } from "@/features/site/faq";
 import { getSiteSettings } from "@/lib/site-settings";
 import { createClient } from "@/lib/supabase/server";
@@ -26,8 +28,13 @@ export default async function PricingPage() {
   const faq = site.faq.length ? site.faq : defaultFaq(trialDays);
   return (
     <PublicShell>
-      <section className="relative -mt-px bg-gradient-to-br from-[#0b2559] via-[#0e3a82] to-[#0e4a9a] pb-10 pt-6 text-center text-white">
-        <div className="mx-auto grid max-w-3xl gap-3 px-4">
+      <section className="relative -mt-px overflow-hidden bg-gradient-to-br from-[#0b2559] via-[#0e3a82] to-[#0e4a9a] pb-10 pt-6 text-center text-white lg:pb-14 lg:pt-10">
+        <div aria-hidden className="pointer-events-none absolute -right-20 -top-24 size-[26rem] rounded-full bg-cyan-400/15 blur-3xl" />
+        {/* Élève réelle (détourée) : l'établissement, c'est d'abord ses élèves. */}
+        <div className="anim-fade-up pointer-events-none absolute bottom-0 right-[4%] hidden w-56 [--delay:200ms] lg:block xl:w-64">
+          <SitePhoto name="lyceenne-portrait" decorative sizes="256px" className="drop-shadow-[0_20px_30px_rgba(0,0,0,0.35)]" />
+        </div>
+        <div className="relative mx-auto grid max-w-3xl gap-3 px-4">
           <p className="anim-fade-up text-xs font-semibold uppercase tracking-widest text-cyan-300">Tarifs NeoScool</p>
           <h1 className="anim-fade-up text-3xl font-bold leading-tight [--delay:80ms] sm:text-4xl">Une formule adaptée à chaque établissement</h1>
           <p className="anim-fade-up text-base text-sky-100/85 [--delay:160ms]">
@@ -74,6 +81,17 @@ export default async function PricingPage() {
               </span>
             </div>
           ))}
+        </section>
+
+        <section aria-label="Paiement en ligne" className="grid items-center gap-6 overflow-hidden rounded-3xl border border-border bg-surface p-6 sm:grid-cols-[14rem_1fr] sm:p-8">
+          <PaymentsIllustration className="mx-auto max-w-56" />
+          <div className="grid gap-2">
+            <h2 className="text-xl font-bold">Payer en quelques secondes</h2>
+            <p className="text-muted-foreground">
+              Mobile Money ou carte, directement depuis « Mon abonnement ». Le paiement est vérifié auprès du prestataire avant d&apos;activer quoi que ce soit ;
+              la facture PDF est disponible aussitôt.
+            </p>
+          </div>
         </section>
 
         <section aria-labelledby="faq" className="mx-auto grid w-full max-w-3xl gap-3">

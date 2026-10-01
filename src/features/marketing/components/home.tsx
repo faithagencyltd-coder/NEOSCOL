@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { ILLUSTRATIONS, type IllustrationName } from "@/components/illustrations/scenes";
 import { PLAN_ACCENTS } from "@/features/billing/constants";
 import { listPlans } from "@/features/billing/queries";
 import { DICTS, route, type Locale } from "@/features/marketing/content";
@@ -30,6 +31,20 @@ import { formatMoney } from "@/lib/utils/format";
 
 import { ActorTabs, BadgeScene, ConnectedHub, CountryShowcase, DataJourney, OfflineScene, SchoolFlow, Screen, VideoGallery, type CountryCard } from "./interactive";
 import { Reveal } from "./reveal";
+import { SitePhoto } from "./site-photo";
+
+/** Illustration NEOSCOOL de chaque fonctionnalité (une scène par fonction, aucune répétée). */
+const FEATURE_ILLUSTRATIONS: Record<string, IllustrationName> = {
+  badge: "attendance",
+  ai: "assistant",
+  notifications: "communication",
+  automation: "automation",
+  offline: "offline",
+  documents: "documents",
+  stats: "stats",
+  audit: "audit",
+  security: "security",
+};
 
 const FEATURE_ICONS: Record<string, typeof IdCard> = {
   badge: IdCard,
@@ -147,13 +162,32 @@ export async function HomePage({ locale }: { locale: Locale }) {
             </div>
           </div>
           <div className="relative" id="logiciel">
-            <div className="site-float">
-              <Screen name="s-dashboard" alt={locale === "fr" ? "Tableau de bord de la direction dans NeoScool" : "Management dashboard in NeoScool"} priority />
+            {/* Photo réelle : l'humain d'abord, le logiciel en surimpression. */}
+            <div className="anim-fade-up relative [--delay:120ms]">
+              <div aria-hidden className="absolute -inset-3 rotate-2 rounded-[2.5rem] bg-gradient-to-br from-[#1d63ed]/20 via-sky-300/20 to-transparent" />
+              <SitePhoto
+                name="eleves-campus"
+                locale={locale}
+                fill
+                priority
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                position="35% 30%"
+                className="photo-zoom relative aspect-[4/3] rounded-[2rem] shadow-[0_40px_80px_-30px_rgba(11,37,89,0.55)] ring-1 ring-[#0b2559]/10 lg:aspect-[5/4]"
+              />
+              <div className="site-float absolute -bottom-10 -left-4 w-[62%] sm:-left-10 sm:w-[58%]">
+                <Screen name="s-dashboard" alt={locale === "fr" ? "Tableau de bord de la direction dans NeoScool" : "Management dashboard in NeoScool"} />
+              </div>
+              <div className="absolute -right-3 top-6 hidden items-center gap-2.5 rounded-2xl bg-white/95 px-3.5 py-2.5 shadow-xl ring-1 ring-[#0b2559]/10 backdrop-blur sm:flex [animation:site-float_6s_ease-in-out_infinite_-2s]">
+                <span className="flex size-8 items-center justify-center rounded-full bg-emerald-500 text-white">
+                  <ShieldCheck className="size-4" aria-hidden />
+                </span>
+                <span className="grid text-xs leading-tight">
+                  <strong className="text-[#0b2559]">{locale === "fr" ? "Arrivée enregistrée" : "Arrival recorded"}</strong>
+                  <span className="text-[#0b2559]/60">{locale === "fr" ? "Parents prévenus" : "Parents notified"}</span>
+                </span>
+              </div>
             </div>
-            <div className="absolute -bottom-10 -left-10 hidden w-[32%] min-w-[7.5rem] sm:block">
-              <Screen name="s-portail" alt={locale === "fr" ? "Portail des parents sur téléphone" : "Parent portal on a phone"} />
-            </div>
-            <p className="mt-4 text-right text-xs text-[#0b2559]/50 sm:mt-14">{t.hero.captionDemo}</p>
+            <p className="mt-14 text-right text-xs text-[#0b2559]/50">{t.hero.captionDemo}</p>
           </div>
         </div>
       </section>
@@ -280,13 +314,18 @@ export async function HomePage({ locale }: { locale: Locale }) {
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {t.features.list.map((f, i) => {
               const Icon = FEATURE_ICONS[f.key] ?? Sparkles;
+              const Illustration = FEATURE_ILLUSTRATIONS[f.key] ? ILLUSTRATIONS[FEATURE_ILLUSTRATIONS[f.key]!] : null;
               return (
-                <Reveal as="li" key={f.key} delay={(i % 3) * 80} className="group rounded-3xl border border-[#0b2559]/10 bg-[#f6f8fc] p-6 transition-all hover:-translate-y-1 hover:bg-white hover:shadow-[0_24px_48px_-30px_rgba(11,37,89,0.5)]">
-                  <span className="flex size-12 items-center justify-center rounded-2xl bg-white text-[#1d63ed] shadow-sm ring-1 ring-[#0b2559]/10 transition-transform group-hover:scale-110">
-                    <Icon className="size-6" aria-hidden />
-                  </span>
-                  <h3 className="mt-4 font-display text-lg font-semibold text-[#0b2559]">{f.title}</h3>
-                  <p className="mt-1 text-sm text-[#0b2559]/65">{f.text}</p>
+                <Reveal as="li" key={f.key} delay={(i % 3) * 80} className="group flex flex-col overflow-hidden rounded-3xl border border-[#0b2559]/10 bg-[#f6f8fc] transition-[transform,box-shadow,background-color] duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-[0_24px_48px_-30px_rgba(11,37,89,0.5)]">
+                  <div className="relative bg-gradient-to-b from-white to-[#f6f8fc] px-6 pt-4 transition-colors group-hover:from-[#eef3fb] group-hover:to-white">
+                    {Illustration ? <Illustration className="mx-auto max-h-44 transition-transform duration-500 group-hover:scale-[1.04]" /> : null}
+                  </div>
+                  <div className="grid gap-1 p-6 pt-2">
+                    <h3 className="flex items-center gap-2 font-display text-lg font-semibold text-[#0b2559]">
+                      <Icon className="size-5 text-[#1d63ed]" aria-hidden /> {f.title}
+                    </h3>
+                    <p className="text-sm text-[#0b2559]/65">{f.text}</p>
+                  </div>
                 </Reveal>
               );
             })}
@@ -481,28 +520,34 @@ export async function HomePage({ locale }: { locale: Locale }) {
 export function FinalCta({ locale }: { locale: Locale }) {
   const t = DICTS[locale].finalCta;
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-[#07142b] via-[#0b2559] to-[#0e4a9a] py-24 text-white" data-testid="final-cta">
-      <div aria-hidden className="pointer-events-none absolute -left-24 top-0 size-[30rem] rounded-full bg-cyan-400/20 blur-3xl" />
-      <div className="relative mx-auto grid max-w-4xl justify-items-center gap-6 px-4 text-center">
-        <Reveal as="div" className="grid gap-4">
-          <h2 className="font-display text-4xl font-semibold leading-tight sm:text-5xl">{t.title}</h2>
-          <p className="text-lg text-sky-100/80">{t.subtitle}</p>
-        </Reveal>
-        <div className="flex flex-wrap justify-center gap-3">
-          <Link href={`${route("home", locale)}#decouvrir`} className="rounded-2xl bg-white px-5 py-3.5 font-semibold text-[#0b2559]">
-            {t.discover}
-          </Link>
-          <Link href={`${route("contact", locale)}?demande=demo`} className="rounded-2xl border border-white/30 px-5 py-3.5 font-semibold">
-            {t.demo}
-          </Link>
-          <Link href="/connexion" className="rounded-2xl px-5 py-3.5 font-semibold text-sky-200 hover:text-white">
-            {t.login}
-          </Link>
-        </div>
-        <div className="mt-6 grid gap-1">
-          <span className="font-display text-2xl font-semibold">NeoScool</span>
-          <span className="text-sky-100/80">{t.signature}</span>
-          <span className="text-sm tracking-wide text-sky-300">www.Neoscool.com</span>
+    <section className="relative isolate overflow-hidden bg-[#07142b] text-white" data-testid="final-cta">
+      {/* Photo réelle en fond (droite), fondue dans le bleu nuit pour garder le texte lisible. */}
+      <SitePhoto name="lyceenne-campus" locale={locale} fill decorative sizes="(min-width: 1024px) 60vw, 100vw" position="62% 30%" className="absolute inset-0 -z-10 lg:left-[38%]" imgClassName="opacity-40 lg:opacity-100" />
+      <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-[#07142b] via-[#07142b]/85 to-[#07142b]/60 lg:left-[38%] lg:bg-gradient-to-r lg:from-[#07142b] lg:via-[#07142b]/25 lg:to-transparent" />
+      <div aria-hidden className="absolute inset-x-0 bottom-0 -z-10 hidden h-24 bg-gradient-to-t from-[#07142b] to-transparent lg:block" />
+      <div aria-hidden className="pointer-events-none absolute -left-24 top-0 -z-10 size-[30rem] rounded-full bg-cyan-400/20 blur-3xl" />
+      <div className="relative mx-auto grid max-w-7xl px-4 py-24 sm:px-8 lg:py-32">
+        <div className="grid max-w-xl justify-items-center gap-6 text-center lg:justify-items-start lg:text-left">
+          <Reveal as="div" className="grid gap-4">
+            <h2 className="font-display text-4xl font-semibold leading-tight sm:text-5xl">{t.title}</h2>
+            <p className="text-lg text-sky-100/85">{t.subtitle}</p>
+          </Reveal>
+          <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
+            <Link href={`${route("home", locale)}#decouvrir`} className="rounded-2xl bg-white px-5 py-3.5 font-semibold text-[#0b2559] shadow-lg shadow-black/20 transition-transform hover:-translate-y-0.5 active:scale-[0.98]">
+              {t.discover}
+            </Link>
+            <Link href={`${route("contact", locale)}?demande=demo`} className="rounded-2xl border border-white/30 bg-white/5 px-5 py-3.5 font-semibold backdrop-blur transition-colors hover:bg-white/10 active:scale-[0.98]">
+              {t.demo}
+            </Link>
+            <Link href="/connexion" className="rounded-2xl px-5 py-3.5 font-semibold text-sky-200 transition-colors hover:text-white">
+              {t.login}
+            </Link>
+          </div>
+          <div className="mt-6 grid gap-1">
+            <span className="font-display text-2xl font-semibold">NeoScool</span>
+            <span className="text-sky-100/80">{t.signature}</span>
+            <span className="text-sm tracking-wide text-sky-300">www.Neoscool.com</span>
+          </div>
         </div>
       </div>
     </section>

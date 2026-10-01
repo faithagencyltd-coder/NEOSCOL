@@ -64,7 +64,7 @@ export default async function MyLessonsPage({ searchParams }: PageProps<"/mes-co
 
       {lessons.length === 0 ? (
         <Card>
-          <EmptyState icon={CalendarDays} title="Aucun cours cette semaine" description="Votre emploi du temps est défini par l'administration." />
+          <EmptyState icon={CalendarDays} illustration="teacher" title="Aucun cours cette semaine" description="Votre emploi du temps est défini par l'administration." />
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

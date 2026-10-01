@@ -27,6 +27,7 @@ export default async function PortalHomePage() {
     return (
       <EmptyState
         icon={ShieldCheck}
+        illustration="parents"
         title="Aucun dossier rattaché"
         description="Votre compte n'est encore rattaché à aucun élève. Contactez le secrétariat de l'établissement."
       />

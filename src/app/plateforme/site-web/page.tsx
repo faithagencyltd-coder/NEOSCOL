@@ -138,6 +138,9 @@ export default async function PlatformSiteWebPage() {
         <Link href="/plateforme/site" className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-2 font-medium hover:border-primary">
           Coordonnées, questions, couleur et logo → Site et marque
         </Link>
+        <Link href="/plateforme/site-web/visuels" className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-2 font-medium hover:border-primary">
+          Bibliothèque visuelle (photos et illustrations)
+        </Link>
       </nav>
 
       <Card>
