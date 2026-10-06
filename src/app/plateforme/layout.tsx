@@ -7,6 +7,7 @@ import { UserMenu } from "@/components/layout/user-menu";
 import { Logo } from "@/components/shared/logo";
 import { InstallAppButton } from "@/components/shared/pwa";
 import { PlatformTabs } from "@/features/platform/components/platform-tabs";
+import { getPlatformRole, PLATFORM_ROLE_LABELS } from "@/lib/auth/platform";
 import { securityState } from "@/lib/auth/security";
 import { requireSession } from "@/lib/auth/guards";
 import { displayName } from "@/lib/auth/session";
@@ -28,7 +29,7 @@ export default async function PlatformLayout({ children }: { children: React.Rea
   const supabase = await createClient();
   const { data: isAdmin } = await supabase.rpc("is_platform_admin");
   if (!isAdmin) notFound();
-  const security = await securityState();
+  const [security, role] = await Promise.all([securityState(), getPlatformRole()]);
   return (
     <div className="min-h-dvh bg-background">
       <header className="bg-gradient-to-br from-[#07142b] via-[#0b2559] to-[#0e4a9a] text-white">
@@ -39,7 +40,7 @@ export default async function PlatformLayout({ children }: { children: React.Rea
             <InstallAppButton label="Installer NeoScool Console" appName="NeoScool Console" />
           </div>
           <div className="rounded-xl bg-white text-foreground">
-            <UserMenu name={displayName(context)} email={context.user.email} roleLabel="Super administrateur" organizations={context.organizations} activeOrganizationId={context.organization?.id ?? ""} />
+            <UserMenu name={displayName(context)} email={context.user.email} roleLabel={role && role !== "owner" ? `Super Admin — ${PLATFORM_ROLE_LABELS[role]}` : "Super administrateur"} organizations={context.organizations} activeOrganizationId={context.organization?.id ?? ""} />
           </div>
           </div>
         </div>
@@ -50,6 +51,11 @@ export default async function PlatformLayout({ children }: { children: React.Rea
           <PlatformTabs />
         </div>
       </header>
+      {role === "viewer" ? (
+        <div role="status" className="bg-info-soft px-4 py-2 text-center text-sm font-medium text-info" data-testid="viewer-banner">
+          Accès en lecture seule : vous consultez la console, aucune modification n&apos;est possible (garanti par la base de données).
+        </div>
+      ) : null}
       {!security?.mfa_enrolled ? (
         <div role="alert" className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-warning-soft px-4 py-2 text-center text-sm font-medium text-warning">
           <KeyRound className="size-4" aria-hidden /> Console non protégée par la double authentification : activez-la pour que votre mot de passe seul ne suffise jamais.

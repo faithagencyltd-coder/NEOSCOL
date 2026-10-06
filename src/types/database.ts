@@ -5791,18 +5791,34 @@ export type Database = {
       }
       platform_admins: {
         Row: {
+          added_by: string | null
           created_at: string
+          role: string
+          updated_at: string
           user_id: string
         }
         Insert: {
+          added_by?: string | null
           created_at?: string
+          role?: string
+          updated_at?: string
           user_id: string
         }
         Update: {
+          added_by?: string | null
           created_at?: string
+          role?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "platform_admins_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "platform_admins_user_id_fkey"
             columns: ["user_id"]
@@ -6013,6 +6029,47 @@ export type Database = {
           {
             foreignKeyName: "platform_campaigns_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      platform_feature_rules: {
+        Row: {
+          enabled: boolean
+          feature_key: string
+          id: string
+          reason: string
+          scope: string
+          scope_value: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled: boolean
+          feature_key: string
+          id?: string
+          reason: string
+          scope: string
+          scope_value?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          feature_key?: string
+          id?: string
+          reason?: string
+          scope?: string
+          scope_value?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_feature_rules_updated_by_fkey"
+            columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -10997,6 +11054,10 @@ export type Database = {
         }
         Returns: string[]
       }
+      my_platform_role: {
+        Args: never
+        Returns: string
+      }
       my_security_state: {
         Args: never
         Returns: Json
@@ -11110,10 +11171,52 @@ export type Database = {
         }
         Returns: Json
       }
+      platform_activity_categories: {
+        Args: never
+        Returns: {
+          category: string
+          events: number
+        }[]
+      }
+      platform_activity_log: {
+        Args: {
+          p_from?: string
+          p_to?: string
+          p_org?: string
+          p_actor?: string
+          p_category?: string
+          p_severity?: string
+          p_scope?: string
+          p_limit?: number
+          p_offset?: number
+        }
+        Returns: {
+          id: number
+          created_at: string
+          organization_id: string
+          organization_name: string
+          actor_email: string
+          action: string
+          category: string
+          severity: string
+          result: string
+          entity_type: string
+          summary: string
+          details_hidden: boolean
+          total: number
+        }[]
+      }
       platform_add_org_admin: {
         Args: {
           p_organization_id: string
           p_user_id: string
+        }
+        Returns: undefined
+      }
+      platform_add_team_member: {
+        Args: {
+          p_user: string
+          p_role: string
         }
         Returns: undefined
       }
@@ -11187,6 +11290,14 @@ export type Database = {
         }
         Returns: string
       }
+      platform_feature_impact: {
+        Args: never
+        Returns: {
+          feature_key: string
+          organizations: number
+          locked: number
+        }[]
+      }
       platform_finish_campaign: {
         Args: {
           p_id: string
@@ -11203,6 +11314,12 @@ export type Database = {
           p_interval: string
         }
         Returns: string
+      }
+      platform_locked_features: {
+        Args: {
+          o: string
+        }
+        Returns: Json
       }
       platform_messaging_usage: {
         Args: never
@@ -11264,6 +11381,13 @@ export type Database = {
           p_note?: string
         }
         Returns: Json
+      }
+      platform_remove_team_member: {
+        Args: {
+          p_user: string
+          p_reason: string
+        }
+        Returns: undefined
       }
       platform_revenue_export: {
         Args: {
@@ -11515,6 +11639,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      platform_set_feature_rule: {
+        Args: {
+          p_feature: string
+          p_scope: string
+          p_value: string
+          p_enabled: boolean
+          p_reason: string
+        }
+        Returns: undefined
+      }
       platform_set_messaging_quota: {
         Args: {
           p_org: string
@@ -11565,6 +11699,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      platform_set_team_role: {
+        Args: {
+          p_user: string
+          p_role: string
+        }
+        Returns: undefined
+      }
       platform_start_campaign: {
         Args: {
           p_subject: string
@@ -11605,6 +11746,22 @@ export type Database = {
       platform_teacher_accesses: {
         Args: never
         Returns: Json
+      }
+      platform_team: {
+        Args: never
+        Returns: {
+          user_id: string
+          email: string
+          first_name: string
+          last_name: string
+          role: string
+          is_active: boolean
+          mfa: boolean
+          created_at: string
+          updated_at: string
+          added_by_email: string
+          last_sign_in_at: string
+        }[]
       }
       platform_unlock_account: {
         Args: {

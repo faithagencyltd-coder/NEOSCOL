@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FeaturesForm } from "@/features/organization/components/features-form";
 import { savePlatformOrganizationFeatures } from "@/features/organization/feature-actions";
-import { ORG_TYPE_LABELS } from "@/features/platform/components/org-dialogs";
+import { ORG_TYPE_LABELS } from "@/features/platform/org-types";
 import { FEATURE_FLAGS, featureEnabled, featureLockedByPlatform } from "@/lib/features";
 import type { OrganizationSummary } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
@@ -23,7 +23,12 @@ export default async function PlatformOrganizationFeaturesPage({ params }: PageP
   const supabase = await createClient();
   const { data: org } = await supabase.from("organizations").select("id, name, short_name, code, type, currency, locale, timezone, is_demo, settings").eq("id", id).maybeSingle();
   if (!org) notFound();
-  const organization = org as unknown as OrganizationSummary;
+  // Colonne calculée (règles générales du Contrôle des modules), lue à part : non décrite par les types générés.
+  const { data: locks } = await supabase.from("organizations").select("platform_locked_features" as string).eq("id", id).maybeSingle();
+  const organization = { ...org, platform_locked_features: (locks as { platform_locked_features?: Record<string, boolean> } | null)?.platform_locked_features ?? null } as unknown as OrganizationSummary;
+  // Arrêt propre à cet établissement (le formulaire) ; les règles générales sont seulement signalées.
+  const ownLock = (key: (typeof FEATURE_FLAGS)[number]["key"]) => featureLockedByPlatform({ ...organization, platform_locked_features: null }, key);
+  const ruleLock = (key: (typeof FEATURE_FLAGS)[number]["key"]) => organization.platform_locked_features?.[key] === false;
   return (
     <div className="grid gap-5">
       <nav aria-label="Fil d'Ariane" className="text-sm text-muted-foreground">
@@ -47,8 +52,8 @@ export default async function PlatformOrganizationFeaturesPage({ params }: PageP
             hidden={{ organization_id: org.id }}
             rows={FEATURE_FLAGS.map((f) => ({
               ...f,
-              enabled: !featureLockedByPlatform(organization, f.key),
-              hint: `${f.hint} ${featureLockedByPlatform(organization, f.key) ? "— arrêtée par NeoScool." : featureEnabled(organization, f.key) ? "— active dans l'établissement." : "— désactivée par l'établissement."}`,
+              enabled: !ownLock(f.key),
+              hint: `${f.hint} ${ownLock(f.key) ? "— arrêtée par NeoScool." : ruleLock(f.key) ? "— arrêtée par une règle générale (Contrôle des modules)." : featureEnabled(organization, f.key) ? "— active dans l'établissement." : "— désactivée par l'établissement."}`,
             }))}
           />
         </CardContent>

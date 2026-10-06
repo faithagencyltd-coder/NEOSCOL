@@ -17,6 +17,8 @@ export type OrganizationSummary = Pick<
 > & {
   /** Options de la formule souscrite (null : pas d'abonnement propre, aucune restriction). */
   plan_features?: Record<string, boolean> | null;
+  /** Fonctionnalités arrêtées par les règles de la plateforme (toute la plateforme, pays, type). */
+  platform_locked_features?: Record<string, boolean> | null;
 };
 
 export type SessionContext = {
@@ -52,7 +54,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext | null> 
     supabase
       .from("memberships")
       .select(
-        "status, organization:organizations(id, name, short_name, code, type, currency, locale, timezone, is_demo, settings, plan_features), membership_roles(role:roles(persona, name))",
+        "status, organization:organizations(id, name, short_name, code, type, currency, locale, timezone, is_demo, settings, plan_features, platform_locked_features), membership_roles(role:roles(persona, name))",
       )
       .eq("user_id", user.id)
       .in("status", ["active", "invited"]),

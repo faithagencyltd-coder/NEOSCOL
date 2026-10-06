@@ -13,21 +13,10 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { addOrganizationAdmin, createOrganization } from "@/features/platform/actions";
 import { useFeedbackAction } from "@/components/motion/use-feedback-action";
+import { ORG_TYPE_LABELS } from "@/features/platform/org-types";
 
-export const ORG_TYPE_LABELS: Record<string, string> = {
-  primary_school: "École primaire",
-  middle_school: "Collège",
-  high_school: "Lycée",
-  school_complex: "Groupe scolaire",
-  university: "Université",
-  institute: "Institut",
-  vocational_center: "Centre de formation professionnelle",
-  technical_center: "Centre de formation technique",
-  private_school: "École privée",
-  school_group: "Réseau d'établissements",
-};
 
-function Credentials({ message, login, password }: { message?: string; login: string; password: string }) {
+export function Credentials({ message, login, password }: { message?: string; login: string; password: string }) {
   return (
     <div className="grid gap-3">
       <Alert tone="success">{message}</Alert>

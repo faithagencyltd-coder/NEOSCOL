@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftRight, BadgePercent, Building2, CreditCard, Gem, Globe2, Layers, Megaphone, MonitorSmartphone, Palette, PlugZap, ShieldCheck, Sigma, TrendingUp, Users, Wallet, MessageSquareText } from "lucide-react";
+import { ArrowLeftRight, BadgePercent, Building2, CreditCard, Gem, Globe2, Layers, Megaphone, MonitorSmartphone, Palette, PlugZap, ShieldCheck, Sigma, TrendingUp, Users, Wallet, MessageSquareText, ToggleRight, History, UsersRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -24,6 +24,9 @@ const TABS = [
   { href: "/plateforme/country-connect", label: "Country Connect", icon: ArrowLeftRight },
   { href: "/plateforme/integrations", label: "Intégrations", icon: PlugZap },
   { href: "/plateforme/securite", label: "Sécurité", icon: ShieldCheck },
+  { href: "/plateforme/modules", label: "Contrôle des modules", icon: ToggleRight },
+  { href: "/plateforme/journal", label: "Journal", icon: History },
+  { href: "/plateforme/equipe", label: "Équipe", icon: UsersRound },
 ];
 
 export function PlatformTabs() {

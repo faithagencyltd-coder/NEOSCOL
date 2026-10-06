@@ -36,9 +36,12 @@ export function featureExcludedByPlan(organization: OrganizationSummary, flag: F
   return Boolean(code && organization.plan_features && organization.plan_features[code] === false);
 }
 
-/** Arrêt forcé par le Super Admin pour cet établissement (prime sur son propre réglage). */
+/**
+ * Arrêt forcé par le Super Admin (prime sur le réglage de l'établissement) :
+ * pour cet établissement, ou par une règle plateforme / pays / type (Contrôle des modules).
+ */
 export function featureLockedByPlatform(organization: OrganizationSummary, flag: FeatureFlag): boolean {
-  return flags(organization, "platform_features")[flag] === false;
+  return flags(organization, "platform_features")[flag] === false || organization.platform_locked_features?.[flag] === false;
 }
 
 /**

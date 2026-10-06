@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { canWritePlatform, getPlatformRole, platformDeniedMessage } from "@/lib/auth/platform";
 import { getSessionContext } from "@/lib/auth/session";
 import { encryptionKeyFrom, encryptSecret, secretHint } from "@/lib/messaging/crypto";
 import { ASSISTANT_MODEL, anthropicClient } from "@/lib/ai/anthropic";
@@ -21,9 +22,9 @@ import { isUuid } from "@/lib/utils/search-params";
 async function requirePlatformAdmin(): Promise<{ ok: true } | { ok: false; message: string }> {
   const context = await getSessionContext();
   if (!context) return { ok: false, message: "Votre session a expiré. Reconnectez-vous." };
-  const supabase = await createClient();
-  const { data } = await supabase.rpc("is_platform_admin");
-  return data ? { ok: true } : { ok: false, message: "Réservé à l'administration de la plateforme NeoScool." };
+  const role = await getPlatformRole();
+  const data = canWritePlatform(role);
+  return data ? { ok: true } : { ok: false, message: platformDeniedMessage(role) };
 }
 
 const refresh = () => {

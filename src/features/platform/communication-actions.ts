@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { canWritePlatform, getPlatformRole, platformDeniedMessage } from "@/lib/auth/platform";
 import { getSessionContext } from "@/lib/auth/session";
 import { sendEmail } from "@/lib/messaging/server";
 import { createClient } from "@/lib/supabase/server";
@@ -14,9 +15,9 @@ import { ANNOUNCEMENT_TONES, CAMPAIGN_STATUSES, campaignEmailHtml, checkedValues
 async function requirePlatformAdmin(): Promise<{ ok: true; userId: string } | { ok: false; message: string }> {
   const context = await getSessionContext();
   if (!context) return { ok: false, message: "Votre session a expiré. Reconnectez-vous." };
-  const supabase = await createClient();
-  const { data } = await supabase.rpc("is_platform_admin");
-  return data ? { ok: true, userId: context.user.id } : { ok: false, message: "Réservé à l'administration de la plateforme NeoScool." };
+  const role = await getPlatformRole();
+  const data = canWritePlatform(role);
+  return data ? { ok: true, userId: context.user.id } : { ok: false, message: platformDeniedMessage(role) };
 }
 
 const dateTimeOrNull = (value: FormDataEntryValue | null, endOfDay = false) => {
