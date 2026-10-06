@@ -136,6 +136,12 @@ export async function SiteShell({ locale, alternate, children }: { locale: Local
             <Link href={route("countries", locale)} className="hover:text-white">
               {t.nav.countries}
             </Link>
+            <Link href="/decouvrir" className="hover:text-white">
+              NeoScool Discover
+            </Link>
+            <Link href="/opportunites" className="hover:text-white">
+              NeoScool Opportunities
+            </Link>
           </nav>
           <nav aria-label={t.footer.company} className="grid content-start gap-2 text-sm">
             <span className="mb-1 text-xs font-semibold uppercase tracking-wider text-sky-200/60">{t.footer.company}</span>
