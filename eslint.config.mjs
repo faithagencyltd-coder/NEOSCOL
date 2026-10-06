@@ -19,6 +19,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Projet vidéo (Remotion), outillage séparé.
     "marketing/**",
+    // Application mobile (Capacitor), outillage séparé.
+    "mobile/**",
   ]),
 ]);
 

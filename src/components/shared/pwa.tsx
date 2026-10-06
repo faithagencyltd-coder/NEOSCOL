@@ -1,9 +1,10 @@
 "use client";
 
-import { Download, Share } from "lucide-react";
+import { Building2, Download, Share } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/button";
+import { isNativeApp, nativeHomeUrl } from "@/lib/native-app";
 
 type InstallEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> };
 
@@ -30,6 +31,12 @@ export function InstallAppButton({ label = "Installer l'application", appName = 
     () => /iphone|ipad|ipod/i.test(navigator.userAgent),
     () => false,
   );
+  // Application mobile NeoScool : déjà installée ; accès à l'écran « Mes établissements ».
+  const nativeHome = useSyncExternalStore(
+    () => () => undefined,
+    () => (isNativeApp(navigator.userAgent) ? nativeHomeUrl(navigator.userAgent) : ""),
+    () => "",
+  );
   const installed = standalone || accepted;
   useEffect(() => {
     const onPrompt = (e: Event) => {
@@ -39,6 +46,18 @@ export function InstallAppButton({ label = "Installer l'application", appName = 
     window.addEventListener("beforeinstallprompt", onPrompt);
     return () => window.removeEventListener("beforeinstallprompt", onPrompt);
   }, []);
+  if (nativeHome) {
+    return (
+      <div className="grid gap-2">
+        <p className="text-sm text-success">Vous utilisez l&apos;application mobile NeoScool.</p>
+        <Button asChild variant="secondary" className="justify-self-start">
+          <a href={nativeHome} data-testid="native-establishments">
+            <Building2 aria-hidden /> Mes établissements et portails
+          </a>
+        </Button>
+      </div>
+    );
+  }
   if (installed) return <p className="text-sm text-success">Application installée sur cet appareil.</p>;
   if (event) {
     return (

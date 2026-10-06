@@ -1,4 +1,4 @@
-import { ArrowRight, ExternalLink, FileDown, KeyRound, Link2, ShieldCheck, Share2 } from "lucide-react";
+import { ArrowRight, ExternalLink, FileDown, KeyRound, Link2, ShieldCheck, Share2, Smartphone } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -133,6 +133,27 @@ export default async function PortalLinkSettingsPage() {
               );
             })}
           </ul>
+        </CardContent>
+      </Card>
+
+      <Card className="anim-fade-up" style={{ "--delay": "160ms" } as React.CSSProperties} data-testid="mobile-app-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Smartphone className="size-5 text-primary" aria-hidden /> Application mobile NeoScool (Android et iPhone)
+          </CardTitle>
+          <CardDescription>Une seule application pour tous les portails : parents, {vocabularyFor(org.type).student.toLowerCase()}s, enseignants / formateurs et administration.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-3 text-sm md:grid-cols-3">
+          {[
+            { title: "1. Installer l'application", text: "« NeoScool » sur le téléphone (Android ou iPhone), fournie par NeoScool." },
+            { title: "2. Scanner le QR code", text: `Celui de cette page ou de l'affiche : l'établissement ${org.short_name || org.name} est ajouté dans l'application (ou saisir le code ${org.code}).` },
+            { title: "3. Choisir son portail", text: "Et se connecter avec ses identifiants habituels. Plusieurs établissements peuvent être ajoutés (parents, enseignants multi-établissements)." },
+          ].map((step) => (
+            <div key={step.title} className="grid gap-0.5 rounded-xl border border-border p-3">
+              <span className="font-semibold">{step.title}</span>
+              <span className="text-muted-foreground">{step.text}</span>
+            </div>
+          ))}
         </CardContent>
       </Card>
 

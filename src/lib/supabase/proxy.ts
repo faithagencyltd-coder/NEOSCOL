@@ -2,15 +2,17 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { isSupabaseConfigured, publicEnv } from "@/lib/env";
+import { isNativeApp } from "@/lib/native-app";
 import type { Database } from "@/types/database";
 
 /** Routes accessibles sans session. */
 // /acces : lien des portails d'un établissement (identité publique + formulaires de connexion).
 // /api/cron : protégé par CRON_SECRET (pas de session utilisateur).
 // /api/webhooks : notifications des fournisseurs de paiement (revérifiées auprès du fournisseur).
+// /api/app : identité publique d'un établissement pour l'application mobile (comme /acces).
 // /tarifs, /pricing, /inscription : offre NeoScool et création d'un établissement (essai gratuit).
 const PUBLIC_PATHS = [
-  "/connexion", "/acces", "/mot-de-passe-oublie", "/auth", "/verifier", "/configuration", "/api/cron", "/api/webhooks", "/api/hooks",
+  "/connexion", "/acces", "/mot-de-passe-oublie", "/auth", "/verifier", "/configuration", "/api/cron", "/api/webhooks", "/api/hooks", "/api/app",
   "/verification-email", "/console.webmanifest",
   "/demo", "/hors-ligne", "/tarifs", "/pricing", "/inscription",
   // Pages publiques réglées par le Super Admin : aide, conditions générales, confidentialité.
@@ -56,6 +58,11 @@ export async function updateSession(request: NextRequest) {
   // getClaims() valide le JWT (signature) : ne jamais se fier à getSession() seul.
   const { data } = await supabase.auth.getClaims();
   const isAuthenticated = Boolean(data?.claims?.sub);
+
+  // Application mobile : pas de site vitrine, l'accueil mène à l'espace du compte (ou à la connexion).
+  if (pathname === "/" && isNativeApp(request.headers.get("user-agent"))) {
+    return NextResponse.redirect(new URL(isAuthenticated ? "/tableau-de-bord" : "/connexion", request.url));
+  }
 
   if (!isAuthenticated && !isPublicPath(pathname)) {
     const loginUrl = new URL("/connexion", request.url);
