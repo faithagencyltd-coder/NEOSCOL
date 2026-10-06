@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { LYCEE_TRACKS, SCHOOL_LEVELS } from "@/features/academic/school";
+import { attributeSignup } from "@/features/affiliates/server";
 import { MODULE4_COMPONENTS, MULTI_MODULES_PLAN } from "@/features/billing/constants";
 import { newPasswordSchema } from "@/features/auth/schemas";
 import { secureCookiesForRequest } from "@/lib/utils/cookie-security";
@@ -162,6 +163,14 @@ export async function signUpOrganization(_: ActionResult | null, formData: FormD
     return { ok: false, message: "Création de l'établissement impossible. Aucune donnée n'a été conservée ; réessayez." };
   }
   const organizationId = (org as { organization_id: string }).organization_id;
+  // Affiliation : lien de recommandation (vérifié en base) ou code saisi ; n'empêche jamais l'inscription.
+  await attributeSignup({
+    organizationId,
+    userId: created.user.id,
+    code: String(formData.get("referral_code") ?? "").trim().slice(0, 40) || null,
+    phone: parsed.data.phone ?? null,
+    ip,
+  }).catch(() => null);
 
   const supabase = await createClient();
   await supabase.auth.signInWithPassword({ email: parsed.data.email, password: password.data.password });

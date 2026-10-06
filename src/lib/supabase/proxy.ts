@@ -25,6 +25,8 @@ const PUBLIC_PATHS = [
   "/decouvrir", "/opportunites", "/espace/inscription", "/sitemap.xml", "/robots.txt",
   // Support Center : chatbot du site (visiteurs sans compte).
   "/api/support",
+  // Affiliation : lien de recommandation (/r/<code>).
+  "/r",
 ];
 
 function isPublicPath(pathname: string): boolean {

@@ -471,6 +471,573 @@ export type Database = {
           }
         ]
       }
+      affiliate_attributions: {
+        Row: {
+          affiliate_id: string
+          campaign_id: string | null
+          click_id: string | null
+          code_used: string | null
+          corrected_at: string | null
+          corrected_by: string | null
+          correction_reason: string | null
+          created_at: string
+          flags: string[]
+          id: string
+          organization_id: string
+          previous_affiliate_id: string | null
+          proof: Json
+          source: string
+          status: string
+        }
+        Insert: {
+          affiliate_id: string
+          campaign_id?: string | null
+          click_id?: string | null
+          code_used?: string | null
+          corrected_at?: string | null
+          corrected_by?: string | null
+          correction_reason?: string | null
+          created_at?: string
+          flags?: string[]
+          id?: string
+          organization_id: string
+          previous_affiliate_id?: string | null
+          proof?: Json
+          source: string
+          status?: string
+        }
+        Update: {
+          affiliate_id?: string
+          campaign_id?: string | null
+          click_id?: string | null
+          code_used?: string | null
+          corrected_at?: string | null
+          corrected_by?: string | null
+          correction_reason?: string | null
+          created_at?: string
+          flags?: string[]
+          id?: string
+          organization_id?: string
+          previous_affiliate_id?: string | null
+          proof?: Json
+          source?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_attributions_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_attributions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_attributions_click_id_fkey"
+            columns: ["click_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_clicks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_attributions_corrected_by_fkey"
+            columns: ["corrected_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_attributions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_attributions_previous_affiliate_id_fkey"
+            columns: ["previous_affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      affiliate_campaigns: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          eligible_plans: string[] | null
+          ends_on: string | null
+          id: string
+          is_active: boolean
+          name: string
+          reward_event: string
+          reward_months: number
+          reward_type: string
+          reward_value: number
+          starts_on: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          eligible_plans?: string[] | null
+          ends_on?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          reward_event?: string
+          reward_months?: number
+          reward_type: string
+          reward_value: number
+          starts_on?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          eligible_plans?: string[] | null
+          ends_on?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          reward_event?: string
+          reward_months?: number
+          reward_type?: string
+          reward_value?: number
+          starts_on?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_campaigns_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      affiliate_clicks: {
+        Row: {
+          affiliate_id: string
+          campaign_id: string | null
+          created_at: string
+          id: string
+          ip_hash: string | null
+          landing: string | null
+        }
+        Insert: {
+          affiliate_id: string
+          campaign_id?: string | null
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          landing?: string | null
+        }
+        Update: {
+          affiliate_id?: string
+          campaign_id?: string | null
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          landing?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_clicks_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_clicks_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_campaigns"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      affiliate_commissions: {
+        Row: {
+          affiliate_id: string
+          amount: number
+          attribution_id: string
+          created_at: string
+          currency: string
+          dispute_message: string | null
+          disputed: boolean
+          id: string
+          invoice_id: string | null
+          mode: string
+          organization_id: string
+          payment_amount: number
+          payment_id: string
+          payout_id: string | null
+          plan_code: string | null
+          reason: string | null
+          refunded_after_payout: boolean
+          rule: Json
+          status: string
+          status_changed_at: string
+          transaction_id: string | null
+          validated_at: string | null
+          validated_by: string | null
+        }
+        Insert: {
+          affiliate_id: string
+          amount: number
+          attribution_id: string
+          created_at?: string
+          currency: string
+          dispute_message?: string | null
+          disputed?: boolean
+          id?: string
+          invoice_id?: string | null
+          mode: string
+          organization_id: string
+          payment_amount: number
+          payment_id: string
+          payout_id?: string | null
+          plan_code?: string | null
+          reason?: string | null
+          refunded_after_payout?: boolean
+          rule?: Json
+          status?: string
+          status_changed_at?: string
+          transaction_id?: string | null
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          affiliate_id?: string
+          amount?: number
+          attribution_id?: string
+          created_at?: string
+          currency?: string
+          dispute_message?: string | null
+          disputed?: boolean
+          id?: string
+          invoice_id?: string | null
+          mode?: string
+          organization_id?: string
+          payment_amount?: number
+          payment_id?: string
+          payout_id?: string | null
+          plan_code?: string | null
+          reason?: string | null
+          refunded_after_payout?: boolean
+          rule?: Json
+          status?: string
+          status_changed_at?: string
+          transaction_id?: string | null
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_commissions_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commissions_attribution_id_fkey"
+            columns: ["attribution_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_attributions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commissions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commissions_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: true
+            referencedRelation: "subscription_payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commissions_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_payouts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commissions_validated_by_fkey"
+            columns: ["validated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      affiliate_payouts: {
+        Row: {
+          affiliate_id: string
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          method: string
+          note: string | null
+          paid_on: string
+          recorded_by: string | null
+          reference: string
+        }
+        Insert: {
+          affiliate_id: string
+          amount: number
+          created_at?: string
+          currency: string
+          id?: string
+          method: string
+          note?: string | null
+          paid_on: string
+          recorded_by?: string | null
+          reference: string
+        }
+        Update: {
+          affiliate_id?: string
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          method?: string
+          note?: string | null
+          paid_on?: string
+          recorded_by?: string | null
+          reference?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_payouts_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_payouts_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      affiliate_settings: {
+        Row: {
+          allowed_kinds: string[]
+          attribution_days: number
+          campaigns_enabled: boolean
+          codes_enabled: boolean
+          conflict_rule: string
+          count_test_payments: boolean
+          currency: string
+          eligible_plans: string[] | null
+          enabled: boolean
+          hold_days: number
+          id: number
+          links_enabled: boolean
+          min_payout: number
+          monthly_cap: number | null
+          require_approval: boolean
+          require_payout_details: boolean
+          require_phone: boolean
+          reward_event: string
+          reward_months: number
+          reward_type: string
+          reward_value: number
+          signups_open: boolean
+          terms: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          allowed_kinds?: string[]
+          attribution_days?: number
+          campaigns_enabled?: boolean
+          codes_enabled?: boolean
+          conflict_rule?: string
+          count_test_payments?: boolean
+          currency?: string
+          eligible_plans?: string[] | null
+          enabled?: boolean
+          hold_days?: number
+          id?: number
+          links_enabled?: boolean
+          min_payout?: number
+          monthly_cap?: number | null
+          require_approval?: boolean
+          require_payout_details?: boolean
+          require_phone?: boolean
+          reward_event?: string
+          reward_months?: number
+          reward_type?: string
+          reward_value?: number
+          signups_open?: boolean
+          terms?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          allowed_kinds?: string[]
+          attribution_days?: number
+          campaigns_enabled?: boolean
+          codes_enabled?: boolean
+          conflict_rule?: string
+          count_test_payments?: boolean
+          currency?: string
+          eligible_plans?: string[] | null
+          enabled?: boolean
+          hold_days?: number
+          id?: number
+          links_enabled?: boolean
+          min_payout?: number
+          monthly_cap?: number | null
+          require_approval?: boolean
+          require_payout_details?: boolean
+          require_phone?: boolean
+          reward_event?: string
+          reward_months?: number
+          reward_type?: string
+          reward_value?: number
+          signups_open?: boolean
+          terms?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      affiliates: {
+        Row: {
+          campaign_id: string | null
+          city: string | null
+          code: string
+          country: string | null
+          created_at: string
+          id: string
+          kind: string
+          motivation: string | null
+          payout_details: string | null
+          payout_method: string | null
+          phone: string | null
+          promo_code_id: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          terms_accepted_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          city?: string | null
+          code: string
+          country?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          motivation?: string | null
+          payout_details?: string | null
+          payout_method?: string | null
+          phone?: string | null
+          promo_code_id?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          terms_accepted_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string | null
+          city?: string | null
+          code?: string
+          country?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          motivation?: string | null
+          payout_details?: string | null
+          payout_method?: string | null
+          phone?: string | null
+          promo_code_id?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          terms_accepted_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliates_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliates_country_fkey"
+            columns: ["country"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "affiliates_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: true
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliates_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       analytics_app_usage: {
         Row: {
           day: string
@@ -12307,6 +12874,58 @@ export type Database = {
         }
         Returns: string
       }
+      affiliate_apply: {
+        Args: {
+          p_kind: string
+          p_phone: string
+          p_country: string
+          p_city: string
+          p_motivation: string
+          p_payout_method: string
+          p_payout_details: string
+          p_accept_terms: boolean
+        }
+        Returns: Json
+      }
+      affiliate_attribute_signup: {
+        Args: {
+          p_org: string
+          p_user: string
+          p_click: string
+          p_code: string
+          p_phone: string
+          p_ip_hash?: string
+        }
+        Returns: Json
+      }
+      affiliate_dispute: {
+        Args: {
+          p_commission: string
+          p_message: string
+        }
+        Returns: undefined
+      }
+      affiliate_promote_payable: {
+        Args: never
+        Returns: number
+      }
+      affiliate_record_click: {
+        Args: {
+          p_code: string
+          p_ip_hash: string
+          p_landing: string
+          p_campaign?: string
+        }
+        Returns: Json
+      }
+      affiliate_update_payout: {
+        Args: {
+          p_phone: string
+          p_payout_method: string
+          p_payout_details: string
+        }
+        Returns: undefined
+      }
       analytics_purge: {
         Args: never
         Returns: Json
@@ -13152,6 +13771,10 @@ export type Database = {
         }
         Returns: Json
       }
+      my_affiliate_space: {
+        Args: never
+        Returns: Json
+      }
       my_badge: {
         Args: {
           p_org: string
@@ -13435,6 +14058,10 @@ export type Database = {
         }
         Returns: number
       }
+      platform_affiliate_overview: {
+        Args: never
+        Returns: Json
+      }
       platform_ai_usage: {
         Args: never
         Returns: {
@@ -13532,6 +14159,14 @@ export type Database = {
           p_order: string
           p_decision: string
           p_reference: string
+        }
+        Returns: undefined
+      }
+      platform_correct_attribution: {
+        Args: {
+          p_org: string
+          p_affiliate: string
+          p_reason: string
         }
         Returns: undefined
       }
@@ -13708,6 +14343,17 @@ export type Database = {
         Args: never
         Returns: Json
       }
+      platform_record_affiliate_payout: {
+        Args: {
+          p_affiliate: string
+          p_commissions: string[]
+          p_method: string
+          p_reference: string
+          p_paid_on: string
+          p_note: string
+        }
+        Returns: string
+      }
       platform_record_gateway_test: {
         Args: {
           p_provider: string
@@ -13795,11 +14441,42 @@ export type Database = {
         }
         Returns: Json
       }
+      platform_review_affiliate: {
+        Args: {
+          p_id: string
+          p_action: string
+          p_note: string
+          p_campaign?: string
+          p_promo_code?: string
+        }
+        Returns: undefined
+      }
+      platform_review_commission: {
+        Args: {
+          p_id: string
+          p_action: string
+          p_reason: string
+        }
+        Returns: undefined
+      }
       platform_revoke_user_sessions: {
         Args: {
           p_user: string
         }
         Returns: number
+      }
+      platform_save_affiliate_campaign: {
+        Args: {
+          p_id: string
+          p: Json
+        }
+        Returns: string
+      }
+      platform_save_affiliate_settings: {
+        Args: {
+          p: Json
+        }
+        Returns: undefined
       }
       platform_save_analytics_settings: {
         Args: {

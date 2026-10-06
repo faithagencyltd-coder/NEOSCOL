@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { referralCodesEnabled } from "@/features/affiliates/server";
 import { SignupForm } from "@/features/billing/components/signup-form";
 import { turnstileSettings } from "@/lib/messaging/server";
 import { createClient } from "@/lib/supabase/server";
@@ -29,7 +30,7 @@ export default async function SignupPage({ searchParams }: PageProps<"/inscripti
         </h1>
         <p className="text-sm text-muted-foreground">Toutes les fonctionnalités de votre formule, sans paiement pendant {TRIAL_DAYS} jours.</p>
       </div>
-      <SignupForm plans={plans} initialPlan={formule} initialInterval={interval} initialComponents={components} captcha={await turnstileSettings()} countries={countries.length ? countries : undefined} />
+      <SignupForm plans={plans} initialPlan={formule} initialInterval={interval} initialComponents={components} captcha={await turnstileSettings()} countries={countries.length ? countries : undefined} referral={await referralCodesEnabled()} />
     </div>
   );
 }

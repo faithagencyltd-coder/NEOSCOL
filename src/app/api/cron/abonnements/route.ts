@@ -8,6 +8,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * RESTRICTED → EXPIRED), paiements abandonnés. À appeler chaque jour avec
  * « Authorization: Bearer <CRON_SECRET> ». L'accès est de toute façon calculé
  * sur les dates : un retard du planificateur ne prolonge jamais un accès.
+ * Affiliation : commissions validées dont le délai de vérification est écoulé → payables.
  */
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
@@ -19,5 +20,6 @@ export async function GET(request: Request) {
   if (!admin) return new Response("Configuration serveur incomplète.", { status: 500 });
   const { data, error } = await admin.rpc("billing_process_lifecycle");
   if (error) return Response.json({ ok: false, error: "Traitement impossible." }, { status: 500 });
-  return Response.json({ ok: true, result: data });
+  const { data: payable } = await admin.rpc("affiliate_promote_payable");
+  return Response.json({ ok: true, result: data, affiliate_payable: payable ?? 0 });
 }

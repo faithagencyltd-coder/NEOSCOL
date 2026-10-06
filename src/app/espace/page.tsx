@@ -23,7 +23,12 @@ export default async function PersonalSpacePage({ searchParams }: PageProps<"/es
   const confirmed = (await searchParams).email === "confirme";
   const context = await getSessionContext();
   const supabase = await createClient();
-  const [{ data }, { data: emailState }] = await Promise.all([supabase.rpc("my_opportunity_space"), supabase.rpc("my_public_account_email_state")]);
+  const [{ data }, { data: emailState }, { data: affiliation }, { data: myAffiliate }] = await Promise.all([
+    supabase.rpc("my_opportunity_space"),
+    supabase.rpc("my_public_account_email_state"),
+    supabase.from("affiliate_settings").select("enabled").eq("id", 1).maybeSingle(),
+    supabase.from("affiliates").select("id").eq("user_id", context?.user.id ?? "").maybeSingle(),
+  ]);
   const space = (data ?? { account: null, posts: [], applications: [], favorites: [] }) as unknown as Space;
   const name = [context?.profile?.first_name, context?.profile?.last_name].filter(Boolean).join(" ");
 
@@ -44,6 +49,11 @@ export default async function PersonalSpacePage({ searchParams }: PageProps<"/es
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {affiliation?.enabled || myAffiliate ? (
+            <Link href="/espace/affiliation" className="rounded-xl border border-border px-3 py-2 text-sm font-semibold" data-testid="link-affiliation">
+              Affiliation
+            </Link>
+          ) : null}
           <Link href="/opportunites" className="rounded-xl border border-border px-3 py-2 text-sm font-semibold">
             Parcourir les annonces
           </Link>

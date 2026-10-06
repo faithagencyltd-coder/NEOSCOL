@@ -60,7 +60,10 @@ export function SignupForm({
   initialComponents = [],
   captcha = null,
   countries = FALLBACK_COUNTRIES,
+  referral = false,
 }: {
+  /** Programme d'affiliation : champ « code de recommandation » (facultatif). */
+  referral?: boolean;
   captcha?: CaptchaConfig;
   /** Pays actifs (table countries, gérée par le Super Admin). */
   countries?: [string, string][];
@@ -267,6 +270,11 @@ export function SignupForm({
               <Gift className="size-3.5" aria-hidden /> Essai gratuit {plan.trial_days} jours : rien à payer aujourd&apos;hui.
             </p>
           </div>
+        ) : null}
+        {referral ? (
+          <FormField id="referral_code" label="Code de recommandation (facultatif)" hint="Si une personne vous a recommandé NeoScool, saisissez son code.">
+            <Input id="referral_code" name="referral_code" maxLength={40} autoComplete="off" placeholder="NEO-…" className="uppercase" />
+          </FormField>
         ) : null}
       </fieldset>
 
