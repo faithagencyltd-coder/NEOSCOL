@@ -93,6 +93,11 @@ export default async function VisibilityPage({ searchParams }: PageProps<"/visib
               <span className="text-muted-foreground">Aucune fiche pour le moment : remplissez le formulaire ci-dessous.</span>
             )}
           </div>
+          {org.is_demo ? (
+            <p className="rounded-lg bg-warning-soft p-3 text-sm text-warning" data-testid="demo-notice">
+              Établissement de démonstration : sa fiche n&apos;apparaît jamais dans l&apos;annuaire public NeoScool Discover.
+            </p>
+          ) : null}
           <TabNav label="Fiche publique" active={tab} tabs={TABS.map((t) => ({ key: t.key, label: t.label, href: `/visibilite?onglet=${t.key}` }))} />
 
           {tab === "fiche" ? (

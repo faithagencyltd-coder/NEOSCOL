@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
   if (!ua || BOTS.test(ua) || request.headers.get("dnt") === "1" || request.headers.get("sec-gpc") === "1") return done;
   const body = (await request.json().catch(() => null)) as { path?: unknown; referrer?: unknown; locale?: unknown } | null;
   const path = typeof body?.path === "string" ? body.path.split(/[?#]/)[0]!.slice(0, 200) : "";
-  if (!path.startsWith("/") || path.startsWith("/api") || path.startsWith("/plateforme")) return done;
+  if (!path.startsWith("/") || path.startsWith("/api") || path.startsWith("/plateforme") || path.startsWith("/espace")) return done;
   let referrer: string | null = null;
   try {
     const host = typeof body?.referrer === "string" && body.referrer ? new URL(body.referrer).hostname.replace(/^www\./, "") : null;

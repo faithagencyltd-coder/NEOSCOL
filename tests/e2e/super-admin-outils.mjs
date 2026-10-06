@@ -109,7 +109,8 @@ await dnt.waitForTimeout(2500);
 check(Number((await q("select count(*) n from site_visits where path = '/tarifs'"))[0].n) === after, "« ne pas me suivre » respecté");
 await sa.goto(`${base}/plateforme/visiteurs?jours=7`);
 check(await sa.getByTestId("visitor-stats").getByText("Visiteurs uniques").isVisible(), "statistiques d'audience");
-check(await sa.getByText("/tarifs").first().isVisible(), "pages les plus vues");
+const [topPage] = await q("select path from site_visits where day > current_date - 7 group by path order by count(*) desc, path limit 1");
+check(await sa.getByText(topPage.path, { exact: true }).first().isVisible(), "pages les plus vues");
 await sa.screenshot({ path: `${out}/05-visiteurs.png`, fullPage: true });
 
 console.log("\n=== 6. Maintenance et versions ===");

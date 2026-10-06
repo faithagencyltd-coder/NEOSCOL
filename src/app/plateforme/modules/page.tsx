@@ -89,7 +89,7 @@ export default async function PlatformModulesPage() {
                 <div className="grid gap-1">
                   <CardTitle className="flex flex-wrap items-center gap-2">
                     {f.label}
-                    {globalOff ? <Badge tone="danger">{isPublic ? "Fermé (par défaut)" : "Arrêté sur la plateforme"}</Badge> : <Badge tone="success">Ouvert partout</Badge>}
+                    {globalOff ? <Badge tone="danger">{isPublic ? "Fermé (par défaut)" : "Arrêté sur la plateforme"}</Badge> : <Badge tone="success">{isPublic ? "Ouvert partout" : "Ouvert"}</Badge>}
                     {isPublic ? <Badge tone="info">Écosystème public</Badge> : null}
                   </CardTitle>
                   <CardDescription>{f.hint}</CardDescription>

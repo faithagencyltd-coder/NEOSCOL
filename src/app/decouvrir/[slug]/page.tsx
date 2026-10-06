@@ -73,7 +73,7 @@ export default async function PublicProfilePage({ params, searchParams }: PagePr
             <img src={mediaUrl(p.cover_file_id)} alt="" className="size-full object-cover opacity-90" />
           ) : null}
         </div>
-        <div className="mx-auto -mt-12 flex max-w-6xl flex-wrap items-end gap-4 px-4 sm:px-8">
+        <div className={`relative z-10 mx-auto flex max-w-6xl flex-wrap items-end gap-4 px-4 sm:px-8 ${p.has_logo ? "-mt-12" : "mt-6"}`}>
           {p.has_logo ? (
             // eslint-disable-next-line @next/next/no-img-element -- logo de l'établissement
             <img src={logoUrl(p.code)} alt={`Logo ${p.name}`} className="size-24 rounded-2xl border-4 border-white bg-white object-contain shadow" />
