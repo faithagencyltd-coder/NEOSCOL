@@ -3,6 +3,8 @@
 import { CheckCircle2, Send } from "lucide-react";
 import { useActionState, useState } from "react";
 
+import { trackConversion } from "@/features/analytics/client";
+
 import { ActionForm } from "@/components/shared/action-form";
 import { SubmitButton } from "@/components/shared/submit-button";
 import { Alert } from "@/components/ui/alert";
@@ -19,7 +21,11 @@ import { cn } from "@/lib/utils/cn";
 /** Formulaire de contact / demande de démonstration (enregistré pour le Super Admin). */
 export function ContactForm({ locale, defaultKind, labels, countries, captchaKey }: { locale: Locale; defaultKind: "contact" | "demo"; labels: Dict["contact"]; countries: string[]; captchaKey?: string | null }) {
   const [kind, setKind] = useState(defaultKind);
-  const [state, action, pending] = useActionState(async (prev: ActionResult | null, formData: FormData) => submitLead(prev, formData), null);
+  const [state, action, pending] = useActionState(async (prev: ActionResult | null, formData: FormData) => {
+    const result = await submitLead(prev, formData);
+    if (result.ok) trackConversion(formData.get("kind") === "demo" ? "demo_request" : "contact_request");
+    return result;
+  }, null);
   const errors = state && !state.ok ? (state.fieldErrors ?? {}) : {};
   if (state?.ok) {
     return (

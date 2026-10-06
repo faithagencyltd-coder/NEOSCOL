@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftRight, BadgePercent, Building2, CreditCard, Gem, Globe2, Layers, Megaphone, MonitorSmartphone, Palette, PlugZap, ShieldCheck, Sigma, TrendingUp, Users, Wallet, MessageSquareText, ToggleRight, History, UsersRound, Activity, LifeBuoy, ChartColumn, Target, UserSearch, Bot, Eye, Wrench, FileLock2, Store } from "lucide-react";
+import { ArrowLeftRight, BadgePercent, Building2, CreditCard, Gem, Globe2, Layers, Megaphone, MonitorSmartphone, Palette, PlugZap, ShieldCheck, Sigma, TrendingUp, Users, Wallet, MessageSquareText, ToggleRight, History, UsersRound, Activity, LifeBuoy, ChartColumn, Target, UserSearch, Bot, Eye, Wrench, FileLock2, Store, ChartPie } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils/cn";
 
 const TABS = [
   { href: "/plateforme", label: "Établissements", icon: Building2 },
+  { href: "/plateforme/analytics", label: "Analytics", icon: ChartPie },
   { href: "/plateforme/assistant", label: "Assistant IA", icon: Bot },
   { href: "/plateforme/comptes", label: "Comptes", icon: UserSearch },
   { href: "/plateforme/abonnements", label: "Abonnements", icon: Gem },

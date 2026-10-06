@@ -1,10 +1,25 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "regions": ["cdg1"],
+  "regions": [
+    "cdg1"
+  ],
   "crons": [
-    { "path": "/api/cron/notifications", "schedule": "* * * * *" },
-    { "path": "/api/cron/rappels", "schedule": "0 7 * * *" },
-    { "path": "/api/cron/abonnements", "schedule": "15 6 * * *" }
+    {
+      "path": "/api/cron/notifications",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/rappels",
+      "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/abonnements",
+      "schedule": "15 6 * * *"
+    },
+    {
+      "path": "/api/cron/analytics",
+      "schedule": "30 3 * * *"
+    }
   ]
 }

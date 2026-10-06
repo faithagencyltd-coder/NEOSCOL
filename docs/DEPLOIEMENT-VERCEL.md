@@ -39,6 +39,7 @@ Les autres réglages (e-mails Brevo, SMS, WhatsApp, anti-robot Turnstile, moyens
 | `/api/cron/notifications` : notifications push | chaque minute |
 | `/api/cron/abonnements` : fin d'essai, échéances, relances d'abonnement | chaque jour à 6 h 15 |
 | `/api/cron/rappels` : rappels d'impayés des familles | chaque jour à 7 h |
+| `/api/cron/analytics` : suppression des données Analytics trop anciennes | chaque jour à 3 h 30 |
 
 Chaque tâche refuse tout appel sans `CRON_SECRET`.
 

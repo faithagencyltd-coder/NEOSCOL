@@ -4,6 +4,8 @@ import { Gift, Rocket } from "lucide-react";
 import Link from "next/link";
 import { useActionState, useState } from "react";
 
+import { trackConversion } from "@/features/analytics/client";
+
 import { ActionForm } from "@/components/shared/action-form";
 import { SubmitButton } from "@/components/shared/submit-button";
 import { TurnstileWidget, type CaptchaConfig } from "@/features/auth/components/turnstile-widget";
@@ -67,7 +69,11 @@ export function SignupForm({
   initialInterval: Interval;
   initialComponents?: Module4Component[];
 }) {
-  const [state, action, pending] = useActionState(signUpOrganization, null);
+  // Mesure : formulaire d'inscription envoyé (l'inscription terminée est comptée sur les établissements créés).
+  const [state, action, pending] = useActionState(async (prev: Parameters<typeof signUpOrganization>[0], formData: FormData) => {
+    trackConversion("signup_submitted");
+    return signUpOrganization(prev, formData);
+  }, null);
   const [planCode, setPlanCode] = useState(initialPlan && plans.some((p) => p.code === initialPlan) ? initialPlan : (plans[1]?.code ?? plans[0]?.code ?? ""));
   const [interval, setBillingInterval] = useState<Interval>(initialInterval);
   const [planTouched, setPlanTouched] = useState(Boolean(initialPlan));

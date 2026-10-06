@@ -24,6 +24,7 @@ import { MaintenanceScreen } from "@/components/shared/maintenance-screen";
 import { isDemoMode } from "@/lib/demo";
 import { maintenanceBlocks } from "@/lib/maintenance";
 import { featureEnabled, type PublicModule } from "@/lib/features";
+import { AppUsageBeacon } from "@/features/analytics/app-usage-beacon";
 import { VISIBILITY_MODULES } from "@/features/ecosystem/constants";
 import { vocabularyFor } from "@/lib/vocabulary";
 
@@ -54,6 +55,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <WordingProvider organizationType={context.organization.type}>
     <AppShell sections={sections} initialCollapsed={collapsed} organization={{ name: context.organization.name, isDemo: context.organization.is_demo }}>
+        <AppUsageBeacon />
         {context.organization.is_demo ? (
           <div className="flex items-center justify-center gap-2 bg-warning-soft px-4 py-1.5 text-center text-xs font-medium text-warning lg:hidden">
             <FlaskConical className="size-3.5" aria-hidden />

@@ -471,6 +471,210 @@ export type Database = {
           }
         ]
       }
+      analytics_app_usage: {
+        Row: {
+          day: string
+          last_at: string
+          module: string
+          organization_id: string
+          user_id: string
+          views: number
+        }
+        Insert: {
+          day?: string
+          last_at?: string
+          module: string
+          organization_id: string
+          user_id: string
+          views?: number
+        }
+        Update: {
+          day?: string
+          last_at?: string
+          module?: string
+          organization_id?: string
+          user_id?: string
+          views?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_app_usage_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analytics_app_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      analytics_events: {
+        Row: {
+          created_at: string
+          day: string
+          duration_ms: number | null
+          id: number
+          label: string | null
+          path: string
+          session_id: string
+          target: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          day?: string
+          duration_ms?: number | null
+          id?: number
+          label?: string | null
+          path: string
+          session_id: string
+          target?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          day?: string
+          duration_ms?: number | null
+          id?: number
+          label?: string | null
+          path?: string
+          session_id?: string
+          target?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_sessions"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      analytics_sessions: {
+        Row: {
+          browser: string
+          city: string | null
+          consented: boolean
+          converted: boolean
+          country: string | null
+          day: string
+          device: string
+          entry_path: string | null
+          exit_path: string | null
+          id: string
+          is_returning: boolean
+          last_seen_at: string
+          locale: string
+          os: string
+          pages: number
+          referrer_host: string | null
+          region: string | null
+          started_at: string
+          utm_campaign: string | null
+          utm_source: string | null
+          visitor: string
+        }
+        Insert: {
+          browser: string
+          city?: string | null
+          consented?: boolean
+          converted?: boolean
+          country?: string | null
+          day?: string
+          device: string
+          entry_path?: string | null
+          exit_path?: string | null
+          id: string
+          is_returning?: boolean
+          last_seen_at?: string
+          locale?: string
+          os: string
+          pages?: number
+          referrer_host?: string | null
+          region?: string | null
+          started_at?: string
+          utm_campaign?: string | null
+          utm_source?: string | null
+          visitor: string
+        }
+        Update: {
+          browser?: string
+          city?: string | null
+          consented?: boolean
+          converted?: boolean
+          country?: string | null
+          day?: string
+          device?: string
+          entry_path?: string | null
+          exit_path?: string | null
+          id?: string
+          is_returning?: boolean
+          last_seen_at?: string
+          locale?: string
+          os?: string
+          pages?: number
+          referrer_host?: string | null
+          region?: string | null
+          started_at?: string
+          utm_campaign?: string | null
+          utm_source?: string | null
+          visitor?: string
+        }
+        Relationships: [
+          
+        ]
+      }
+      analytics_settings: {
+        Row: {
+          consent_required: boolean
+          enabled: boolean
+          id: number
+          retention_months: number
+          track_app_usage: boolean
+          track_clicks: boolean
+          track_duration: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          consent_required?: boolean
+          enabled?: boolean
+          id?: number
+          retention_months?: number
+          track_app_usage?: boolean
+          track_clicks?: boolean
+          track_duration?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          consent_required?: boolean
+          enabled?: boolean
+          id?: number
+          retention_months?: number
+          track_app_usage?: boolean
+          track_clicks?: boolean
+          track_duration?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       announcements: {
         Row: {
           audience: Json
@@ -11829,6 +12033,10 @@ export type Database = {
         }
         Returns: string
       }
+      analytics_purge: {
+        Args: never
+        Returns: Json
+      }
       application_thread: {
         Args: {
           p_id: string
@@ -12953,6 +13161,59 @@ export type Database = {
           override: number
         }[]
       }
+      platform_analytics_behavior: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_country: string
+          p_device: string
+        }
+        Returns: Json
+      }
+      platform_analytics_conversion: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_country: string
+          p_device: string
+        }
+        Returns: Json
+      }
+      platform_analytics_devices: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_country: string
+          p_device: string
+        }
+        Returns: Json
+      }
+      platform_analytics_geo: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_country: string
+          p_device: string
+        }
+        Returns: Json
+      }
+      platform_analytics_organizations: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_country: string
+        }
+        Returns: Json
+      }
+      platform_analytics_overview: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_country: string
+          p_device: string
+        }
+        Returns: Json
+      }
       platform_begin_org_export: {
         Args: {
           p_org: string
@@ -13149,6 +13410,10 @@ export type Database = {
           admins: number
         }[]
       }
+      platform_purge_analytics: {
+        Args: never
+        Returns: Json
+      }
       platform_record_gateway_test: {
         Args: {
           p_provider: string
@@ -13241,6 +13506,17 @@ export type Database = {
           p_user: string
         }
         Returns: number
+      }
+      platform_save_analytics_settings: {
+        Args: {
+          p_enabled: boolean
+          p_consent: boolean
+          p_clicks: boolean
+          p_duration: boolean
+          p_app: boolean
+          p_retention: number
+        }
+        Returns: undefined
       }
       platform_save_announcement: {
         Args: {
@@ -13954,6 +14230,21 @@ export type Database = {
       push_public_key: {
         Args: never
         Returns: string
+      }
+      record_analytics: {
+        Args: {
+          p_session: Json
+          p_events: Json
+        }
+        Returns: undefined
+      }
+      record_app_usage: {
+        Args: {
+          p_org: string
+          p_user: string
+          p_module: string
+        }
+        Returns: undefined
       }
       record_assistant_usage: {
         Args: {

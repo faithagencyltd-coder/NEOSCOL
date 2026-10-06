@@ -4,6 +4,7 @@ import { CheckCircle2 } from "lucide-react";
 import { useActionState } from "react";
 
 import { ActionForm } from "@/components/shared/action-form";
+import { trackConversion } from "@/features/analytics/client";
 import { SubmitButton } from "@/components/shared/submit-button";
 import { Alert } from "@/components/ui/alert";
 import { FormField } from "@/components/ui/form-field";
@@ -17,7 +18,11 @@ import type { ActionResult } from "@/lib/utils/action-result";
 
 /** « Demander des informations » : transmis à l'établissement, avec l'origine de la demande. Aucun compte requis. */
 export function LeadForm({ slug, programs, source, campaignId, captchaKey }: { slug: string; programs: string[]; source: string; campaignId?: string; captchaKey?: string | null }) {
-  const [state, action, pending] = useActionState(async (prev: ActionResult | null, formData: FormData) => submitPublicLead(prev, formData), null);
+  const [state, action, pending] = useActionState(async (prev: ActionResult | null, formData: FormData) => {
+    const result = await submitPublicLead(prev, formData);
+    if (result.ok) trackConversion("discover_request");
+    return result;
+  }, null);
   if (state?.ok) {
     return (
       <div className="grid justify-items-center gap-3 py-8 text-center" role="status" data-testid="lead-sent">

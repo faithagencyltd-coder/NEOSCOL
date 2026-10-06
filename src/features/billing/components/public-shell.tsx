@@ -2,16 +2,17 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { Logo } from "@/components/shared/logo";
+import { getAnalyticsConfig } from "@/features/analytics/server";
 import { VisitBeacon } from "@/features/marketing/components/visit-beacon";
 import { SiteContacts } from "@/features/site/components/site-contacts";
 import { getSiteSettings } from "@/lib/site-settings";
 
 /** Enveloppe des pages publiques de l'offre NeoScool (tarifs, aide, conditions). */
 export async function PublicShell({ children }: { children: ReactNode }) {
-  const site = await getSiteSettings();
+  const [site, analytics] = await Promise.all([getSiteSettings(), getAnalyticsConfig()]);
   return (
     <div className="min-h-dvh bg-background">
-      <VisitBeacon locale="fr" />
+      <VisitBeacon locale="fr" config={analytics} />
       <header className="relative overflow-hidden bg-gradient-to-br from-[#07142b] via-[#0b2559] to-[#0e4a9a] text-white">
         <div aria-hidden className="pointer-events-none absolute inset-0">
           <div className="absolute -left-24 top-0 size-[26rem] rounded-full bg-cyan-400/20 blur-3xl [animation:blob_18s_ease-in-out_infinite]" />
