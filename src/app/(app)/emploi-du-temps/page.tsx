@@ -1,4 +1,4 @@
-import { CalendarClock } from "lucide-react";
+import { CalendarClock, FileText } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { LinkSelect } from "@/components/shared/link-select";
 import { QuickFormDialog } from "@/components/shared/quick-form-dialog";
 import { TabNav } from "@/components/shared/tab-nav";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getClasses, getCurrentYear, getRooms, getTeachers } from "@/features/academic/queries";
 import { createSlot } from "@/features/timetable/actions";
@@ -78,6 +79,28 @@ export default async function TimetablePage({ searchParams }: PageProps<"/emploi
           <p className="text-sm text-muted-foreground">Pédagogie</p>
           <h1 className="text-2xl font-semibold sm:text-[26px]">Emploi du temps</h1>
           <p className="text-sm text-muted-foreground">Semaine type · année {year.name}</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {/* Export PDF de la vue affichée (classe / groupe, enseignant ou salle) et de toutes les classes. */}
+          {classId || teacherId || roomId ? (
+            <Button asChild variant="secondary">
+              <a
+                href={`/api/exports/emplois-du-temps?annee=${year.id}&${roomId ? `salle=${roomId}` : teacherId ? `enseignant=${teacherId}` : `classes=${classId}${groupId ? `&groupe=${groupId}` : ""}`}`}
+                target="_blank"
+                rel="noreferrer"
+                data-testid="timetable-export"
+              >
+                <FileText aria-hidden /> Exporter l&apos;emploi du temps en PDF
+              </a>
+            </Button>
+          ) : null}
+          {classes.length > 1 ? (
+            <Button asChild variant="ghost">
+              <a href={`/api/exports/emplois-du-temps?annee=${year.id}`} target="_blank" rel="noreferrer" data-testid="timetable-export-all">
+                <FileText aria-hidden /> {training ? "Toutes les sessions" : "Toutes les classes"} (PDF)
+              </a>
+            </Button>
+          ) : null}
         </div>
         {canManage && classId && selectedClass ? (
           <QuickFormDialog

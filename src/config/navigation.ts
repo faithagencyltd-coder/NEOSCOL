@@ -125,6 +125,7 @@ export const NAVIGATION: NavSection[] = [
       { href: "/structure?onglet=filieres", label: "Séries et filières", icon: "structure", anyOf: ["academic.manage"], keywords: "lycée général technique séries filières F1 F2 F3 F4 G1 G2 G3 génie civil électrotechnique", schoolLevel: "lycee" , family: "school" },
       { href: "/structure?onglet=matieres", label: "Matières", icon: "subjects", anyOf: ["academic.manage"], keywords: "matières modules coefficients" },
       { href: "/emploi-du-temps", label: "Emploi du temps", icon: "timetable", anyOf: ["timetable.read", "timetable.manage"], keywords: "cours horaires salles" },
+      { href: "/listes", label: "Listes et exportations", icon: "reports", anyOf: ["students.read", "timetable.read", "timetable.manage"], keywords: "liste de classe export pdf excel effectifs garçons filles photos emploi du temps imprimer" },
     ],
   },
   {
@@ -250,6 +251,7 @@ export const UNIVERSITY_NAVIGATION: NavSection[] = [
       { href: "/parents", label: "Parents et tuteurs", icon: "guardians", anyOf: ["guardians.read"], feature: "parent_portal", keywords: "parent tuteur famille portail parent" },
       { href: "/universite/enseignants", label: "Enseignants", icon: "staff", anyOf: ["staff.read"], keywords: "professeur maître de conférences chargé de cours vacataire grade" },
       { href: "/emploi-du-temps", label: "Emploi du temps", icon: "timetable", anyOf: ["timetable.read", "timetable.manage"], keywords: "cours CM TD TP salles horaires" },
+      { href: "/listes", label: "Listes et exportations", icon: "reports", anyOf: ["students.read", "timetable.read", "timetable.manage"], keywords: "liste de classe export pdf excel effectifs garçons filles photos emploi du temps imprimer" },
     ],
   },
   {
