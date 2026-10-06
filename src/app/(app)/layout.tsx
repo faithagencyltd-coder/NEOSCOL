@@ -23,7 +23,8 @@ import { can, displayName } from "@/lib/auth/session";
 import { MaintenanceScreen } from "@/components/shared/maintenance-screen";
 import { isDemoMode } from "@/lib/demo";
 import { maintenanceBlocks } from "@/lib/maintenance";
-import { featureEnabled } from "@/lib/features";
+import { featureEnabled, type PublicModule } from "@/lib/features";
+import { VISIBILITY_MODULES } from "@/features/ecosystem/constants";
 import { vocabularyFor } from "@/lib/vocabulary";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -39,6 +40,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     hidden: [
       ...(featureEnabled(context.organization, "messaging") ? [] : ["/messages"]),
       ...(featureEnabled(context.organization, "assistant") ? [] : ["/assistant"]),
+      ...(Object.entries(VISIBILITY_MODULES) as [string, PublicModule][]).filter(([, flag]) => !featureEnabled(context.organization, flag)).map(([href]) => href),
     ],
   });
   const notifications = await getRecentNotifications(context.organization.id);

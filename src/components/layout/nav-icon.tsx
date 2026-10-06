@@ -1,5 +1,6 @@
 import {
   Archive,
+  Megaphone,
   ArrowLeftRight,
   Award,
   Briefcase,
@@ -66,6 +67,7 @@ import {
 import type { NavIcon as NavIconName } from "@/config/navigation";
 
 const ICONS: Record<NavIconName, LucideIcon> = {
+  visibility: Megaphone,
   dashboard: LayoutDashboard,
   account: UserRound,
   students: GraduationCap,

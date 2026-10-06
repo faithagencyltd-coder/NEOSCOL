@@ -66,7 +66,8 @@ export type NavIcon =
   | "thesis"
   | "defense"
   | "diploma"
-  | "teacherPortal";
+  | "teacherPortal"
+  | "visibility";
 
 export type NavItem = {
   href: string;
@@ -84,6 +85,15 @@ export type NavItem = {
 };
 
 export type NavSection = { label: string; items: NavItem[] };
+
+/** Écosystème public (Discover, Leads, Promotion, Opportunities, publicité) : masqué tant que le module est fermé. */
+const VISIBILITY_ITEMS: NavItem[] = [
+  { href: "/visibilite", label: "Fiche publique", icon: "visibility", anyOf: ["settings.manage"], keywords: "discover annuaire fiche publique vérification profil vérifié images statistiques mise en avant" },
+  { href: "/visibilite/demandes", label: "Demandes reçues", icon: "visibility", anyOf: ["enrollments.manage"], keywords: "leads prospects demandes d'information contacts origine" },
+  { href: "/visibilite/campagnes", label: "Campagnes", icon: "visibility", anyOf: ["communication.send"], keywords: "promotion campagne affiche média kit qr code réseaux sociaux" },
+  { href: "/visibilite/opportunites", label: "Recrutement", icon: "visibility", anyOf: ["staff.manage"], keywords: "opportunities offre d'emploi recrutement candidatures cv" },
+  { href: "/visibilite/publicite", label: "Publicité externe", icon: "visibility", anyOf: ["communication.send"], keywords: "facebook instagram tiktok google publicité budget" },
+];
 
 /**
  * Navigation principale. Seuls les modules LIVRÉS y figurent : chaque phase
@@ -150,6 +160,10 @@ export const NAVIGATION: NavSection[] = [
       { href: "/communication/envois", label: "Centre d'envois", icon: "communication", anyOf: ["communication.send"], keywords: "sms e-mail email whatsapp envoi groupé relance impayés modèles parents personnel" },
       { href: "/communication/credit-sms", label: "Crédit SMS", icon: "communication", anyOf: ["communication.send", "billing.manage"], keywords: "sms crédit acheter prix recharge solde" },
     ],
+  },
+  {
+    label: "Visibilité",
+    items: VISIBILITY_ITEMS,
   },
   {
     label: "Finances",
@@ -314,6 +328,10 @@ export const UNIVERSITY_NAVIGATION: NavSection[] = [
       { href: "/communication/envois", label: "Centre d'envois", icon: "communication", anyOf: ["communication.send"], keywords: "sms e-mail whatsapp envoi groupé relance" },
       { href: "/communication/credit-sms", label: "Crédit SMS", icon: "communication", anyOf: ["communication.send", "billing.manage"], keywords: "sms crédit acheter prix recharge solde" },
     ],
+  },
+  {
+    label: "Visibilité",
+    items: VISIBILITY_ITEMS,
   },
   {
     label: "Portails",

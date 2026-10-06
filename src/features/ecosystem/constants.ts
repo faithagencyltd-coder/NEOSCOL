@@ -135,3 +135,12 @@ export const PUBLIC_ACCOUNT_TYPES: Record<string, string> = {
 
 export const toOptions = (map: Record<string, string | { label: string }>) =>
   Object.entries(map).map(([value, v]) => ({ value, label: typeof v === "string" ? v : v.label }));
+
+/** Page de l'espace « Visibilité » → module public qui l'ouvre (Super Admin › Contrôle des modules). */
+export const VISIBILITY_MODULES = {
+  "/visibilite": "discover",
+  "/visibilite/demandes": "leads",
+  "/visibilite/campagnes": "promotion",
+  "/visibilite/opportunites": "opportunities",
+  "/visibilite/publicite": "external_ads",
+} as const;
