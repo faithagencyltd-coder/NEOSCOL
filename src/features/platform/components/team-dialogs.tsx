@@ -33,14 +33,27 @@ export function AddTeamMemberDialog() {
           <UserPlus aria-hidden /> Ajouter un membre
         </Button>
       </DialogTrigger>
-      <DialogContent title="Ajouter un membre à l'équipe" description="Si un compte existe déjà avec cet e-mail, il est simplement ajouté ; sinon il est créé.">
+      <DialogContent
+        title="Ajouter un membre à l'équipe"
+        description="Si un compte existe déjà avec cet e-mail, il est simplement ajouté ; sinon il est créé."
+      >
         {created ? (
-          <Credentials message={state?.message} login={created.login} password={created.password} />
+          <Credentials
+            message={state?.message}
+            login={created.login}
+            password={created.password}
+          />
         ) : state?.ok ? (
           <Alert tone="success">{state.message}</Alert>
         ) : (
-          <ActionForm dispatch={action} pending={pending} className="grid gap-4">
-            {state && !state.ok ? <Alert tone="danger">{state.message}</Alert> : null}
+          <ActionForm
+            dispatch={action}
+            pending={pending}
+            className="grid gap-4"
+          >
+            {state && !state.ok ? (
+              <Alert tone="danger">{state.message}</Alert>
+            ) : null}
             <FormField id="team_email" label="E-mail de connexion">
               <Input id="team_email" name="email" type="email" required />
             </FormField>

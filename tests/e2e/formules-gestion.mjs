@@ -84,7 +84,7 @@ try {
   await visitor.close();
 
   // 3. Modification.
-  await card.getByRole("button", { name: "Modifier" }).click();
+  await card.getByRole("button", { name: "Modifier", exact: true }).click();
   const edit = sa.getByRole("dialog");
   await edit.getByLabel("Nom affiché *").fill("Scolaire Premium+");
   await edit.getByTestId("plan-org-types").getByLabel("Lycée").check();
@@ -115,7 +115,7 @@ try {
   check((await sa.locator('[data-plan="MODULE_SCOLAIRE"]').getByRole("button", { name: "Supprimer" }).count()) === 0, "suppression : impossible pour une formule qui a des abonnés");
 
   // 5. Option appliquée : l'assistant coupé par la formule de l'école.
-  await sa.locator('[data-plan="MODULE_SCOLAIRE"]').getByRole("button", { name: "Modifier" }).click();
+  await sa.locator('[data-plan="MODULE_SCOLAIRE"]').getByRole("button", { name: "Modifier", exact: true }).click();
   await sa.getByRole("dialog").getByTestId("plan-features").getByLabel("Assistant intelligent").uncheck();
   await sa.getByRole("dialog").getByRole("button", { name: "Enregistrer la formule" }).click();
   check(await toast(sa, "Formule mise à jour"), "option : assistant retiré de la formule Module Scolaire");

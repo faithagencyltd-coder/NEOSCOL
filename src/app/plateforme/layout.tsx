@@ -4,9 +4,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { UserMenu } from "@/components/layout/user-menu";
-import { Logo } from "@/components/shared/logo";
 import { InstallAppButton } from "@/components/shared/pwa";
-import { PlatformTabs } from "@/features/platform/components/platform-tabs";
+import { PlatformFrame } from "@/features/platform/components/platform-frame";
 import { getPlatformRole, PLATFORM_ROLE_LABELS } from "@/lib/auth/platform";
 import { securityState } from "@/lib/auth/security";
 import { maintenanceState } from "@/lib/maintenance";
@@ -30,28 +29,15 @@ export default async function PlatformLayout({ children }: { children: React.Rea
   const supabase = await createClient();
   const { data: isAdmin } = await supabase.rpc("is_platform_admin");
   if (!isAdmin) notFound();
-  const [security, role, maintenance] = await Promise.all([securityState(), getPlatformRole(), maintenanceState()]);
-  return (
-    <div className="min-h-dvh bg-background">
-      <header className="bg-gradient-to-br from-[#07142b] via-[#0b2559] to-[#0e4a9a] text-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-8">
-          <Logo inverted tagline />
-          <div className="flex items-center gap-2">
-          <div className="hidden rounded-xl bg-white/95 px-1 text-foreground sm:block [&_p]:px-2 [&_p]:py-1 [&_p]:text-xs">
-            <InstallAppButton label="Installer NeoScool Console" appName="NeoScool Console" />
-          </div>
-          <div className="rounded-xl bg-white text-foreground">
-            <UserMenu name={displayName(context)} email={context.user.email} roleLabel={role && role !== "owner" ? `Super Admin — ${PLATFORM_ROLE_LABELS[role]}` : "Super administrateur"} organizations={context.organizations} activeOrganizationId={context.organization?.id ?? ""} />
-          </div>
-          </div>
-        </div>
-        <div className="mx-auto grid max-w-7xl gap-1 px-4 pt-2 sm:px-8">
-          <p className="text-xs font-semibold uppercase tracking-widest text-cyan-300">Platform console</p>
-          <h1 className="text-3xl font-bold">Plateforme NeoScool</h1>
-          <p className="pb-4 text-white/75">Établissements, abonnements, paiements, formules, intégrations et sécurité. Les données de chaque établissement restent strictement séparées.</p>
-          <PlatformTabs />
-        </div>
-      </header>
+  const [security, role, maintenance, { count: openTickets }] = await Promise.all([
+    securityState(),
+    getPlatformRole(),
+    maintenanceState(),
+    supabase.from("support_tickets").select("id", { count: "exact", head: true }).in("status", ["open", "in_progress"]),
+  ]);
+  const roleLabel = role && role !== "owner" ? `Super Admin — ${PLATFORM_ROLE_LABELS[role]}` : "Super administrateur";
+  const banners = (
+    <>
       {maintenance ? (
         <div role="status" className="bg-warning-soft px-4 py-2 text-center text-sm font-medium text-warning" data-testid="maintenance-banner">
           Mode maintenance actif : les établissements voient l&apos;écran de maintenance. Vous gardez l&apos;accès pour vérifier.{" "}
@@ -73,7 +59,25 @@ export default async function PlatformLayout({ children }: { children: React.Rea
           </Link>
         </div>
       ) : null}
-      <main className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-8">{children}</main>
-    </div>
+    </>
+  );
+  return (
+    <PlatformFrame
+      roleLabel={roleLabel}
+      openTickets={openTickets ?? 0}
+      banners={banners}
+      installButton={
+        <div className="rounded-xl bg-white/95 text-foreground [&_p]:px-2 [&_p]:py-1 [&_p]:text-xs">
+          <InstallAppButton label="Installer NeoScool Console" appName="NeoScool Console" />
+        </div>
+      }
+      userMenu={
+        <div className="rounded-xl border border-border bg-surface text-foreground">
+          <UserMenu name={displayName(context)} email={context.user.email} roleLabel={roleLabel} organizations={context.organizations} activeOrganizationId={context.organization?.id ?? ""} />
+        </div>
+      }
+    >
+      {children}
+    </PlatformFrame>
   );
 }

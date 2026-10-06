@@ -8,11 +8,20 @@ import { ActionForm } from "@/components/shared/action-form";
 import { SubmitButton } from "@/components/shared/submit-button";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { exampleVars, renderTemplate, TEMPLATE_VARIABLES } from "@/features/platform/communication";
+import {
+  exampleVars,
+  renderTemplate,
+  TEMPLATE_VARIABLES,
+} from "@/features/platform/communication";
 import { saveMessageTemplate } from "@/features/platform/communication-actions";
 import type { ActionResult } from "@/lib/utils/action-result";
 
@@ -29,17 +38,24 @@ export type MessageTemplate = {
 };
 
 /** Modification d'un message automatique : variables cliquables et aperçu avec un exemple. */
-export function MessageTemplateEditor({ template }: { template: MessageTemplate }) {
+export function MessageTemplateEditor({
+  template,
+}: {
+  template: MessageTemplate;
+}) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState(template.title ?? template.default_title);
   const [body, setBody] = useState(template.body ?? template.default_body);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
-  const [state, formAction, pending] = useActionState(async (prev: ActionResult | null, formData: FormData) => {
-    const result = await saveMessageTemplate(prev, formData);
-    notifyResult(result);
-    if (result.ok) setOpen(false);
-    return result;
-  }, null);
+  const [state, formAction, pending] = useActionState(
+    async (prev: ActionResult | null, formData: FormData) => {
+      const result = await saveMessageTemplate(prev, formData);
+      notifyResult(result);
+      if (result.ok) setOpen(false);
+      return result;
+    },
+    null,
+  );
   const vars = exampleVars(template.variables);
 
   const insert = (name: string) => {
@@ -67,22 +83,52 @@ export function MessageTemplateEditor({ template }: { template: MessageTemplate 
       }}
     >
       <DialogTrigger asChild>
-        <Button size="sm" variant="ghost" aria-label={`Modifier le message « ${template.label} »`}>
+        <Button
+          size="sm"
+          variant="ghost"
+          aria-label={`Modifier le message « ${template.label} »`}
+        >
           <Pencil aria-hidden />
         </Button>
       </DialogTrigger>
-      <DialogContent title={template.label} description={template.description} className="max-w-2xl">
-        <ActionForm dispatch={formAction} pending={pending} className="grid gap-4">
+      <DialogContent
+        title={template.label}
+        description={template.description}
+        className="max-w-2xl"
+      >
+        <ActionForm
+          dispatch={formAction}
+          pending={pending}
+          className="grid gap-4"
+        >
           <input type="hidden" name="code" value={template.code} />
-          {state && !state.ok ? <Alert tone="danger">{state.message}</Alert> : null}
+          {state && !state.ok ? (
+            <Alert tone="danger">{state.message}</Alert>
+          ) : null}
           <FormField id={`tpl-title-${template.code}`} label="Titre *">
-            <Input id={`tpl-title-${template.code}`} name="title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={150} />
+            <Input
+              id={`tpl-title-${template.code}`}
+              name="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              maxLength={150}
+            />
           </FormField>
           <FormField id={`tpl-body-${template.code}`} label="Texte *">
-            <Textarea id={`tpl-body-${template.code}`} ref={bodyRef} name="body" value={body} onChange={(e) => setBody(e.target.value)} maxLength={1000} rows={4} />
+            <Textarea
+              id={`tpl-body-${template.code}`}
+              ref={bodyRef}
+              name="body"
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              maxLength={1000}
+              rows={4}
+            />
           </FormField>
           <div className="grid gap-1.5">
-            <span className="text-sm font-medium">Variables (cliquez pour les insérer dans le texte)</span>
+            <span className="text-sm font-medium">
+              Variables (cliquez pour les insérer dans le texte)
+            </span>
             <div className="flex flex-wrap gap-1.5">
               {template.variables.map((v) => (
                 <button
@@ -97,7 +143,10 @@ export function MessageTemplateEditor({ template }: { template: MessageTemplate 
               ))}
             </div>
           </div>
-          <div className="grid gap-1 rounded-xl border border-dashed border-border p-3" data-testid="template-preview">
+          <div
+            className="grid gap-1 rounded-xl border border-dashed border-border p-3"
+            data-testid="template-preview"
+          >
             <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
               <Eye className="size-3.5" aria-hidden /> Aperçu avec un exemple
             </span>
@@ -105,7 +154,12 @@ export function MessageTemplateEditor({ template }: { template: MessageTemplate 
             <span className="text-sm">{renderTemplate(body, vars)}</span>
           </div>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="enabled" defaultChecked={template.enabled} className="size-4 accent-[var(--primary)]" />
+            <input
+              type="checkbox"
+              name="enabled"
+              defaultChecked={template.enabled}
+              className="size-4 accent-[var(--primary)]"
+            />
             Message actif (décochez pour ne plus l&apos;envoyer)
           </label>
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">

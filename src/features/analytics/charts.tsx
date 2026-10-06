@@ -123,3 +123,43 @@ export function Kpi({ label, value, deltaPct, hint, testId }: { label: string; v
     </Card>
   );
 }
+
+/** Anneau de répartition (parts d'un total), avec légende et pourcentages. */
+export function Donut({ rows, centerLabel, colors = DONUT_COLORS }: { rows: { label: string; value: number }[]; centerLabel: string; colors?: string[] }) {
+  const total = rows.reduce((t, r) => t + r.value, 0);
+  if (!total) return <Empty />;
+  const R = 42;
+  const C = 2 * Math.PI * R;
+  const lengths = rows.map((r) => (r.value / total) * C);
+  const offsets = lengths.map((_, i) => lengths.slice(0, i).reduce((a, b) => a + b, 0));
+  return (
+    <figure className="grid items-center gap-4 sm:grid-cols-[150px_minmax(0,1fr)] lg:grid-cols-1 2xl:grid-cols-[150px_minmax(0,1fr)]">
+      <svg viewBox="0 0 110 110" className="mx-auto size-[150px]" role="img" aria-label={`Répartition : ${rows.map((r) => `${r.label} ${r.value}`).join(", ")}`}>
+        <circle cx="55" cy="55" r={R} fill="none" stroke="currentColor" strokeWidth="14" className="text-surface-muted" />
+        {rows.map((r, i) => (
+          <circle key={r.label} cx="55" cy="55" r={R} fill="none" stroke={colors[i % colors.length]} strokeWidth="14" strokeDasharray={`${lengths[i]} ${C - lengths[i]!}`} strokeDashoffset={-offsets[i]!} transform="rotate(-90 55 55)">
+            <title>{`${r.label} : ${r.value}`}</title>
+          </circle>
+        ))}
+        <text x="55" y="53" textAnchor="middle" className="fill-foreground" fontSize="18" fontWeight="700">
+          {total.toLocaleString("fr-FR")}
+        </text>
+        <text x="55" y="68" textAnchor="middle" className="fill-muted-foreground" fontSize="8">
+          {centerLabel}
+        </text>
+      </svg>
+      <figcaption className="min-w-0">
+        <ul className="grid gap-1.5 text-xs">
+          {rows.map((r, i) => (
+            <li key={r.label} className="flex items-center gap-2">
+              <span className="inline-block size-2.5 shrink-0 rounded-full" style={{ background: colors[i % colors.length] }} aria-hidden />
+              <span className="flex-1 truncate text-muted-foreground">{r.label}</span>
+              <span className="tabular-nums font-medium">{Math.round((r.value / total) * 100)} %</span>
+            </li>
+          ))}
+        </ul>
+      </figcaption>
+    </figure>
+  );
+}
+const DONUT_COLORS = ["#1d63ed", "#22c55e", "#f59e0b", "#a855f7", "#ef4444", "#0ea5e9", "#64748b", "#ec4899", "#14b8a6", "#84cc16"];
