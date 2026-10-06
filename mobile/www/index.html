@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0B1F3A" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: http: https:; connect-src 'self' http: https:; media-src 'self' blob: mediastream:; style-src 'self' 'unsafe-inline'; script-src 'self'" />
+  <title>NeoScool</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="top">
+    <button class="icon-btn" id="btn-back" type="button" aria-label="Retour" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
+    </button>
+    <img src="logo.png" alt="" class="brand-mark" />
+    <span class="brand">Neo<span>Scool</span></span>
+  </header>
+
+  <main id="app" aria-live="polite">
+    <!-- Accueil : établissements enregistrés -->
+    <section class="screen" id="screen-home" hidden>
+      <div class="hero" id="home-empty" hidden>
+        <img src="logo.png" alt="" class="hero-logo" />
+        <h1>Bienvenue sur NeoScool</h1>
+        <p>Une seule application pour tous vos portails : parent, élève, étudiant, apprenant, enseignant, formateur et administration.</p>
+      </div>
+      <div id="home-list-wrap" hidden>
+        <h1 class="title">Mes établissements</h1>
+        <ul class="cards" id="home-list"></ul>
+      </div>
+      <div class="actions">
+        <button class="btn primary" type="button" data-go="scan">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2M7 12h10" /></svg>
+          Scanner le QR code de l'établissement
+        </button>
+        <button class="btn" type="button" data-go="saisie">Saisir le lien ou le code</button>
+      </div>
+      <p class="hint">Le QR code et le lien se trouvent sur l'affiche ou le message envoyé par votre établissement (Paramètres › Lien des portails).</p>
+    </section>
+
+    <!-- Scanner -->
+    <section class="screen" id="screen-scan" hidden>
+      <h1 class="title">Scanner le QR code</h1>
+      <div class="scanner">
+        <video id="scan-video" playsinline muted></video>
+        <canvas id="scan-canvas" hidden></canvas>
+        <span class="frame" aria-hidden="true"></span>
+      </div>
+      <p class="hint" id="scan-status">Placez le QR code de l'établissement dans le cadre.</p>
+      <div class="actions">
+        <button class="btn" type="button" data-go="saisie">Saisir le lien à la place</button>
+      </div>
+    </section>
+
+    <!-- Saisie -->
+    <section class="screen" id="screen-saisie" hidden>
+      <h1 class="title">Ajouter un établissement</h1>
+      <form id="form-add" class="form" novalidate>
+        <label for="add-link">Lien de l'établissement ou code</label>
+        <input id="add-link" name="link" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="https://…/acces/CODE  ou  CODE" />
+        <div id="server-row">
+          <label for="add-server">Adresse du serveur NeoScool <small>(si vous n'avez qu'un code)</small></label>
+          <input id="add-server" name="server" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="ex. 192.168.1.20:3000" />
+        </div>
+        <p class="error" id="add-error" role="alert" hidden></p>
+        <button class="btn primary" type="submit" id="add-submit">Ajouter</button>
+      </form>
+    </section>
+
+    <!-- Établissement : choix du portail -->
+    <section class="screen" id="screen-org" hidden>
+      <div class="org-head" id="org-head"></div>
+      <h2 class="subtitle">Choisissez votre portail</h2>
+      <ul class="portals" id="org-portals"></ul>
+      <button class="btn ghost danger" type="button" id="org-remove">Retirer cet établissement de l'application</button>
+    </section>
+
+    <!-- Ouverture / erreur -->
+    <section class="screen center" id="screen-open" hidden>
+      <div class="spinner" aria-hidden="true"></div>
+      <p id="open-text">Connexion…</p>
+      <button class="btn ghost" type="button" id="open-cancel">Annuler</button>
+    </section>
+    <section class="screen center" id="screen-error" hidden>
+      <div class="error-icon" aria-hidden="true">!</div>
+      <h1 class="title" id="error-title">Établissement injoignable</h1>
+      <p id="error-text"></p>
+      <div class="actions">
+        <button class="btn primary" type="button" id="error-retry">Réessayer</button>
+        <button class="btn" type="button" data-go="home">Mes établissements</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot" id="foot"></footer>
+
+  <script src="config.js"></script>
+  <script src="lib.js"></script>
+  <script src="jsQR.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

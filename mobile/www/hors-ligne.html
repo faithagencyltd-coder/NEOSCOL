@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>NeoScool — hors connexion</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="screen center" style="min-height:100vh">
+    <img src="logo.png" alt="" class="hero-logo" />
+    <h1 class="title">Connexion impossible</h1>
+    <p>Le serveur de votre établissement ne répond pas. Vérifiez votre connexion Internet ou Wi-Fi, puis réessayez.</p>
+    <div class="actions">
+      <button class="btn primary" type="button" onclick="history.length > 1 ? history.back() : location.replace('index.html')">Réessayer</button>
+      <a class="btn" href="index.html#etablissements">Mes établissements</a>
+    </div>
+  </main>
+</body>
+</html>

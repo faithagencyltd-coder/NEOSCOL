@@ -1,0 +1,27 @@
+{
+  "name": "neoscool-mobile",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Application mobile NeoScool (Android / iPhone) : tous les portails de l'établissement.",
+  "scripts": {
+    "config": "node scripts/config.mjs",
+    "icones": "node scripts/icones.mjs",
+    "sync": "node scripts/config.mjs && cap sync",
+    "test": "node --test scripts/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/ios": "^8.5.2",
+    "@capacitor/preferences": "^8.0.1",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.2"
+  }
+}
