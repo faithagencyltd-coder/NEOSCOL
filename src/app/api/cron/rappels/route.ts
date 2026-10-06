@@ -1,6 +1,5 @@
-import { timingSafeEqual } from "node:crypto";
-
 import { processCampaignBatch } from "@/features/communication/campaigns";
+import { cronUnauthorized } from "@/lib/cron-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -11,11 +10,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * établissements qui les ont activées (centre d'envois).
  */
 export async function GET(request: Request) {
-  const secret = process.env.CRON_SECRET;
-  const provided = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
-  if (!secret || provided.length !== secret.length || !timingSafeEqual(Buffer.from(provided), Buffer.from(secret))) {
-    return new Response("Non autorisé.", { status: 401 });
-  }
+  const denied = cronUnauthorized(request, "/api/cron/rappels");
+  if (denied) return denied;
   const admin = createAdminClient();
   if (!admin) return new Response("Configuration serveur incomplète.", { status: 500 });
   const { data: organizations } = await admin.from("organizations").select("id").eq("status", "active");

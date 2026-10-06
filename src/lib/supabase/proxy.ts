@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { isSupabaseConfigured, publicEnv } from "@/lib/env";
+import { isSupabaseConfigured, missingSupabaseEnv, publicEnv } from "@/lib/env";
 import { isNativeApp } from "@/lib/native-app";
 import type { Database } from "@/types/database";
 
@@ -37,9 +37,19 @@ function isPublicPath(pathname: string): boolean {
 export async function updateSession(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
+  // Variables Supabase absentes (ex. non créées sur Vercel) : aucune page ne peut fonctionner.
+  // Message explicite (noms des variables, jamais de valeur) au lieu d'une erreur 500 générique.
   if (!isSupabaseConfigured()) {
-    if (isPublicPath(pathname)) {
+    const missing = missingSupabaseEnv();
+    console.error(`[configuration] Variables Supabase manquantes : ${missing.join(", ")} (à créer puis redéployer).`);
+    if (pathname === "/configuration" || pathname === "/robots.txt") {
       return NextResponse.next();
+    }
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { error: "Configuration Supabase manquante sur le serveur.", missing },
+        { status: 503, headers: { "Cache-Control": "no-store" } },
+      );
     }
     return NextResponse.redirect(new URL("/configuration", request.url));
   }

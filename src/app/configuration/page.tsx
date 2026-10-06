@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { Logo } from "@/components/shared/logo";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { isSupabaseConfigured } from "@/lib/env";
+import { isSupabaseConfigured, missingSupabaseEnv, supabaseEnvHints } from "@/lib/env";
 
 export const metadata: Metadata = { title: "Configuration requise" };
 export const dynamic = "force-dynamic";
@@ -13,6 +13,8 @@ export default function ConfigurationPage() {
   if (isSupabaseConfigured()) {
     redirect("/connexion");
   }
+  const missing = missingSupabaseEnv();
+  const hints = supabaseEnvHints();
   return (
     <main className="mx-auto grid min-h-dvh max-w-2xl content-center gap-6 px-4 py-10">
       <Logo />
@@ -24,6 +26,24 @@ export default function ConfigurationPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 text-sm">
+          <div className="grid gap-1.5 rounded-xl border border-warning/40 bg-warning-soft p-4" data-testid="config-missing">
+            <p className="font-semibold text-foreground">Variables manquantes sur ce serveur</p>
+            <ul className="list-disc pl-5">
+              {missing.map((name) => (
+                <li key={name}>
+                  <code>{name}</code>
+                </li>
+              ))}
+            </ul>
+            {hints.map((hint) => (
+              <p key={hint} className="text-warning">
+                {hint}
+              </p>
+            ))}
+            <p>
+              <strong>Hébergement Vercel</strong> : Project › Settings › Environment Variables, créez ces variables (URL du projet et clé publique « anon », Supabase › Project Settings › API) pour Production et Preview, puis relancez un déploiement : les variables <code>NEXT_PUBLIC_*</code> sont prises en compte à la compilation.
+            </p>
+          </div>
           <div className="grid gap-1.5 rounded-xl border border-primary/30 bg-primary-soft/60 p-4">
             <p className="font-semibold text-foreground">Essayer NeoScool sur votre ordinateur (données de démonstration)</p>
             <p>

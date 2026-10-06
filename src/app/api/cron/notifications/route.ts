@@ -1,5 +1,4 @@
-import { timingSafeEqual } from "node:crypto";
-
+import { cronUnauthorized } from "@/lib/cron-auth";
 import { processPushQueue } from "@/lib/push/server";
 
 /**
@@ -8,16 +7,8 @@ import { processPushQueue } from "@/lib/push/server";
  * « Authorization: Bearer <CRON_SECRET> ».
  */
 export async function GET(request: Request) {
-  const secret = process.env.CRON_SECRET;
-  const provided =
-    request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
-  if (
-    !secret ||
-    provided.length !== secret.length ||
-    !timingSafeEqual(Buffer.from(provided), Buffer.from(secret))
-  ) {
-    return new Response("Non autorisé.", { status: 401 });
-  }
+  const denied = cronUnauthorized(request, "/api/cron/notifications");
+  if (denied) return denied;
   let processed = 0;
   let sent = 0;
   // Jusqu'à 10 lots de 100 par appel.

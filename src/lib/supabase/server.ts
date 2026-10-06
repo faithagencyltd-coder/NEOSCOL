@@ -3,7 +3,7 @@ import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies, headers } from "next/headers";
 
-import { publicEnv } from "@/lib/env";
+import { assertSupabaseConfigured, publicEnv } from "@/lib/env";
 import type { Database } from "@/types/database";
 
 /**
@@ -20,6 +20,8 @@ export async function createClient() {
   if (userAgent) forwarded["user-agent"] = userAgent.slice(0, 300);
   if (ip) forwarded["x-forwarded-for"] = ip.split(",")[0]!.trim().slice(0, 64);
 
+  // Après cookies() / headers() : la page reste « dynamique » à la compilation, comme avant.
+  assertSupabaseConfigured("client serveur");
   return createServerClient<Database>(publicEnv.supabaseUrl, publicEnv.supabaseAnonKey, {
     global: { headers: forwarded },
     cookies: {

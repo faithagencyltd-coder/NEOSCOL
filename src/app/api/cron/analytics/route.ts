@@ -1,3 +1,4 @@
+import { cronUnauthorized } from "@/lib/cron-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -6,9 +7,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * Cron avec « Authorization: Bearer <CRON_SECRET> ».
  */
 export async function GET(request: Request) {
-  const secret = process.env.CRON_SECRET;
-  const provided = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
-  if (!secret || provided !== secret) return Response.json({ error: "Non autorisé." }, { status: 401 });
+  const denied = cronUnauthorized(request, "/api/cron/analytics");
+  if (denied) return denied;
   const admin = createAdminClient();
   if (!admin) return Response.json({ error: "Configuration serveur incomplète." }, { status: 500 });
   const { data, error } = await admin.rpc("analytics_purge");
