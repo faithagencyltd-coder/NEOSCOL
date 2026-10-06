@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MobileMenu } from "./mobile-menu";
 import { SocialIcon } from "./social-icon";
 import { getAnalyticsConfig } from "@/features/analytics/server";
+import { SupportChatMount } from "@/features/support/components/support-chat-mount";
 
 import { VisitBeacon } from "./visit-beacon";
 import { WhatsAppButton } from "./whatsapp-button";
@@ -101,6 +102,7 @@ export async function SiteShell({ locale, alternate, children }: { locale: Local
 
       <main id="contenu">{children}</main>
       <VisitBeacon locale={locale} config={analytics} />
+      <SupportChatMount placement="site" locale={locale} />
 
       <footer className="border-t border-[#0b2559]/10 bg-[#07142b] text-sky-100/80">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-8 md:grid-cols-[1.4fr_1fr_1fr_1fr]">

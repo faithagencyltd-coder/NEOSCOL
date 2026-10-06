@@ -16,6 +16,8 @@ import { isUuid } from "@/lib/utils/search-params";
 export const metadata: Metadata = { title: "Demande — Plateforme" };
 
 /** Détail d'une demande ou d'un incident : fil, réponse, note interne, statut et gravité. */
+const SUPPORT_CHANNELS: Record<string, string> = { chatbot: "Assistant (chatbot)", whatsapp: "WhatsApp", site: "Site", email: "E-mail", platform: "Plateforme" };
+
 export default async function PlatformIncidentPage({ params }: PageProps<"/plateforme/incidents/[id]">) {
   const { id } = await params;
   if (!isUuid(id)) notFound();
@@ -53,9 +55,15 @@ export default async function PlatformIncidentPage({ params }: PageProps<"/plate
                   {org.name}
                 </Link>
               ) : (
-                <span>Plateforme</span>
+                <span>{t.kind === "incident" ? "Plateforme" : "Visiteur sans établissement"}</span>
               )}
+              {t.channel && t.channel !== "portal" ? <Badge tone="info">Canal : {SUPPORT_CHANNELS[t.channel] ?? t.channel}</Badge> : null}
             </CardDescription>
+            {t.requester_name || t.requester_email || t.requester_phone ? (
+              <p className="text-sm text-muted-foreground" data-testid="ticket-requester">
+                Contact : {[t.requester_name, t.requester_email, t.requester_phone].filter(Boolean).join(" · ")}
+              </p>
+            ) : null}
           </div>
           {writable ? (
             <div className="flex flex-wrap gap-2">

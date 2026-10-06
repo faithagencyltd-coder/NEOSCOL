@@ -4220,6 +4220,68 @@ export type Database = {
           }
         ]
       }
+      knowledge_articles: {
+        Row: {
+          audience: string
+          body: string
+          category: string
+          created_at: string
+          helpful: number
+          id: string
+          keywords: string[]
+          not_helpful: number
+          published: boolean
+          search: string | null
+          sort_order: number
+          title: string
+          updated_at: string
+          updated_by: string | null
+          views: number
+        }
+        Insert: {
+          audience?: string
+          body: string
+          category: string
+          created_at?: string
+          helpful?: number
+          id?: string
+          keywords?: string[]
+          not_helpful?: number
+          published?: boolean
+          search?: string | null
+          sort_order?: number
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+          views?: number
+        }
+        Update: {
+          audience?: string
+          body?: string
+          category?: string
+          created_at?: string
+          helpful?: number
+          id?: string
+          keywords?: string[]
+          not_helpful?: number
+          published?: boolean
+          search?: string | null
+          sort_order?: number
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+          views?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_articles_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       learner_attendance: {
         Row: {
           attendance_date: string
@@ -10757,6 +10819,206 @@ export type Database = {
           }
         ]
       }
+      support_conversation_messages: {
+        Row: {
+          answered: boolean | null
+          article_ids: string[]
+          author_id: string | null
+          body: string
+          conversation_id: string
+          created_at: string
+          id: number
+          sender: string
+        }
+        Insert: {
+          answered?: boolean | null
+          article_ids?: string[]
+          author_id?: string | null
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: number
+          sender: string
+        }
+        Update: {
+          answered?: boolean | null
+          article_ids?: string[]
+          author_id?: string | null
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: number
+          sender?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_conversation_messages_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_conversation_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "support_conversations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      support_conversations: {
+        Row: {
+          audience: string
+          channel: string
+          created_at: string
+          id: string
+          last_inbound_at: string | null
+          locale: string
+          organization_id: string | null
+          page: string | null
+          status: string
+          ticket_id: string | null
+          token_hash: string | null
+          updated_at: string
+          user_id: string | null
+          whatsapp_from: string | null
+        }
+        Insert: {
+          audience?: string
+          channel: string
+          created_at?: string
+          id?: string
+          last_inbound_at?: string | null
+          locale?: string
+          organization_id?: string | null
+          page?: string | null
+          status?: string
+          ticket_id?: string | null
+          token_hash?: string | null
+          updated_at?: string
+          user_id?: string | null
+          whatsapp_from?: string | null
+        }
+        Update: {
+          audience?: string
+          channel?: string
+          created_at?: string
+          id?: string
+          last_inbound_at?: string | null
+          locale?: string
+          organization_id?: string | null
+          page?: string | null
+          status?: string
+          ticket_id?: string | null
+          token_hash?: string | null
+          updated_at?: string
+          user_id?: string | null
+          whatsapp_from?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_conversations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_conversations_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_conversations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      support_secrets: {
+        Row: {
+          id: number
+          updated_at: string
+          whatsapp_app_secret_ciphertext: string | null
+          whatsapp_verify_token_hash: string | null
+        }
+        Insert: {
+          id?: number
+          updated_at?: string
+          whatsapp_app_secret_ciphertext?: string | null
+          whatsapp_verify_token_hash?: string | null
+        }
+        Update: {
+          id?: number
+          updated_at?: string
+          whatsapp_app_secret_ciphertext?: string | null
+          whatsapp_verify_token_hash?: string | null
+        }
+        Relationships: [
+          
+        ]
+      }
+      support_settings: {
+        Row: {
+          ai_enabled: boolean
+          ai_model: string
+          chatbot_enabled: boolean
+          chatbot_in_portals: boolean
+          chatbot_on_site: boolean
+          handoff_message: string
+          id: number
+          instructions: string | null
+          updated_at: string
+          updated_by: string | null
+          welcome_message: string
+          whatsapp_bot_replies: boolean
+          whatsapp_inbound_enabled: boolean
+        }
+        Insert: {
+          ai_enabled?: boolean
+          ai_model?: string
+          chatbot_enabled?: boolean
+          chatbot_in_portals?: boolean
+          chatbot_on_site?: boolean
+          handoff_message?: string
+          id?: number
+          instructions?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          welcome_message?: string
+          whatsapp_bot_replies?: boolean
+          whatsapp_inbound_enabled?: boolean
+        }
+        Update: {
+          ai_enabled?: boolean
+          ai_model?: string
+          chatbot_enabled?: boolean
+          chatbot_in_portals?: boolean
+          chatbot_on_site?: boolean
+          handoff_message?: string
+          id?: number
+          instructions?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          welcome_message?: string
+          whatsapp_bot_replies?: boolean
+          whatsapp_inbound_enabled?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       support_ticket_messages: {
         Row: {
           author_id: string | null
@@ -10806,6 +11068,7 @@ export type Database = {
         Row: {
           assigned_to: string | null
           category: string
+          channel: string
           created_at: string
           created_by: string | null
           description: string
@@ -10813,6 +11076,9 @@ export type Database = {
           kind: string
           number: number
           organization_id: string | null
+          requester_email: string | null
+          requester_name: string | null
+          requester_phone: string | null
           resolved_at: string | null
           severity: string
           status: string
@@ -10822,6 +11088,7 @@ export type Database = {
         Insert: {
           assigned_to?: string | null
           category: string
+          channel?: string
           created_at?: string
           created_by?: string | null
           description: string
@@ -10829,6 +11096,9 @@ export type Database = {
           kind?: string
           number?: number
           organization_id?: string | null
+          requester_email?: string | null
+          requester_name?: string | null
+          requester_phone?: string | null
           resolved_at?: string | null
           severity?: string
           status?: string
@@ -10838,6 +11108,7 @@ export type Database = {
         Update: {
           assigned_to?: string | null
           category?: string
+          channel?: string
           created_at?: string
           created_by?: string | null
           description?: string
@@ -10845,6 +11116,9 @@ export type Database = {
           kind?: string
           number?: number
           organization_id?: string | null
+          requester_email?: string | null
+          requester_name?: string | null
+          requester_phone?: string | null
           resolved_at?: string | null
           severity?: string
           status?: string
@@ -12723,6 +12997,20 @@ export type Database = {
         }
         Returns: string
       }
+      knowledge_search: {
+        Args: {
+          p_query: string
+          p_audience: string
+          p_limit?: number
+        }
+        Returns: {
+          id: string
+          category: string
+          title: string
+          body: string
+          rank: number
+        }[]
+      }
       learner_attendance_summary: {
         Args: {
           p_student_id: string
@@ -13233,6 +13521,12 @@ export type Database = {
         }
         Returns: Json
       }
+      platform_close_conversation: {
+        Args: {
+          p_conversation: string
+        }
+        Returns: undefined
+      }
       platform_confirm_visibility_order: {
         Args: {
           p_order: string
@@ -13569,6 +13863,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      platform_save_knowledge_article: {
+        Args: {
+          p_id: string
+          p_data: Json
+        }
+        Returns: string
+      }
       platform_save_message_template: {
         Args: {
           p_code: string
@@ -13719,6 +14020,12 @@ export type Database = {
           p_sort: number
         }
         Returns: string
+      }
+      platform_save_support_settings: {
+        Args: {
+          p_settings: Json
+        }
+        Returns: undefined
       }
       platform_save_teacher_access_settings: {
         Args: {
@@ -13906,6 +14213,20 @@ export type Database = {
       }
       platform_support_overview: {
         Args: never
+        Returns: Json
+      }
+      platform_support_reply: {
+        Args: {
+          p_conversation: string
+          p_body: string
+        }
+        Returns: Json
+      }
+      platform_support_stats: {
+        Args: {
+          p_from: string
+          p_to: string
+        }
         Returns: Json
       }
       platform_teacher_access_payments: {
@@ -14753,6 +15074,28 @@ export type Database = {
           p_message: string
         }
         Returns: string
+      }
+      support_chat_handoff: {
+        Args: {
+          p_conversation: string
+          p_token_hash: string
+          p_name: string
+          p_email: string
+          p_phone: string
+          p_subject: string
+        }
+        Returns: Json
+      }
+      support_chat_record: {
+        Args: {
+          p_conversation: string
+          p_token_hash: string
+          p_sender: string
+          p_body: string
+          p_articles: string[]
+          p_answered: boolean
+        }
+        Returns: undefined
       }
       sync_offline_lesson_attendance: {
         Args: {

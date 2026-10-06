@@ -23,6 +23,8 @@ const PUBLIC_PATHS = [
   "/en", "/secteurs", "/pays", "/contact",
   // Écosystème public : annuaire Discover, opportunités, création d'un compte public.
   "/decouvrir", "/opportunites", "/espace/inscription", "/sitemap.xml", "/robots.txt",
+  // Support Center : chatbot du site (visiteurs sans compte).
+  "/api/support",
 ];
 
 function isPublicPath(pathname: string): boolean {

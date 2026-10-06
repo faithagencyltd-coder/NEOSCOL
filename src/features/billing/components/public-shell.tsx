@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { Logo } from "@/components/shared/logo";
 import { getAnalyticsConfig } from "@/features/analytics/server";
+import { SupportChatMount } from "@/features/support/components/support-chat-mount";
 import { VisitBeacon } from "@/features/marketing/components/visit-beacon";
 import { SiteContacts } from "@/features/site/components/site-contacts";
 import { getSiteSettings } from "@/lib/site-settings";
@@ -13,6 +14,7 @@ export async function PublicShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh bg-background">
       <VisitBeacon locale="fr" config={analytics} />
+      <SupportChatMount placement="site" />
       <header className="relative overflow-hidden bg-gradient-to-br from-[#07142b] via-[#0b2559] to-[#0e4a9a] text-white">
         <div aria-hidden className="pointer-events-none absolute inset-0">
           <div className="absolute -left-24 top-0 size-[26rem] rounded-full bg-cyan-400/20 blur-3xl [animation:blob_18s_ease-in-out_infinite]" />

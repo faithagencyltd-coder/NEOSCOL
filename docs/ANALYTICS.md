@@ -19,7 +19,7 @@ Filtres : période (7 j, 30 j, 90 j, 12 mois ou dates), pays, type d'appareil.
 
 ## Collecte
 
-- **Site public** : le composant `VisitBeacon` (pages du site) envoie à `/api/site/visite` les pages vues, clics (libellé du bouton ou adresse du lien), durée de la page visible et conversions (`trackConversion`). Le compteur de visites existant (page « Visiteurs ») continue d'être alimenté par la même requête.
+- **Site public** : le composant `VisitBeacon` (pages du site) envoie à `/api/site/visite` les pages vues, clics (libellé du bouton ou adresse du lien), durée de la page visible et conversions (`trackConversion`). La durée envoyée à la fermeture de la page peut être interrompue par le navigateur : elle est aussi gardée dans l'onglet (sessionStorage) et renvoyée par la page suivante ; chaque durée porte une clé unique et le serveur ignore les doublons. Le compteur de visites existant (page « Visiteurs ») continue d'être alimenté par la même requête.
 - **Application des établissements** : `AppUsageBeacon` envoie le module consulté (premier segment de l'adresse) à `/api/analytics/app` ; établissement et compte sont lus dans la session, côté serveur.
 - **Connexions** : déjà enregistrées dans le journal d'audit (`auth.login`).
 

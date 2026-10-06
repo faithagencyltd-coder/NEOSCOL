@@ -13,6 +13,7 @@ import { requirePortal } from "@/features/portal/context";
 import { isHigherOrg } from "@/features/university/config";
 import { displayName } from "@/lib/auth/session";
 import { MaintenanceScreen } from "@/components/shared/maintenance-screen";
+import { SupportChatMount } from "@/features/support/components/support-chat-mount";
 import { isDemoMode } from "@/lib/demo";
 import { maintenanceBlocks } from "@/lib/maintenance";
 import { vocabularyFor } from "@/lib/vocabulary";
@@ -83,6 +84,7 @@ export default async function PortalLayout({ children }: { children: React.React
       </header>
       <PortalNav parent={parent} university={isHigherOrg(organization.type)} hidden={hidden} />
       <main className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-5 px-4 py-5">{children}</main>
+      <SupportChatMount placement="portal" />
       <NotificationWatcher />
     </div>
     </WordingProvider>

@@ -294,6 +294,26 @@ export async function whatsappSendTemplate(
   }
 }
 
+/** Message texte libre : autorisé seulement dans les 24 h qui suivent le dernier message du contact (règle Meta). */
+export async function whatsappSendText(
+  args: { accessToken: string; phoneNumberId: string; apiVersion?: string; to: string; body: string },
+  fetchImpl: FetchImpl = fetch,
+): Promise<ProviderResult> {
+  const version = args.apiVersion || DEFAULT_GRAPH_VERSION;
+  try {
+    const { status, json } = await call(fetchImpl, `${GRAPH_API}/${version}/${encodeURIComponent(args.phoneNumberId)}/messages`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${args.accessToken}`, "content-type": "application/json" },
+      body: JSON.stringify({ messaging_product: "whatsapp", to: args.to.replace(/^\+/, ""), type: "text", text: { body: args.body.slice(0, 4000), preview_url: false } }),
+    });
+    const messages = json?.messages as { id?: string }[] | undefined;
+    if (status >= 200 && status < 300) return { ok: true, id: messages?.[0]?.id };
+    return failure("WhatsApp", status, json);
+  } catch (e) {
+    return network("WhatsApp", e);
+  }
+}
+
 export async function whatsappCheck(accessToken: string, phoneNumberId: string, apiVersion?: string, fetchImpl: FetchImpl = fetch): Promise<ProviderResult> {
   try {
     const { status, json } = await call(fetchImpl, `${GRAPH_API}/${apiVersion || DEFAULT_GRAPH_VERSION}/${encodeURIComponent(phoneNumberId)}?fields=display_phone_number,verified_name`, {

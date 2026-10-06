@@ -7,9 +7,12 @@ import {
   CONVERSION_EVENT,
   describeClick,
   doNotTrack,
+  eventKey,
+  keepPending,
   readConsent,
   send,
   sessionId,
+  takePending,
   visitorId,
   writeConsent,
   type AnalyticsConfig,
@@ -48,7 +51,11 @@ export function VisitBeacon({ locale, config = DEFAULT_CONFIG }: { locale: "fr" 
       if (leaving && page.current) {
         const p = page.current;
         const ms = p.visibleMs + (p.visibleSince ? Date.now() - p.visibleSince : 0);
-        if (ms > 0) queue.current.push({ type: "leave", path: p.path, duration_ms: Math.min(ms, 3_600_000) });
+        if (ms > 0) {
+          const leave: AnalyticsEvent = { type: "leave", path: p.path, label: eventKey(), duration_ms: Math.min(ms, 3_600_000) };
+          queue.current.push(leave);
+          keepPending(sessionId(), [leave]);
+        }
         p.visibleMs = 0;
         p.visibleSince = null;
       }
@@ -66,6 +73,8 @@ export function VisitBeacon({ locale, config = DEFAULT_CONFIG }: { locale: "fr" 
         events,
       });
     };
+    // Durées de la page précédente dont l'envoi a pu être interrompu (doublons ignorés côté serveur).
+    queue.current.push(...takePending(sessionId()));
     const timer = window.setInterval(() => flush(), 3000);
     const heartbeat = window.setInterval(() => {
       if (document.visibilityState === "visible" && config.enabled) send({ sid: sessionId(), vid: visitorId(config), consent: readConsent() === "granted" || !config.consentRequired, locale, events: [] });
@@ -106,7 +115,7 @@ export function VisitBeacon({ locale, config = DEFAULT_CONFIG }: { locale: "fr" 
     const prev = page.current;
     if (prev && prev.path !== pathname) {
       const ms = prev.visibleMs + (prev.visibleSince ? Date.now() - prev.visibleSince : 0);
-      queue.current.push({ type: "leave", path: prev.path, duration_ms: Math.min(ms, 3_600_000) });
+      queue.current.push({ type: "leave", path: prev.path, label: eventKey(), duration_ms: Math.min(ms, 3_600_000) });
     }
     page.current = { path: pathname, visibleSince: document.visibilityState === "visible" ? Date.now() : null, visibleMs: 0 };
     counter.current += 1;
@@ -136,7 +145,7 @@ export function VisitBeacon({ locale, config = DEFAULT_CONFIG }: { locale: "fr" 
     window.dispatchEvent(new Event(CONSENT_CHANGE));
   };
   return (
-    <div role="dialog" aria-label={en ? "Audience measurement" : "Mesure d'audience"} data-analytics-ignore data-testid="consent-banner" className="fixed inset-x-3 bottom-3 z-[70] mx-auto max-w-xl rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700 shadow-2xl sm:inset-x-6">
+    <div role="dialog" aria-label={en ? "Audience measurement" : "Mesure d'audience"} data-analytics-ignore data-testid="consent-banner" className="fixed inset-x-3 bottom-3 z-[70] mx-auto max-w-xl rounded-2xl sm:right-auto sm:left-6 sm:mx-0 sm:max-w-md border border-slate-200 bg-white p-4 text-sm text-slate-700 shadow-2xl sm:inset-x-6">
       <p>
         {en
           ? "NeoScool measures its audience to improve the site (pages viewed, buttons clicked). With your consent, we also recognise you when you come back. No advertising, no resale, nothing you type is recorded."

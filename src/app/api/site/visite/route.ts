@@ -99,12 +99,21 @@ export async function POST(request: NextRequest) {
   // Analytics : session et événements détaillés.
   const consented = body.consent === true && typeof body.vid === "string" && UUID.test(body.vid);
   const visitor = consented ? createHash("sha256").update(`v|${body.vid}|${salt}`).digest("hex") : daily;
+  // Durées de page renvoyées par la page suivante (envoi à la fermeture interrompu) : doublons ignorés.
+  const keys = events.filter((e) => e.type === "leave" && e.label).map((e) => e.label as string);
+  let detailed = events;
+  if (keys.length) {
+    const { data: seen } = await admin.from("analytics_events").select("label").eq("session_id", body.sid.toLowerCase()).eq("type", "leave").in("label", keys);
+    const known = new Set((seen ?? []).map((r) => r.label));
+    detailed = events.filter((e) => !(e.type === "leave" && e.label && known.has(e.label)));
+    if (!detailed.length) return done;
+  }
   await admin.rpc("record_analytics", {
     p_session: {
       id: body.sid.toLowerCase(),
       visitor,
       consented,
-      path: events[0]?.path ?? null,
+      path: detailed[0]?.path ?? null,
       device,
       os: osOf(ua),
       browser: browserOf(ua),
@@ -116,7 +125,7 @@ export async function POST(request: NextRequest) {
       utm_campaign: str(body.utm_campaign, 80),
       locale,
     },
-    p_events: events,
+    p_events: detailed,
   });
   return done;
 }

@@ -21,6 +21,7 @@ const ENDPOINT = "/api/site/visite";
 const SESSION_KEY = "ns_sid";
 const SESSION_SEEN = "ns_sid_at";
 const VISITOR_KEY = "ns_vid";
+const PENDING_KEY = "ns_pending";
 export const CONSENT_KEY = "ns_consent";
 export const CONVERSION_EVENT = "neoscool:conversion";
 const IDLE_MS = 30 * 60 * 1000;
@@ -69,6 +70,31 @@ export function sessionId(): string {
     return id;
   }, uuid());
 }
+
+/**
+ * Durées de page envoyées à la fermeture : le navigateur peut interrompre cet
+ * envoi pendant la navigation. Elles sont donc aussi gardées dans l'onglet et
+ * renvoyées par la page suivante ; chaque durée porte une clé unique (label),
+ * le serveur ignore les doublons.
+ */
+export function keepPending(sid: string, events: AnalyticsEvent[]) {
+  safe(() => {
+    const prev = takePendingRaw();
+    const kept = prev && prev.sid === sid ? prev.events : [];
+    sessionStorage.setItem(PENDING_KEY, JSON.stringify({ sid, events: [...kept, ...events].slice(-10) }));
+  }, undefined);
+}
+const takePendingRaw = (): { sid: string; events: AnalyticsEvent[] } | null =>
+  safe(() => {
+    const v = JSON.parse(sessionStorage.getItem(PENDING_KEY) ?? "null");
+    return v && typeof v.sid === "string" && Array.isArray(v.events) ? v : null;
+  }, null);
+export function takePending(sid: string): AnalyticsEvent[] {
+  const v = takePendingRaw();
+  safe(() => sessionStorage.removeItem(PENDING_KEY), undefined);
+  return v && v.sid === sid ? v.events.filter((e) => e?.type === "leave" && typeof e.path === "string").slice(0, 10) : [];
+}
+export const eventKey = () => uuid().replace(/-/g, "").slice(0, 16);
 
 /** Identifiant durable : seulement avec consentement (ou consentement non exigé). */
 export function visitorId(config: AnalyticsConfig): string | null {

@@ -24,7 +24,7 @@ export function SupportThread({ description, createdAt, author, messages }: { de
         >
           <p className="mb-1 flex items-center gap-1 text-xs text-muted-foreground">
             {m.internal ? <Lock className="size-3" aria-hidden /> : null}
-            {m.internal ? "Note interne (invisible pour l'établissement)" : m.author_side === "platform" ? "Équipe NeoScool" : (m.author ?? "Établissement")} · {new Date(m.created_at).toLocaleString("fr-FR")}
+            {m.internal ? "Note interne (invisible pour l'établissement)" : m.author_side === "platform" ? "Équipe NeoScool" : m.author_side === "visitor" ? "Visiteur" : (m.author ?? "Établissement")} · {new Date(m.created_at).toLocaleString("fr-FR")}
           </p>
           <p className="whitespace-pre-line">{m.body}</p>
         </li>
