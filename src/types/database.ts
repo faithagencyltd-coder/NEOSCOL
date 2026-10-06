@@ -331,6 +331,146 @@ export type Database = {
           }
         ]
       }
+      ad_platforms: {
+        Row: {
+          api_connected: boolean
+          enabled: boolean
+          label: string
+          note: string | null
+          provider: string
+          updated_at: string
+        }
+        Insert: {
+          api_connected?: boolean
+          enabled?: boolean
+          label: string
+          note?: string | null
+          provider: string
+          updated_at?: string
+        }
+        Update: {
+          api_connected?: boolean
+          enabled?: boolean
+          label?: string
+          note?: string | null
+          provider?: string
+          updated_at?: string
+        }
+        Relationships: [
+          
+        ]
+      }
+      ad_requests: {
+        Row: {
+          audience: string | null
+          budget_amount: number | null
+          budget_currency: string | null
+          campaign_id: string | null
+          cities: string[]
+          countries: string[]
+          created_at: string
+          created_by: string | null
+          ends_on: string | null
+          id: string
+          mode: string
+          objective: string
+          organization_id: string
+          platform: string
+          platform_note: string | null
+          results: Json
+          results_source: string | null
+          school_validated_at: string | null
+          school_validated_by: string | null
+          starts_on: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: string | null
+          budget_amount?: number | null
+          budget_currency?: string | null
+          campaign_id?: string | null
+          cities?: string[]
+          countries?: string[]
+          created_at?: string
+          created_by?: string | null
+          ends_on?: string | null
+          id?: string
+          mode: string
+          objective: string
+          organization_id: string
+          platform: string
+          platform_note?: string | null
+          results?: Json
+          results_source?: string | null
+          school_validated_at?: string | null
+          school_validated_by?: string | null
+          starts_on?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string | null
+          budget_amount?: number | null
+          budget_currency?: string | null
+          campaign_id?: string | null
+          cities?: string[]
+          countries?: string[]
+          created_at?: string
+          created_by?: string | null
+          ends_on?: string | null
+          id?: string
+          mode?: string
+          objective?: string
+          organization_id?: string
+          platform?: string
+          platform_note?: string | null
+          results?: Json
+          results_source?: string | null
+          school_validated_at?: string | null
+          school_validated_by?: string | null
+          starts_on?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_requests_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "promo_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_requests_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_requests_platform_fkey"
+            columns: ["platform"]
+            isOneToOne: false
+            referencedRelation: "ad_platforms"
+            referencedColumns: ["provider"]
+          },
+          {
+            foreignKeyName: "ad_requests_school_validated_by_fkey"
+            columns: ["school_validated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       announcements: {
         Row: {
           audience: Json
@@ -1290,6 +1430,63 @@ export type Database = {
           }
         ]
       }
+      content_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reporter_id: string | null
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reporter_id?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_reports_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       countries: {
         Row: {
           code: string
@@ -2071,6 +2268,41 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      ecosystem_settings: {
+        Row: {
+          campaigns_require_review: boolean
+          id: number
+          opportunities_require_review: boolean
+          profiles_require_review: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          campaigns_require_review?: boolean
+          id?: number
+          opportunities_require_review?: boolean
+          profiles_require_review?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          campaigns_require_review?: boolean
+          id?: number
+          opportunities_require_review?: boolean
+          profiles_require_review?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ecosystem_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           }
         ]
@@ -5022,6 +5254,434 @@ export type Database = {
           }
         ]
       }
+      opportunities: {
+        Row: {
+          author_id: string
+          category: string
+          city: string | null
+          compensation: string | null
+          contract: string | null
+          country: string
+          created_at: string
+          description: string
+          expires_at: string
+          featured_until: string | null
+          id: string
+          level: string | null
+          location: string | null
+          moderation_note: string | null
+          organization_id: string | null
+          published_at: string | null
+          schedule: string | null
+          starts_on: string | null
+          status: string
+          subject: string | null
+          title: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          author_id: string
+          category: string
+          city?: string | null
+          compensation?: string | null
+          contract?: string | null
+          country: string
+          created_at?: string
+          description: string
+          expires_at?: string
+          featured_until?: string | null
+          id?: string
+          level?: string | null
+          location?: string | null
+          moderation_note?: string | null
+          organization_id?: string | null
+          published_at?: string | null
+          schedule?: string | null
+          starts_on?: string | null
+          status?: string
+          subject?: string | null
+          title: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          author_id?: string
+          category?: string
+          city?: string | null
+          compensation?: string | null
+          contract?: string | null
+          country?: string
+          created_at?: string
+          description?: string
+          expires_at?: string
+          featured_until?: string | null
+          id?: string
+          level?: string | null
+          location?: string | null
+          moderation_note?: string | null
+          organization_id?: string | null
+          published_at?: string | null
+          schedule?: string | null
+          starts_on?: string | null
+          status?: string
+          subject?: string | null
+          title?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunities_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_category_fkey"
+            columns: ["category"]
+            isOneToOne: false
+            referencedRelation: "opportunity_categories"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "opportunities_country_fkey"
+            columns: ["country"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "opportunities_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      opportunity_application_events: {
+        Row: {
+          application_id: string
+          author_id: string | null
+          body: string
+          created_at: string
+          id: string
+          kind: string
+        }
+        Insert: {
+          application_id: string
+          author_id?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          kind: string
+        }
+        Update: {
+          application_id?: string
+          author_id?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_application_events_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "opportunity_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunity_application_events_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      opportunity_applications: {
+        Row: {
+          applicant_id: string
+          applicant_unread: boolean
+          author_unread: boolean
+          created_at: string
+          cv_file_id: string | null
+          id: string
+          message: string
+          opportunity_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          applicant_id: string
+          applicant_unread?: boolean
+          author_unread?: boolean
+          created_at?: string
+          cv_file_id?: string | null
+          id?: string
+          message: string
+          opportunity_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          applicant_id?: string
+          applicant_unread?: boolean
+          author_unread?: boolean
+          created_at?: string
+          cv_file_id?: string | null
+          id?: string
+          message?: string
+          opportunity_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_applications_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunity_applications_cv_file_id_fkey"
+            columns: ["cv_file_id"]
+            isOneToOne: false
+            referencedRelation: "opportunity_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunity_applications_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      opportunity_categories: {
+        Row: {
+          active: boolean
+          description: string | null
+          key: string
+          kind: string
+          label: string
+          poster: string
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          description?: string | null
+          key: string
+          kind: string
+          label: string
+          poster: string
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          description?: string | null
+          key?: string
+          kind?: string
+          label?: string
+          poster?: string
+          sort_order?: number
+        }
+        Relationships: [
+          
+        ]
+      }
+      opportunity_favorites: {
+        Row: {
+          created_at: string
+          opportunity_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          opportunity_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          opportunity_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_favorites_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunity_favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      opportunity_files: {
+        Row: {
+          content: string
+          created_at: string
+          file_name: string
+          id: string
+          mime_type: string
+          owner_id: string
+          size_bytes: number
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          file_name: string
+          id?: string
+          mime_type: string
+          owner_id: string
+          size_bytes: number
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          file_name?: string
+          id?: string
+          mime_type?: string
+          owner_id?: string
+          size_bytes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_files_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      org_lead_events: {
+        Row: {
+          author_id: string | null
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          lead_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          kind: string
+          lead_id: string
+        }
+        Update: {
+          author_id?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          lead_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_lead_events_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_lead_events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "org_leads"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      org_leads: {
+        Row: {
+          assigned_to: string | null
+          campaign_id: string | null
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          message: string | null
+          organization_id: string
+          phone: string | null
+          program: string | null
+          source: string
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          message?: string | null
+          organization_id: string
+          phone?: string | null
+          program?: string | null
+          source?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          message?: string | null
+          organization_id?: string
+          phone?: string | null
+          program?: string | null
+          source?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_leads_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_leads_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "promo_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_leads_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       org_payment_providers: {
         Row: {
           adapter: string
@@ -5145,6 +5805,172 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: true
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      org_public_profiles: {
+        Row: {
+          address: string | null
+          admission: string | null
+          city: string | null
+          cover_file_id: string | null
+          description: string | null
+          email: string | null
+          enrollment_period: string | null
+          enrollment_url: string | null
+          extra: string | null
+          featured_until: string | null
+          gallery: string[]
+          moderation: string
+          moderation_note: string | null
+          organization_id: string
+          phone: string | null
+          programs: Json
+          published: boolean
+          published_at: string | null
+          review_status: string
+          slug: string
+          socials: Json
+          start_date: string | null
+          tagline: string | null
+          translations: Json
+          updated_at: string
+          verification_status: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          admission?: string | null
+          city?: string | null
+          cover_file_id?: string | null
+          description?: string | null
+          email?: string | null
+          enrollment_period?: string | null
+          enrollment_url?: string | null
+          extra?: string | null
+          featured_until?: string | null
+          gallery?: string[]
+          moderation?: string
+          moderation_note?: string | null
+          organization_id: string
+          phone?: string | null
+          programs?: Json
+          published?: boolean
+          published_at?: string | null
+          review_status?: string
+          slug: string
+          socials?: Json
+          start_date?: string | null
+          tagline?: string | null
+          translations?: Json
+          updated_at?: string
+          verification_status?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          admission?: string | null
+          city?: string | null
+          cover_file_id?: string | null
+          description?: string | null
+          email?: string | null
+          enrollment_period?: string | null
+          enrollment_url?: string | null
+          extra?: string | null
+          featured_until?: string | null
+          gallery?: string[]
+          moderation?: string
+          moderation_note?: string | null
+          organization_id?: string
+          phone?: string | null
+          programs?: Json
+          published?: boolean
+          published_at?: string | null
+          review_status?: string
+          slug?: string
+          socials?: Json
+          start_date?: string | null
+          tagline?: string | null
+          translations?: Json
+          updated_at?: string
+          verification_status?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_public_profiles_cover_file_id_fkey"
+            columns: ["cover_file_id"]
+            isOneToOne: false
+            referencedRelation: "file_objects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_public_profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      org_verification_requests: {
+        Row: {
+          created_at: string
+          documents: Json
+          id: string
+          message: string | null
+          organization_id: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          documents?: Json
+          id?: string
+          message?: string | null
+          organization_id: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          documents?: Json
+          id?: string
+          message?: string | null
+          organization_id?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_verification_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_verification_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_verification_requests_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           }
         ]
@@ -6043,6 +6869,7 @@ export type Database = {
           reason: string
           scope: string
           scope_value: string
+          until: string | null
           updated_at: string
           updated_by: string | null
         }
@@ -6053,6 +6880,7 @@ export type Database = {
           reason: string
           scope: string
           scope_value?: string
+          until?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -6063,6 +6891,7 @@ export type Database = {
           reason?: string
           scope?: string
           scope_value?: string
+          until?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -6863,6 +7692,96 @@ export type Database = {
           }
         ]
       }
+      promo_campaigns: {
+        Row: {
+          audience: string | null
+          budget_amount: number | null
+          budget_currency: string | null
+          cities: string[]
+          contact: string | null
+          countries: string[]
+          created_at: string
+          created_by: string | null
+          description: string | null
+          destination_url: string | null
+          ends_on: string | null
+          featured_until: string | null
+          id: string
+          media: string[]
+          moderation_note: string | null
+          objective: string
+          organization_id: string
+          starts_on: string | null
+          status: string
+          target: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: string | null
+          budget_amount?: number | null
+          budget_currency?: string | null
+          cities?: string[]
+          contact?: string | null
+          countries?: string[]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          destination_url?: string | null
+          ends_on?: string | null
+          featured_until?: string | null
+          id?: string
+          media?: string[]
+          moderation_note?: string | null
+          objective: string
+          organization_id: string
+          starts_on?: string | null
+          status?: string
+          target?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string | null
+          budget_amount?: number | null
+          budget_currency?: string | null
+          cities?: string[]
+          contact?: string | null
+          countries?: string[]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          destination_url?: string | null
+          ends_on?: string | null
+          featured_until?: string | null
+          id?: string
+          media?: string[]
+          moderation_note?: string | null
+          objective?: string
+          organization_id?: string
+          starts_on?: string | null
+          status?: string
+          target?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_campaigns_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_campaigns_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       promo_codes: {
         Row: {
           auto_apply: boolean
@@ -6970,6 +7889,45 @@ export type Database = {
             columns: ["promo_id"]
             isOneToOne: false
             referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      public_accounts: {
+        Row: {
+          account_type: string
+          city: string | null
+          country: string | null
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          account_type: string
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          account_type?: string
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_accounts_country_fkey"
+            columns: ["country"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "public_accounts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           }
         ]
@@ -10481,6 +11439,183 @@ export type Database = {
           }
         ]
       }
+      verification_requirements: {
+        Row: {
+          active: boolean
+          country: string | null
+          created_at: string
+          description: string | null
+          id: string
+          label: string
+          org_type: string | null
+          required: boolean
+        }
+        Insert: {
+          active?: boolean
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          label: string
+          org_type?: string | null
+          required?: boolean
+        }
+        Update: {
+          active?: boolean
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          label?: string
+          org_type?: string | null
+          required?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verification_requirements_country_fkey"
+            columns: ["country"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["code"]
+          }
+        ]
+      }
+      visibility_offers: {
+        Row: {
+          active: boolean
+          code: string
+          country: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          duration_days: number | null
+          id: string
+          kind: string
+          label: string
+          org_type: string | null
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          country?: string | null
+          created_at?: string
+          currency: string
+          description?: string | null
+          duration_days?: number | null
+          id?: string
+          kind: string
+          label: string
+          org_type?: string | null
+          price: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          country?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          duration_days?: number | null
+          id?: string
+          kind?: string
+          label?: string
+          org_type?: string | null
+          price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visibility_offers_country_fkey"
+            columns: ["country"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["code"]
+          }
+        ]
+      }
+      visibility_orders: {
+        Row: {
+          amount: number
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          currency: string
+          id: string
+          number: number
+          offer_id: string
+          organization_id: string | null
+          payment_reference: string | null
+          status: string
+          target_id: string
+          target_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          currency: string
+          id?: string
+          number?: number
+          offer_id: string
+          organization_id?: string | null
+          payment_reference?: string | null
+          status?: string
+          target_id: string
+          target_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          number?: number
+          offer_id?: string
+          organization_id?: string | null
+          payment_reference?: string | null
+          status?: string
+          target_id?: string
+          target_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visibility_orders_confirmed_by_fkey"
+            columns: ["confirmed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visibility_orders_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "visibility_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visibility_orders_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visibility_orders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       voice_checkin_settings: {
         Row: {
           announce_names: boolean
@@ -10630,6 +11765,13 @@ export type Database = {
           ends_at: string
         }[]
       }
+      add_application_message: {
+        Args: {
+          p_application: string
+          p_body: string
+        }
+        Returns: undefined
+      }
       add_student_guardian: {
         Args: {
           p_student_id: string
@@ -10660,6 +11802,20 @@ export type Database = {
           p_reason: string
         }
         Returns: Json
+      }
+      apply_opportunity: {
+        Args: {
+          p_id: string
+          p_message: string
+          p_cv: string
+        }
+        Returns: string
+      }
+      archive_opportunity: {
+        Args: {
+          p_id: string
+        }
+        Returns: undefined
       }
       assistant_quota: {
         Args: {
@@ -10784,6 +11940,12 @@ export type Database = {
       cancel_message_campaign: {
         Args: {
           p_campaign: string
+        }
+        Returns: undefined
+      }
+      cancel_visibility_order: {
+        Args: {
+          p_order: string
         }
         Returns: undefined
       }
@@ -10945,6 +12107,14 @@ export type Database = {
         }
         Returns: string
       }
+      create_visibility_order: {
+        Args: {
+          p_offer: string
+          p_target_type: string
+          p_target: string
+        }
+        Returns: string
+      }
       current_platform_announcements: {
         Args: {
           p_org: string
@@ -11020,6 +12190,43 @@ export type Database = {
         }
         Returns: undefined
       }
+      discover_filters: {
+        Args: never
+        Returns: Json
+      }
+      discover_profile: {
+        Args: {
+          p_slug: string
+        }
+        Returns: Json
+      }
+      discover_search: {
+        Args: {
+          p_query: string
+          p_country: string
+          p_city: string
+          p_type: string
+          p_program: string
+          p_sort: string
+          p_limit: number
+          p_offset: number
+        }
+        Returns: {
+          slug: string
+          name: string
+          type: string
+          country: string
+          city: string
+          tagline: string
+          verified: boolean
+          featured: boolean
+          has_logo: boolean
+          cover_file_id: string
+          programs: Json
+          code: string
+          total: number
+        }[]
+      }
       dismiss_platform_announcement: {
         Args: {
           p_id: string
@@ -11045,6 +12252,13 @@ export type Database = {
           p_org: string
         }
         Returns: Json
+      }
+      end_promo_campaign: {
+        Args: {
+          p_org: string
+          p_id: string
+        }
+        Returns: undefined
       }
       enroll_learner: {
         Args: {
@@ -11434,6 +12648,10 @@ export type Database = {
           session_id: string
         }[]
       }
+      my_opportunity_space: {
+        Args: never
+        Returns: Json
+      }
       my_organization_accesses: {
         Args: never
         Returns: Json
@@ -11475,6 +12693,52 @@ export type Database = {
           participants: string
           last_message: string
           unread: boolean
+        }[]
+      }
+      opportunities_search: {
+        Args: {
+          p_query: string
+          p_category: string
+          p_kind: string
+          p_country: string
+          p_city: string
+          p_limit: number
+          p_offset: number
+        }
+        Returns: {
+          id: string
+          category: string
+          category_label: string
+          kind: string
+          title: string
+          excerpt: string
+          country: string
+          city: string
+          subject: string
+          level: string
+          compensation: string
+          contract: string
+          published_at: string
+          expires_at: string
+          featured: boolean
+          author: Json
+          total: number
+        }[]
+      }
+      opportunity_detail: {
+        Args: {
+          p_id: string
+        }
+        Returns: Json
+      }
+      opportunity_file_download: {
+        Args: {
+          p_id: string
+        }
+        Returns: {
+          file_name: string
+          mime_type: string
+          content: string
         }[]
       }
       org_archive_payment_provider: {
@@ -11527,6 +12791,12 @@ export type Database = {
           p_priority: number
         }
         Returns: undefined
+      }
+      org_visibility_stats: {
+        Args: {
+          p_org: string
+        }
+        Returns: Json
       }
       organization_portal: {
         Args: {
@@ -11651,6 +12921,14 @@ export type Database = {
         }
         Returns: Json
       }
+      platform_confirm_visibility_order: {
+        Args: {
+          p_order: string
+          p_decision: string
+          p_reference: string
+        }
+        Returns: undefined
+      }
       platform_country_overview: {
         Args: never
         Returns: {
@@ -11701,6 +12979,14 @@ export type Database = {
         }
         Returns: Json
       }
+      platform_decide_verification: {
+        Args: {
+          p_org: string
+          p_decision: string
+          p_note: string
+        }
+        Returns: undefined
+      }
       platform_delete_custom_gateway: {
         Args: {
           p_code: string
@@ -11720,6 +13006,10 @@ export type Database = {
           p_name: string
         }
         Returns: string
+      }
+      platform_ecosystem_overview: {
+        Args: never
+        Returns: Json
       }
       platform_feature_impact: {
         Args: never
@@ -11775,6 +13065,15 @@ export type Database = {
           sms_override: number
           whatsapp_override: number
         }[]
+      }
+      platform_moderate: {
+        Args: {
+          p_type: string
+          p_id: string
+          p_action: string
+          p_note: string
+        }
+        Returns: undefined
       }
       platform_organization_profile: {
         Args: {
@@ -11842,6 +13141,14 @@ export type Database = {
         Args: {
           p_user: string
           p_reason: string
+        }
+        Returns: undefined
+      }
+      platform_resolve_report: {
+        Args: {
+          p_id: string
+          p_status: string
+          p_note: string
         }
         Returns: undefined
       }
@@ -11927,12 +13234,32 @@ export type Database = {
         }
         Returns: string
       }
+      platform_save_ecosystem_settings: {
+        Args: {
+          p_campaigns: boolean
+          p_opportunities: boolean
+          p_profiles: boolean
+        }
+        Returns: undefined
+      }
       platform_save_message_template: {
         Args: {
           p_code: string
           p_title: string
           p_body: string
           p_enabled: boolean
+        }
+        Returns: undefined
+      }
+      platform_save_opportunity_category: {
+        Args: {
+          p_key: string
+          p_label: string
+          p_kind: string
+          p_poster: string
+          p_description: string
+          p_sort: number
+          p_active: boolean
         }
         Returns: undefined
       }
@@ -12090,6 +13417,34 @@ export type Database = {
         }
         Returns: string
       }
+      platform_save_verification_requirement: {
+        Args: {
+          p_id: string
+          p_country: string
+          p_type: string
+          p_label: string
+          p_description: string
+          p_required: boolean
+          p_active: boolean
+        }
+        Returns: undefined
+      }
+      platform_save_visibility_offer: {
+        Args: {
+          p_id: string
+          p_code: string
+          p_label: string
+          p_kind: string
+          p_description: string
+          p_price: number
+          p_currency: string
+          p_duration: number
+          p_country: string
+          p_type: string
+          p_active: boolean
+        }
+        Returns: undefined
+      }
       platform_security_alerts: {
         Args: {
           p_days?: number
@@ -12104,6 +13459,14 @@ export type Database = {
         Args: never
         Returns: Json
       }
+      platform_set_ad_platform: {
+        Args: {
+          p_provider: string
+          p_enabled: boolean
+          p_note: string
+        }
+        Returns: undefined
+      }
       platform_set_ai_quota: {
         Args: {
           p_org: string
@@ -12115,6 +13478,17 @@ export type Database = {
         Args: {
           p_country: string
           p_price: number
+        }
+        Returns: undefined
+      }
+      platform_set_feature_rule: {
+        Args: {
+          p_feature: string
+          p_scope: string
+          p_value: string
+          p_enabled: boolean
+          p_reason: string
+          p_until: string
         }
         Returns: undefined
       }
@@ -12266,6 +13640,16 @@ export type Database = {
       platform_unlock_account: {
         Args: {
           p_identifier_hash: string
+        }
+        Returns: undefined
+      }
+      platform_update_ad_request: {
+        Args: {
+          p_id: string
+          p_status: string
+          p_note: string
+          p_results: Json
+          p_source: string
         }
         Returns: undefined
       }
@@ -12558,6 +13942,14 @@ export type Database = {
         }
         Returns: number
       }
+      register_public_account: {
+        Args: {
+          p_type: string
+          p_country: string
+          p_city: string
+        }
+        Returns: undefined
+      }
       register_push_subscription: {
         Args: {
           p_endpoint: string
@@ -12611,6 +14003,15 @@ export type Database = {
           p_rules: Json
           p_notes?: string
           p_based_on?: string
+        }
+        Returns: string
+      }
+      save_ad_request: {
+        Args: {
+          p_org: string
+          p_id: string
+          p_data: Json
+          p_submit: boolean
         }
         Returns: string
       }
@@ -12674,12 +14075,37 @@ export type Database = {
         }
         Returns: string
       }
+      save_opportunity: {
+        Args: {
+          p_id: string
+          p_data: Json
+          p_submit: boolean
+        }
+        Returns: string
+      }
       save_org_features: {
         Args: {
           p_org: string
           p_features: Json
         }
         Returns: Json
+      }
+      save_promo_campaign: {
+        Args: {
+          p_org: string
+          p_id: string
+          p_data: Json
+          p_submit: boolean
+        }
+        Returns: string
+      }
+      save_public_profile: {
+        Args: {
+          p_org: string
+          p_data: Json
+          p_publish: boolean
+        }
+        Returns: string
       }
       save_voice_checkin_settings: {
         Args: {
@@ -12736,6 +14162,16 @@ export type Database = {
           p_offline?: boolean
         }
         Returns: Json
+      }
+      school_ad_request_action: {
+        Args: {
+          p_org: string
+          p_id: string
+          p_action: string
+          p_results: Json
+          p_source: string
+        }
+        Returns: undefined
       }
       send_invoice_reminder: {
         Args: {
@@ -12922,6 +14358,29 @@ export type Database = {
         }
         Returns: string
       }
+      submit_content_report: {
+        Args: {
+          p_type: string
+          p_target: string
+          p_reason: string
+          p_details: string
+        }
+        Returns: undefined
+      }
+      submit_org_lead: {
+        Args: {
+          p_slug: string
+          p_name: string
+          p_phone: string
+          p_email: string
+          p_program: string
+          p_subject: string
+          p_message: string
+          p_source: string
+          p_campaign: string
+        }
+        Returns: undefined
+      }
       submit_site_lead: {
         Args: {
           p_kind: string
@@ -12933,6 +14392,14 @@ export type Database = {
           p_country: string
           p_message: string
           p_locale?: string
+        }
+        Returns: string
+      }
+      submit_verification_request: {
+        Args: {
+          p_org: string
+          p_documents: Json
+          p_message: string
         }
         Returns: string
       }
@@ -13020,6 +14487,12 @@ export type Database = {
           mine: boolean
         }[]
       }
+      toggle_opportunity_favorite: {
+        Args: {
+          p_id: string
+        }
+        Returns: boolean
+      }
       training_dashboard: {
         Args: {
           p_organization_id: string
@@ -13055,6 +14528,32 @@ export type Database = {
           p_slot_id: string
           p_date: string
           p_reason: string
+        }
+        Returns: string
+      }
+      update_application_status: {
+        Args: {
+          p_application: string
+          p_status: string
+          p_note: string
+        }
+        Returns: undefined
+      }
+      update_org_lead: {
+        Args: {
+          p_id: string
+          p_status: string
+          p_assign_me: boolean
+          p_event_kind: string
+          p_event_body: string
+        }
+        Returns: undefined
+      }
+      upload_opportunity_file: {
+        Args: {
+          p_name: string
+          p_mime: string
+          p_content: string
         }
         Returns: string
       }

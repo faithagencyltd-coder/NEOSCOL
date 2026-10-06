@@ -110,7 +110,11 @@ describe("Contrôle des modules", () => {
   test("plateforme, pays, type : le niveau le plus précis l'emporte ; historique", async () => {
     await as(USERS.superadmin, async (q) => {
       const startedAt = (await one(q, "select now() t")).t;
-      const locked = async (org) => (await one(q, "select platform_locked_features(o) l from organizations o where id = $1", [org])).l;
+      // Seule la fonctionnalité testée compte (les modules publics sont fermés par défaut).
+      const locked = async (org) => {
+        const l = (await one(q, "select platform_locked_features(o) l from organizations o where id = $1", [org])).l;
+        return "assistant" in l ? { assistant: l.assistant } : {};
+      };
       assert.deepEqual(await locked(ORG_DEMO), {});
       await q("select platform_set_feature_rule('assistant', 'global', null, false, 'Ouverture progressive')");
       assert.deepEqual(await locked(ORG_DEMO), { assistant: false }, "arrêt global");
