@@ -13488,17 +13488,7 @@ export type Database = {
           p_value: string
           p_enabled: boolean
           p_reason: string
-          p_until: string
-        }
-        Returns: undefined
-      }
-      platform_set_feature_rule: {
-        Args: {
-          p_feature: string
-          p_scope: string
-          p_value: string
-          p_enabled: boolean
-          p_reason: string
+          p_until?: string
         }
         Returns: undefined
       }
