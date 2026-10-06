@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 
 import { MobileMenu } from "./mobile-menu";
 import { SocialIcon } from "./social-icon";
+import { VisitBeacon } from "./visit-beacon";
 import { WhatsAppButton } from "./whatsapp-button";
 
 /** Enveloppe du site officiel : en-tête, changement de langue, pied de page, WhatsApp. */
@@ -96,6 +97,7 @@ export async function SiteShell({ locale, alternate, children }: { locale: Local
       </header>
 
       <main id="contenu">{children}</main>
+      <VisitBeacon locale={locale} />
 
       <footer className="border-t border-[#0b2559]/10 bg-[#07142b] text-sky-100/80">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-8 md:grid-cols-[1.4fr_1fr_1fr_1fr]">

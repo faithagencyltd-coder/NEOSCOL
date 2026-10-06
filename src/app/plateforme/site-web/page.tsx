@@ -10,6 +10,7 @@ import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { Flag } from "@/features/marketing/flags";
 import { HOME_SECTIONS, systemsToText, type InstitutionalSystem } from "@/features/platform/site-web";
 import { saveCountryProfile, saveSiteVideo, saveSiteWebSettings, saveSocialLink, saveTestimonial, updateLead } from "@/features/platform/site-web-actions";
+import { CRM_STATUS } from "@/features/platform/crm";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateTime } from "@/lib/utils/format";
 
@@ -41,12 +42,7 @@ const AVAILABILITY = [
   { value: "preparing", label: "En préparation" },
   { value: "available", label: "Disponible" },
 ];
-const LEAD_STATUS: Record<string, { label: string; tone: "info" | "warning" | "success" | "neutral" }> = {
-  new: { label: "Nouvelle", tone: "info" },
-  in_progress: { label: "En cours", tone: "warning" },
-  done: { label: "Traitée", tone: "success" },
-  spam: { label: "Indésirable", tone: "neutral" },
-};
+const LEAD_STATUS = CRM_STATUS;
 
 const editButton = (label: string) => (
   <Button size="sm" variant="ghost" aria-label={label}>

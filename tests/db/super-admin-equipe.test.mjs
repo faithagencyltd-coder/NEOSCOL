@@ -13,6 +13,7 @@ describe("Équipe Super Admin", () => {
   test("rôles : seul un propriétaire gère l'équipe ; il reste toujours un propriétaire", async () => {
     await as(USERS.superadmin, async (q) => {
       assert.equal((await one(q, "select my_platform_role() r")).r, "owner", "les comptes existants deviennent propriétaires");
+      const startedAt = (await one(q, "select now() t")).t;
       await q("select platform_add_team_member($1, 'admin')", [USERS.director]);
       await q("select platform_add_team_member($1, 'viewer')", [USERS.secretary]);
       assert.match(await rejects(q("select platform_add_team_member($1, 'viewer')", [USERS.secretary])), /déjà/);
@@ -39,7 +40,7 @@ describe("Équipe Super Admin", () => {
       await switchTo(q, USERS.director);
       await q("select platform_remove_team_member($1, 'Fin de mission')", [USERS.secretary]);
       assert.equal((await one(q, "select count(*)::int n from profiles where id = $1", [USERS.secretary])).n, 1, "le compte lui-même est conservé");
-      const log = await q("select action from audit_logs where action like 'platform.team_%' order by id");
+      const log = await q("select action from audit_logs where action like 'platform.team_%' and created_at >= $1 order by id", [startedAt]);
       assert.deepEqual(log.map((r) => r.action), ["platform.team_member_added", "platform.team_member_added", "platform.team_role_changed", "platform.team_role_changed", "platform.team_member_removed"]);
     });
   });
@@ -108,6 +109,7 @@ describe("Journal global", () => {
 describe("Contrôle des modules", () => {
   test("plateforme, pays, type : le niveau le plus précis l'emporte ; historique", async () => {
     await as(USERS.superadmin, async (q) => {
+      const startedAt = (await one(q, "select now() t")).t;
       const locked = async (org) => (await one(q, "select platform_locked_features(o) l from organizations o where id = $1", [org])).l;
       assert.deepEqual(await locked(ORG_DEMO), {});
       await q("select platform_set_feature_rule('assistant', 'global', null, false, 'Ouverture progressive')");
@@ -126,7 +128,7 @@ describe("Contrôle des modules", () => {
       assert.match(await rejects(q("select platform_set_feature_rule('inconnu', 'global', null, false, 'x x x')")), /inconnue/);
       assert.match(await rejects(q("select platform_set_feature_rule('assistant', 'country', 'ZZ', false, 'x x x')")), /Pays inconnu/);
       assert.match(await rejects(q("select platform_set_feature_rule('assistant', 'global', null, false, '')")), /motif/);
-      assert.equal((await one(q, "select count(*)::int n from audit_logs where action like 'platform.feature_rule%'")).n, 4, "chaque changement est journalisé");
+      assert.equal((await one(q, "select count(*)::int n from audit_logs where action like 'platform.feature_rule%' and created_at >= $1", [startedAt])).n, 4, "chaque changement est journalisé");
       await switchTo(q, USERS.admin);
       assert.match(await rejects(q("select platform_set_feature_rule('assistant', 'global', null, true, 'x x x')")), /Réservé/);
       assert.equal((await q("select * from platform_feature_rules")).length, 0, "règles invisibles hors plateforme");

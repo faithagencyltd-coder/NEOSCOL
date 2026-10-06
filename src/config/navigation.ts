@@ -206,6 +206,7 @@ export const NAVIGATION: NavSection[] = [
     label: "Compte",
     items: [
       { href: "/mon-compte", label: "Mon compte", icon: "account", anyOf: [], keywords: "profil mot de passe" },
+      { href: "/assistance", label: "Assistance", icon: "notifications", anyOf: [], keywords: "aide support problème question incident ticket contacter neoscool" },
       { href: "/mon-badge", label: "Mon badge", icon: "badges", anyOf: [], keywords: "badge QR pointage carte plein écran" },
     ],
   },
@@ -345,6 +346,7 @@ export const UNIVERSITY_NAVIGATION: NavSection[] = [
     label: "Compte",
     items: [
       { href: "/mon-compte", label: "Mon compte", icon: "account", anyOf: [], keywords: "profil mot de passe" },
+      { href: "/assistance", label: "Assistance", icon: "notifications", anyOf: [], keywords: "aide support problème question incident ticket contacter neoscool" },
       { href: "/mon-badge", label: "Mon badge", icon: "badges", anyOf: [], keywords: "badge QR pointage carte plein écran" },
     ],
   },
@@ -383,6 +385,7 @@ export const GROUP_NAVIGATION: NavSection[] = [
     label: "Compte",
     items: [
       { href: "/mon-compte", label: "Mon compte", icon: "account", anyOf: [], keywords: "profil mot de passe" },
+      { href: "/assistance", label: "Assistance", icon: "notifications", anyOf: [], keywords: "aide support problème question incident ticket contacter neoscool" },
     ],
   },
 ];

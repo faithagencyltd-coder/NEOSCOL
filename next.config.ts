@@ -1,4 +1,19 @@
+import { execSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+
 import type { NextConfig } from "next";
+
+// Version réellement construite (affichée et enregistrée par la console Super Admin › Maintenance).
+function gitCommit(): string {
+  const fromEnv = process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GITHUB_SHA ?? process.env.SOURCE_COMMIT;
+  if (fromEnv) return fromEnv.slice(0, 12);
+  try {
+    return execSync("git rev-parse --short=12 HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+  } catch {
+    return "";
+  }
+}
+const appVersion = (JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")) as { version: string }).version;
 
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
@@ -14,6 +29,7 @@ const codespaceOrigins = process.env.CODESPACES === "true" ? [`*.${process.env.G
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  env: { APP_VERSION: appVersion, APP_COMMIT: gitCommit(), APP_BUILT_AT: new Date().toISOString() },
   // Paquet portable (scripts/portable) : serveur autonome sans dépendances à installer.
   output: process.env.NEOSCOL_STANDALONE === "1" ? "standalone" : undefined,
   allowedDevOrigins: codespaceOrigins,

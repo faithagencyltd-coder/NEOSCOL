@@ -6117,6 +6117,41 @@ export type Database = {
           
         ]
       }
+      platform_maintenance: {
+        Row: {
+          enabled: boolean
+          ends_at: string | null
+          id: number
+          message: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          ends_at?: string | null
+          id?: number
+          message?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          ends_at?: string | null
+          id?: number
+          message?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_maintenance_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       platform_message_templates: {
         Row: {
           body: string | null
@@ -6188,6 +6223,35 @@ export type Database = {
           school_payments_enabled?: boolean
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: [
+          
+        ]
+      }
+      platform_releases: {
+        Row: {
+          built_at: string | null
+          commit_sha: string
+          first_seen_at: string
+          id: string
+          last_seen_at: string
+          version: string
+        }
+        Insert: {
+          built_at?: string | null
+          commit_sha?: string
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          version: string
+        }
+        Update: {
+          built_at?: string | null
+          commit_sha?: string
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          version?: string
         }
         Relationships: [
           
@@ -6470,6 +6534,79 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "students"
             referencedColumns: ["organization_id", "id"]
+          }
+        ]
+      }
+      privacy_requests: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          details: string
+          due_at: string
+          handled_by: string | null
+          id: string
+          number: number
+          organization_id: string | null
+          request_type: string
+          requester_email: string | null
+          requester_name: string
+          response: string | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          details: string
+          due_at?: string
+          handled_by?: string | null
+          id?: string
+          number?: number
+          organization_id?: string | null
+          request_type: string
+          requester_email?: string | null
+          requester_name: string
+          response?: string | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          details?: string
+          due_at?: string
+          handled_by?: string | null
+          id?: string
+          number?: number
+          organization_id?: string | null
+          request_type?: string
+          requester_email?: string | null
+          requester_name?: string
+          response?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "privacy_requests_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "privacy_requests_handled_by_fkey"
+            columns: ["handled_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "privacy_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           }
         ]
       }
@@ -7295,9 +7432,52 @@ export type Database = {
           }
         ]
       }
+      site_lead_events: {
+        Row: {
+          author_id: string | null
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          lead_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          kind: string
+          lead_id: string
+        }
+        Update: {
+          author_id?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          lead_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_lead_events_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_lead_events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "site_leads"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       site_leads: {
         Row: {
           admin_note: string | null
+          assigned_to: string | null
           country: string | null
           created_at: string
           email: string
@@ -7308,13 +7488,18 @@ export type Database = {
           kind: string
           locale: string
           message: string | null
+          next_action: string | null
+          next_action_at: string | null
           organization: string | null
+          organization_id: string | null
           organization_type: string | null
           phone: string | null
+          source: string | null
           status: string
         }
         Insert: {
           admin_note?: string | null
+          assigned_to?: string | null
           country?: string | null
           created_at?: string
           email: string
@@ -7325,13 +7510,18 @@ export type Database = {
           kind: string
           locale?: string
           message?: string | null
+          next_action?: string | null
+          next_action_at?: string | null
           organization?: string | null
+          organization_id?: string | null
           organization_type?: string | null
           phone?: string | null
+          source?: string | null
           status?: string
         }
         Update: {
           admin_note?: string | null
+          assigned_to?: string | null
           country?: string | null
           created_at?: string
           email?: string
@@ -7342,17 +7532,35 @@ export type Database = {
           kind?: string
           locale?: string
           message?: string | null
+          next_action?: string | null
+          next_action_at?: string | null
           organization?: string | null
+          organization_id?: string | null
           organization_type?: string | null
           phone?: string | null
+          source?: string | null
           status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "site_leads_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "site_leads_handled_by_fkey"
             columns: ["handled_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_leads_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           }
         ]
@@ -7466,6 +7674,44 @@ export type Database = {
           topic?: string
           updated_at?: string
           video_url?: string
+        }
+        Relationships: [
+          
+        ]
+      }
+      site_visits: {
+        Row: {
+          country: string | null
+          created_at: string
+          day: string
+          device: string
+          id: number
+          locale: string
+          path: string
+          referrer_host: string | null
+          visitor: string
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          day?: string
+          device: string
+          id?: number
+          locale?: string
+          path: string
+          referrer_host?: string | null
+          visitor: string
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          day?: string
+          device?: string
+          id?: number
+          locale?: string
+          path?: string
+          referrer_host?: string | null
+          visitor?: string
         }
         Relationships: [
           
@@ -9314,6 +9560,124 @@ export type Database = {
           }
         ]
       }
+      support_ticket_messages: {
+        Row: {
+          author_id: string | null
+          author_side: string
+          body: string
+          created_at: string
+          id: string
+          internal: boolean
+          ticket_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          author_side: string
+          body: string
+          created_at?: string
+          id?: string
+          internal?: boolean
+          ticket_id: string
+        }
+        Update: {
+          author_id?: string | null
+          author_side?: string
+          body?: string
+          created_at?: string
+          id?: string
+          internal?: boolean
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_messages_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          kind: string
+          number: number
+          organization_id: string | null
+          resolved_at: string | null
+          severity: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          id?: string
+          kind?: string
+          number?: number
+          organization_id?: string | null
+          resolved_at?: string | null
+          severity?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          kind?: string
+          number?: number
+          organization_id?: string | null
+          resolved_at?: string | null
+          severity?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       teacher_access_payments: {
         Row: {
           access_id: string | null
@@ -10273,6 +10637,14 @@ export type Database = {
         }
         Returns: string
       }
+      add_support_message: {
+        Args: {
+          p_ticket: string
+          p_body: string
+          p_internal?: boolean
+        }
+        Returns: undefined
+      }
       adopt_academic_template: {
         Args: {
           p_org: string
@@ -10563,6 +10935,16 @@ export type Database = {
         }
         Returns: string
       }
+      create_support_ticket: {
+        Args: {
+          p_org: string
+          p_category: string
+          p_severity: string
+          p_title: string
+          p_description: string
+        }
+        Returns: string
+      }
       current_platform_announcements: {
         Args: {
           p_org: string
@@ -10834,6 +11216,10 @@ export type Database = {
         }
         Returns: Json
       }
+      health_ping: {
+        Args: never
+        Returns: string
+      }
       historical_overview: {
         Args: {
           p_organization_id: string
@@ -10915,6 +11301,10 @@ export type Database = {
           p_success: boolean
         }
         Returns: undefined
+      }
+      maintenance_state: {
+        Args: never
+        Returns: Json
       }
       mark_thread_read: {
         Args: {
@@ -11242,6 +11632,13 @@ export type Database = {
           override: number
         }[]
       }
+      platform_begin_org_export: {
+        Args: {
+          p_org: string
+          p_reason: string
+        }
+        Returns: Json
+      }
       platform_billing_overview: {
         Args: never
         Returns: Json
@@ -11261,6 +11658,40 @@ export type Database = {
           organizations: number
           active_subscriptions: number
         }[]
+      }
+      platform_create_incident: {
+        Args: {
+          p_org: string
+          p_category: string
+          p_severity: string
+          p_title: string
+          p_description: string
+        }
+        Returns: string
+      }
+      platform_crm_report: {
+        Args: {
+          p_from: string
+          p_to: string
+        }
+        Returns: Json
+      }
+      platform_crm_update_lead: {
+        Args: {
+          p_id: string
+          p_status: string
+          p_assign_me: boolean
+          p_next_action: string
+          p_next_action_at: string
+          p_organization: string
+          p_event_kind: string
+          p_event_body: string
+        }
+        Returns: undefined
+      }
+      platform_dashboard: {
+        Args: never
+        Returns: Json
       }
       platform_decide_offline_payment: {
         Args: {
@@ -11307,6 +11738,12 @@ export type Database = {
         }
         Returns: undefined
       }
+      platform_growth: {
+        Args: {
+          p_months?: number
+        }
+        Returns: Json
+      }
       platform_issue_invoice: {
         Args: {
           p_org: string
@@ -11338,6 +11775,12 @@ export type Database = {
           sms_override: number
           whatsapp_override: number
         }[]
+      }
+      platform_organization_profile: {
+        Args: {
+          p_org: string
+        }
+        Returns: Json
       }
       platform_overview: {
         Args: never
@@ -11381,6 +11824,19 @@ export type Database = {
           p_note?: string
         }
         Returns: Json
+      }
+      platform_release_history: {
+        Args: never
+        Returns: {
+          version: string
+          commit_sha: string
+          built_at: string
+          first_seen_at: string
+          last_seen_at: string
+          failures: number
+          denied: number
+          incidents: number
+        }[]
       }
       platform_remove_team_member: {
         Args: {
@@ -11499,6 +11955,19 @@ export type Database = {
           p_annual_discount_percent?: number
           p_trial_days?: number
           p_currency?: string
+        }
+        Returns: string
+      }
+      platform_save_privacy_request: {
+        Args: {
+          p_id: string
+          p_org: string
+          p_name: string
+          p_email: string
+          p_type: string
+          p_details: string
+          p_status: string
+          p_response: string
         }
         Returns: string
       }
@@ -11621,7 +12090,17 @@ export type Database = {
         }
         Returns: string
       }
+      platform_security_alerts: {
+        Args: {
+          p_days?: number
+        }
+        Returns: Json
+      }
       platform_security_overview: {
+        Args: never
+        Returns: Json
+      }
+      platform_service_health: {
         Args: never
         Returns: Json
       }
@@ -11645,6 +12124,15 @@ export type Database = {
           p_scope: string
           p_value: string
           p_enabled: boolean
+          p_reason: string
+        }
+        Returns: undefined
+      }
+      platform_set_maintenance: {
+        Args: {
+          p_enabled: boolean
+          p_message: string
+          p_ends_at: string
           p_reason: string
         }
         Returns: undefined
@@ -11706,6 +12194,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      platform_set_user_active: {
+        Args: {
+          p_user: string
+          p_active: boolean
+          p_reason: string
+        }
+        Returns: undefined
+      }
       platform_start_campaign: {
         Args: {
           p_subject: string
@@ -11715,6 +12211,10 @@ export type Database = {
           p_channels: string[]
           p_include_demo?: boolean
         }
+        Returns: Json
+      }
+      platform_support_overview: {
+        Args: never
         Returns: Json
       }
       platform_teacher_access_payments: {
@@ -11856,6 +12356,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      platform_update_ticket: {
+        Args: {
+          p_ticket: string
+          p_status: string
+          p_severity: string
+          p_assign_me: boolean
+        }
+        Returns: undefined
+      }
       platform_upsert_country: {
         Args: {
           p_country: Json
@@ -11881,6 +12390,19 @@ export type Database = {
           p_enabled: boolean
         }
         Returns: string
+      }
+      platform_user_search: {
+        Args: {
+          p_query: string
+        }
+        Returns: Json
+      }
+      platform_visitor_stats: {
+        Args: {
+          p_from: string
+          p_to: string
+        }
+        Returns: Json
       }
       portal_account: {
         Args: {
@@ -12009,6 +12531,25 @@ export type Database = {
           p_records?: Json
         }
         Returns: string
+      }
+      record_release: {
+        Args: {
+          p_version: string
+          p_commit: string
+          p_built_at: string
+        }
+        Returns: undefined
+      }
+      record_site_visit: {
+        Args: {
+          p_path: string
+          p_referrer: string
+          p_device: string
+          p_locale: string
+          p_country: string
+          p_visitor: string
+        }
+        Returns: undefined
       }
       register_curriculum: {
         Args: {

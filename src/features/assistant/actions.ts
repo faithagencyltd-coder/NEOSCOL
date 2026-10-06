@@ -3,6 +3,8 @@
 import { z } from "zod";
 
 import { answer, type AssistantAnswer } from "@/features/assistant/engine";
+import { answerPlatform } from "@/features/assistant/platform";
+import { getPlatformRole } from "@/lib/auth/platform";
 import { authorize } from "@/lib/auth/authorize";
 import { todayIn } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
@@ -31,6 +33,21 @@ export async function askAssistant(history: unknown): Promise<{ ok: true; data: 
   await supabase.rpc("log_event", {
     p_organization_id: org.id,
     p_action: "assistant.question",
+    p_summary: parsed.data.at(-1)!.content.slice(0, 200),
+    p_metadata: { tools: result.tools, provider: result.provider },
+  });
+  return { ok: true, data: result };
+}
+
+/** Question à l'assistant de supervision (équipe de la plateforme, lecture seule). Journalisée. */
+export async function askPlatformAssistant(history: unknown): Promise<{ ok: true; data: AssistantAnswer } | { ok: false; message: string }> {
+  if (!(await getPlatformRole())) return { ok: false, message: "Réservé à l'équipe de la plateforme." };
+  const parsed = historySchema.safeParse(history);
+  if (!parsed.success || parsed.data.at(-1)?.role !== "user") return { ok: false, message: "Question invalide." };
+  const supabase = await createClient();
+  const result = await answerPlatform({ supabase, today: todayIn("Africa/Abidjan") }, parsed.data);
+  await supabase.rpc("log_event", {
+    p_action: "assistant.platform_question",
     p_summary: parsed.data.at(-1)!.content.slice(0, 200),
     p_metadata: { tools: result.tools, provider: result.provider },
   });

@@ -5,13 +5,14 @@ import { notFound } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FeaturesForm } from "@/features/organization/components/features-form";
 import { savePlatformOrganizationFeatures } from "@/features/organization/feature-actions";
+import { OrganizationProfile, type OrgProfile } from "@/features/platform/components/org-profile";
 import { ORG_TYPE_LABELS } from "@/features/platform/org-types";
 import { FEATURE_FLAGS, featureEnabled, featureLockedByPlatform } from "@/lib/features";
 import type { OrganizationSummary } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { isUuid } from "@/lib/utils/search-params";
 
-export const metadata: Metadata = { title: "Fonctionnalités de l'établissement" };
+export const metadata: Metadata = { title: "Fiche établissement" };
 
 /**
  * Super Admin : fonctionnalités d'un établissement. Décocher = arrêt forcé
@@ -23,6 +24,7 @@ export default async function PlatformOrganizationFeaturesPage({ params }: PageP
   const supabase = await createClient();
   const { data: org } = await supabase.from("organizations").select("id, name, short_name, code, type, currency, locale, timezone, is_demo, settings").eq("id", id).maybeSingle();
   if (!org) notFound();
+  const { data: profile } = await supabase.rpc("platform_organization_profile", { p_org: id });
   // Colonne calculée (règles générales du Contrôle des modules), lue à part : non décrite par les types générés.
   const { data: locks } = await supabase.from("organizations").select("platform_locked_features" as string).eq("id", id).maybeSingle();
   const organization = { ...org, platform_locked_features: (locks as { platform_locked_features?: Record<string, boolean> } | null)?.platform_locked_features ?? null } as unknown as OrganizationSummary;
@@ -37,6 +39,7 @@ export default async function PlatformOrganizationFeaturesPage({ params }: PageP
         </Link>{" "}
         / <span className="text-foreground">{org.name}</span>
       </nav>
+      {profile ? <OrganizationProfile p={profile as unknown as OrgProfile} typeLabel={ORG_TYPE_LABELS[org.type] ?? org.type} /> : null}
       <Card>
         <CardHeader>
           <CardTitle>Fonctionnalités — {org.name}</CardTitle>

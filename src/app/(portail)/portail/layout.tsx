@@ -12,12 +12,16 @@ import { PortalNav } from "@/features/portal/components/portal-nav";
 import { requirePortal } from "@/features/portal/context";
 import { isHigherOrg } from "@/features/university/config";
 import { displayName } from "@/lib/auth/session";
+import { MaintenanceScreen } from "@/components/shared/maintenance-screen";
 import { isDemoMode } from "@/lib/demo";
+import { maintenanceBlocks } from "@/lib/maintenance";
 import { vocabularyFor } from "@/lib/vocabulary";
 
 /** Portail parent / élève : interface mobile (bleu nuit, blanc, cyan), navigation en bas d'écran. */
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const { context, organization, parent, students, student, shows } = await requirePortal();
+  const maintenance = await maintenanceBlocks();
+  if (maintenance) return <MaintenanceScreen state={maintenance} />;
   const hidden = (["results", "grades", "attendance", "finances", "documents", "timetable"] as const).filter((s) => !shows(s));
   const notifications = await getRecentNotifications(organization.id);
   const name = displayName(context);

@@ -132,3 +132,59 @@ export async function setFeatureRule(_: ActionResult | null, formData: FormData)
   revalidatePath("/plateforme/modules");
   return { ok: true, message: state === "remove" ? "Règle retirée." : state === "on" ? "Fonctionnalité ouverte à ce niveau." : "Fonctionnalité arrêtée à ce niveau." };
 }
+
+/** Suspendre / réactiver un compte (motif obligatoire ; sessions fermées à la suspension). */
+export async function setUserActive(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  if (!(await getSessionContext())) return { ok: false, message: "Votre session a expiré. Reconnectez-vous." };
+  const role = await getPlatformRole();
+  if (!canWritePlatform(role)) return { ok: false, message: platformDeniedMessage(role) };
+  const user = String(formData.get("user_id") ?? "");
+  if (!isUuid(user)) return { ok: false, message: "Compte introuvable." };
+  const active = formData.get("active") === "true";
+  const { error } = await (await createClient()).rpc("platform_set_user_active", { p_user: user, p_active: active, p_reason: String(formData.get("reason") ?? "") });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  revalidatePath("/plateforme/comptes");
+  return { ok: true, message: active ? "Compte réactivé." : "Compte suspendu : il n'a plus accès à NeoScool et ses sessions sont fermées." };
+}
+
+/** Mode maintenance (motif obligatoire, journalisé). Fin prévue facultative : date + heure (GMT). */
+export async function setMaintenance(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  if (!(await getSessionContext())) return { ok: false, message: "Votre session a expiré. Reconnectez-vous." };
+  const role = await getPlatformRole();
+  if (!canWritePlatform(role)) return { ok: false, message: platformDeniedMessage(role) };
+  const enabled = formData.get("enabled") === "true" || formData.get("enabled") === "on";
+  const date = String(formData.get("end_date") ?? "");
+  const time = String(formData.get("end_time") ?? "") || "23:59";
+  const ends = /^\d{4}-\d{2}-\d{2}$/.test(date) && /^\d{2}:\d{2}$/.test(time) ? `${date}T${time}:00Z` : null;
+  const { error } = await (await createClient()).rpc("platform_set_maintenance", {
+    p_enabled: enabled,
+    p_message: String(formData.get("message") ?? ""),
+    p_ends_at: ends as string,
+    p_reason: String(formData.get("reason") ?? ""),
+  });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  revalidatePath("/plateforme", "layout");
+  return { ok: true, message: enabled ? "Mode maintenance activé : les établissements voient l'écran de maintenance." : "Mode maintenance désactivé : service rétabli pour tous." };
+}
+
+/** Registre des demandes de confidentialité (création ou suivi). */
+export async function savePrivacyRequest(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  if (!(await getSessionContext())) return { ok: false, message: "Votre session a expiré. Reconnectez-vous." };
+  const role = await getPlatformRole();
+  if (!canWritePlatform(role)) return { ok: false, message: platformDeniedMessage(role) };
+  const id = String(formData.get("id") ?? "");
+  const org = String(formData.get("organization_id") ?? "");
+  const { error } = await (await createClient()).rpc("platform_save_privacy_request", {
+    p_id: (isUuid(id) ? id : null) as string,
+    p_org: (isUuid(org) ? org : null) as string,
+    p_name: String(formData.get("requester_name") ?? ""),
+    p_email: String(formData.get("requester_email") ?? ""),
+    p_type: String(formData.get("request_type") ?? "other"),
+    p_details: String(formData.get("details") ?? ""),
+    p_status: String(formData.get("status") ?? "received"),
+    p_response: String(formData.get("response") ?? ""),
+  });
+  if (error) return { ok: false, message: dbErrorMessage(error) };
+  revalidatePath("/plateforme/confidentialite");
+  return { ok: true, message: isUuid(id) ? "Demande mise à jour." : "Demande enregistrée : réponse attendue sous 30 jours." };
+}

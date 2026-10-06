@@ -10,9 +10,11 @@ import type { Database } from "@/types/database";
 // /api/cron : protégé par CRON_SECRET (pas de session utilisateur).
 // /api/webhooks : notifications des fournisseurs de paiement (revérifiées auprès du fournisseur).
 // /api/app : identité publique d'un établissement pour l'application mobile (comme /acces).
+// /api/site : mesure d'audience anonyme du site public (sans cookie).
+// /api/sante : sonde de disponibilité pour un service de surveillance externe (aucune donnée).
 // /tarifs, /pricing, /inscription : offre NeoScool et création d'un établissement (essai gratuit).
 const PUBLIC_PATHS = [
-  "/connexion", "/acces", "/mot-de-passe-oublie", "/auth", "/verifier", "/configuration", "/api/cron", "/api/webhooks", "/api/hooks", "/api/app",
+  "/connexion", "/acces", "/mot-de-passe-oublie", "/auth", "/verifier", "/configuration", "/api/cron", "/api/webhooks", "/api/hooks", "/api/app", "/api/sante", "/api/site",
   "/verification-email", "/console.webmanifest",
   "/demo", "/hors-ligne", "/tarifs", "/pricing", "/inscription",
   // Pages publiques réglées par le Super Admin : aide, conditions générales, confidentialité.

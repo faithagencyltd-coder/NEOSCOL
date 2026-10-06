@@ -5,7 +5,7 @@ import { useState, useTransition } from "react";
 
 import { AssistantIllustration } from "@/components/illustrations/scenes";
 import { Button } from "@/components/ui/button";
-import { askAssistant } from "@/features/assistant/actions";
+import { askAssistant, askPlatformAssistant } from "@/features/assistant/actions";
 import type { AssistantAnswer, AssistantTurn } from "@/features/assistant/engine";
 import { cn } from "@/lib/utils/cn";
 
@@ -19,7 +19,25 @@ const SUGGESTIONS = [
   "Où en est le passage à l'année suivante ?",
 ];
 
+const PLATFORM_SUGGESTIONS = [
+  "Fais-moi un rapport général sur l'état de NeoScool",
+  "Combien d'établissements sont actifs ?",
+  "Y a-t-il eu des tentatives de piratage aujourd'hui ?",
+  "La plateforme fonctionne-t-elle normalement ?",
+  "Quels abonnements arrivent à expiration ?",
+  "Quels sont les derniers incidents ?",
+  "Le stockage commence-t-il à être saturé ?",
+];
+
 const TOOL_LABELS: Record<string, string> = {
+  tableau_de_bord: "Tableau de bord",
+  etat_technique: "Supervision",
+  securite: "Sécurité",
+  abonnements_echeance: "Abonnements",
+  incidents: "Assistance",
+  croissance: "Analyses",
+  etablissement: "Fiche établissement",
+  journal: "Journal",
   rechercher: "Recherche",
   statistiques: "Statistiques",
   impayes: "Impayés",
@@ -33,7 +51,8 @@ const TOOL_LABELS: Record<string, string> = {
 type Message = AssistantTurn & { meta?: Pick<AssistantAnswer, "tools" | "provider"> };
 
 /** Conversation avec l'assistant : chaque réponse indique les outils consultés (avec vos droits). */
-export function AssistantChat({ llm }: { llm: boolean }) {
+export function AssistantChat({ llm, scope = "organization" }: { llm: boolean; scope?: "organization" | "platform" }) {
+  const platform = scope === "platform";
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +66,7 @@ export function AssistantChat({ llm }: { llm: boolean }) {
     setInput("");
     setError(null);
     startTransition(async () => {
-      const result = await askAssistant(next.map(({ role, content }) => ({ role, content })).slice(-20));
+      const result = await (platform ? askPlatformAssistant : askAssistant)(next.map(({ role, content }) => ({ role, content })).slice(-20));
       if (result.ok) setMessages((current) => [...current, { role: "assistant", content: result.data.answer, meta: { tools: result.data.tools, provider: result.data.provider } }]);
       else setError(result.message);
     });
@@ -58,7 +77,9 @@ export function AssistantChat({ llm }: { llm: boolean }) {
       <div className="flex items-start gap-2 rounded-xl bg-info-soft px-3 py-2 text-sm text-info">
         <ShieldCheck className="mt-0.5 size-4 shrink-0" aria-hidden />
         <span>
-          L&apos;assistant consulte les données avec VOS droits (mêmes règles de sécurité que l&apos;application) et ne modifie rien.{" "}
+          {platform
+            ? "L'assistant de supervision lit les données de la plateforme (chiffres, sécurité, technique, assistance) sans jamais rien modifier ni afficher de clé. Il distingue les faits des soupçons."
+            : "L'assistant consulte les données avec VOS droits (mêmes règles de sécurité que l'application) et ne modifie rien."}{" "}
           {llm ? "Moteur : Claude (Anthropic)." : "Moteur local : questions guidées (le langage naturel complet s'active quand l'administration de la plateforme configure Claude)."}
         </span>
       </div>
@@ -66,9 +87,9 @@ export function AssistantChat({ llm }: { llm: boolean }) {
         {messages.length === 0 ? (
           <div className="grid justify-items-center gap-3 py-4 text-center">
             <AssistantIllustration className="anim-fade-up w-52" />
-            <p className="font-semibold">Posez une question sur votre établissement</p>
+            <p className="font-semibold">{platform ? "Posez une question sur la plateforme NeoScool" : "Posez une question sur votre établissement"}</p>
             <div className="flex flex-wrap justify-center gap-2">
-              {SUGGESTIONS.map((s) => (
+              {(platform ? PLATFORM_SUGGESTIONS : SUGGESTIONS).map((s) => (
                 <button key={s} type="button" onClick={() => send(s)} className="rounded-full border border-border px-3 py-1.5 text-sm transition-[color,border-color,transform] duration-200 hover:-translate-y-px hover:border-primary hover:text-primary active:scale-[0.97]">
                   {s}
                 </button>
@@ -112,7 +133,7 @@ export function AssistantChat({ llm }: { llm: boolean }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           maxLength={2000}
-          placeholder="Ex. : qui a des impayés ? absences d'aujourd'hui ?"
+          placeholder={platform ? "Ex. : la plateforme fonctionne-t-elle normalement ?" : "Ex. : qui a des impayés ? absences d'aujourd'hui ?"}
           className="h-12 flex-1 rounded-xl border border-input bg-surface px-4 text-sm focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
         />
         <Button type="submit" size="lg" disabled={pending || !input.trim()} aria-label="Envoyer la question">

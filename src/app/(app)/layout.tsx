@@ -20,12 +20,16 @@ import { SIDEBAR_COOKIE } from "@/config/ui";
 import { getRecentNotifications } from "@/features/notifications/queries";
 import { requireOrganization } from "@/lib/auth/guards";
 import { can, displayName } from "@/lib/auth/session";
+import { MaintenanceScreen } from "@/components/shared/maintenance-screen";
 import { isDemoMode } from "@/lib/demo";
+import { maintenanceBlocks } from "@/lib/maintenance";
 import { featureEnabled } from "@/lib/features";
 import { vocabularyFor } from "@/lib/vocabulary";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const context = await requireOrganization();
+  const maintenance = await maintenanceBlocks();
+  if (maintenance) return <MaintenanceScreen state={maintenance} />;
   const demo = isDemoMode() && context.organization.is_demo;
   const sections = visibleNavigation(context.permissions, {
     demo,

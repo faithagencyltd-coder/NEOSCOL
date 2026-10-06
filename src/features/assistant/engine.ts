@@ -54,9 +54,21 @@ async function localAnswer(ctx: ToolContext, question: string): Promise<Assistan
   return { provider: "local", tools: calls.map((c) => c.name), answer: results.join("\n\n") };
 }
 
+/** Jeu d'outils confié à Claude : définitions, exécution (droits de l'utilisateur) et consigne. */
+export type Toolkit = {
+  tools: readonly { name: string; description: string; inputSchema: Record<string, unknown> }[];
+  run: (name: string, input: unknown) => Promise<string>;
+  system: string;
+};
+
 /** Réponse via Claude (outils identiques, exécutés côté serveur avec les droits de l'utilisateur). */
 async function claudeAnswer(client: Anthropic, ctx: ToolContext, history: AssistantTurn[]): Promise<AssistantAnswer> {
-  const tools: Anthropic.Beta.BetaTool[] = ASSISTANT_TOOLS.map((t) => ({
+  return runClaude(client, { tools: ASSISTANT_TOOLS, run: (name, input) => runTool(ctx, name, input), system: `${SYSTEM}\nDate du jour : ${ctx.today}.` }, history);
+}
+
+/** Boucle d'outils Claude, commune à l'assistant des établissements et à celui de la plateforme. */
+export async function runClaude(client: Anthropic, toolkit: Toolkit, history: AssistantTurn[]): Promise<AssistantAnswer> {
+  const tools: Anthropic.Beta.BetaTool[] = toolkit.tools.map((t) => ({
     name: t.name,
     description: t.description,
     input_schema: t.inputSchema as Anthropic.Beta.BetaTool["input_schema"],
@@ -72,7 +84,7 @@ async function claudeAnswer(client: Anthropic, ctx: ToolContext, history: Assist
       output_config: { effort: "medium" },
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
-      system: `${SYSTEM}\nDate du jour : ${ctx.today}.`,
+      system: toolkit.system,
       tools,
       messages,
     });
@@ -94,7 +106,7 @@ async function claudeAnswer(client: Anthropic, ctx: ToolContext, history: Assist
     const results = await Promise.all(
       toolUses.map(async (block) => {
         used.push(block.name);
-        return { type: "tool_result" as const, tool_use_id: block.id, content: await runTool(ctx, block.name, block.input) };
+        return { type: "tool_result" as const, tool_use_id: block.id, content: await toolkit.run(block.name, block.input) };
       }),
     );
     messages.push({ role: "user", content: results });

@@ -9,6 +9,7 @@ import { InstallAppButton } from "@/components/shared/pwa";
 import { PlatformTabs } from "@/features/platform/components/platform-tabs";
 import { getPlatformRole, PLATFORM_ROLE_LABELS } from "@/lib/auth/platform";
 import { securityState } from "@/lib/auth/security";
+import { maintenanceState } from "@/lib/maintenance";
 import { requireSession } from "@/lib/auth/guards";
 import { displayName } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
@@ -29,7 +30,7 @@ export default async function PlatformLayout({ children }: { children: React.Rea
   const supabase = await createClient();
   const { data: isAdmin } = await supabase.rpc("is_platform_admin");
   if (!isAdmin) notFound();
-  const [security, role] = await Promise.all([securityState(), getPlatformRole()]);
+  const [security, role, maintenance] = await Promise.all([securityState(), getPlatformRole(), maintenanceState()]);
   return (
     <div className="min-h-dvh bg-background">
       <header className="bg-gradient-to-br from-[#07142b] via-[#0b2559] to-[#0e4a9a] text-white">
@@ -51,6 +52,14 @@ export default async function PlatformLayout({ children }: { children: React.Rea
           <PlatformTabs />
         </div>
       </header>
+      {maintenance ? (
+        <div role="status" className="bg-warning-soft px-4 py-2 text-center text-sm font-medium text-warning" data-testid="maintenance-banner">
+          Mode maintenance actif : les établissements voient l&apos;écran de maintenance. Vous gardez l&apos;accès pour vérifier.{" "}
+          <Link href="/plateforme/maintenance" className="font-semibold underline-offset-4 hover:underline">
+            Gérer
+          </Link>
+        </div>
+      ) : null}
       {role === "viewer" ? (
         <div role="status" className="bg-info-soft px-4 py-2 text-center text-sm font-medium text-info" data-testid="viewer-banner">
           Accès en lecture seule : vous consultez la console, aucune modification n&apos;est possible (garanti par la base de données).

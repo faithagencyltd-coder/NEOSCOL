@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { StatCard } from "@/features/dashboard/components/stat-card";
+import { SecurityAlertsSection, type SecurityAlerts } from "@/features/platform/components/security-alerts";
 import { revokeUserSessions, saveSecuritySettings, unlockAccount } from "@/features/platform/integration-actions";
 import { createClient } from "@/lib/supabase/server";
 
@@ -26,7 +27,7 @@ type Overview = {
 /** Centre de sécurité : réglages, comptes verrouillés, double authentification des rôles sensibles, journal. */
 export default async function PlatformSecurityPage() {
   const supabase = await createClient();
-  const [{ data }, { data: settings }, { data: integrations }, { data: events }] = await Promise.all([
+  const [{ data }, { data: settings }, { data: integrations }, { data: events }, { data: alerts }] = await Promise.all([
     supabase.rpc("platform_security_overview"),
     supabase.from("platform_security_settings").select("*").eq("id", 1).maybeSingle(),
     supabase.from("platform_integrations").select("provider, enabled").in("provider", ["turnstile", "brevo_email"]),
@@ -36,6 +37,7 @@ export default async function PlatformSecurityPage() {
       .or("action.like.auth.%,action.like.platform.%")
       .order("created_at", { ascending: false })
       .limit(30),
+    supabase.rpc("platform_security_alerts", { p_days: 7 }),
   ]);
   const o = (data ?? { failures_24h: 0, successes_24h: 0, pending_verification: 0, locked: [], sensitive_accounts: [] }) as Overview;
   const turnstile = integrations?.find((i) => i.provider === "turnstile")?.enabled ?? false;
@@ -186,10 +188,17 @@ export default async function PlatformSecurityPage() {
         </Table>
       </Card>
 
+      {alerts ? <SecurityAlertsSection a={alerts as unknown as SecurityAlerts} /> : null}
+
       <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle>Journal de sécurité</CardTitle>
-          <CardDescription>30 derniers événements de connexion et d&apos;administration de la plateforme.</CardDescription>
+          <CardDescription>
+            30 derniers événements de connexion et d&apos;administration de la plateforme.{" "}
+            <Link href="/plateforme/journal?categorie=auth" className="font-medium text-primary underline-offset-4 hover:underline">
+              Historique complet et filtres
+            </Link>
+          </CardDescription>
         </CardHeader>
         <Table>
           <THead>
