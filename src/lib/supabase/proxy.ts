@@ -21,6 +21,8 @@ const PUBLIC_PATHS = [
   "/aide", "/conditions", "/confidentialite",
   // Site officiel : accueil (« / » exact), version anglaise, secteurs, pays, contact.
   "/en", "/secteurs", "/pays", "/contact",
+  // Écosystème public : annuaire Discover, opportunités, création d'un compte public.
+  "/decouvrir", "/opportunites", "/espace/inscription", "/sitemap.xml", "/robots.txt",
 ];
 
 function isPublicPath(pathname: string): boolean {

@@ -11794,6 +11794,12 @@ export type Database = {
         }
         Returns: string
       }
+      application_thread: {
+        Args: {
+          p_id: string
+        }
+        Returns: Json
+      }
       apply_invoice_discount: {
         Args: {
           p_invoice: string
@@ -12740,6 +12746,12 @@ export type Database = {
           mime_type: string
           content: string
         }[]
+      }
+      opportunity_manage: {
+        Args: {
+          p_id: string
+        }
+        Returns: Json
       }
       org_archive_payment_provider: {
         Args: {

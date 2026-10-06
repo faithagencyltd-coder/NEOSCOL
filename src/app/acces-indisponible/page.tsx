@@ -19,6 +19,9 @@ export default async function AccessUnavailablePage({ searchParams }: PageProps<
   // Super administrateur sans établissement : console de la plateforme.
   const { data: platformAdmin } = await (await createClient()).rpc("is_platform_admin");
   if (platformAdmin) redirect("/plateforme");
+  // Compte particulier (NeoScool Opportunities) : son espace personnel.
+  const { data: publicAccount } = await (await createClient()).from("public_accounts").select("user_id").maybeSingle();
+  if (publicAccount && !portalOff) redirect("/espace");
   return (
     <main className="mx-auto grid min-h-dvh max-w-md content-center gap-6 px-4 py-10">
       <Logo />
