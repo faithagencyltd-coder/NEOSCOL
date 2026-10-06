@@ -1,4 +1,4 @@
-import { BookOpen, CalendarClock, IdCard, ChevronRight, FileCheck2, LogOut, Megaphone, MessagesSquare, NotebookPen, Route, UserRound, Wallet, type LucideIcon } from "lucide-react";
+import { BookOpen, CalendarClock, GraduationCap, IdCard, ChevronRight, FileCheck2, LogOut, Megaphone, MessagesSquare, NotebookPen, Route, UserRound, Wallet, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -13,6 +13,7 @@ import { requirePortal } from "@/features/portal/context";
 import { getPortalSchoolRecord, getPortalSubjects } from "@/features/portal/queries";
 import { isHigherOrg } from "@/features/university/config";
 import { displayName } from "@/lib/auth/session";
+import { featureEnabled } from "@/lib/features";
 import { SEX } from "@/lib/labels";
 import { formatDate, formatNumber } from "@/lib/utils/format";
 import { vocabularyFor } from "@/lib/vocabulary";
@@ -38,6 +39,8 @@ export default async function PortalMorePage() {
     ...(parent ? [] : [{ href: "/portail/finances", label: "Situation financière", icon: Wallet }]),
     { href: "/portail/annonces", label: "Annonces et notifications", icon: Megaphone },
     { href: "/portail/messages", label: "Messages de l'établissement", icon: MessagesSquare },
+    // Tutor Match : service facultatif, seulement si ouvert pour l'établissement (aucune note transmise aux tuteurs).
+    ...(parent && featureEnabled(organization, "tutor_match") ? [{ href: "/espace/tutorat", label: "Soutien scolaire (trouver un tuteur)", icon: GraduationCap }] : []),
   ];
 
   return (

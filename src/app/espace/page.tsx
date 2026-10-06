@@ -54,6 +54,9 @@ export default async function PersonalSpacePage({ searchParams }: PageProps<"/es
               Affiliation
             </Link>
           ) : null}
+          <Link href="/espace/tutorat" className="rounded-xl border border-border px-3 py-2 text-sm font-semibold" data-testid="link-tutoring">
+            Soutien scolaire
+          </Link>
           <Link href="/opportunites" className="rounded-xl border border-border px-3 py-2 text-sm font-semibold">
             Parcourir les annonces
           </Link>

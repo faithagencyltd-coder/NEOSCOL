@@ -34,13 +34,18 @@ async function enableProgram(q, extra = {}) {
   await q("select platform_save_affiliate_settings($1)", [JSON.stringify({ enabled: true, reward_type: "percent", reward_value: 20, reward_event: "first_payment", hold_days: 30, ...extra })]);
 }
 
-async function approvedAffiliate(q, user = USERS.teacher, phone = "+225 07 11 22 33 44") {
+/** Affilié approuvé : compte dédié au test (indépendant des données laissées par d'autres tests). */
+async function approvedAffiliate(q, phone = "+225 07 11 22 33 44") {
+  await switchTo(q, null);
+  const user = randomUUID();
+  await q("insert into auth.users (id, email) values ($1, $2)", [user, `affilie.${user.slice(0, 8)}@exemple.ci`]);
+  await q("update profiles set last_name = 'Testeur' where id = $1", [user]);
   await switchTo(q, user);
   await q("select affiliate_apply('teacher', $1, 'CI', 'Abidjan', 'Je connais des écoles', 'mobile_money', '+225 07 11 22 33 44', true)", [phone]);
   const a = await one(q, "select id, code, status from affiliates where user_id = $1", [user]);
   await switchTo(q, USERS.superadmin);
   await q("select platform_review_affiliate($1, 'approve', null)", [a.id]);
-  return a;
+  return { ...a, user };
 }
 
 describe("Affiliation", () => {
@@ -63,7 +68,7 @@ describe("Affiliation", () => {
       assert.match(a.code, /^NEO-[A-Z0-9]+-\d{4}$/);
       await switchTo(q, USERS.admin);
       assert.equal((await q("select id from affiliates")).length, 0, "un établissement ne voit pas les affiliés");
-      await switchTo(q, USERS.teacher);
+      await switchTo(q, a.user);
       assert.match(await rejects(q("select affiliate_apply('teacher', '+22507000000', 'CI', '', '', 'mobile_money', '0700', true)")), /déjà/, "une seule adhésion");
 
       // Lien : clic enregistré en base, puis inscription d'une nouvelle école.
@@ -114,7 +119,7 @@ describe("Affiliation", () => {
       assert.equal((await q("select id from affiliate_commissions where organization_id = $1", [other.org])).length, 0);
 
       // Isolation : l'affilié voit ses commissions, un autre compte non.
-      await switchTo(q, USERS.teacher);
+      await switchTo(q, a.user);
       const space = (await one(q, "select my_affiliate_space() s")).s;
       assert.equal(space.commissions.length, 1);
       assert.equal(space.totals.estimated, c.amount);
@@ -136,7 +141,7 @@ describe("Affiliation", () => {
       assert.equal(paid.status, "paid");
       assert.equal(paid.payout_id, payout);
       assert.match(await rejects(q("select platform_review_commission($1, 'reject', 'erreur')", [c.id])), /ne peut plus/, "commission payée figée");
-      await switchTo(q, USERS.teacher);
+      await switchTo(q, a.user);
       assert.equal((await one(q, "select my_affiliate_space() s")).s.totals.paid, c.amount, "versement visible par l'affilié");
       await switchTo(q, USERS.superadmin);
       const journal = await q("select action from audit_logs where action like 'platform.affiliate%' order by created_at desc limit 20");
@@ -164,7 +169,7 @@ describe("Affiliation", () => {
       await pay(q, s2.org, `VIR-AFF-${randomUUID().slice(0, 8)}`);
       const c2 = await one(q, "select id from affiliate_commissions where organization_id = $1", [s2.org]);
       await q("select platform_review_commission($1, 'reject', 'Inscription suspecte')", [c2.id]);
-      await switchTo(q, USERS.teacher);
+      await switchTo(q, a.user);
       await q("select affiliate_dispute($1, 'Cette école existe bien, voici le contact du directeur.')", [c2.id]);
       await switchTo(q, USERS.teacher2);
       assert.match(await rejects(q("select affiliate_dispute($1, 'je conteste aussi')", [c2.id])), /introuvable/, "on ne conteste que ses commissions");
@@ -185,7 +190,7 @@ describe("Affiliation", () => {
       assert.equal((await one(q, "select affiliate_attribute_signup($1, $2, null, $3, '', null) r", [s3.org, s3.user, a.code])).r.reason, "disabled");
       assert.equal((await one(q, "select affiliate_record_click($1, null, '/', null) r", [a.code])).r, null, "lien inactif");
       assert.ok((await q("select id from affiliate_commissions where affiliate_id = $1", [a.id])).length >= 2, "historique conservé");
-      await switchTo(q, USERS.teacher);
+      await switchTo(q, a.user);
       assert.ok((await one(q, "select my_affiliate_space() s")).s.commissions.length >= 2, "l'affilié garde l'accès à son historique");
     });
   });

@@ -12422,6 +12422,450 @@ export type Database = {
           }
         ]
       }
+      tutor_blocks: {
+        Row: {
+          created_at: string
+          parent_id: string
+          tutor_id: string
+        }
+        Insert: {
+          created_at?: string
+          parent_id: string
+          tutor_id: string
+        }
+        Update: {
+          created_at?: string
+          parent_id?: string
+          tutor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutor_blocks_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tutor_blocks_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      tutor_profiles: {
+        Row: {
+          availability: string | null
+          bio: string | null
+          city: string
+          country: string
+          created_at: string
+          currency: string
+          experience_years: number | null
+          headline: string
+          kind: string
+          languages: string[]
+          levels: string[]
+          modes: string[]
+          qualifications: string | null
+          rate_amount: number | null
+          rate_unit: string
+          references_text: string | null
+          review_note: string | null
+          status: string
+          subjects: string[]
+          terms_accepted_at: string
+          updated_at: string
+          user_id: string
+          verification: string
+          verification_note: string | null
+          verified_at: string | null
+          verified_by: string | null
+          zones: string[]
+        }
+        Insert: {
+          availability?: string | null
+          bio?: string | null
+          city: string
+          country: string
+          created_at?: string
+          currency?: string
+          experience_years?: number | null
+          headline: string
+          kind: string
+          languages?: string[]
+          levels: string[]
+          modes: string[]
+          qualifications?: string | null
+          rate_amount?: number | null
+          rate_unit?: string
+          references_text?: string | null
+          review_note?: string | null
+          status?: string
+          subjects: string[]
+          terms_accepted_at?: string
+          updated_at?: string
+          user_id: string
+          verification?: string
+          verification_note?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          zones?: string[]
+        }
+        Update: {
+          availability?: string | null
+          bio?: string | null
+          city?: string
+          country?: string
+          created_at?: string
+          currency?: string
+          experience_years?: number | null
+          headline?: string
+          kind?: string
+          languages?: string[]
+          levels?: string[]
+          modes?: string[]
+          qualifications?: string | null
+          rate_amount?: number | null
+          rate_unit?: string
+          references_text?: string | null
+          review_note?: string | null
+          status?: string
+          subjects?: string[]
+          terms_accepted_at?: string
+          updated_at?: string
+          user_id?: string
+          verification?: string
+          verification_note?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          zones?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutor_profiles_country_fkey"
+            columns: ["country"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "tutor_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tutor_profiles_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      tutor_request_messages: {
+        Row: {
+          author_id: string | null
+          body: string
+          created_at: string
+          id: string
+          request_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          request_id: string
+        }
+        Update: {
+          author_id?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutor_request_messages_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tutor_request_messages_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_requests"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      tutor_requests: {
+        Row: {
+          child_label: string | null
+          closed_reason: string | null
+          created_at: string
+          id: string
+          level: string
+          message: string
+          mode: string
+          parent_id: string
+          preferred_schedule: string | null
+          proposed_schedule: string | null
+          source: string
+          status: string
+          subject: string
+          tutor_id: string
+          tutor_note: string | null
+          updated_at: string
+        }
+        Insert: {
+          child_label?: string | null
+          closed_reason?: string | null
+          created_at?: string
+          id?: string
+          level: string
+          message: string
+          mode: string
+          parent_id: string
+          preferred_schedule?: string | null
+          proposed_schedule?: string | null
+          source?: string
+          status?: string
+          subject: string
+          tutor_id: string
+          tutor_note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          child_label?: string | null
+          closed_reason?: string | null
+          created_at?: string
+          id?: string
+          level?: string
+          message?: string
+          mode?: string
+          parent_id?: string
+          preferred_schedule?: string | null
+          proposed_schedule?: string | null
+          source?: string
+          status?: string
+          subject?: string
+          tutor_id?: string
+          tutor_note?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutor_requests_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tutor_requests_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_profiles"
+            referencedColumns: ["user_id"]
+          }
+        ]
+      }
+      tutor_sessions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          duration_minutes: number
+          id: string
+          mode: string
+          note: string | null
+          request_id: string
+          starts_at: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          duration_minutes?: number
+          id?: string
+          mode: string
+          note?: string | null
+          request_id: string
+          starts_at: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          duration_minutes?: number
+          id?: string
+          mode?: string
+          note?: string | null
+          request_id?: string
+          starts_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutor_sessions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tutor_sessions_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_requests"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      tutor_settings: {
+        Row: {
+          forbid_own_school: boolean
+          id: number
+          independent_tutors: boolean
+          max_open_requests: number
+          require_verification: boolean
+          school_teachers: boolean
+          suggestion_cooldown_days: number
+          suggestion_periods: number
+          suggestion_threshold: number
+          suggestions_enabled: boolean
+          terms: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          forbid_own_school?: boolean
+          id?: number
+          independent_tutors?: boolean
+          max_open_requests?: number
+          require_verification?: boolean
+          school_teachers?: boolean
+          suggestion_cooldown_days?: number
+          suggestion_periods?: number
+          suggestion_threshold?: number
+          suggestions_enabled?: boolean
+          terms?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          forbid_own_school?: boolean
+          id?: number
+          independent_tutors?: boolean
+          max_open_requests?: number
+          require_verification?: boolean
+          school_teachers?: boolean
+          suggestion_cooldown_days?: number
+          suggestion_periods?: number
+          suggestion_threshold?: number
+          suggestions_enabled?: boolean
+          terms?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutor_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      tutor_suggestion_optouts: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutor_suggestion_optouts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      tutor_suggestions: {
+        Row: {
+          child_first_name: string | null
+          created_at: string
+          dismissed_at: string | null
+          id: string
+          organization_id: string
+          rule: Json
+          student_id: string
+          subject: string
+          user_id: string
+        }
+        Insert: {
+          child_first_name?: string | null
+          created_at?: string
+          dismissed_at?: string | null
+          id?: string
+          organization_id: string
+          rule?: Json
+          student_id: string
+          subject: string
+          user_id: string
+        }
+        Update: {
+          child_first_name?: string | null
+          created_at?: string
+          dismissed_at?: string | null
+          id?: string
+          organization_id?: string
+          rule?: Json
+          student_id?: string
+          subject?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutor_suggestions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tutor_suggestions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tutor_suggestions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       ue_results: {
         Row: {
           academic_period_id: string
@@ -13859,6 +14303,10 @@ export type Database = {
           unread: boolean
         }[]
       }
+      my_tutor_space: {
+        Args: never
+        Returns: Json
+      }
       opportunities_search: {
         Args: {
           p_query: string
@@ -14459,6 +14907,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      platform_review_tutor: {
+        Args: {
+          p_user: string
+          p_action: string
+          p_note: string
+        }
+        Returns: undefined
+      }
       platform_revoke_user_sessions: {
         Args: {
           p_user: string
@@ -14728,6 +15184,12 @@ export type Database = {
         }
         Returns: string
       }
+      platform_save_tutor_settings: {
+        Args: {
+          p: Json
+        }
+        Returns: undefined
+      }
       platform_save_verification_requirement: {
         Args: {
           p_id: string
@@ -14951,6 +15413,10 @@ export type Database = {
           added_by_email: string
           last_sign_in_at: string
         }[]
+      }
+      platform_tutor_overview: {
+        Args: never
+        Returns: Json
       }
       platform_unlock_account: {
         Args: {
@@ -15885,6 +16351,129 @@ export type Database = {
           p_values: number[]
         }
         Returns: Json
+      }
+      tutor_block: {
+        Args: {
+          p_tutor: string
+          p_blocked: boolean
+        }
+        Returns: undefined
+      }
+      tutor_generate_suggestions: {
+        Args: never
+        Returns: number
+      }
+      tutor_match_open: {
+        Args: {
+          p_country: string
+        }
+        Returns: boolean
+      }
+      tutor_request_create: {
+        Args: {
+          p_tutor: string
+          p_child_label: string
+          p_level: string
+          p_subject: string
+          p_mode: string
+          p_schedule: string
+          p_message: string
+          p_source?: string
+        }
+        Returns: string
+      }
+      tutor_request_message: {
+        Args: {
+          p_id: string
+          p_body: string
+        }
+        Returns: undefined
+      }
+      tutor_request_parent_action: {
+        Args: {
+          p_id: string
+          p_action: string
+          p_reason?: string
+        }
+        Returns: undefined
+      }
+      tutor_request_respond: {
+        Args: {
+          p_id: string
+          p_action: string
+          p_note: string
+          p_schedule?: string
+        }
+        Returns: undefined
+      }
+      tutor_request_verification: {
+        Args: {
+          p_note: string
+        }
+        Returns: undefined
+      }
+      tutor_save_profile: {
+        Args: {
+          p: Json
+        }
+        Returns: undefined
+      }
+      tutor_search: {
+        Args: {
+          p_country: string
+          p_subject?: string
+          p_level?: string
+          p_city?: string
+          p_mode?: string
+          p_language?: string
+          p_max_rate?: number
+        }
+        Returns: {
+          user_id: string
+          name: string
+          kind: string
+          headline: string
+          bio: string
+          subjects: string[]
+          levels: string[]
+          city: string
+          zones: string[]
+          modes: string[]
+          languages: string[]
+          rate_amount: number
+          rate_unit: string
+          currency: string
+          availability: string
+          experience_years: number
+          qualifications: string
+          verification: string
+          verified_at: string
+        }[]
+      }
+      tutor_session_save: {
+        Args: {
+          p_request: string
+          p_session: string
+          p_starts_at: string
+          p_duration: number
+          p_mode: string
+          p_note: string
+          p_status?: string
+        }
+        Returns: string
+      }
+      tutor_set_visibility: {
+        Args: {
+          p_visible: boolean
+        }
+        Returns: undefined
+      }
+      tutor_suggestion_preference: {
+        Args: {
+          p_opt_out: boolean
+          p_dismiss?: string
+        }
+        Returns: undefined
       }
       university_statistics: {
         Args: {

@@ -5,8 +5,8 @@ export type FeatureFlag =
   | PublicModule;
 
 /** Modules de l'écosystème public : fermés tant que le Super Admin ne les ouvre pas (Contrôle des modules). */
-export type PublicModule = "discover" | "promotion" | "media_kit" | "leads" | "opportunities" | "external_ads";
-export const PUBLIC_MODULES: readonly PublicModule[] = ["discover", "promotion", "media_kit", "leads", "opportunities", "external_ads"];
+export type PublicModule = "discover" | "promotion" | "media_kit" | "leads" | "opportunities" | "external_ads" | "tutor_match";
+export const PUBLIC_MODULES: readonly PublicModule[] = ["discover", "promotion", "media_kit", "leads", "opportunities", "external_ads", "tutor_match"];
 export const isPublicModule = (key: string): key is PublicModule => (PUBLIC_MODULES as readonly string[]).includes(key);
 
 /** Fonctionnalités réglables par établissement (et arrêtables par le Super Admin). */
@@ -25,6 +25,7 @@ export const FEATURE_FLAGS: { key: FeatureFlag; label: string; hint: string }[] 
   { key: "media_kit", label: "NeoScool Media Kit", hint: "Visuels prêts à publier (affiches, réseaux sociaux, QR codes)." },
   { key: "opportunities", label: "NeoScool Opportunities", hint: "Offres de recrutement et candidatures." },
   { key: "external_ads", label: "Publicité externe", hint: "Demandes de campagnes Facebook, Instagram, TikTok (sans lancement automatique)." },
+  { key: "tutor_match", label: "NeoScool Tutor Match", hint: "Les familles peuvent chercher un tuteur ou répétiteur (service facultatif ; aucune note n'est transmise aux tuteurs)." },
 ];
 
 function flags(organization: OrganizationSummary, key: "features" | "platform_features"): Record<string, unknown> {
