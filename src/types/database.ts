@@ -13771,6 +13771,16 @@ export type Database = {
         }
         Returns: Json
       }
+      platform_verification_document: {
+        Args: {
+          p_id: string
+        }
+        Returns: {
+          file_name: string
+          mime_type: string
+          content: string
+        }[]
+      }
       platform_visitor_stats: {
         Args: {
           p_from: string
@@ -13873,6 +13883,15 @@ export type Database = {
           rank: number
           class_size: number
           data: Json
+        }[]
+      }
+      public_media: {
+        Args: {
+          p_id: string
+        }
+        Returns: {
+          mime_type: string
+          content: string
         }[]
       }
       publish_academic_rule_set: {

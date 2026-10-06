@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ORG_TYPE_LABELS } from "@/features/platform/org-types";
 import { setFeatureRule } from "@/features/platform/team-actions";
 import { canWritePlatform, getPlatformRole } from "@/lib/auth/platform";
-import { FEATURE_FLAGS } from "@/lib/features";
+import { FEATURE_FLAGS, isPublicModule } from "@/lib/features";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Contrôle des modules — Plateforme" };
@@ -22,19 +22,28 @@ export const metadata: Metadata = { title: "Contrôle des modules — Plateforme
  */
 export default async function PlatformModulesPage() {
   const supabase = await createClient();
-  const [role, { data: rules }, { data: impact }, { data: countries }] = await Promise.all([
+  const [role, { data: rules }, { data: impact }, { data: countries }, { data: orgs }] = await Promise.all([
     getPlatformRole(),
-    supabase.from("platform_feature_rules").select("feature_key, scope, scope_value, enabled, reason, updated_at").order("updated_at", { ascending: false }),
+    supabase.from("platform_feature_rules").select("feature_key, scope, scope_value, enabled, reason, updated_at, until").order("updated_at", { ascending: false }),
     supabase.rpc("platform_feature_impact"),
     supabase.from("countries").select("code, name").order("name"),
+    supabase.from("organizations").select("id, name").order("name"),
   ]);
   const writable = canWritePlatform(role);
   const countryName = new Map((countries ?? []).map((c) => [c.code, c.name]));
+  const orgName = new Map((orgs ?? []).map((o) => [o.id, o.name]));
   const targetLabel = (scope: string, value: string) =>
-    scope === "country" ? `Pays : ${countryName.get(value) ?? value}` : scope === "org_type" ? `Type : ${ORG_TYPE_LABELS[value] ?? value}` : "Toute la plateforme";
+    scope === "country"
+      ? `Pays : ${countryName.get(value) ?? value}`
+      : scope === "org_type"
+        ? `Type : ${ORG_TYPE_LABELS[value] ?? value}`
+        : scope === "organization"
+          ? `Établissement : ${orgName.get(value) ?? value}`
+          : "Toute la plateforme";
   const targets = [
     ...(countries ?? []).map((c) => ({ value: `country:${c.code}`, label: `Pays — ${c.name}` })),
     ...Object.entries(ORG_TYPE_LABELS).map(([value, label]) => ({ value: `org_type:${value}`, label: `Type — ${label}` })),
+    ...(orgs ?? []).map((o) => ({ value: `organization:${o.id}`, label: `Établissement — ${o.name}` })),
   ];
 
   return (
@@ -71,14 +80,17 @@ export default async function PlatformModulesPage() {
           const global = own.find((r) => r.scope === "global");
           const exceptions = own.filter((r) => r.scope !== "global");
           const stats = (impact ?? []).find((i) => i.feature_key === f.key);
-          const globalOff = global?.enabled === false;
+          // Modules publics : fermés tant qu'une règle ne les ouvre pas ; les autres : ouverts par défaut.
+          const isPublic = isPublicModule(f.key);
+          const globalOff = isPublic ? global?.enabled !== true : global?.enabled === false;
           return (
             <Card key={f.key} data-testid={`module-${f.key}`}>
               <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
                 <div className="grid gap-1">
                   <CardTitle className="flex flex-wrap items-center gap-2">
                     {f.label}
-                    {globalOff ? <Badge tone="danger">Arrêté sur la plateforme</Badge> : <Badge tone="success">Ouvert</Badge>}
+                    {globalOff ? <Badge tone="danger">{isPublic ? "Fermé (par défaut)" : "Arrêté sur la plateforme"}</Badge> : <Badge tone="success">Ouvert partout</Badge>}
+                    {isPublic ? <Badge tone="info">Écosystème public</Badge> : null}
                   </CardTitle>
                   <CardDescription>{f.hint}</CardDescription>
                   <p className="text-xs text-muted-foreground">
@@ -90,7 +102,7 @@ export default async function PlatformModulesPage() {
                     <ConfirmAction
                       trigger={
                         <Button size="sm" variant={globalOff ? "primary" : "secondary"} data-testid={`module-${f.key}-global`}>
-                          {globalOff ? <CircleCheck aria-hidden /> : <Ban aria-hidden />} {globalOff ? "Rouvrir partout" : "Arrêter partout"}
+                          {globalOff ? <CircleCheck aria-hidden /> : <Ban aria-hidden />} {globalOff ? (isPublic ? "Ouvrir partout" : "Rouvrir partout") : isPublic ? "Fermer partout" : "Arrêter partout"}
                         </Button>
                       }
                       title={globalOff ? `Rouvrir « ${f.label} » sur toute la plateforme ?` : `Arrêter « ${f.label} » sur toute la plateforme ?`}
@@ -99,10 +111,10 @@ export default async function PlatformModulesPage() {
                           ? "Les exceptions par pays ou par type restent appliquées."
                           : "Les établissements perdent l'accès à cette fonctionnalité, sauf exception par pays ou par type. Leurs données sont conservées."
                       }
-                      confirmLabel={globalOff ? "Rouvrir" : "Arrêter"}
+                      confirmLabel={globalOff ? (isPublic ? "Ouvrir" : "Rouvrir") : isPublic ? "Fermer" : "Arrêter"}
                       tone={globalOff ? "primary" : "danger"}
                       action={setFeatureRule}
-                      fields={{ feature: f.key, scope: "global", state: globalOff ? "remove" : "off" }}
+                      fields={{ feature: f.key, scope: "global", state: isPublic ? (globalOff ? "on" : "remove") : globalOff ? "remove" : "off" }}
                       reason={{ label: "Motif (conservé dans le journal)", required: true }}
                     />
                     <QuickFormDialog
@@ -128,6 +140,7 @@ export default async function PlatformModulesPage() {
                             { value: "off", label: "Arrêté" },
                           ],
                         },
+                        { name: "until", label: "Jusqu'au (facultatif : essai, pilote)", type: "date" },
                         { name: "reason", label: "Motif (conservé dans le journal)", type: "text", required: true },
                       ]}
                     />
@@ -146,6 +159,7 @@ export default async function PlatformModulesPage() {
                           </span>
                           <span className="text-xs text-muted-foreground">
                             {r.reason} — {new Date(r.updated_at).toLocaleString("fr-FR")}
+                            {r.until ? ` — jusqu'au ${new Date(r.until).toLocaleDateString("fr-FR")}${new Date(r.until) < new Date() ? " (terminé)" : ""}` : ""}
                           </span>
                         </span>
                         {writable && r.scope !== "global" ? (

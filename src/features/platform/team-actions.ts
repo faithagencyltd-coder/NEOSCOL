@@ -120,13 +120,15 @@ export async function setFeatureRule(_: ActionResult | null, formData: FormData)
   const scope = targetScope && targetValue ? targetScope : String(formData.get("scope") ?? "");
   const value = targetScope && targetValue ? targetValue : String(formData.get("value") ?? "");
   const state = String(formData.get("state") ?? "");
-  if (!["global", "country", "org_type"].includes(scope) || !["on", "off", "remove"].includes(state)) return { ok: false, message: "Saisie invalide." };
+  if (!["global", "country", "org_type", "organization"].includes(scope) || !["on", "off", "remove"].includes(state)) return { ok: false, message: "Saisie invalide." };
+  const until = String(formData.get("until") ?? "");
   const { error } = await (await createClient()).rpc("platform_set_feature_rule", {
     p_feature: String(formData.get("feature") ?? ""),
     p_scope: scope,
     p_value: value,
     p_enabled: (state === "remove" ? null : state === "on") as boolean,
     p_reason: String(formData.get("reason") ?? ""),
+    p_until: /^\d{4}-\d{2}-\d{2}$/.test(until) ? `${until}T23:59:59Z` : undefined,
   });
   if (error) return { ok: false, message: dbErrorMessage(error) };
   revalidatePath("/plateforme/modules");
