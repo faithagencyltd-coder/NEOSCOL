@@ -435,7 +435,13 @@ describe("Formation professionnelle — assiduité, compétences, stages, statis
       assert.ok(d.trainers.expected >= 1);
       const [{ s }] = await q("select training_statistics($1) s", [ORG_DEMOF]);
       assert.equal(s.formations, 3);
-      assert.equal(s.sessions.ongoing, 2);
+      // Sessions en cours à la date du jour (les données de démonstration contiennent aussi une session à date fixe).
+      const [{ n: ongoing }] = await q(
+        "select count(*)::int n from classes where organization_id = $1 and kind = 'training_session' and archived_at is null and (starts_on is null or starts_on <= current_date) and (ends_on is null or ends_on >= current_date)",
+        [ORG_DEMOF],
+      );
+      assert.ok(ongoing >= 2);
+      assert.equal(s.sessions.ongoing, ongoing);
       assert.ok(s.attendance_rate > 0);
       assert.ok(Number(s.finance.remaining) > 0, "reliquats");
       assert.ok(Number(s.finance.collected) > 0);
