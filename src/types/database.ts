@@ -7893,12 +7893,43 @@ export type Database = {
           }
         ]
       }
+      public_account_email_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          token_hash: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          token_hash: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token_hash?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          
+        ]
+      }
       public_accounts: {
         Row: {
           account_type: string
           city: string | null
           country: string | null
           created_at: string
+          email_verification: string
+          email_verified_at: string | null
           user_id: string
         }
         Insert: {
@@ -7906,6 +7937,8 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          email_verification?: string
+          email_verified_at?: string | null
           user_id: string
         }
         Update: {
@@ -7913,6 +7946,8 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          email_verification?: string
+          email_verified_at?: string | null
           user_id?: string
         }
         Relationships: [
@@ -12672,6 +12707,10 @@ export type Database = {
         Args: never
         Returns: string
       }
+      my_public_account_email_state: {
+        Args: never
+        Returns: string
+      }
       my_security_state: {
         Args: never
         Returns: Json
@@ -14614,6 +14653,12 @@ export type Database = {
         }[]
       }
       verify_organization_email: {
+        Args: {
+          p_token_hash: string
+        }
+        Returns: Json
+      }
+      verify_public_account_email: {
         Args: {
           p_token_hash: string
         }

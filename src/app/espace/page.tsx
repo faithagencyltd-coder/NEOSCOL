@@ -2,8 +2,10 @@ import { Heart, Plus, Send, Megaphone } from "lucide-react";
 import Link from "next/link";
 
 import { StatusBadge } from "@/components/shared/status-badge";
+import { InlineForm } from "@/features/ecosystem/components/inline-form";
 import { APPLICATION_STATUSES, OPPORTUNITY_STATUSES, PUBLIC_ACCOUNT_TYPES } from "@/features/ecosystem/constants";
 import type { OpportunityAuthor } from "@/features/ecosystem/discover";
+import { resendPublicAccountEmail } from "@/features/ecosystem/public-actions";
 import { getSessionContext } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 
@@ -17,9 +19,11 @@ type Space = {
 };
 
 /** Mon espace : annonces publiées, candidatures envoyées, favoris. */
-export default async function PersonalSpacePage() {
+export default async function PersonalSpacePage({ searchParams }: PageProps<"/espace">) {
+  const confirmed = (await searchParams).email === "confirme";
   const context = await getSessionContext();
-  const { data } = await (await createClient()).rpc("my_opportunity_space");
+  const supabase = await createClient();
+  const [{ data }, { data: emailState }] = await Promise.all([supabase.rpc("my_opportunity_space"), supabase.rpc("my_public_account_email_state")]);
   const space = (data ?? { account: null, posts: [], applications: [], favorites: [] }) as unknown as Space;
   const name = [context?.profile?.first_name, context?.profile?.last_name].filter(Boolean).join(" ");
 
@@ -48,6 +52,17 @@ export default async function PersonalSpacePage() {
           </Link>
         </div>
       </div>
+      {confirmed ? (
+        <p className="rounded-xl bg-success-soft p-3 text-sm text-success" role="status">
+          Adresse e-mail confirmée : vous pouvez répondre aux annonces et en publier.
+        </p>
+      ) : null}
+      {emailState === "pending" ? (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl bg-warning-soft p-3 text-sm text-warning" data-testid="email-pending">
+          <span>Confirmez votre adresse e-mail avec le lien reçu à l&apos;inscription : c&apos;est nécessaire pour répondre aux annonces et en publier.</span>
+          <InlineForm action={resendPublicAccountEmail} submit="Renvoyer le lien" variant="secondary" className="flex" />
+        </div>
+      ) : null}
       {!space.account ? (
         <Link href="/espace/inscription" className="rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4 text-sm">
           Complétez votre profil (type de compte, pays, ville) pour répondre aux annonces et en publier. →

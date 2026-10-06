@@ -27,6 +27,8 @@ L'origine de chaque demande est conservée : `?source=discover|profile|campaign|
 
 ## Espace personnel (particuliers) — `/espace`
 
+**Confirmation de l'adresse e-mail** : quand la plateforme exige la vérification des adresses (*Console › Sécurité*) et que l'envoi d'e-mails est configuré (Brevo), un nouveau compte reçoit un lien (48 h, usage unique). Tant qu'il n'a pas cliqué, il peut consulter mais ni répondre à une annonce ni en publier (contrôlé en base) ; un bouton « Renvoyer le lien » est proposé (3 envois par heure). Sans envoi d'e-mails configuré, le compte est actif tout de suite : personne n'est bloqué faute d'e-mail.
+
 Candidatures et leur statut, annonces publiées et réponses reçues, favoris, échanges. Le CV n'est visible que par son propriétaire et par l'auteur de l'annonce. L'adresse e-mail de l'auteur d'une annonce n'est révélée au candidat qu'une fois sa candidature acceptée.
 
 ## Espace établissement — menu « Visibilité »

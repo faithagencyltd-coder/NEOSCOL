@@ -7,9 +7,11 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { newPasswordSchema } from "@/features/auth/schemas";
+import { recentPublicVerificationCount, sendPublicAccountVerification, verificationRequired } from "@/lib/auth/email-verification";
 import { clientIp } from "@/lib/auth/security";
 import { getSessionContext } from "@/lib/auth/session";
 import { verifyTurnstileToken } from "@/lib/messaging/server";
+import { publicBaseUrl } from "@/lib/site-url";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/utils/action-result";
@@ -97,7 +99,23 @@ export async function registerPublicAccount(_: ActionResult | null, formData: Fo
   await supabase.auth.signInWithPassword({ email: parsed.data.email, password: password.data.password });
   const { error: accountError } = await supabase.rpc("register_public_account", { p_type: parsed.data.account_type, p_country: parsed.data.country, p_city: parsed.data.city ?? "" });
   if (accountError) return { ok: false, message: dbErrorMessage(accountError) };
+  // Confirmation de l'adresse quand la plateforme l'exige (et seulement si l'e-mail part vraiment).
+  if (await verificationRequired()) {
+    const sent = await sendPublicAccountVerification({ userId: created.user.id, email: parsed.data.email, firstName: parsed.data.first_name, baseUrl: await publicBaseUrl() });
+    if (sent) await admin.from("public_accounts").update({ email_verification: "pending" }).eq("user_id", created.user.id);
+  }
   redirect(safeNext(text(formData, "next")) ?? "/espace");
+}
+
+/** Renvoie le lien de confirmation de l'adresse (3 envois par heure au plus). */
+export async function resendPublicAccountEmail(): Promise<ActionResult> {
+  const context = await getSessionContext();
+  if (!context?.user.email) return { ok: false, message: "Votre session a expiré. Reconnectez-vous." };
+  const { data: state } = await (await createClient()).rpc("my_public_account_email_state");
+  if (state !== "pending") return { ok: true, message: "Adresse déjà confirmée." };
+  if ((await recentPublicVerificationCount(context.user.id)) >= 3) return { ok: false, message: "Trop de demandes : réessayez dans une heure." };
+  const sent = await sendPublicAccountVerification({ userId: context.user.id, email: context.user.email, firstName: context.profile?.first_name ?? undefined, baseUrl: await publicBaseUrl() });
+  return sent ? { ok: true, message: `Lien de confirmation envoyé à ${context.user.email}.` } : { ok: false, message: "Envoi impossible pour le moment. Réessayez plus tard." };
 }
 
 /** Profil « Opportunities » d'un compte déjà existant (personnel d'établissement, parent…). */

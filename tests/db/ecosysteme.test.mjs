@@ -242,3 +242,36 @@ describe("Visibilité payante et publicité externe", () => {
     });
   });
 });
+
+describe("Comptes particuliers : confirmation de l'adresse", () => {
+  test("en attente : ni candidature ni publication ; confirmé par le lien (usage unique)", async () => {
+    await as(USERS.admin, async (q) => {
+      await openModules(q);
+      await switchTo(q, USERS.superadmin);
+      await q("select platform_set_feature_rule('opportunities', 'country', 'CI', true, 'Ouverture CI', null::timestamptz)");
+      await q("select platform_save_ecosystem_settings(true, false, false)");
+      await switchTo(q, USERS.admin);
+      const id = (await one(q, "select save_opportunity(null, $1, true) id", [JSON.stringify({ category: "emploi_enseignant", organization_id: ORG_DEMO, title: "Professeur d'anglais", description: "Poste à pourvoir à la rentrée en collège, 18 h par semaine.", city: "Abidjan" })])).id;
+      await switchTo(q, USERS.parent);
+      await q("select register_public_account('teacher', 'CI', 'Abidjan')");
+      await switchTo(q, null);
+      await q("update public_accounts set email_verification = 'pending' where user_id = $1", [USERS.parent]);
+      const hash = "a".repeat(64);
+      await q("insert into public_account_email_tokens (user_id, token_hash, expires_at) values ($1, $2, now() + interval '2 days')", [USERS.parent, hash]);
+      await switchTo(q, USERS.parent);
+      assert.equal((await one(q, "select my_public_account_email_state() s")).s, "pending");
+      assert.match(await rejects(q("select apply_opportunity($1, 'Professeure d''anglais, 4 ans d''expérience.', null)", [id])), /Confirmez d'abord votre adresse/);
+      assert.match(
+        await rejects(q("select save_opportunity(null, $1, true)", [JSON.stringify({ category: "cours_particuliers", title: "Cours d'anglais à domicile", description: "Professeure propose des cours d'anglais tous niveaux, le soir.", country: "CI" })])),
+        /Confirmez d'abord votre adresse/,
+      );
+      assert.match(await rejects(q("select verify_public_account_email($1)", [hash])), /permission denied/, "réservé au serveur");
+      await switchTo(q, null);
+      assert.equal((await one(q, "select verify_public_account_email($1) r", [hash])).r.ok, true);
+      assert.equal((await one(q, "select verify_public_account_email($1) r", [hash])).r.ok, false, "lien à usage unique");
+      await switchTo(q, USERS.parent);
+      assert.equal((await one(q, "select my_public_account_email_state() s")).s, "verified");
+      assert.ok((await one(q, "select apply_opportunity($1, 'Professeure d''anglais, 4 ans d''expérience.', null) id", [id])).id, "candidature possible une fois confirmé");
+    });
+  });
+});
