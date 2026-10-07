@@ -21,6 +21,8 @@ const eslintConfig = defineConfig([
     "marketing/**",
     // Application mobile (Capacitor), outillage séparé.
     "mobile/**",
+    // Skills des agents IA (HyperFrames…), code tiers.
+    ".claude/**",
   ]),
 ]);
 
