@@ -6,6 +6,8 @@ NeoScool (Next.js 16) se déploie sur Vercel sans adaptation. La base de donnée
 
 1. Créer un projet Supabase dans la région **Europe — Paris (eu-west-3)** : la plus proche de l'Afrique de l'Ouest parmi les régions disponibles.
 2. Appliquer les migrations du dossier `supabase/migrations` (Supabase CLI : `supabase link` puis `supabase db push`). Ne jamais charger `supabase/seed.sql` (données de démonstration) en production.
+   Sans Supabase CLI : `node scripts/db/parties-sql-editor.mjs <dossier>` produit des fichiers `NeoScool-base-partie-N.sql` à coller dans l'ordre dans Supabase › SQL Editor (chaque partie vérifie que la précédente est appliquée et enregistre ses migrations pour un futur `supabase db push`).
+   Premier Super Admin : Supabase › Authentication › Users › *Add user* (cocher *Auto Confirm User*), puis dans SQL Editor : `insert into public.platform_admins (user_id, role) select id, 'owner' from auth.users where email = 'votre@adresse';` et connexion sur `/connexion` → `/plateforme`.
 3. *Authentication › URL Configuration* : mettre l'adresse du site (ex. `https://app.neoscool.com`) dans **Site URL** et `https://app.neoscool.com/**` dans **Redirect URLs**.
 
 ## 2. Vercel
