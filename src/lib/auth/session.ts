@@ -22,7 +22,8 @@ export type OrganizationSummary = Pick<
 };
 
 export type SessionContext = {
-  user: { id: string; email: string | null; phone: string | null };
+  /** mustChangePassword : mot de passe provisoire remis par l'établissement, à remplacer. */
+  user: { id: string; email: string | null; phone: string | null; mustChangePassword: boolean };
   profile: Tables<"profiles"> | null;
   organizations: OrganizationSummary[];
   organization: OrganizationSummary | null;
@@ -93,7 +94,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext | null> 
   }
 
   return {
-    user: { id: user.id, email: user.email ?? null, phone: user.phone ?? null },
+    user: { id: user.id, email: user.email ?? null, phone: user.phone ?? null, mustChangePassword: user.user_metadata?.must_change_password === true },
     profile: profile ?? null,
     organizations,
     organization,

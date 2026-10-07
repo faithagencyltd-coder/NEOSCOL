@@ -336,7 +336,11 @@ export async function updatePassword(_: ActionResult | null, formData: FormData)
     return { ok: false, message: "Votre lien a expiré. Demandez un nouveau lien de réinitialisation." };
   }
   const supabase = await createClient();
-  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+  // Mot de passe provisoire remis par l'établissement : remplacé, plus rien n'est exigé.
+  const { error } = await supabase.auth.updateUser({
+    password: parsed.data.password,
+    ...(context.user.mustChangePassword ? { data: { must_change_password: false } } : {}),
+  });
   if (error) {
     return { ok: false, message: error.code === "same_password" ? "Choisissez un mot de passe différent de l'actuel." : "La modification a échoué." };
   }

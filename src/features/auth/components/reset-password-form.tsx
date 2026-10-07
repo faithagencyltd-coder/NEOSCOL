@@ -10,15 +10,23 @@ import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { updatePassword } from "@/features/auth/actions";
 
-export function ResetPasswordForm({ redirectTo = "/tableau-de-bord" }: { redirectTo?: string }) {
+/** reload : rechargement complet après succès (écran qui bloquait l'accès tant que le mot de passe n'était pas changé). */
+export function ResetPasswordForm({ redirectTo = "/tableau-de-bord", reload = false }: { redirectTo?: string; reload?: boolean }) {
   const [state, action, pending] = useActionState(updatePassword, null);
   if (state?.ok) {
+    const className = "text-center text-sm font-medium text-primary hover:underline";
     return (
       <div className="grid gap-4">
         <Alert tone="success">{state.message}</Alert>
-        <Link href={redirectTo} className="text-center text-sm font-medium text-primary hover:underline">
-          Continuer
-        </Link>
+        {reload ? (
+          <a href={redirectTo} className={className}>
+            Continuer
+          </a>
+        ) : (
+          <Link href={redirectTo} className={className}>
+            Continuer
+          </Link>
+        )}
       </div>
     );
   }

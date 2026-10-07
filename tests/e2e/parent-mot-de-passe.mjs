@@ -1,6 +1,7 @@
 // NEOSCOOL — Connexion parent gratuite : l'école active le portail (mot de passe
-// provisoire affiché une fois), le parent se connecte avec téléphone + mot de passe,
-// nouveau mot de passe, refus si le compte sert dans un autre établissement, option SMS.
+// provisoire NOM@1234 affiché une fois), le parent se connecte avec téléphone + mot de
+// passe et doit le remplacer à la première connexion, nouveau mot de passe, refus si le
+// compte sert dans un autre établissement, option SMS.
 import { mkdirSync } from "node:fs";
 import { chromium } from "playwright-core";
 import pg from "pg";
@@ -54,7 +55,7 @@ try {
 
   console.log("\n=== 1. L'école active le portail : mot de passe provisoire ===");
   const first = await credentials("Activer le portail", "Créer l'accès");
-  check(first.password.length >= 10, "mot de passe provisoire affiché");
+  check(/^TESTPARENT@\d{4}$/.test(first.password), `mot de passe provisoire = NOM@4 chiffres (${first.password})`);
   check(await first.dlg.getByText(phone).isVisible(), "identifiant = téléphone du parent");
   check(await first.dlg.getByRole("button", { name: "Imprimer la fiche" }).isVisible(), "bouton « Imprimer la fiche »");
   await admin.screenshot({ path: `${out}/1-activation.png` });
@@ -82,21 +83,39 @@ try {
   check(bad, "mauvais mot de passe refusé (message unique)");
   const p1 = await parentSignIn(first.password);
   check(p1.okUrl, "parent connecté avec téléphone + mot de passe");
+  check(await p1.page.getByTestId("first-password").isVisible(), "première connexion : choix d'un nouveau mot de passe exigé");
+  await p1.page.goto(`${base}/portail/notes`);
+  check(await p1.page.getByTestId("first-password").isVisible(), "aucune page du portail accessible avant le changement");
+  await p1.page.screenshot({ path: `${out}/2-premiere-connexion.png` });
+  const chosen = "MonMotDePasse2026";
+  await p1.page.getByLabel("Nouveau mot de passe").fill(chosen);
+  await p1.page.getByLabel("Confirmation").fill(chosen);
+  await p1.page.getByRole("button", { name: "Enregistrer le mot de passe" }).click();
+  // Le portail se rouvre de lui-même une fois le mot de passe enregistré.
+  await p1.page.getByTestId("first-password").waitFor({ state: "detached", timeout: 20000 }).catch(() => {});
+  check(!(await p1.page.getByTestId("first-password").isVisible()), "portail ouvert après le changement");
+  const flag = await q1("select raw_user_meta_data->>'must_change_password' as f from auth.users where id = $1", [linked.user_id]);
+  check(flag?.f === "false", "obligation de changement levée");
   await p1.page.goto(`${base}/portail/plus`);
   check(await p1.page.getByRole("heading", { name: "Changer mon mot de passe" }).isVisible(), "le parent peut changer son mot de passe lui-même");
   await p1.page.screenshot({ path: `${out}/2-portail-parent.png` });
   await p1.ctx.close();
+  const again = await parentSignIn(chosen);
+  check(again.okUrl && !(await again.page.getByTestId("first-password").isVisible()), "reconnexion avec le mot de passe choisi, sans nouvelle demande");
+  await again.ctx.close();
+  check(!(await parentSignIn(first.password).then(async (r) => (await r.ctx.close(), r.okUrl))), "le mot de passe provisoire ne fonctionne plus");
 
   console.log("\n=== 3. Nouveau mot de passe (oubli) ===");
   const second = await credentials("Nouveau mot de passe", "Générer");
-  check(second.password !== first.password, "nouveau mot de passe généré");
+  check(/^TESTPARENT@\d{4}$/.test(second.password), "nouveau mot de passe provisoire NOM@4 chiffres");
   await admin.screenshot({ path: `${out}/3-nouveau-mot-de-passe.png` });
   await second.dlg.getByRole("button", { name: "Terminé" }).click();
-  const old = await parentSignIn(first.password);
+  const old = await parentSignIn(chosen);
   check(!old.okUrl, "l'ancien mot de passe ne fonctionne plus");
   await old.ctx.close();
   const p2 = await parentSignIn(second.password);
   check(p2.okUrl, "le nouveau mot de passe fonctionne");
+  check(await p2.page.getByTestId("first-password").isVisible(), "changement de nouveau exigé après réinitialisation");
   await p2.ctx.close();
   check(Boolean(await q1("select 1 from audit_logs where action = 'portal.password_reset' and entity_id = $1", [guardian.id])), "réinitialisation journalisée");
 

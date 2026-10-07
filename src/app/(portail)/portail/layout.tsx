@@ -1,7 +1,9 @@
-import { FlaskConical } from "lucide-react";
+import { FlaskConical, KeyRound, LogOut } from "lucide-react";
 
 import { NotificationWatcher } from "@/components/layout/notification-watcher";
-import { switchOrganization } from "@/features/auth/actions";
+import { signOut, switchOrganization } from "@/features/auth/actions";
+import { ResetPasswordForm } from "@/features/auth/components/reset-password-form";
+import { SubmitButton } from "@/components/shared/submit-button";
 import { NotificationsMenu } from "@/components/layout/notifications-menu";
 import { UserMenu } from "@/components/layout/user-menu";
 import { Logo } from "@/components/shared/logo";
@@ -23,6 +25,8 @@ export default async function PortalLayout({ children }: { children: React.React
   const { context, organization, parent, students, student, shows } = await requirePortal();
   const maintenance = await maintenanceBlocks();
   if (maintenance) return <MaintenanceScreen state={maintenance} />;
+  // Mot de passe provisoire remis par l'établissement (NOM@1234) : à remplacer avant tout accès.
+  if (parent && context.user.mustChangePassword) return <FirstPasswordScreen />;
   const hidden = (["results", "grades", "attendance", "finances", "documents", "timetable"] as const).filter((s) => !shows(s));
   const notifications = await getRecentNotifications(organization.id);
   const name = displayName(context);
@@ -88,5 +92,30 @@ export default async function PortalLayout({ children }: { children: React.React
       <NotificationWatcher />
     </div>
     </WordingProvider>
+  );
+}
+
+function FirstPasswordScreen() {
+  return (
+    <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-10">
+      <div className="grid w-full max-w-md gap-5 rounded-3xl border border-border bg-surface p-6 shadow-sm" data-testid="first-password">
+        <Logo />
+        <div className="grid gap-1.5">
+          <h1 className="flex items-center gap-2 text-xl font-semibold">
+            <KeyRound className="size-5 text-primary" aria-hidden /> Choisissez votre mot de passe
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Le mot de passe remis par l&apos;établissement est provisoire. Choisissez-en un que vous seul connaissez : vous vous connecterez ensuite avec votre
+            numéro de téléphone et ce mot de passe.
+          </p>
+        </div>
+        <ResetPasswordForm redirectTo="/portail" reload />
+        <form action={signOut}>
+          <SubmitButton variant="secondary" className="w-full" pendingLabel="Déconnexion…">
+            <LogOut aria-hidden /> Se déconnecter
+          </SubmitButton>
+        </form>
+      </div>
+    </div>
   );
 }
