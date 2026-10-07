@@ -1,6 +1,7 @@
 import { loadFont } from "@remotion/fonts";
 import { Composition, staticFile } from "remotion";
 
+import { Extrait, EXTRAIT_FPS, EXTRAIT_FRAMES } from "./anime/Extrait";
 import { Film, LogoSignature } from "./film/Film";
 import { filmFrames, FPS as FILM_FPS } from "./film/timing";
 import { type ModuleKey } from "./theme";
@@ -30,6 +31,8 @@ export function Root() {
       <Composition id="film-30s-9x16" component={Film} defaultProps={{ cut: "flash" as const }} durationInFrames={filmFrames("flash")} fps={FILM_FPS} width={1080} height={1920} />
       <Composition id="logo-6s-16x9" component={LogoSignature} defaultProps={{ seconds: 6 as const }} durationInFrames={6 * FILM_FPS} fps={FILM_FPS} width={1920} height={1080} />
       <Composition id="logo-6s-9x16" component={LogoSignature} defaultProps={{ seconds: 6 as const }} durationInFrames={6 * FILM_FPS} fps={FILM_FPS} width={1080} height={1920} />
+      {/* Film animé (motion design, 100 % illustré) : extrait de validation du style. */}
+      <Composition id="anime-extrait-16x9" component={Extrait} durationInFrames={EXTRAIT_FRAMES} fps={EXTRAIT_FPS} width={1920} height={1080} />
       <Composition id="logo-2s-16x9" component={LogoSignature} defaultProps={{ seconds: 2 as const }} durationInFrames={2 * FILM_FPS} fps={FILM_FPS} width={1920} height={1080} />
     </>
   );
