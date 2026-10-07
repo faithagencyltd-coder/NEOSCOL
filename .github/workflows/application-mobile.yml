@@ -19,6 +19,8 @@ jobs:
   android:
     name: Android (APK)
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: mobile
@@ -77,6 +79,18 @@ jobs:
           name: NeoScool-Android-${{ env.NEOSCOOL_APP_VERSION }}
           path: livraison/
           retention-days: 30
+      # Lien fixe pour installer la version de test depuis un téléphone :
+      # https://github.com/<dépôt>/releases/download/mobile-test/NeoScool-test.apk
+      - name: Publier l'APK de test (page « Releases », lien fixe)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp "../livraison/NeoScool-${NEOSCOOL_APP_VERSION}-test.apk" ../livraison/NeoScool-test.apk
+          gh release delete mobile-test --yes --cleanup-tag || true
+          gh release create mobile-test ../livraison/NeoScool-test.apk "../livraison/NeoScool-${NEOSCOOL_APP_VERSION}-test.apk" \
+            --prerelease --target "$GITHUB_SHA" \
+            --title "Application mobile NeoScool — version de test ${NEOSCOOL_APP_VERSION}" \
+            --notes "Version de test (non signée pour le Play Store). Sur Android : télécharger NeoScool-test.apk, l'ouvrir et autoriser l'installation depuis cette source."
 
   ios:
     name: iPhone (simulateur)

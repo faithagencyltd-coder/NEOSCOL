@@ -29,6 +29,9 @@ modification du dossier `mobile/` ou en cliquant **Run workflow** :
 
 Fichiers téléchargeables dans la section **Artifacts** de l'exécution (30 jours).
 
+Lien fixe de la dernière version de test (à ouvrir depuis le téléphone) :
+`https://github.com/faithagencyltd-coder/NEOSCOL/releases/download/mobile-test/NeoScool-test.apk`
+
 ### Clé de signature (pour le Play Store)
 
 Créer une clé une seule fois et la garder précieusement (sans elle, impossible de publier les mises à jour) :
