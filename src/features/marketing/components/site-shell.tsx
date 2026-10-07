@@ -32,10 +32,12 @@ export async function SiteShell({ locale, alternate, children }: { locale: Local
   // Visiteur déjà connecté : accès direct au logiciel.
   const loginHref = signedIn ? "/tableau-de-bord" : "/connexion";
   const loginLabel = signedIn ? (locale === "fr" ? "Accéder au logiciel" : "Open the software") : t.nav.login;
+  // Menu du haut : « Pays » reste accessible depuis le pied de page et l'accueil.
   const nav = [
     { href: `${route("home", locale)}#secteurs`, label: t.nav.solutions },
     { href: `${route("home", locale)}#fonctionnalites`, label: t.nav.features },
-    { href: route("countries", locale), label: t.nav.countries },
+    { href: "/decouvrir", label: t.nav.discover, hint: t.nav.discoverHint, highlight: true },
+    { href: "/opportunites", label: t.nav.opportunities, hint: t.nav.opportunitiesHint, highlight: true },
     { href: route("pricing", locale), label: t.nav.pricing },
     { href: route("contact", locale), label: t.nav.contact },
   ];
@@ -54,19 +56,26 @@ export async function SiteShell({ locale, alternate, children }: { locale: Local
         {locale === "fr" ? "Aller au contenu" : "Skip to content"}
       </a>
       <header className="sticky top-0 z-40 border-b border-[#0b2559]/10 bg-white/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-8">
-          <Link href={route("home", locale)} className="flex items-center gap-2.5" aria-label="NeoScool">
+        <div className="mx-auto flex h-[4.25rem] max-w-[90rem] items-center gap-2 px-4 sm:px-6 2xl:gap-3 2xl:px-8">
+          <Link href={route("home", locale)} className="flex shrink-0 items-center gap-2.5" aria-label="NeoScool">
             <LogoMark className="size-9" />
             <BrandName className="text-xl" />
           </Link>
-          <nav aria-label={locale === "fr" ? "Navigation principale" : "Main navigation"} className="ml-4 hidden items-center gap-1 text-sm font-medium text-[#0b2559]/80 lg:flex">
-            {nav.map((item) => (
-              <Link key={item.href} href={item.href} className="rounded-lg px-3 py-2 transition-colors hover:bg-[#0b2559]/5 hover:text-[#0b2559]">
-                {item.label}
-              </Link>
-            ))}
+          <nav aria-label={locale === "fr" ? "Navigation principale" : "Main navigation"} className="ml-1 hidden items-center gap-0 whitespace-nowrap text-sm font-medium text-[#0b2559]/80 xl:flex">
+            {nav.map((item) =>
+              item.highlight ? (
+                <Link key={item.href} href={item.href} title={item.hint} className="group relative rounded-lg px-2 py-2 font-semibold 2xl:px-2.5 text-[#0b2559] transition-colors hover:bg-[#1d63ed]/[0.07]">
+                  <span className="mr-1.5 inline-block size-1.5 -translate-y-px rounded-full bg-gradient-to-br from-[#1d63ed] to-[#0ea5e9] align-middle" aria-hidden />
+                  {item.label}
+                </Link>
+              ) : (
+                <Link key={item.href} href={item.href} className="rounded-lg px-2 py-2 transition-colors hover:bg-[#0b2559]/5 hover:text-[#0b2559] 2xl:px-2.5">
+                  {item.label}
+                </Link>
+              ),
+            )}
           </nav>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex shrink-0 items-center gap-1.5 2xl:gap-2">
             <div role="group" aria-label={t.nav.language} className="flex rounded-full border border-[#0b2559]/15 bg-white p-0.5 text-xs font-semibold" data-testid="lang-switch">
               {(["fr", "en"] as const).map((l) => (
                 <Link
@@ -80,14 +89,14 @@ export async function SiteShell({ locale, alternate, children }: { locale: Local
                 </Link>
               ))}
             </div>
-            <Link href={loginHref} className="hidden rounded-xl px-3 py-2 text-sm font-semibold text-[#0b2559] hover:bg-[#0b2559]/5 sm:inline-flex">
+            <Link href={loginHref} className="hidden whitespace-nowrap rounded-xl px-2 py-2 text-sm 2xl:px-3 font-semibold text-[#0b2559] hover:bg-[#0b2559]/5 sm:inline-flex">
               {loginLabel}
             </Link>
             <Link
               href={`${route("contact", locale)}?demande=demo`}
-              className="hidden items-center gap-1.5 rounded-xl bg-[#0b2559] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5 md:inline-flex"
+              className="hidden items-center gap-1.5 whitespace-nowrap rounded-xl bg-[#0b2559] px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-[#0b2559]/20 transition-transform hover:-translate-y-0.5 md:inline-flex"
             >
-              {t.nav.demo} <ArrowRight className="size-4" aria-hidden />
+              {t.nav.demo} <ArrowRight className="size-4 xl:max-2xl:hidden" aria-hidden />
             </Link>
             <MobileMenu
               labels={{ menu: t.nav.menu, close: t.nav.close, login: loginLabel, demo: t.nav.demo, solutions: t.nav.solutions }}
@@ -98,6 +107,17 @@ export async function SiteShell({ locale, alternate, children }: { locale: Local
             />
           </div>
         </div>
+        {/* Petits écrans : Discover et Opportunities restent visibles sous la barre du haut. */}
+        <nav aria-label="NeoScool Discover / Opportunities" className="grid grid-cols-2 gap-2 border-t border-[#0b2559]/[0.06] px-4 py-2 sm:px-6 xl:hidden" data-testid="eco-strip">
+          {nav
+            .filter((item) => item.highlight)
+            .map((item) => (
+              <Link key={item.href} href={item.href} className="flex min-w-0 items-center justify-center gap-1.5 rounded-xl bg-[#1d63ed]/[0.07] px-2 py-1.5 text-center text-xs font-semibold text-[#0b2559] sm:text-sm">
+                <span className="size-1.5 shrink-0 rounded-full bg-gradient-to-br from-[#1d63ed] to-[#0ea5e9]" aria-hidden />
+                <span className="truncate">{item.label}</span>
+              </Link>
+            ))}
+        </nav>
       </header>
 
       <main id="contenu">{children}</main>

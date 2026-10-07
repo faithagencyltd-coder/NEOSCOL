@@ -4,6 +4,7 @@ import {
   Bell,
   Bot,
   Building2,
+  CheckCircle2,
   CloudOff,
   FileCheck2,
   FileSpreadsheet,
@@ -11,6 +12,8 @@ import {
   History,
   IdCard,
   Lock,
+  MapPin,
+  BriefcaseBusiness,
   School,
   ShieldCheck,
   Sparkles,
@@ -139,27 +142,53 @@ export async function HomePage({ locale }: { locale: Locale }) {
       <section className="site-grid-bg relative overflow-hidden">
         <div aria-hidden className="pointer-events-none absolute -left-32 top-10 size-[36rem] rounded-full bg-sky-300/25 blur-3xl" />
         <div aria-hidden className="pointer-events-none absolute -right-40 top-40 size-[34rem] rounded-full bg-indigo-300/20 blur-3xl" />
-        <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 pb-20 pt-14 sm:px-8 lg:grid-cols-[1fr_1.15fr] lg:pt-20">
+        <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 pb-20 pt-10 sm:px-8 lg:grid-cols-[1.15fr_1fr] lg:pt-14">
           <div className="grid gap-6">
             <span className="anim-fade-up inline-flex w-fit items-center gap-2 rounded-full border border-[#1d63ed]/20 bg-white/80 px-3 py-1 text-xs font-semibold text-[#1d63ed]">
               <Sparkles className="size-3.5" aria-hidden /> {slogan ?? t.hero.eyebrow}
             </span>
-            <h1 className="anim-fade-up font-display text-5xl font-semibold leading-[1.02] tracking-tight text-[#0b2559] [--delay:80ms] sm:text-6xl lg:text-7xl">
+            <h1 className="anim-fade-up font-display text-[2.6rem] font-semibold leading-[1.05] tracking-tight text-[#0b2559] [--delay:80ms] sm:text-6xl xl:text-[4.25rem]">
               {t.hero.title1}
               <span className="block bg-gradient-to-r from-[#1d63ed] to-[#0ea5e9] bg-clip-text text-transparent">{t.hero.title2}</span>
             </h1>
             <p className="anim-fade-up max-w-xl text-lg text-[#0b2559]/70 [--delay:160ms] sm:text-xl">{t.hero.subtitle}</p>
-            <div className="anim-fade-up flex flex-wrap gap-3 [--delay:240ms]">
-              <Link href="#decouvrir" className="inline-flex items-center gap-2 rounded-2xl bg-[#0b2559] px-5 py-3.5 font-semibold text-white shadow-lg shadow-[#0b2559]/25 transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]">
-                {t.hero.discover} <ArrowRight className="size-4" aria-hidden />
+            <div className="anim-fade-up flex flex-wrap items-center gap-3 [--delay:240ms]">
+              <Link href={`${route("contact", locale)}?demande=demo`} className="inline-flex items-center gap-2 rounded-2xl bg-[#0b2559] px-5 py-3.5 font-semibold text-white shadow-lg shadow-[#0b2559]/25 transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]">
+                {t.hero.demo} <ArrowRight className="size-4" aria-hidden />
               </Link>
-              <Link href="#logiciel" className="inline-flex items-center gap-2 rounded-2xl border border-[#0b2559]/15 bg-white px-5 py-3.5 font-semibold text-[#0b2559] transition-[colors,transform] hover:border-[#1d63ed]/40 active:scale-[0.98]">
+              <Link href="#comment-ca-marche" className="inline-flex items-center gap-2 rounded-2xl border border-[#0b2559]/15 bg-white px-5 py-3.5 font-semibold text-[#0b2559] transition-[colors,transform] hover:border-[#1d63ed]/40 active:scale-[0.98]">
+                {t.hero.discover}
+              </Link>
+              <Link href="#fonctionnalites" className="inline-flex items-center gap-1.5 rounded-2xl px-3 py-3.5 font-semibold text-[#1d63ed] hover:underline">
                 {t.hero.software}
               </Link>
-              <Link href={`${route("contact", locale)}?demande=demo`} className="inline-flex items-center gap-2 rounded-2xl px-5 py-3.5 font-semibold text-[#1d63ed] hover:bg-[#1d63ed]/5">
-                {t.hero.demo}
-              </Link>
             </div>
+            {/* Pour qui : accès direct à la page de chaque secteur. */}
+            <div className="anim-fade-up grid gap-2 [--delay:300ms]">
+              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[#0b2559]/50">{t.audience.label}</span>
+              <ul className="flex flex-wrap gap-2" data-testid="hero-audience">
+                {(
+                  [
+                    { key: "school", icon: School },
+                    { key: "university", icon: GraduationCap },
+                    { key: "training", icon: Wrench },
+                  ] as const
+                ).map(({ key, icon: Icon }) => (
+                  <li key={key}>
+                    <Link href={route(key, locale)} className="inline-flex items-center gap-2 rounded-full border border-[#0b2559]/10 bg-white px-3.5 py-1.5 text-sm font-semibold text-[#0b2559] shadow-sm transition-colors hover:border-[#1d63ed]/40 hover:text-[#1d63ed]">
+                      <Icon className="size-4 text-[#1d63ed]" aria-hidden /> {t.sectorsNav[key]}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <ul className="anim-fade-up grid gap-2 border-t border-[#0b2559]/10 pt-5 text-sm text-[#0b2559]/75 [--delay:360ms] sm:grid-cols-2" data-testid="hero-facts">
+              {t.facts.map((f) => (
+                <li key={f} className="flex items-start gap-2">
+                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600" aria-hidden /> {f}
+                </li>
+              ))}
+            </ul>
           </div>
           <div className="relative" id="logiciel">
             {/* Photo réelle : l'humain d'abord, le logiciel en surimpression. */}
@@ -192,45 +221,8 @@ export async function HomePage({ locale }: { locale: Locale }) {
         </div>
       </section>
 
-      {/* ACTEURS CONNECTÉS */}
-      {sectionOn(content, "connected") ? (
-        <section id="decouvrir" className="bg-white py-20">
-          <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-8 lg:grid-cols-2">
-            <SectionTitle eyebrow={t.connected.eyebrow} title={t.connected.title} center={false} />
-            <Reveal delay={120}>
-              <ConnectedHub core={t.connected.core} actors={t.connected.actors} />
-            </Reveal>
-          </div>
-        </section>
-      ) : null}
-
-      {/* VIDÉO */}
-      {sectionOn(content, "video") ? (
-        <section className="py-20" id="video">
-          <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-8">
-            <SectionTitle eyebrow={t.video.eyebrow} title={t.video.title} subtitle={t.video.subtitle} />
-            {videos.length ? (
-              <VideoGallery videos={videos} labels={{ play: t.video.play, close: t.nav.close }} />
-            ) : (
-              <Reveal className="relative overflow-hidden rounded-3xl bg-[#07142b] p-8 text-center text-white sm:p-14" data-testid="video-soon">
-                <div aria-hidden className="absolute inset-0 opacity-25">
-                  <Screen name="s-bulletins-apercu" alt="" className="scale-110 blur-[2px]" />
-                </div>
-                <div className="relative grid justify-items-center gap-3">
-                  <p className="font-display text-2xl font-semibold">{t.video.soon}</p>
-                  <p className="max-w-lg text-sky-100/80">{t.video.soonHint}</p>
-                  <Link href={`${route("contact", locale)}?demande=demo`} className="mt-2 rounded-2xl bg-white px-5 py-3 font-semibold text-[#0b2559]">
-                    {t.hero.demo}
-                  </Link>
-                </div>
-              </Reveal>
-            )}
-          </div>
-        </section>
-      ) : null}
-
       {/* SECTEURS */}
-      <section id="secteurs" className="bg-white py-20">
+      <section id="secteurs" className="scroll-mt-32 bg-white py-20">
         <div className="mx-auto grid max-w-7xl gap-12 px-4 sm:px-8">
           <SectionTitle eyebrow={t.sectors.eyebrow} title={t.sectors.title} subtitle={t.sectors.subtitle} />
           <div className="grid gap-5 lg:grid-cols-3">
@@ -273,6 +265,72 @@ export async function HomePage({ locale }: { locale: Locale }) {
         </div>
       </section>
 
+      {/* COMMENT ÇA MARCHE */}
+      <HowItWorks locale={locale} />
+
+      {/* VIDÉO */}
+      {sectionOn(content, "video") ? (
+        <section className="bg-white py-20" id="video">
+          <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-8">
+            <SectionTitle eyebrow={t.video.eyebrow} title={t.video.title} subtitle={t.video.subtitle} />
+            {videos.length ? (
+              <VideoGallery videos={videos} labels={{ play: t.video.play, close: t.nav.close }} />
+            ) : (
+              <Reveal className="relative overflow-hidden rounded-3xl bg-[#07142b] p-8 text-center text-white sm:p-14" data-testid="video-soon">
+                <div aria-hidden className="absolute inset-0 opacity-25">
+                  <Screen name="s-bulletins-apercu" alt="" className="scale-110 blur-[2px]" />
+                </div>
+                <div className="relative grid justify-items-center gap-3">
+                  <p className="font-display text-2xl font-semibold">{t.video.soon}</p>
+                  <p className="max-w-lg text-sky-100/80">{t.video.soonHint}</p>
+                  <Link href={`${route("contact", locale)}?demande=demo`} className="mt-2 rounded-2xl bg-white px-5 py-3 font-semibold text-[#0b2559]">
+                    {t.hero.demo}
+                  </Link>
+                </div>
+              </Reveal>
+            )}
+          </div>
+        </section>
+      ) : null}
+
+      {/* FONCTIONNALITÉS */}
+      <section id="fonctionnalites" className="scroll-mt-32 py-20">
+        <div className="mx-auto grid max-w-7xl gap-12 px-4 sm:px-8">
+          <SectionTitle eyebrow={t.features.eyebrow} title={t.features.title} />
+          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {t.features.list.map((f, i) => {
+              const Icon = FEATURE_ICONS[f.key] ?? Sparkles;
+              const Illustration = FEATURE_ILLUSTRATIONS[f.key] ? ILLUSTRATIONS[FEATURE_ILLUSTRATIONS[f.key]!] : null;
+              return (
+                <Reveal as="li" key={f.key} delay={(i % 3) * 80} className="group flex flex-col overflow-hidden rounded-3xl border border-[#0b2559]/10 bg-white transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_24px_48px_-30px_rgba(11,37,89,0.5)]">
+                  <div className="relative bg-gradient-to-b from-[#f6f8fc] to-white px-6 pt-4 transition-colors group-hover:from-[#eef3fb]">
+                    {Illustration ? <Illustration className="mx-auto max-h-44 transition-transform duration-500 group-hover:scale-[1.04]" /> : null}
+                  </div>
+                  <div className="grid gap-1 p-6 pt-2">
+                    <h3 className="flex items-center gap-2 font-display text-lg font-semibold text-[#0b2559]">
+                      <Icon className="size-5 text-[#1d63ed]" aria-hidden /> {f.title}
+                    </h3>
+                    <p className="text-sm text-[#0b2559]/65">{f.text}</p>
+                  </div>
+                </Reveal>
+              );
+            })}
+          </ul>
+        </div>
+      </section>
+
+      {/* ACTEURS CONNECTÉS */}
+      {sectionOn(content, "connected") ? (
+        <section id="decouvrir" className="bg-white py-20">
+          <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-8 lg:grid-cols-2">
+            <SectionTitle eyebrow={t.connected.eyebrow} title={t.connected.title} center={false} />
+            <Reveal delay={120}>
+              <ConnectedHub core={t.connected.core} actors={t.connected.actors} />
+            </Reveal>
+          </div>
+        </section>
+      ) : null}
+
       {/* MODULE SCOLAIRE */}
       {sectionOn(content, "flow") ? (
         <section className="py-20">
@@ -306,32 +364,6 @@ export async function HomePage({ locale }: { locale: Locale }) {
           </div>
         </section>
       ) : null}
-
-      {/* FONCTIONNALITÉS */}
-      <section id="fonctionnalites" className="bg-white py-20">
-        <div className="mx-auto grid max-w-7xl gap-12 px-4 sm:px-8">
-          <SectionTitle eyebrow={t.features.eyebrow} title={t.features.title} />
-          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {t.features.list.map((f, i) => {
-              const Icon = FEATURE_ICONS[f.key] ?? Sparkles;
-              const Illustration = FEATURE_ILLUSTRATIONS[f.key] ? ILLUSTRATIONS[FEATURE_ILLUSTRATIONS[f.key]!] : null;
-              return (
-                <Reveal as="li" key={f.key} delay={(i % 3) * 80} className="group flex flex-col overflow-hidden rounded-3xl border border-[#0b2559]/10 bg-[#f6f8fc] transition-[transform,box-shadow,background-color] duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-[0_24px_48px_-30px_rgba(11,37,89,0.5)]">
-                  <div className="relative bg-gradient-to-b from-white to-[#f6f8fc] px-6 pt-4 transition-colors group-hover:from-[#eef3fb] group-hover:to-white">
-                    {Illustration ? <Illustration className="mx-auto max-h-44 transition-transform duration-500 group-hover:scale-[1.04]" /> : null}
-                  </div>
-                  <div className="grid gap-1 p-6 pt-2">
-                    <h3 className="flex items-center gap-2 font-display text-lg font-semibold text-[#0b2559]">
-                      <Icon className="size-5 text-[#1d63ed]" aria-hidden /> {f.title}
-                    </h3>
-                    <p className="text-sm text-[#0b2559]/65">{f.text}</p>
-                  </div>
-                </Reveal>
-              );
-            })}
-          </ul>
-        </div>
-      </section>
 
       {/* SMART BADGE */}
       {sectionOn(content, "badge") ? (
@@ -457,6 +489,9 @@ export async function HomePage({ locale }: { locale: Locale }) {
         </section>
       ) : null}
 
+      {/* ÉCOSYSTÈME PUBLIC : DISCOVER ET OPPORTUNITIES */}
+      <EcosystemSection locale={locale} />
+
       {/* PAYS */}
       {sectionOn(content, "countries") && content.countries.length ? (
         <section className="relative overflow-hidden bg-[#07142b] py-20 text-white" id="pays">
@@ -514,6 +549,70 @@ export async function HomePage({ locale }: { locale: Locale }) {
 
       <FinalCta locale={locale} />
     </>
+  );
+}
+
+/** Démarrage en trois étapes (inscription en ligne, configuration et import, usage quotidien). */
+function HowItWorks({ locale }: { locale: Locale }) {
+  const t = DICTS[locale].howItWorks;
+  return (
+    <section id="comment-ca-marche" className="scroll-mt-32 py-20" data-testid="how-it-works">
+      <div className="mx-auto grid max-w-7xl gap-12 px-4 sm:px-8">
+        <SectionTitle eyebrow={t.eyebrow} title={t.title} subtitle={t.subtitle} />
+        <ol className="relative grid gap-5 md:grid-cols-3">
+          <span aria-hidden className="absolute left-[16.6%] right-[16.6%] top-7 hidden h-0.5 bg-gradient-to-r from-[#1d63ed]/30 via-[#0ea5e9]/40 to-[#1d63ed]/30 md:block" />
+          {t.steps.map((step, i) => (
+            <Reveal as="li" key={step.title} delay={i * 100} className="relative grid justify-items-center gap-3 rounded-3xl border border-[#0b2559]/10 bg-white p-6 pt-0 text-center shadow-[0_24px_48px_-36px_rgba(11,37,89,0.45)] md:border-0 md:bg-transparent md:shadow-none">
+              <span className="relative -mt-0 flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0b2559] to-[#1d63ed] font-display text-xl font-semibold text-white shadow-lg shadow-[#1d63ed]/30 ring-8 ring-[#f6f8fc] max-md:mt-6 max-md:ring-0">
+                {i + 1}
+              </span>
+              <h3 className="font-display text-xl font-semibold text-[#0b2559]">{step.title}</h3>
+              <p className="max-w-xs text-[#0b2559]/65">{step.text}</p>
+            </Reveal>
+          ))}
+        </ol>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link href="/inscription" className="inline-flex items-center gap-2 rounded-2xl bg-[#0b2559] px-5 py-3 font-semibold text-white transition-transform hover:-translate-y-0.5 active:scale-[0.98]">
+            {t.signup} <ArrowRight className="size-4" aria-hidden />
+          </Link>
+          <Link href="/demo" className="rounded-2xl border border-[#0b2559]/15 bg-white px-5 py-3 font-semibold text-[#0b2559] hover:border-[#1d63ed]/40">
+            {t.demo}
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** NeoScool Discover et NeoScool Opportunities : services publics de l'écosystème. */
+function EcosystemSection({ locale }: { locale: Locale }) {
+  const t = DICTS[locale].ecosystem;
+  const cards = [
+    { key: "discover", href: "/decouvrir", icon: MapPin, accent: "from-[#1d63ed] to-[#0ea5e9]", ...t.discover },
+    { key: "opportunities", href: "/opportunites", icon: BriefcaseBusiness, accent: "from-[#f59e0b] to-[#fb923c]", ...t.opportunities },
+  ];
+  return (
+    <section id="ecosysteme" className="scroll-mt-32 py-20" data-testid="ecosystem-section">
+      <div className="mx-auto grid max-w-7xl gap-12 px-4 sm:px-8">
+        <SectionTitle eyebrow={t.eyebrow} title={t.title} subtitle={t.subtitle} />
+        <div className="grid gap-5 md:grid-cols-2">
+          {cards.map((c, i) => (
+            <Reveal key={c.key} delay={i * 100} as="article" className="group flex flex-col gap-5 rounded-3xl border border-[#0b2559]/10 bg-white p-7 shadow-[0_24px_48px_-36px_rgba(11,37,89,0.45)] transition-shadow hover:shadow-[0_30px_60px_-30px_rgba(11,37,89,0.45)]">
+              <span className={cn("flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-lg", c.accent)}>
+                <c.icon className="size-7" aria-hidden />
+              </span>
+              <div className="grid gap-2">
+                <h3 className="font-display text-2xl font-semibold text-[#0b2559]">{c.title}</h3>
+                <p className="text-[#0b2559]/65">{c.text}</p>
+              </div>
+              <Link href={c.href} className="mt-auto inline-flex w-fit items-center gap-1.5 rounded-xl bg-[#0b2559]/[0.05] px-4 py-2.5 font-semibold text-[#0b2559] transition-colors hover:bg-[#1d63ed] hover:text-white">
+                {c.cta} <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+              </Link>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 

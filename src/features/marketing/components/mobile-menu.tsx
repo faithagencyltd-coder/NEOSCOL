@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
-type Item = { href: string; label: string };
+type Item = { href: string; label: string; hint?: string; highlight?: boolean };
 
 /**
  * Menu mobile plein écran du site. Rendu directement dans <body> : la barre du
@@ -25,18 +25,28 @@ export function MobileMenu({ labels, nav, sectors, demoHref, loginHref }: { labe
   }, [open]);
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className="flex size-10 items-center justify-center rounded-xl text-[#0b2559] hover:bg-[#0b2559]/5 lg:hidden" aria-label={labels.menu} aria-expanded={open}>
+      <button type="button" onClick={() => setOpen(true)} className="flex size-10 items-center justify-center rounded-xl text-[#0b2559] hover:bg-[#0b2559]/5 xl:hidden" aria-label={labels.menu} aria-expanded={open}>
         <Menu className="size-5" aria-hidden />
       </button>
       {open
         ? createPortal(
-            <div role="dialog" aria-modal="true" aria-label={labels.menu} data-testid="site-mobile-menu" className="anim-fade sheet-in fixed inset-0 z-[70] flex flex-col overflow-y-auto overscroll-contain bg-[#07142b] p-5 text-white lg:hidden">
+            <div role="dialog" aria-modal="true" aria-label={labels.menu} data-testid="site-mobile-menu" className="anim-fade sheet-in fixed inset-0 z-[70] flex flex-col overflow-y-auto overscroll-contain bg-[#07142b] p-5 text-white xl:hidden">
               <div className="flex justify-end">
                 <button type="button" onClick={() => setOpen(false)} className="flex size-11 items-center justify-center rounded-xl bg-white/10 transition-transform duration-200 hover:rotate-90 active:scale-95" aria-label={labels.close}>
                   <X className="size-5" aria-hidden />
                 </button>
               </div>
               <nav className="stagger mt-4 grid gap-1 text-lg font-semibold">
+                <div className="mb-2 grid gap-2 sm:grid-cols-2">
+                  {nav
+                    .filter((s) => s.highlight)
+                    .map((s) => (
+                      <Link key={s.href} href={s.href} onClick={() => setOpen(false)} className="grid gap-0.5 rounded-2xl border border-white/15 bg-gradient-to-br from-[#1d63ed]/30 to-[#0ea5e9]/10 px-4 py-3 transition-colors hover:bg-white/10">
+                        <span>{s.label}</span>
+                        {s.hint ? <span className="text-sm font-normal text-sky-100/75">{s.hint}</span> : null}
+                      </Link>
+                    ))}
+                </div>
                 <span className="px-3 pt-2 text-xs uppercase tracking-wider text-sky-200/60">{labels.solutions}</span>
                 {sectors.map((s) => (
                   <Link key={s.href} href={s.href} onClick={() => setOpen(false)} className="rounded-xl px-3 py-2.5 transition-colors hover:bg-white/10 active:bg-white/15">
@@ -44,7 +54,9 @@ export function MobileMenu({ labels, nav, sectors, demoHref, loginHref }: { labe
                   </Link>
                 ))}
                 <span className="my-2 h-px bg-white/10" />
-                {nav.map((s) => (
+                {nav
+                  .filter((s) => !s.highlight)
+                  .map((s) => (
                   <Link key={s.href} href={s.href} onClick={() => setOpen(false)} className="rounded-xl px-3 py-2.5 transition-colors hover:bg-white/10 active:bg-white/15">
                     {s.label}
                   </Link>

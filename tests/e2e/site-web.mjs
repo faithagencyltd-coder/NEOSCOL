@@ -69,7 +69,12 @@ try {
   for (const [label, name] of [["Découvrir NeoScool", "Découvrir NeoScool"], ["Voir le logiciel", "Voir le logiciel"], ["Demander une démonstration", "Demander une démonstration"]]) {
     check(await v.getByRole("link", { name, exact: true }).first().isVisible(), `bouton : ${label}`);
   }
-  for (const id of ["connected-hub", "school-flow", "data-journey", "badge-scene", "offline-scene", "country-showcase", "national-note", "pricing-cards", "final-cta"]) {
+  const mainNav = v.getByRole("navigation", { name: "Navigation principale" });
+  check((await mainNav.getByRole("link", { name: "NeoScool Discover" }).getAttribute("href")) === "/decouvrir", "menu du haut : NeoScool Discover");
+  check((await mainNav.getByRole("link", { name: "NeoScool Opportunities" }).getAttribute("href")) === "/opportunites", "menu du haut : NeoScool Opportunities");
+  check(!(await mainNav.getByRole("link", { name: "Pays", exact: true }).count()), "menu du haut : « Pays » retiré");
+  check((await v.locator("footer").getByRole("link", { name: "Pays", exact: true }).count()) === 1, "pied de page : « Pays » toujours accessible");
+  for (const id of ["how-it-works", "ecosystem-section", "connected-hub", "school-flow", "data-journey", "badge-scene", "offline-scene", "country-showcase", "national-note", "pricing-cards", "final-cta"]) {
     await v.getByTestId(id).scrollIntoViewIfNeeded();
     check(await v.getByTestId(id).isVisible(), `section : ${id}`);
   }
@@ -182,6 +187,7 @@ try {
   check(overflow <= 1, `mobile : pas de défilement horizontal (${overflow}px)`);
   await m.getByRole("button", { name: "Menu" }).click();
   check(await m.getByRole("dialog", { name: "Menu" }).getByRole("link", { name: "Université" }).isVisible(), "menu mobile");
+  check(await m.getByRole("dialog", { name: "Menu" }).getByRole("link", { name: /NeoScool Discover/ }).isVisible(), "menu mobile : NeoScool Discover");
   await m.getByRole("button", { name: "Fermer" }).click();
   const hidden = await m.evaluate(() => [...document.querySelectorAll(".site-reveal")].filter((el) => getComputedStyle(el).opacity !== "1").length);
   check(hidden === 0, "mouvement réduit : tout le contenu visible d'emblée");
