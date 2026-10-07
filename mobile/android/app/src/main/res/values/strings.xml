@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">NeoScool</string>
+    <string name="title_activity_main">NeoScool</string>
+    <string name="package_name">com.neoscool.app</string>
+    <string name="custom_url_scheme">com.neoscool.app</string>
+</resources>

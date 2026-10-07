@@ -122,3 +122,11 @@ h1, h2, p { margin: 0; }
 .error-icon { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; font-weight: 900; font-size: 26px; color: #fff; background: var(--danger); }
 
 .foot { text-align: center; color: var(--muted); font-size: 12px; padding: 8px 16px calc(var(--safe-bottom) + 12px); }
+/* Pastille : initiales sur la couleur de l'établissement, remplacées par son logo s'il est publié. */
+.avatar { position: relative; color: #fff; font-weight: 700; }
+.avatar > span { font-size: 15px; letter-spacing: 0.02em; }
+.avatar img { position: absolute; inset: 0; opacity: 0; }
+.avatar.has-logo img { opacity: 1; }
+.avatar.big > span { font-size: 20px; }
+.muted { color: var(--muted); margin: 2px 0 6px; }
+.portal.suggested { border-color: var(--primary, #1d63ed); box-shadow: 0 0 0 2px rgba(29, 99, 237, 0.15); }

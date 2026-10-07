@@ -13,6 +13,7 @@
   function normalizeServer(text) {
     var raw = String(text || "").trim();
     if (!raw) return null;
+    if (/^[a-z][a-z0-9+.-]*:\/\//i.test(raw) && !/^https?:\/\//i.test(raw)) return null;
     if (!/^https?:\/\//i.test(raw)) {
       var host = raw.split(/[/?#]/)[0];
       var local = /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|[^.]+$)/i.test(host) || /\.local(:\d+)?$/i.test(host);

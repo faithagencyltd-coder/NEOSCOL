@@ -1,0 +1,32 @@
+{
+  "appId": "com.neoscool.app",
+  "appName": "NeoScool",
+  "webDir": "www",
+  "appendUserAgent": "NeoScoolApp/1.0.0",
+  "server": {
+    "androidScheme": "https",
+    "allowNavigation": [
+      "*"
+    ],
+    "errorPath": "hors-ligne.html"
+  },
+  "android": {
+    "allowMixedContent": true
+  },
+  "ios": {
+    "contentInset": "never",
+    "limitsNavigationsToAppBoundDomains": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 700,
+      "launchAutoHide": true,
+      "backgroundColor": "#FFFFFF",
+      "showSpinner": false
+    },
+    "SystemBars": {
+      "insetsHandling": "css",
+      "style": "LIGHT"
+    }
+  }
+}

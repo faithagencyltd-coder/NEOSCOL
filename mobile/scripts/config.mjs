@@ -37,7 +37,7 @@ const config = {
     limitsNavigationsToAppBoundDomains: false,
   },
   plugins: {
-    SplashScreen: { launchShowDuration: 700, launchAutoHide: true, backgroundColor: "#0B1F3A", showSpinner: false },
+    SplashScreen: { launchShowDuration: 700, launchAutoHide: true, backgroundColor: "#FFFFFF", showSpinner: false },
     SystemBars: { insetsHandling: "css", style: "LIGHT" },
   },
 };
