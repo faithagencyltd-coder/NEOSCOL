@@ -26,12 +26,16 @@ function refresh() {
   revalidatePath("/eleves", "layout");
 }
 
+/** Adresse technique non routable : la connexion parent se fait par téléphone + mot de passe. */
+const guardianLoginEmail = (guardianId: string) => `parent-${guardianId}@parents.neoscol.invalid`;
+
 /**
  * Active le portail d'un parent : compte créé (service role, après contrôle
- * portal_access.manage) avec son téléphone ; connexion par téléphone + nom +
- * prénom + code SMS. Le rattachement et le rôle passent par la base (RPC).
+ * portal_access.manage) avec son téléphone et un mot de passe provisoire
+ * affiché une seule fois — connexion gratuite, sans SMS. Le code SMS reste
+ * possible si l'établissement l'a configuré. Rattachement et rôle : RPC.
  */
-export async function activateGuardianPortal(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+export async function activateGuardianPortal(_: ActionResult<Credentials> | null, formData: FormData): Promise<ActionResult<Credentials>> {
   const auth = await authorize("portal_access.manage");
   if (!auth.ok) return auth;
   const id = String(formData.get("guardian_id") ?? "");
@@ -49,10 +53,13 @@ export async function activateGuardianPortal(_: ActionResult | null, formData: F
   if (!/^\+[1-9]\d{7,14}$/.test(phone)) return { ok: false, message: "Renseignez d'abord un téléphone au format international (+225…)." };
   const admin = createAdminClient();
   if (!admin) return { ok: false, message: "Configuration serveur incomplète (clé de service Supabase absente)." };
+  const secret = password();
   const { data: created, error } = await admin.auth.admin.createUser({
     phone,
     phone_confirm: true,
-    ...(guardian.email ? { email: guardian.email, email_confirm: true } : {}),
+    email: guardian.email ?? guardianLoginEmail(guardian.id),
+    email_confirm: true,
+    password: secret,
     user_metadata: { first_name: guardian.first_name, last_name: guardian.last_name },
   });
   if (error || !created.user) {
@@ -63,8 +70,67 @@ export async function activateGuardianPortal(_: ActionResult | null, formData: F
     await admin.auth.admin.deleteUser(created.user.id);
     return { ok: false, message: dbErrorMessage(grantError) };
   }
-  refresh();
-  return { ok: true, message: `Portail parent activé : connexion avec le ${phone}, le nom, le prénom et le code reçu par SMS.` };
+  // Pas de revalidation : le mot de passe doit rester affiché ; la page est rafraîchie à la fermeture.
+  return {
+    ok: true,
+    message: "Portail parent activé. Remettez ces identifiants au parent en main propre : le mot de passe ne sera plus affiché.",
+    data: { login: phone, password: secret },
+  };
+}
+
+/**
+ * Nouveau mot de passe provisoire pour un parent (oubli, ou compte créé avant
+ * la connexion par mot de passe). Refusé si le compte est aussi rattaché à un
+ * autre établissement : une école ne peut pas prendre la main sur l'accès
+ * qu'un parent utilise ailleurs.
+ */
+export async function resetGuardianPassword(_: ActionResult<Credentials> | null, formData: FormData): Promise<ActionResult<Credentials>> {
+  const auth = await authorize("portal_access.manage");
+  if (!auth.ok) return auth;
+  const id = String(formData.get("guardian_id") ?? "");
+  if (!isUuid(id)) return { ok: false, message: "Parent introuvable." };
+  const organizationId = auth.context.organization.id;
+  const supabase = await createClient();
+  const { data: guardian } = await supabase
+    .from("guardians")
+    .select("id, phone, user_id")
+    .eq("organization_id", organizationId)
+    .eq("id", id)
+    .maybeSingle();
+  if (!guardian) return { ok: false, message: "Parent introuvable." };
+  if (!guardian.user_id) return { ok: false, message: "Activez d'abord le portail de ce parent." };
+  const admin = createAdminClient();
+  if (!admin) return { ok: false, message: "Configuration serveur incomplète (clé de service Supabase absente)." };
+  const [{ data: links }, { data: memberships }] = await Promise.all([
+    admin.from("guardians").select("organization_id").eq("user_id", guardian.user_id),
+    admin.from("memberships").select("organization_id").eq("user_id", guardian.user_id),
+  ]);
+  const elsewhere = [...(links ?? []), ...(memberships ?? [])].some((row) => row.organization_id !== organizationId);
+  if (elsewhere) {
+    return { ok: false, message: "Ce compte est aussi utilisé dans un autre établissement : le parent doit changer son mot de passe depuis son portail." };
+  }
+  const { data: existing } = await admin.auth.admin.getUserById(guardian.user_id);
+  if (!existing.user) return { ok: false, message: "Compte introuvable." };
+  const secret = password();
+  const { error } = await admin.auth.admin.updateUserById(guardian.user_id, {
+    password: secret,
+    // Comptes créés pour le SMS : adresse technique ajoutée pour la connexion par mot de passe.
+    ...(existing.user.email ? {} : { email: guardianLoginEmail(guardian.id), email_confirm: true }),
+  });
+  if (error) return { ok: false, message: "Mot de passe non modifié. Réessayez." };
+  await supabase.rpc("log_event", {
+    p_action: "portal.password_reset",
+    p_organization_id: organizationId,
+    p_entity_type: "guardians",
+    p_entity_id: guardian.id,
+    p_summary: "Nouveau mot de passe provisoire du portail parent",
+  });
+  const login = existing.user.phone ? `+${existing.user.phone.replace(/^\+/, "")}` : (guardian.phone ?? "");
+  return {
+    ok: true,
+    message: "Nouveau mot de passe créé. Remettez-le au parent en main propre : il ne sera plus affiché.",
+    data: { login, password: secret },
+  };
 }
 
 /**

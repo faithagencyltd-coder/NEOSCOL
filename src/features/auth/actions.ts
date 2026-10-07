@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { isPortalKind, normalizeOrgCode, PORTAL_PERSONAS, PORTALS, type PortalKind } from "@/features/auth/portals";
-import { emailSchema, newPasswordSchema, otpSchema, parentOtpSchema, phoneSchema, signInSchema, studentSignInSchema } from "@/features/auth/schemas";
+import { emailSchema, newPasswordSchema, otpSchema, parentOtpSchema, parentSignInSchema, phoneSchema, signInSchema, studentSignInSchema } from "@/features/auth/schemas";
 import { secureCookiesForRequest } from "@/lib/utils/cookie-security";
 import { checkLoginGate, recordLoginAttempt } from "@/lib/auth/security";
 import { ACTIVE_ORG_COOKIE, getSessionContext } from "@/lib/auth/session";
@@ -209,7 +209,52 @@ export async function signInStudent(_: ActionResult | null, formData: FormData):
 }
 
 /**
- * Parent : téléphone + nom + prénom. Le code n'est envoyé que si ces trois
+ * Parent : téléphone + mot de passe remis par l'établissement (connexion par
+ * défaut, gratuite : aucun SMS). Le compte est retrouvé côté serveur à partir
+ * du téléphone ; message d'erreur unique (aucune énumération possible).
+ */
+export async function signInGuardian(_: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const parsed = parentSignInSchema.safeParse({ phone: formData.get("phone"), password: formData.get("password") });
+  if (!parsed.success) {
+    return { ok: false, message: "Vérifiez les champs du formulaire.", fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  }
+  const scope = await portalScope(formData);
+  if (scope === "invalid") return INVALID_PORTAL;
+  const gate = await checkLoginGate(`phone:${parsed.data.phone}`, captchaToken(formData));
+  if (!gate.ok) return gateFailure(gate);
+  const admin = createAdminClient();
+  const digits = parsed.data.phone.replace(/\D/g, "");
+  let guardianQuery = admin
+    ?.from("guardians")
+    .select("user_id")
+    .not("user_id", "is", null)
+    .is("archived_at", null)
+    .or(`phone.eq.${parsed.data.phone},phone_secondary.eq.${parsed.data.phone},phone.eq.${digits},phone_secondary.eq.${digits}`);
+  if (guardianQuery && scope) guardianQuery = guardianQuery.eq("organization_id", scope.id);
+  const { data: guardians } = guardianQuery ? await guardianQuery.limit(10) : { data: [] };
+  // Un même numéro peut appartenir à plusieurs comptes (rare) : chacun est essayé.
+  const userIds = [...new Set((guardians ?? []).map((g) => g.user_id))].slice(0, 3);
+  const supabase = await createClient();
+  let signedIn = false;
+  for (const userId of userIds) {
+    const email = await accountEmail(userId);
+    if (!email) continue;
+    const { error } = await supabase.auth.signInWithPassword({ email, password: parsed.data.password });
+    if (!error) {
+      signedIn = true;
+      break;
+    }
+  }
+  await recordLoginAttempt(gate, signedIn);
+  if (!signedIn) {
+    await logFailedSignIn(parsed.data.phone, "password", scope?.id);
+    return { ok: false, message: "Numéro de téléphone ou mot de passe incorrect." };
+  }
+  return completeSignIn(formData.get("suite"), scope);
+}
+
+/**
+ * Parent (option SMS, payante) : téléphone + nom + prénom. Le code n'est envoyé que si ces trois
  * informations correspondent à un parent disposant d'un accès portail ; la
  * réponse est identique dans tous les cas (aucune énumération possible).
  */

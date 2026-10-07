@@ -45,7 +45,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/connexion
           <ChevronDown className="ml-auto size-4 transition-transform duration-300 group-open:rotate-180" aria-hidden />
         </summary>
         <p className="anim-fade-up px-4 pb-4 text-muted-foreground">
-          Les comptes sont créés par votre établissement : le secrétariat active l&apos;accès des familles (téléphone), des élèves (matricule) et
+          Les comptes sont créés par votre établissement : le secrétariat active l&apos;accès des familles (téléphone + mot de passe), des élèves (matricule) et
           du personnel (e-mail). Contactez-le pour recevoir vos identifiants.
         </p>
       </details>

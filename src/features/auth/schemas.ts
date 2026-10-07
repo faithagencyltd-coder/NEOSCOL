@@ -33,6 +33,12 @@ export const phoneSchema = z
   .transform((value) => (value.startsWith("00") ? `+${value.slice(2)}` : value))
   .pipe(z.string().regex(/^\+[1-9]\d{7,14}$/, { error: "Numéro invalide : utilisez le format international (+225…)." }));
 
+/** Parent : téléphone + mot de passe (connexion gratuite, sans SMS). */
+export const parentSignInSchema = z.object({
+  phone: phoneSchema,
+  password: z.string().min(1, { error: "Mot de passe requis." }),
+});
+
 export const otpSchema = z.object({
   phone: phoneSchema,
   token: z.string().trim().regex(/^\d{6}$/, { error: "Le code comporte 6 chiffres." }),

@@ -236,6 +236,8 @@ const parent = await parentCtx.newPage();
 parent.on("pageerror", (e) => problems.push(`[parent] pageerror: ${e.message}`));
 await parent.goto(`${base}/connexion`);
 await parent.getByRole("button", { name: "Parent / Tuteur" }).click();
+// Connexion par mot de passe par défaut ; le code SMS reste proposé en option.
+await parent.getByRole("button", { name: "Recevoir plutôt un code par SMS" }).click();
 await parent.getByLabel("Numéro de téléphone").fill("+2250700000001");
 await parent.getByLabel("Nom", { exact: true }).fill("BAMBA");
 await parent.getByLabel("Prénom").fill("Adjoua");

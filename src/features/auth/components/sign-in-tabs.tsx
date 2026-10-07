@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { PasswordSignInForm } from "@/features/auth/components/password-sign-in-form";
 import type { CaptchaConfig } from "@/features/auth/components/turnstile-widget";
-import { PhoneSignInForm } from "@/features/auth/components/phone-sign-in-form";
+import { ParentSignInForm } from "@/features/auth/components/parent-sign-in-form";
 import { StudentSignInForm } from "@/features/auth/components/student-sign-in-form";
 import { cn } from "@/lib/utils/cn";
 
@@ -20,7 +20,7 @@ const PROFILES: { id: Profile; label: string; short?: string; sub?: string; icon
 
 /**
  * Le profil ne donne aucun droit : il choisit seulement la méthode de connexion
- * (parent : téléphone + nom + prénom + code SMS ; élève : matricule + date de
+ * (parent : téléphone + mot de passe, ou code SMS en option ; élève : matricule + date de
  * naissance + mot de passe ; personnel : e-mail ou matricule + mot de passe).
  * Les droits viennent des rôles attribués par l'établissement.
  */
@@ -64,7 +64,7 @@ export function SignInTabs({ next, captcha }: { next?: string; captcha?: Captcha
       </div>
 
       <div key={profile} className="anim-fade-up">
-        {profile === "parent" ? <PhoneSignInForm next={next} /> : profile === "student" ? <StudentSignInForm next={next} captcha={captcha} /> : <PasswordSignInForm next={next} captcha={captcha} />}
+        {profile === "parent" ? <ParentSignInForm next={next} captcha={captcha} /> : profile === "student" ? <StudentSignInForm next={next} captcha={captcha} /> : <PasswordSignInForm next={next} captcha={captcha} />}
       </div>
     </div>
   );

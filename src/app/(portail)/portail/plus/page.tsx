@@ -150,14 +150,11 @@ export default async function PortalMorePage() {
               </div>
             ) : null}
           </dl>
-          {parent ? (
-            <p className="text-muted-foreground">Connexion par téléphone, nom, prénom et code reçu par SMS : aucun mot de passe à retenir.</p>
-          ) : (
-            <div className="grid gap-2">
-              <h3 className="font-semibold">Changer mon mot de passe</h3>
-              <ResetPasswordForm redirectTo="/portail" />
-            </div>
-          )}
+          <div className="grid gap-2">
+            <h3 className="font-semibold">Changer mon mot de passe</h3>
+            {parent ? <p className="text-muted-foreground">Vous vous connectez avec votre numéro de téléphone et ce mot de passe.</p> : null}
+            <ResetPasswordForm redirectTo="/portail" />
+          </div>
           <div className="grid gap-2">
             <h3 className="font-semibold">Application mobile</h3>
             <InstallAppButton />

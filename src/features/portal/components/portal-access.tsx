@@ -1,7 +1,8 @@
 "use client";
 
-import { KeyRound, LockOpen, ShieldAlert, Smartphone, UserCheck, UserX } from "lucide-react";
+import { KeyRound, LockOpen, Printer, RefreshCw, ShieldAlert, Smartphone, UserCheck, UserX } from "lucide-react";
 import { useRouter } from "next/navigation";
+import type { ReactNode } from "react";
 
 import { ActionForm } from "@/components/shared/action-form";
 import { ConfirmAction } from "@/components/shared/confirm-action";
@@ -19,10 +20,12 @@ import {
   activateGuardianPortal,
   activateStudentPortal,
   removePortalOverride,
+  resetGuardianPassword,
   setPortalAccount,
   setPortalOverride,
 } from "@/features/portal/actions";
 import { useFeedbackAction } from "@/components/motion/use-feedback-action";
+import type { ActionResult } from "@/lib/utils/action-result";
 
 type Account = { has_account: boolean; status?: string; last_sign_in_at?: string | null; login?: string | null } | null;
 
@@ -67,7 +70,7 @@ function SuspendToggle({ kind, recordId, active }: { kind: "guardian" | "student
   );
 }
 
-/** Accès portail d'un parent : activation par téléphone (connexion OTP), suspension. */
+/** Accès portail d'un parent : activation (téléphone + mot de passe provisoire), nouveau mot de passe, suspension. */
 export function GuardianPortalAccess({
   guardianId,
   phone,
@@ -91,26 +94,45 @@ export function GuardianPortalAccess({
       <CardContent className="grid gap-3">
         <AccountState account={account} lastSignIn={lastSignIn} />
         <p className="text-sm text-muted-foreground">
-          Connexion par numéro de téléphone, nom et prénom, puis code à usage unique reçu par SMS. Le parent voit tous ses enfants rattachés.
+          Connexion gratuite par numéro de téléphone et mot de passe (aucun SMS). Le parent voit tous ses enfants rattachés et peut changer son mot de
+          passe depuis son portail.
         </p>
         {canManage ? (
           account?.has_account ? (
-            <div>
+            <div className="flex flex-wrap gap-2">
+              <CredentialsDialog
+                action={resetGuardianPassword}
+                fields={{ guardian_id: guardianId }}
+                trigger={
+                  <Button size="sm" variant="secondary">
+                    <RefreshCw aria-hidden /> Nouveau mot de passe
+                  </Button>
+                }
+                title="Nouveau mot de passe parent"
+                description="Connexion par téléphone + mot de passe."
+                intro="Un nouveau mot de passe provisoire sera généré et affiché une seule fois ; l'ancien ne fonctionnera plus."
+                submitLabel="Générer"
+                loginLabel="Téléphone"
+                slipTitle="Accès au portail parent"
+              />
               <SuspendToggle kind="guardian" recordId={guardianId} active={account.status === "active"} />
             </div>
           ) : (
             <div>
-              <ConfirmAction
+              <CredentialsDialog
+                action={activateGuardianPortal}
+                fields={{ guardian_id: guardianId }}
                 trigger={
                   <Button size="sm" disabled={!phone}>
                     <KeyRound aria-hidden /> Activer le portail
                   </Button>
                 }
-                title="Activer le portail parent ?"
-                description={`Un compte sera créé pour le ${phone ?? "téléphone"} ; le parent se connecte avec ce numéro, son nom, son prénom et le code reçu par SMS.`}
-                confirmLabel="Activer"
-                action={activateGuardianPortal}
-                fields={{ guardian_id: guardianId }}
+                title="Portail parent"
+                description="Connexion par téléphone + mot de passe."
+                intro={`Un compte sera créé pour le ${phone ?? "téléphone"} avec un mot de passe provisoire, affiché une seule fois. Le parent pourra le changer depuis son portail.`}
+                submitLabel="Créer l'accès"
+                loginLabel="Téléphone"
+                slipTitle="Accès au portail parent"
               />
               {!phone ? <p className="mt-2 text-xs text-warning">Renseignez d&apos;abord le téléphone du parent (format +225…).</p> : null}
             </div>
@@ -121,24 +143,67 @@ export function GuardianPortalAccess({
   );
 }
 
-function ActivateStudentDialog({ studentId, hasBirthDate }: { studentId: string; hasBirthDate: boolean }) {
-  const [state, formAction, pending] = useFeedbackAction(activateStudentPortal);
+type Credentials = { login: string; password?: string };
+
+/** Fiche imprimable remise en main propre (identifiant + mot de passe provisoire). */
+function printSlip(title: string, loginLabel: string, credentials: Credentials) {
+  const win = window.open("", "_blank", "width=480,height=600");
+  if (!win) return;
+  const doc = win.document;
+  doc.title = title;
+  const box = doc.createElement("div");
+  box.style.cssText = "font-family:system-ui,sans-serif;max-width:380px;margin:32px auto;padding:24px;border:2px dashed #94a3b8;border-radius:16px";
+  const line = (tag: string, text: string, css = "") => {
+    const el = doc.createElement(tag);
+    el.textContent = text;
+    el.style.cssText = css;
+    box.appendChild(el);
+  };
+  line("h1", title, "font-size:20px;margin:0 0 16px");
+  line("p", `${loginLabel} : ${credentials.login}`, "font-size:16px;margin:8px 0");
+  line("p", `Mot de passe provisoire : ${credentials.password ?? ""}`, "font-size:16px;margin:8px 0;font-family:monospace;font-weight:700");
+  line("p", `Connexion : ${window.location.origin}/connexion`, "font-size:14px;margin:16px 0 4px");
+  line("p", "Changez ce mot de passe à la première connexion (menu Plus › Changer mon mot de passe). Ne le communiquez à personne.", "font-size:12px;color:#475569");
+  doc.body.appendChild(box);
+  win.focus();
+  win.print();
+}
+
+/** Création d'un accès ou d'un nouveau mot de passe : identifiants affichés une seule fois. */
+function CredentialsDialog({
+  action,
+  fields,
+  trigger,
+  title,
+  description,
+  intro,
+  submitLabel,
+  loginLabel,
+  slipTitle,
+}: {
+  action: (state: ActionResult<Credentials> | null, formData: FormData) => Promise<ActionResult<Credentials>>;
+  fields: Record<string, string>;
+  trigger: ReactNode;
+  title: string;
+  description: string;
+  intro: string;
+  submitLabel: string;
+  loginLabel: string;
+  slipTitle: string;
+}) {
+  const [state, formAction, pending] = useFeedbackAction(action);
   const created = state?.ok ? state.data : undefined;
   const router = useRouter();
   return (
     <Dialog onOpenChange={(open) => !open && created && router.refresh()}>
-      <DialogTrigger asChild>
-        <Button size="sm" disabled={!hasBirthDate}>
-          <KeyRound aria-hidden /> Activer le portail élève
-        </Button>
-      </DialogTrigger>
-      <DialogContent title="Portail élève" description="Connexion par matricule + date de naissance + mot de passe.">
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogContent title={title} description={description}>
         {created ? (
           <div className="grid gap-3">
             <Alert tone="success">{state?.message}</Alert>
             <dl className="grid gap-2 rounded-xl bg-surface-muted p-4 text-sm">
               <div className="flex justify-between gap-3">
-                <dt className="text-muted-foreground">Matricule</dt>
+                <dt className="text-muted-foreground">{loginLabel}</dt>
                 <dd className="font-medium">{created.login}</dd>
               </div>
               <div className="flex justify-between gap-3">
@@ -148,14 +213,21 @@ function ActivateStudentDialog({ studentId, hasBirthDate }: { studentId: string;
                 </dd>
               </div>
             </dl>
-            <DialogClose asChild>
-              <Button>Terminé</Button>
-            </DialogClose>
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button type="button" variant="secondary" onClick={() => printSlip(slipTitle, loginLabel, created)}>
+                <Printer aria-hidden /> Imprimer la fiche
+              </Button>
+              <DialogClose asChild>
+                <Button>Terminé</Button>
+              </DialogClose>
+            </div>
           </div>
         ) : (
           <ActionForm dispatch={formAction} pending={pending} className="grid gap-4">
-            <input type="hidden" name="student_id" value={studentId} />
-            <p className="text-sm text-muted-foreground">Un mot de passe provisoire sera généré et affiché une seule fois ; l&apos;élève pourra le changer depuis son portail.</p>
+            {Object.entries(fields).map(([name, value]) => (
+              <input key={name} type="hidden" name={name} value={value} />
+            ))}
+            <p className="text-sm text-muted-foreground">{intro}</p>
             {state && !state.ok ? <Alert tone="danger">{state.message}</Alert> : null}
             <div className="flex justify-end gap-2">
               <DialogClose asChild>
@@ -163,12 +235,32 @@ function ActivateStudentDialog({ studentId, hasBirthDate }: { studentId: string;
                   Annuler
                 </Button>
               </DialogClose>
-              <SubmitButton>Créer l&apos;accès</SubmitButton>
+              <SubmitButton>{submitLabel}</SubmitButton>
             </div>
           </ActionForm>
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ActivateStudentDialog({ studentId, hasBirthDate }: { studentId: string; hasBirthDate: boolean }) {
+  return (
+    <CredentialsDialog
+      action={activateStudentPortal}
+      fields={{ student_id: studentId }}
+      trigger={
+        <Button size="sm" disabled={!hasBirthDate}>
+          <KeyRound aria-hidden /> Activer le portail élève
+        </Button>
+      }
+      title="Portail élève"
+      description="Connexion par matricule + date de naissance + mot de passe."
+      intro="Un mot de passe provisoire sera généré et affiché une seule fois ; l'élève pourra le changer depuis son portail."
+      submitLabel="Créer l'accès"
+      loginLabel="Matricule"
+      slipTitle="Accès au portail élève"
+    />
   );
 }
 

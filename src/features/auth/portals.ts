@@ -22,7 +22,7 @@ export const PORTAL_PERSONAS: Record<PortalKind, readonly string[]> = {
 };
 
 export const PORTALS: Record<PortalKind, { label: string; sub: string; icon: LucideIcon; method: string }> = {
-  parent: { label: "Portail Parent", sub: "Parents et tuteurs", icon: Users, method: "Téléphone, nom, prénom et code SMS" },
+  parent: { label: "Portail Parent", sub: "Parents et tuteurs", icon: Users, method: "Téléphone et mot de passe" },
   enseignant: { label: "Portail Enseignant / Formateur", sub: "Enseignants, professeurs, formateurs", icon: Presentation, method: "E-mail ou matricule et mot de passe" },
   eleve: { label: "Portail Élève / Étudiant", sub: "Élèves, étudiants, apprenants", icon: GraduationCap, method: "Matricule, date de naissance et mot de passe" },
   personnel: { label: "Portail Administration", sub: "Direction, secrétariat, comptabilité", icon: ShieldCheck, method: "E-mail ou matricule et mot de passe" },

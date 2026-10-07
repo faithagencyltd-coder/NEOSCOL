@@ -164,7 +164,7 @@ export default async function PortalLinkSettingsPage() {
         <CardContent className="grid gap-3 text-sm md:grid-cols-3">
           {[
             { icon: Share2, title: "1. Partagez le lien", text: "Par WhatsApp, SMS, e-mail, sur l'affiche imprimée (QR code) ou votre site." },
-            { icon: KeyRound, title: "2. Chacun choisit son portail", text: "Et se connecte avec ses propres identifiants : téléphone + code SMS, matricule, e-mail ou mot de passe." },
+            { icon: KeyRound, title: "2. Chacun choisit son portail", text: "Et se connecte avec ses propres identifiants : téléphone + mot de passe (parents), matricule, e-mail." },
             { icon: ShieldCheck, title: "3. Accès contrôlé", text: "Le serveur n'accepte que les comptes de cet établissement ayant le rôle du portail choisi. Tout refus est journalisé." },
           ].map((step) => (
             <div key={step.title} className="flex gap-3 rounded-xl border border-border p-3">

@@ -5,7 +5,7 @@ import { ArrowLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
 import { PasswordSignInForm } from "@/features/auth/components/password-sign-in-form";
-import { PhoneSignInForm } from "@/features/auth/components/phone-sign-in-form";
+import { ParentSignInForm } from "@/features/auth/components/parent-sign-in-form";
 import { StudentSignInForm } from "@/features/auth/components/student-sign-in-form";
 import { portalsFor, type PortalKind } from "@/features/auth/portals";
 import { cn } from "@/lib/utils/cn";
@@ -108,7 +108,7 @@ export function PortalGateway({
         </span>
       </div>
       {kind === "parent" ? (
-        <PhoneSignInForm next={next} portal={portal} />
+        <ParentSignInForm next={next} portal={portal} captcha={captcha} />
       ) : kind === "eleve" ? (
         <StudentSignInForm next={next} portal={portal} captcha={captcha} />
       ) : (
