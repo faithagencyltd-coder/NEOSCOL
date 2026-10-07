@@ -1,5 +1,6 @@
 "use server";
 
+import { allocateInstallments, type AllocatedInstallment } from "@/features/finance/installments";
 import { authorize } from "@/lib/auth/authorize";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/utils/action-result";
@@ -11,7 +12,7 @@ import { isUuid, likePattern, normalizeSearch } from "@/lib/utils/search-params"
  * l'encaissement lui-même passe par recordPayment (mêmes contrôles en base).
  */
 
-export type PayableInstallment = { id: string; label: string; dueOn: string; amount: number; remaining: number };
+export type PayableInstallment = AllocatedInstallment;
 export type PayableInvoice = {
   id: string;
   number: string;
@@ -23,19 +24,6 @@ export type PayableInvoice = {
   installments: PayableInstallment[];
 };
 export type PayableStudent = { id: string; firstName: string; lastName: string; matricule: string | null; invoices: PayableInvoice[] };
-
-/** Répartit le montant déjà payé sur les tranches, dans l'ordre (la plus ancienne d'abord). */
-function allocate(paid: number, installments: { id: string; label: string; due_on: string; amount: number | string; sequence: number }[]): PayableInstallment[] {
-  let left = paid;
-  return [...installments]
-    .sort((a, b) => a.sequence - b.sequence)
-    .map((i) => {
-      const amount = Number(i.amount);
-      const covered = Math.min(amount, Math.max(0, left));
-      left -= covered;
-      return { id: i.id, label: i.label, dueOn: i.due_on, amount, remaining: Math.round((amount - covered) * 100) / 100 };
-    });
-}
 
 async function loadPayable(organizationId: string, studentIds: string[]): Promise<PayableStudent[]> {
   if (!studentIds.length) return [];
@@ -72,7 +60,7 @@ async function loadPayable(organizationId: string, studentIds: string[]): Promis
       balance: Number(b.balance ?? 0),
       isOverdue: Boolean(b.is_overdue),
       label: invoiceLines.length ? invoiceLines[0]!.description + (invoiceLines.length > 1 ? ` (+${invoiceLines.length - 1})` : "") : "",
-      installments: allocate(paid, (installments ?? []).filter((i) => i.invoice_id === b.invoice_id)),
+      installments: allocateInstallments(paid, (installments ?? []).filter((i) => i.invoice_id === b.invoice_id)),
     });
     byStudent.set(b.student_id, list);
   }
@@ -107,5 +95,14 @@ export async function payableForInvoice(invoiceId: string): Promise<ActionResult
   const { data } = await supabase.from("invoices").select("student_id").eq("organization_id", auth.context.organization.id).eq("id", invoiceId).maybeSingle();
   if (!data?.student_id) return { ok: true, message: "", data: null };
   const [student] = await loadPayable(auth.context.organization.id, [data.student_id]);
+  return { ok: true, message: "", data: student ?? null };
+}
+
+/** Élève donné (bouton « Enregistrer un paiement » de sa fiche). */
+export async function payableForStudent(studentId: string): Promise<ActionResult<PayableStudent | null>> {
+  const auth = await authorize("finance.payments.create");
+  if (!auth.ok) return auth;
+  if (!isUuid(studentId)) return { ok: true, message: "", data: null };
+  const [student] = await loadPayable(auth.context.organization.id, [studentId]);
   return { ok: true, message: "", data: student ?? null };
 }

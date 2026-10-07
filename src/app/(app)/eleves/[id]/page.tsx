@@ -1,4 +1,4 @@
-import { Archive, ArchiveRestore, ClipboardPlus, Pencil } from "lucide-react";
+import { Archive, ArchiveRestore, Cake, CalendarDays, Check, ClipboardPlus, GraduationCap, Hash, Mail, Pencil, Phone, School } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -39,13 +39,19 @@ import {
   getStudentGrades,
   getStudentHistory,
   getStudentMedical,
+  getStudentMonthPresence,
+  getStudentSchedule,
 } from "@/features/students/queries";
+import { DocumentsMenu, MoreActions } from "@/features/students/components/dossier-menus";
+import { DossierKpis, OverviewTab, PaymentsTab, ScheduleTab } from "@/features/students/components/dossier-overview";
+import { CashierDialog } from "@/features/finance/components/cashier-dialog";
+import { allocateInstallments } from "@/features/finance/installments";
 import { featureEnabled } from "@/lib/features";
 import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth/guards";
 import { todayIn } from "@/lib/dates";
 import { can } from "@/lib/auth/session";
-import { STUDENT_STATUS } from "@/lib/labels";
+import { RELATIONSHIP, STUDENT_STATUS } from "@/lib/labels";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/utils/format";
 import { isUuid, param } from "@/lib/utils/search-params";
 import { vocabularyFor } from "@/lib/vocabulary";
@@ -110,6 +116,10 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
   const canReportCards = can(context, "report_cards.manage") || can(context, "grades.read");
   const canConduct = can(context, "conduct.read") || can(context, "conduct.manage");
   const canDocuments = can(context, "documents.read") || can(context, "documents.generate") || can(context, "documents.dossier");
+  const canCash = canFinance && can(context, "finance.payments.create");
+  const today = todayIn(organization.timezone);
+  const monthStart = `${today.slice(0, 8)}01`;
+  const finance = canFinance ? await getStudentFinance(student.id) : null;
 
   // Module Formation professionnelle : sections propres au dossier de l'apprenant.
   const training = isTrainingOrg(organization.type);
@@ -130,32 +140,63 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
         ...(canAttendance ? [{ key: "assiduite", label: "Assiduité", href: "?onglet=assiduite" }] : []),
       ]
     : [];
-  const tabs: TabLink[] = [
+  // Onglets principaux (comme sur la maquette) ; les autres restent accessibles dans « Plus ».
+  const learnerAttendance = training || Boolean(university);
+  const all: TabLink[] = [
+    { key: "apercu", label: "Aperçu", href: "?onglet=apercu" },
     { key: "informations", label: "Informations", href: "?onglet=informations" },
-    ...trainingTabs,
-    ...universityTabs,
+    { key: "scolarite", label: "Inscription", href: "?onglet=scolarite", count: student.enrollments.length },
+    { key: "parents", label: "Parent / Tuteur", href: "?onglet=parents", count: student.student_guardians.length },
+    ...(canFinance ? [{ key: "paiements", label: "Paiements", href: "?onglet=paiements", count: finance?.payments.filter((p) => p.status !== "cancelled").length }] : []),
+    ...(canFinance ? [{ key: "echeancier", label: "Échéancier", href: "?onglet=echeancier" }] : []),
+    // Présences : appels de cours (scolaire) ; entrées enregistrées (université, formation).
+    ...(learnerAttendance && (training || canAttendance) ? [{ key: "assiduite", label: "Présences", href: "?onglet=assiduite" }] : []),
+    ...(!learnerAttendance && canAttendance ? [{ key: "presences", label: "Présences", href: "?onglet=presences" }] : []),
     // Carte (badge + QR) : les trois modules ; université selon sa configuration.
     ...(!university || university.features.badges ? [{ key: "badge", label: "Badge & QR", href: "?onglet=badge" }] : []),
-    { key: "parents", label: "Parents", href: "?onglet=parents", count: student.student_guardians.length },
-    { key: "scolarite", label: "Scolarité", href: "?onglet=scolarite", count: student.enrollments.length },
-    { key: "parcours", label: "Parcours antérieur", href: "?onglet=parcours" },
+    ...(canDocuments ? [{ key: "documents", label: "Documents", href: "?onglet=documents" }] : []),
+  ];
+  const more: TabLink[] = [
+    ...trainingTabs.filter((t) => t.key !== "assiduite"),
+    ...universityTabs.filter((t) => t.key !== "assiduite"),
+    ...(learnerAttendance && canAttendance ? [{ key: "presences", label: "Appels de cours", href: "?onglet=presences" }] : []),
     ...(canGrades ? [{ key: "notes", label: "Notes", href: "?onglet=notes" }] : []),
     ...(canReportCards && !university ? [{ key: "bulletins", label: "Bulletins", href: "?onglet=bulletins" }] : []),
-    ...(canAttendance ? [{ key: "presences", label: "Présences", href: "?onglet=presences" }] : []),
     ...(canConduct ? [{ key: "discipline", label: "Discipline", href: "?onglet=discipline" }] : []),
-    ...(canFinance ? [{ key: "finance", label: "Finance", href: "?onglet=finance" }] : []),
-    ...(canDocuments ? [{ key: "documents", label: "Documents", href: "?onglet=documents" }] : []),
+    ...(canFinance ? [{ key: "finance", label: "Factures", href: "?onglet=finance" }] : []),
+    { key: "parcours", label: "Parcours antérieur", href: "?onglet=parcours" },
     { key: "portail", label: "Portail", href: "?onglet=portail" },
     ...(canAudit ? [{ key: "historique", label: "Historique", href: "?onglet=historique" }] : []),
   ];
+  const tabs = all;
   const requested = param(query, "onglet");
-  const active = tabs.some((t) => t.key === requested) ? requested! : "informations";
+  const active = [...tabs, ...more].some((t) => t.key === requested) ? requested! : "apercu";
 
   const current =
     student.enrollments.find((e) => e.status === "validated" && e.academic_year?.is_current) ??
     student.enrollments.find((e) => e.status === "validated");
   const archived = student.archived_at !== null;
   const fullName = `${student.first_name} ${student.last_name}`;
+  const liveInvoices = (finance?.invoices ?? []).filter((i) => i.status === "issued");
+  const kpis = finance
+    ? {
+        total: liveInvoices.reduce((t, i) => t + Number(i.total ?? 0), 0),
+        paid: liveInvoices.reduce((t, i) => t + Number(i.paid ?? 0), 0),
+        balance: liveInvoices.reduce((t, i) => t + Number(i.balance ?? 0), 0),
+        overdue: liveInvoices.some((i) => i.is_overdue),
+      }
+    : null;
+  const presence = canAttendance || (training && can(context, "students.read")) ? await getStudentMonthPresence(student.id, monthStart, today, learnerAttendance) : null;
+  const schedule = canFinance && ["apercu", "echeancier"].includes(active) ? await getStudentSchedule(student.id) : [];
+  const cashier = canCash ? (
+    <CashierDialog
+      currency={organization.currency}
+      today={today}
+      minDate={new Date(Date.parse(`${today}T00:00:00Z`) - 90 * 86_400_000).toISOString().slice(0, 10)}
+      labels={{ student: v.student, theStudent: v.theStudent }}
+      initialStudentId={student.id}
+    />
+  ) : null;
 
   return (
     <div className="grid gap-5">
@@ -174,83 +215,150 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
         </Alert>
       ) : null}
 
-      <Card className="flex flex-col gap-5 p-5 sm:p-6 lg:flex-row lg:items-center">
-        <Avatar name={fullName} photoId={student.photo_path} className="size-20 text-2xl ring-4 ring-primary-soft" />
-        <div className="grid flex-1 gap-2">
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-semibold sm:text-[26px]">{fullName}</h1>
-            {archived ? <Badge>Archivé</Badge> : <StatusBadge value={student.status} map={STUDENT_STATUS} />}
-          </div>
-          <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
-            <span>
-              Matricule <strong className="text-foreground">{student.matricule}</strong>
+      <Card className="overflow-hidden p-0" data-testid="dossier-header">
+        <div aria-hidden className="h-24 bg-gradient-to-r from-[#0b2559] via-[#1d4fd8] to-[#0ea5c6] sm:h-28" />
+        <div className="grid gap-4 px-5 pb-5 sm:px-6">
+          <div className="-mt-12 flex flex-wrap items-end justify-between gap-3 sm:-mt-14">
+            <span className="relative">
+              <Avatar name={fullName} photoId={student.photo_path} className="size-24 rounded-2xl border-4 border-surface bg-primary-soft text-3xl shadow-md sm:size-28 [&_img]:rounded-xl" />
+              {!archived && student.status === "active" ? (
+                <span className="absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full border-2 border-surface bg-success text-white" title="Actif">
+                  <Check className="size-4" aria-hidden />
+                </span>
+              ) : null}
             </span>
-            <span>
-              {v.klass} <strong className="text-foreground">{current?.class?.name ?? "—"}</strong>
-            </span>
-            {current?.academic_year ? (
-              <span>
-                Année <strong className="text-foreground">{current.academic_year.name}</strong>
-              </span>
-            ) : null}
-            {student.birth_date ? (
-              <span>
-                Né{student.sex === "F" ? "e" : ""} le{" "}
-                <strong className="text-foreground">{formatDate(student.birth_date, "fr-FR", { dateStyle: "short" })}</strong>
-                {student.birth_place ? ` à ${student.birth_place}` : ""}
-              </span>
-            ) : null}
+            <div className="flex flex-wrap items-center gap-2">
+              {canCash && !archived ? cashier : null}
+              {canDocuments ? <DocumentsMenu studentId={student.id} university={Boolean(university)} transcript={can(context, "documents.generate") && (can(context, "report_cards.manage") || can(context, "report_cards.publish"))} generate={can(context, "documents.generate") && !archived} /> : null}
+              <MoreActions>
+                {can(context, "enrollments.manage") && !archived ? (
+                  <Button asChild variant="secondary">
+                    <Link
+                      href={
+                        training ? `/formation/inscription?apprenant=${student.id}` : university ? `/universite/inscription?etudiant=${student.id}` : `/inscriptions/nouvelle?eleve=${student.id}`
+                      }
+                    >
+                      <ClipboardPlus aria-hidden /> Inscrire
+                    </Link>
+                  </Button>
+                ) : null}
+                {can(context, "students.update") ? (
+                  <Button asChild variant="secondary">
+                    <Link href={`/eleves/${student.id}/modifier`}>
+                      <Pencil aria-hidden /> Modifier
+                    </Link>
+                  </Button>
+                ) : null}
+                <StudentLifecycleActions
+                  student={{ id: student.id, status: student.status, matricule: student.matricule, archived }}
+                  can={{ update: can(context, "students.update"), archive: can(context, "students.archive"), delete: can(context, "students.delete") }}
+                />
+                {can(context, "students.archive") ? (
+                  <ConfirmAction
+                    trigger={
+                      <Button variant="ghost" className={archived ? undefined : "text-danger"}>
+                        {archived ? <ArchiveRestore aria-hidden /> : <Archive aria-hidden />}
+                        {archived ? "Restaurer" : "Archiver"}
+                      </Button>
+                    }
+                    title={archived ? "Restaurer ce dossier ?" : "Archiver ce dossier ?"}
+                    description={
+                      archived
+                        ? "Le dossier réapparaîtra dans la liste des élèves."
+                        : "Le dossier est conservé intégralement (historique, notes, paiements) mais n'apparaît plus dans les listes courantes."
+                    }
+                    confirmLabel={archived ? "Restaurer" : "Archiver"}
+                    tone={archived ? "primary" : "danger"}
+                    action={setStudentArchived}
+                    fields={{ student_id: student.id, archive: archived ? "false" : "true" }}
+                  />
+                ) : null}
+              </MoreActions>
+            </div>
           </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {can(context, "enrollments.manage") && !archived ? (
-            <Button asChild variant="secondary">
-              <Link
-                href={
-                  training ? `/formation/inscription?apprenant=${student.id}` : university ? `/universite/inscription?etudiant=${student.id}` : `/inscriptions/nouvelle?eleve=${student.id}`
-                }
-              >
-                <ClipboardPlus aria-hidden /> Inscrire
-              </Link>
-            </Button>
-          ) : null}
-          {can(context, "students.update") ? (
-            <Button asChild variant="secondary">
-              <Link href={`/eleves/${student.id}/modifier`}>
-                <Pencil aria-hidden /> Modifier
-              </Link>
-            </Button>
-          ) : null}
-          <StudentLifecycleActions
-            student={{ id: student.id, status: student.status, matricule: student.matricule, archived }}
-            can={{ update: can(context, "students.update"), archive: can(context, "students.archive"), delete: can(context, "students.delete") }}
-          />
-          {can(context, "students.archive") ? (
-            <ConfirmAction
-              trigger={
-                <Button variant={archived ? "secondary" : "ghost"} className={archived ? undefined : "text-danger"}>
-                  {archived ? <ArchiveRestore aria-hidden /> : <Archive aria-hidden />}
-                  {archived ? "Restaurer" : "Archiver"}
-                </Button>
-              }
-              title={archived ? "Restaurer ce dossier ?" : "Archiver ce dossier ?"}
-              description={
-                archived
-                  ? "Le dossier réapparaîtra dans la liste des élèves."
-                  : "Le dossier est conservé intégralement (historique, notes, paiements) mais n'apparaît plus dans les listes courantes."
-              }
-              confirmLabel={archived ? "Restaurer" : "Archiver"}
-              tone={archived ? "primary" : "danger"}
-              action={setStudentArchived}
-              fields={{ student_id: student.id, archive: archived ? "false" : "true" }}
-            />
-          ) : null}
+          <div className="grid gap-2">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="text-2xl font-semibold sm:text-[28px]">{fullName}</h1>
+              {archived ? <Badge>Archivé</Badge> : <StatusBadge value={student.status} map={STUDENT_STATUS} />}
+              <Badge tone="primary">{training ? "Formation pro" : university ? "Université" : "Scolaire"}</Badge>
+            </div>
+            <ul className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-muted-foreground" data-testid="dossier-facts">
+              <li className="flex items-center gap-1.5">
+                <Hash className="size-4" aria-hidden /> <span className="font-mono text-foreground">{student.matricule}</span>
+              </li>
+              {current?.class?.program?.name ? (
+                <li className="flex items-center gap-1.5">
+                  <GraduationCap className="size-4" aria-hidden /> {current.class.program.name}
+                </li>
+              ) : null}
+              <li className="flex items-center gap-1.5" title={v.klass}>
+                <School className="size-4" aria-hidden /> {current?.class?.name ?? `${v.klass} : —`}
+              </li>
+              {current?.academic_year ? (
+                <li className="flex items-center gap-1.5" title={v.year}>
+                  <CalendarDays className="size-4" aria-hidden /> {current.academic_year.name}
+                </li>
+              ) : null}
+              {student.birth_date ? (
+                <li className="flex items-center gap-1.5">
+                  <Cake className="size-4" aria-hidden /> Né{student.sex === "F" ? "e" : ""} le {formatDate(student.birth_date, "fr-FR", { dateStyle: "short" })}
+                  {student.birth_place ? ` à ${student.birth_place}` : ""}
+                </li>
+              ) : null}
+              {student.phone ? (
+                <li className="flex items-center gap-1.5">
+                  <Phone className="size-4" aria-hidden /> {student.phone}
+                </li>
+              ) : null}
+              {student.email ? (
+                <li className="flex items-center gap-1.5">
+                  <Mail className="size-4" aria-hidden /> {student.email}
+                </li>
+              ) : null}
+            </ul>
+          </div>
+          <DossierKpis finance={kpis} presence={presence} currency={organization.currency} />
         </div>
       </Card>
 
-      <TabNav tabs={tabs} active={active} label="Sections du dossier" />
+      <TabNav tabs={tabs} more={more} active={active} label="Sections du dossier" />
       <TabPanel active={active}>
-  
+        {active === "apercu" ? (
+          <OverviewTab
+            enrollment={
+              current
+                ? { klass: current.class?.name ?? null, year: current.academic_year?.name ?? null, program: current.class?.program?.name ?? null, reference: current.reference }
+                : null
+            }
+            guardians={student.student_guardians.map((g) => ({
+              name: g.guardian ? `${g.guardian.first_name} ${g.guardian.last_name}` : "—",
+              relationship: g.relationship ? (RELATIONSHIP[g.relationship] ?? g.relationship) : null,
+              phone: g.guardian?.phone ?? null,
+              primary: g.is_primary,
+            }))}
+            contact={{ phone: student.phone, email: student.email, address: [student.address, student.city].filter(Boolean).join(", ") || null }}
+            finance={
+              finance
+                ? {
+                    lastPayment: (() => {
+                      const p = finance.payments.find((x) => x.status !== "cancelled");
+                      return p ? { id: p.id, number: p.number, amount: Number(p.amount), at: p.paid_at } : null;
+                    })(),
+                    next: nextInstallment(schedule, today),
+                    currency: organization.currency,
+                    timezone: organization.timezone,
+                    canReceipt: can(context, "documents.generate") || canFinance,
+                  }
+                : null
+            }
+            presence={presence}
+            labels={{ klass: v.klass, year: v.year, guardians: "Parents / tuteurs" }}
+          />
+        ) : null}
+        {active === "paiements" && finance ? (
+          <PaymentsTab payments={finance.payments} currency={organization.currency} timezone={organization.timezone} cashier={archived ? null : cashier} canReceipt />
+        ) : null}
+        {active === "echeancier" ? <ScheduleTab invoices={schedule} currency={organization.currency} today={today} cashier={archived ? null : cashier} /> : null}
         {active === "informations" ? (
           <InformationTab
             student={student}
@@ -330,7 +438,7 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
         ) : null}
         {active === "notes" ? <GradesTab grades={await getStudentGrades(student.id)} /> : null}
         {active === "presences" ? <AttendanceTab attendance={await getStudentAttendance(student.id)} /> : null}
-        {active === "finance" ? <FinanceTab finance={await getStudentFinance(student.id)} currency={organization.currency} /> : null}
+        {active === "finance" ? <FinanceTab finance={finance ?? (await getStudentFinance(student.id))} currency={organization.currency} /> : null}
         {active === "documents" ? (
           <StudentDocumentsTab
             studentId={student.id}
@@ -517,4 +625,15 @@ async function PortalTab({
       }
     />
   );
+}
+
+/** Prochaine tranche non soldée (la plus proche), pour l'Aperçu. */
+function nextInstallment(schedule: Awaited<ReturnType<typeof getStudentSchedule>>, today: string) {
+  const rows = schedule.flatMap((inv) =>
+    inv.installments.length
+      ? allocateInstallments(Number(inv.paid ?? 0), inv.installments)
+      : [{ id: inv.invoice_id ?? "", label: inv.label ?? inv.number ?? "Facture", dueOn: inv.due_on ?? inv.issued_on ?? today, amount: Number(inv.total ?? 0), remaining: Number(inv.balance ?? 0) }],
+  );
+  const next = rows.filter((r) => r.remaining > 0).sort((a, b) => a.dueOn.localeCompare(b.dueOn))[0];
+  return next ? { label: next.label, dueOn: next.dueOn, remaining: next.remaining, overdue: next.dueOn < today } : null;
 }

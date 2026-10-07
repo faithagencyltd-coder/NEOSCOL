@@ -84,7 +84,7 @@ export async function getStudent(organizationId: string, studentId: string) {
   const { data } = await supabase
     .from("students")
     .select(
-      `*, enrollments(id, reference, type, status, created_at, decided_at, academic_year:academic_years(id, name, is_current), class:classes(id, name)),
+      `*, enrollments(id, reference, type, status, created_at, decided_at, academic_year:academic_years(id, name, is_current), class:classes(id, name, program:programs(name))),
        student_guardians(id, relationship, is_primary, is_financial_responsible, is_emergency_contact, portal_access,
          guardian:guardians(id, first_name, last_name, phone, email, profession, user_id))`,
     )
@@ -187,7 +187,7 @@ export async function getStudentFinance(studentId: string) {
       .order("issued_on", { ascending: false }),
     supabase
       .from("payments")
-      .select("id, number, amount, method, paid_at, status, balance_after")
+      .select("id, number, amount, method, paid_at, status, balance_after, invoice_id, reference, payer_name, received_by_name")
       .eq("student_id", studentId)
       .order("paid_at", { ascending: false }),
   ]);
@@ -238,4 +238,55 @@ export async function getStudentReportCards(studentId: string) {
     (a, b) =>
       (b.period?.academic_year?.starts_on ?? "").localeCompare(a.period?.academic_year?.starts_on ?? "") || (a.period?.sequence ?? 0) - (b.period?.sequence ?? 0),
   );
+}
+
+/** Échéancier de l'élève : factures (hors brouillons et annulées) et leurs tranches (RLS : finance.read). */
+export async function getStudentSchedule(studentId: string) {
+  const supabase = await createClient();
+  const { data: invoices } = await supabase
+    .from("invoice_balances")
+    .select("invoice_id, number, status, issued_on, due_on, total, paid, balance, is_overdue")
+    .eq("student_id", studentId)
+    .eq("status", "issued")
+    .order("issued_on", { ascending: true });
+  const ids = (invoices ?? []).map((i) => i.invoice_id).filter((id): id is string => Boolean(id));
+  const [{ data: installments }, { data: lines }] = ids.length
+    ? await Promise.all([
+        supabase.from("installments").select("id, invoice_id, label, due_on, amount, sequence").in("invoice_id", ids),
+        supabase.from("invoice_lines").select("invoice_id, description, sort_order").in("invoice_id", ids).order("sort_order"),
+      ])
+    : [{ data: [] }, { data: [] }];
+  return (invoices ?? []).map((i) => ({
+    ...i,
+    label: (lines ?? []).find((l) => l.invoice_id === i.invoice_id)?.description ?? null,
+    installments: (installments ?? []).filter((x) => x.invoice_id === i.invoice_id),
+  }));
+}
+
+/**
+ * Présences du mois en cours : jours avec au moins une présence (ou un retard)
+ * et absences. Scolaire : appels de cours ; université et formation : entrées
+ * enregistrées (même calcul que l'onglet Assiduité).
+ */
+export async function getStudentMonthPresence(studentId: string, from: string, to: string, learner: boolean) {
+  const supabase = await createClient();
+  if (learner) {
+    const { data, error } = await supabase.rpc("learner_attendance_summary", { p_student_id: studentId, p_from: from, p_to: to });
+    if (error || !data) return null;
+    const summary = data as { days_present?: number; absences?: number };
+    return { days: Number(summary.days_present ?? 0), absences: Number(summary.absences ?? 0) };
+  }
+  const { data } = await supabase
+    .from("attendance_records")
+    .select("status, session:attendance_sessions!inner(session_date)")
+    .eq("student_id", studentId)
+    .gte("session.session_date", from)
+    .lte("session.session_date", to);
+  const days = new Set<string>();
+  let absences = 0;
+  for (const r of data ?? []) {
+    if (r.status === "present" || r.status === "late") days.add(r.session!.session_date);
+    else if (r.status === "absent") absences += 1;
+  }
+  return { days: days.size, absences };
 }

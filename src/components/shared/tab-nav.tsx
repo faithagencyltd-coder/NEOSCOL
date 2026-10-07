@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { AnimatedSwap } from "@/components/motion/animated-page";
 import { cn } from "@/lib/utils/cn";
+import { TabMore } from "@/components/shared/tab-more";
 import { W } from "@/components/shared/wording";
 
 export type TabLink = { key: string; label: string; href: string; count?: number };
@@ -12,9 +13,12 @@ export type TabLink = { key: string; label: string; href: string; count?: number
  * animée, survol, défilement horizontal sur mobile. Le contenu associé se
  * place dans <TabPanel> pour un fondu enchaîné sans rechargement brutal.
  */
-export function TabNav({ tabs, active, label }: { tabs: TabLink[]; active: string; label: string }) {
+export function TabNav({ tabs, active, label, more = [] }: { tabs: TabLink[]; active: string; label: string; more?: TabLink[] }) {
   return (
-    <nav aria-label={label} className="-mb-px flex gap-1 overflow-x-auto border-b border-border">
+    <nav
+      aria-label={label}
+      className={cn("-mb-px flex gap-1 overflow-x-auto border-b border-border", more.length && "[scrollbar-width:none] lg:flex-wrap lg:overflow-visible [&::-webkit-scrollbar]:hidden")}
+    >
       {tabs.map((tab) => {
         const selected = tab.key === active;
         return (
@@ -43,6 +47,7 @@ export function TabNav({ tabs, active, label }: { tabs: TabLink[]; active: strin
           </Link>
         );
       })}
+      {more.length ? <TabMore tabs={more} active={active} /> : null}
     </nav>
   );
 }

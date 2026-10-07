@@ -14,7 +14,7 @@ import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { recordPayment } from "@/features/finance/actions";
-import { payableForInvoice, searchPayableStudents, type PayableInvoice, type PayableStudent } from "@/features/finance/cashier";
+import { payableForInvoice, payableForStudent, searchPayableStudents, type PayableInvoice, type PayableStudent } from "@/features/finance/cashier";
 import { cn } from "@/lib/utils/cn";
 
 type Labels = { student: string; theStudent: string };
@@ -43,12 +43,15 @@ export function CashierDialog({
   minDate,
   labels,
   initialInvoiceId,
+  initialStudentId,
 }: {
   currency: string;
   today: string;
   minDate: string;
   labels: Labels;
   initialInvoiceId?: string;
+  /** Fiche de l'élève : la caisse s'ouvre directement sur lui (sans ouverture automatique). */
+  initialStudentId?: string;
 }) {
   const [open, setOpen] = useState(Boolean(initialInvoiceId));
   const [round, setRound] = useState(0);
@@ -60,7 +63,7 @@ export function CashierDialog({
         </Button>
       </DialogTrigger>
       <DialogContent title="Enregistrer un paiement" description={`Encaissement à la caisse : choisissez ${labels.theStudent}, la tranche, puis validez pour générer le reçu.`} className="max-w-xl">
-        <CashierFlow key={round} currency={currency} today={today} minDate={minDate} labels={labels} initialInvoiceId={round === 0 ? initialInvoiceId : undefined} onAgain={() => setRound((r) => r + 1)} />
+        <CashierFlow key={round} currency={currency} today={today} minDate={minDate} labels={labels} initialInvoiceId={round === 0 ? initialInvoiceId : undefined} initialStudentId={initialStudentId} onAgain={() => setRound((r) => r + 1)} />
       </DialogContent>
     </Dialog>
   );
@@ -72,6 +75,7 @@ function CashierFlow({
   minDate,
   labels,
   initialInvoiceId,
+  initialStudentId,
   onAgain,
 }: {
   currency: string;
@@ -79,8 +83,10 @@ function CashierFlow({
   minDate: string;
   labels: Labels;
   initialInvoiceId?: string;
+  initialStudentId?: string;
   onAgain: () => void;
 }) {
+  const preset = Boolean(initialInvoiceId || initialStudentId);
   const money = (n: number) =>
     new Intl.NumberFormat("fr-FR", { style: "currency", currency, maximumFractionDigits: currency === "XOF" || currency === "XAF" ? 0 : 2 }).format(n);
   const [query, setQuery] = useState("");
@@ -126,9 +132,9 @@ function CashierFlow({
 
   // Ouverture depuis une ligne de facture : élève et facture déjà choisis.
   useEffect(() => {
-    if (!initialInvoiceId) return;
+    if (!initialInvoiceId && !initialStudentId) return;
     startSearch(async () => {
-      const res = await payableForInvoice(initialInvoiceId);
+      const res = initialInvoiceId ? await payableForInvoice(initialInvoiceId) : await payableForStudent(initialStudentId!);
       const s = res.ok ? res.data : null;
       if (s) {
         setStudent(s);
@@ -136,7 +142,7 @@ function CashierFlow({
         pickInvoice(inv);
       }
     });
-  }, [initialInvoiceId]);
+  }, [initialInvoiceId, initialStudentId]);
 
   // Recherche au fil de la saisie (nom, prénom ou matricule).
   useEffect(() => {
@@ -201,7 +207,7 @@ function CashierFlow({
             {searching ? <Loader2 className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted-foreground" aria-hidden /> : null}
           </div>
         </FormField>
-        {initialInvoiceId && searching && !shown ? <p className="text-sm text-muted-foreground">Chargement de la facture…</p> : null}
+        {preset && searching && !shown ? <p className="text-sm text-muted-foreground">Chargement…</p> : null}
         {shown ? (
           shown.length ? (
             <ul className="grid gap-1.5" data-testid="cashier-results" aria-live="polite">
@@ -259,7 +265,7 @@ function CashierFlow({
           </strong>
           <span className="text-xs text-muted-foreground">{student.matricule ?? "—"}</span>
         </span>
-        {!initialInvoiceId ? (
+        {!preset ? (
           <Button type="button" variant="ghost" size="sm" onClick={() => setStudent(null)}>
             <ArrowLeft aria-hidden /> Changer
           </Button>

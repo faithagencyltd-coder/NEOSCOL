@@ -299,6 +299,7 @@ await shot(acc, "final-08-depenses");
 // Retrait d'un élève + archivage d'un autre
 const others = (await db.query("select id, first_name from students where organization_id='10000000-0000-4000-a000-000000000001' and first_name not in ('Kofi','Aya') and archived_at is null and status='active' order by matricule limit 2")).rows;
 await admin.goto(`${base}/eleves/${others[0].id}`);
+await admin.getByTestId("more-actions").click();
 await admin.getByRole("button", { name: "Statut" }).click();
 dlg = admin.getByRole("dialog");
 await dlg.getByLabel("Nouveau statut").selectOption("withdrawn");
@@ -308,6 +309,7 @@ await dlg.waitFor({ state: "detached" });
 const st = (await db.query("select status, status_reason from students where id=$1", [others[0].id])).rows[0];
 check(st.status === "withdrawn" && st.status_reason === "Déménagement de la famille", `13. élève retiré avec motif (${others[0].first_name})`);
 await admin.goto(`${base}/eleves/${others[1].id}`);
+await admin.getByTestId("more-actions").click();
 await admin.getByRole("button", { name: "Archiver" }).click();
 await admin.getByRole("dialog").getByRole("button", { name: "Archiver" }).click();
 await admin.getByText("Dossier archivé").first().waitFor();
@@ -361,6 +363,7 @@ scenario(11, `établissement B → dossier, certificat, dossier PDF, facture de 
 
 console.log("\n=== SCÉNARIO 12 : élève archivé → portail désactivé, historique conservé ===");
 await admin.goto(`${base}/eleves/${kofi}`);
+await admin.getByTestId("more-actions").click();
 await admin.getByRole("button", { name: "Archiver" }).click();
 await admin.getByRole("dialog").getByRole("button", { name: "Archiver" }).click();
 await admin.getByText("Dossier archivé").first().waitFor();

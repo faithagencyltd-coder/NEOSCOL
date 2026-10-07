@@ -170,7 +170,7 @@ check(await pdfOk(admin, `${base}/api/documents/factures/${inv.id}`), "facture +
 console.log("\n=== Dossier apprenant ===");
 await admin.goto(`${base}/eleves/${learner.id}?onglet=formation`);
 check(await admin.getByText(`Soudure industrielle ${run}`).first().isVisible(), "onglet Formation : formation et session");
-check(await admin.getByText("Reste à payer").isVisible(), "situation financière (payé / reste)");
+check(await admin.getByText("Reste à payer").last().isVisible(), "situation financière (payé / reste)");
 await admin.goto(`${base}/eleves/${learner.id}?onglet=badge`);
 await admin.getByRole("button", { name: "Générer la carte" }).click();
 check(await toast(admin, /Carte générée/), "carte apprenant générée");
