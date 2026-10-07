@@ -1,0 +1,46 @@
+[
+  {
+    "id": "chaos",
+    "seconds": 7.04
+  },
+  {
+    "id": "unifie",
+    "seconds": 4.416
+  },
+  {
+    "id": "inscription",
+    "seconds": 7.211
+  },
+  {
+    "id": "arrivee",
+    "seconds": 5.419
+  },
+  {
+    "id": "classe",
+    "seconds": 4.139
+  },
+  {
+    "id": "bulletins",
+    "seconds": 4.16
+  },
+  {
+    "id": "caisse",
+    "seconds": 8.768
+  },
+  {
+    "id": "communication",
+    "seconds": 4.565
+  },
+  {
+    "id": "documents",
+    "seconds": 5.483
+  },
+  {
+    "id": "pilotage",
+    "seconds": 5.291
+  },
+  {
+    "id": "signature",
+    "seconds": 6.293
+  }
+]

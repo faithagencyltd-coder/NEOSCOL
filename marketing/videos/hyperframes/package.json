@@ -1,0 +1,13 @@
+{
+  "name": "neoscool-hyperframes",
+  "private": true,
+  "description": "Vidéos motion design NeoScool rendues avec HyperFrames.",
+  "scripts": {
+    "lint": "hyperframes lint neoscool-90s",
+    "render": "cd neoscool-90s && hyperframes render -o ../../out/NeoScool-module-scolaire-90s.mp4"
+  },
+  "dependencies": {
+    "gsap": "^3.13.0",
+    "hyperframes": "0.8.140"
+  }
+}
