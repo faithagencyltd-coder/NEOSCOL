@@ -7,6 +7,7 @@ import { CinetPayProvider } from "./cinetpay";
 import { CustomHttpProvider } from "./custom";
 import { customDefinitionSchema, type CustomDefinition } from "./custom-definition";
 import { FedaPayProvider } from "./fedapay";
+import { FeexPayProvider } from "./feexpay";
 import { FlutterwaveProvider } from "./flutterwave";
 import { gatewayDefinition } from "./gateways";
 import { OfflineProvider } from "./offline";
@@ -51,6 +52,16 @@ const simulationStore = {
     if (!admin) return null;
     const { data } = await admin.from("payment_simulations").select("outcome, amount").eq("reference", reference).maybeSingle();
     return data ? { outcome: data.outcome as "completed" | "cancelled" | "failed", amount: data.amount } : null;
+  },
+};
+
+/** Références FeexPay obtenues par le serveur pour un paiement NeoScool (la plus récente d'abord). */
+const feexpayStore = {
+  async requestsFor(reference: string) {
+    const admin = createAdminClient();
+    if (!admin) return [];
+    const { data } = await admin.from("feexpay_requests").select("feexpay_reference").eq("internal_reference", reference).order("created_at", { ascending: false }).limit(5);
+    return (data ?? []).map((r) => r.feexpay_reference);
   },
 };
 
@@ -103,6 +114,16 @@ export function buildProvider(code: string, mode: PaymentMode, config: Record<st
       return new CinetPayProvider({ mode, apiKey: secrets.api_key ?? "", siteId: config.site_id ?? "" });
     case "fedapay":
       return new FedaPayProvider({ mode, secretKey: secrets.secret_key ?? "" });
+    case "feexpay":
+      return new FeexPayProvider({
+        mode,
+        shopId: config.shop_id ?? "",
+        apiKey: secrets.api_key ?? "",
+        siteUrl: baseUrl,
+        store: feexpayStore,
+        // Faux FeexPay des tests automatiques : jamais en production réelle.
+        apiBase: simulationAllowed() && process.env.FEEXPAY_API_BASE ? process.env.FEEXPAY_API_BASE : undefined,
+      });
     case "flutterwave":
       return new FlutterwaveProvider({ mode, secretKey: secrets.secret_key ?? "" });
     case "paystack":

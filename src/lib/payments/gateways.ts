@@ -51,6 +51,16 @@ export const GATEWAYS: GatewayDefinition[] = [
     testNote: "Mode test : environnement « sandbox » FedaPay.",
   },
   {
+    code: "feexpay",
+    name: "FeexPay",
+    description: "Mobile Money au Bénin (MTN, Moov, Celtiis), en Côte d'Ivoire, au Togo, au Sénégal, au Burkina Faso et au Congo. Le payeur choisit son réseau et valide sur son téléphone.",
+    where: "FeexPay › votre boutique › Développeurs / API : identifiant de la boutique (Shop ID) et clé API (fp_…). Collez aussi l'adresse de notification ci-dessous dans FeexPay (URL de callback).",
+    publicFields: [{ key: "shop_id", label: "Identifiant de la boutique (Shop ID)", required: true }],
+    secretFields: [{ key: "api_key", label: "Clé API", hint: "fp_…", required: true }],
+    webhook: true,
+    testNote: "FeexPay n'a pas d'environnement de test : chaque paiement est réel. Vérifiez avec un petit paiement (100 F).",
+  },
+  {
     code: "flutterwave",
     name: "Flutterwave",
     description: "Cartes, Mobile Money et virements dans de nombreux pays africains.",

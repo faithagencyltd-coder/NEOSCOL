@@ -4009,6 +4009,41 @@ export type Database = {
           }
         ]
       }
+      feexpay_requests: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          feexpay_reference: string
+          id: string
+          internal_reference: string
+          mode: string
+          network: string
+          phone_last4: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          feexpay_reference: string
+          id?: string
+          internal_reference: string
+          mode: string
+          network: string
+          phone_last4?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          feexpay_reference?: string
+          id?: string
+          internal_reference?: string
+          mode?: string
+          network?: string
+          phone_last4?: string | null
+        }
+        Relationships: [
+          
+        ]
+      }
       file_objects: {
         Row: {
           bucket: string

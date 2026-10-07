@@ -58,7 +58,8 @@ export const STANDARD_PUBLIC_FIELDS: GatewayField[] = [
   { key: "account_id", label: "Account ID" },
 ];
 
-export const BUILTIN_SCHOOL_ADAPTERS: SchoolAdapter[] = GATEWAYS.filter((g) => g.code !== "offline").map((g) => ({
+// FeexPay : abonnements (établissements, enseignants) seulement pour l'instant.
+export const BUILTIN_SCHOOL_ADAPTERS: SchoolAdapter[] = GATEWAYS.filter((g) => g.code !== "offline" && g.code !== "feexpay").map((g) => ({
   code: g.code,
   name: g.name,
   description: g.description,
