@@ -30,6 +30,7 @@ import {
   setExpenseArchived,
   setFeeTypeActive,
 } from "@/features/finance/actions";
+import { CashierDialog } from "@/features/finance/components/cashier-dialog";
 import { ExpenseDialog } from "@/features/finance/components/expense-dialog";
 import { FeeRateDialog } from "@/features/finance/components/fee-rate-dialog";
 import {
@@ -52,6 +53,9 @@ import { INVOICE_PAYMENT_STATUS, PAYMENT_METHOD } from "@/lib/labels";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/utils/format";
 import { isUuid, pageParam, param } from "@/lib/utils/search-params";
 import { AnimatedMoney } from "@/components/motion/animated-counter";
+import { vocabularyFor } from "@/lib/vocabulary";
+
+const shiftDate = (date: string, days: number) => new Date(Date.parse(`${date}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
 
 export const metadata: Metadata = { title: "Finances" };
 
@@ -86,6 +90,11 @@ export default async function FinancePage({ searchParams }: PageProps<"/finances
     ...(canRead ? [{ key: "rappels", label: "Rappels d'impayés", href: "/finances?onglet=rappels" }] : []),
     ...(canRead ? [{ key: "tarifs", label: "Frais et tarifs", href: "/finances?onglet=tarifs" }] : []),
   ];
+  const today = todayIn(context.organization.timezone);
+  const vocabulary = vocabularyFor(context.organization.type);
+  // « Encaisser » depuis une ligne de facture : la caisse s'ouvre sur cette facture.
+  const encaisserParam = param(params, "encaisser");
+  const encaisser = encaisserParam && isUuid(encaisserParam) ? encaisserParam : undefined;
   const requested = param(params, "onglet");
   const tab = tabs.some((t) => t.key === requested) ? requested! : tabs[0]!.key;
   return (
@@ -96,7 +105,19 @@ export default async function FinancePage({ searchParams }: PageProps<"/finances
           <h1 className="text-2xl font-semibold sm:text-[26px]">Finances</h1>
           <p className="text-sm text-muted-foreground">Factures, encaissements, reçus, dépenses et relances — soldes calculés en base.</p>
         </div>
-        {can(context, "finance.invoices.manage") ? <NewInvoiceButton organizationId={context.organization.id} today={todayIn(context.organization.timezone)} /> : null}
+        <div className="flex flex-wrap gap-2">
+          {can(context, "finance.invoices.manage") ? <NewInvoiceButton organizationId={context.organization.id} today={todayIn(context.organization.timezone)} /> : null}
+          {canRead && can(context, "finance.payments.create") ? (
+            <CashierDialog
+              key={encaisser ?? "caisse"}
+              currency={context.organization.currency}
+              today={today}
+              minDate={shiftDate(today, -90)}
+              labels={{ student: vocabulary.student, theStudent: vocabulary.theStudent }}
+              initialInvoiceId={encaisser}
+            />
+          ) : null}
+        </div>
       </div>
       <TabNav tabs={tabs} active={tab} label="Rubriques financières" />
       <TabPanel active={tab}>
@@ -232,6 +253,7 @@ async function InvoicesSection({ params }: { params: Params }) {
   const context = await requireOrganization();
   const filters = { q: param(params, "q"), status: param(params, "statut"), page: pageParam(params) };
   const { rows, total } = await listInvoices(context.organization.id, filters);
+  const canCash = can(context, "finance.payments.create");
   const money = (n: number | null) => formatMoney(n ?? 0, context.organization.currency);
   return (
     <Card className="overflow-hidden">
@@ -269,6 +291,7 @@ async function InvoicesSection({ params }: { params: Params }) {
               <TH className="text-right">Reste dû</TH>
               <TH>Échéance</TH>
               <TH>Situation</TH>
+              {canCash ? <TH className="text-right">Caisse</TH> : null}
             </tr>
           </THead>
           <tbody>
@@ -303,6 +326,17 @@ async function InvoicesSection({ params }: { params: Params }) {
                   ) : null}
                 </TD>
                 <TD>{row.payment_status ? <StatusBadge value={row.payment_status} map={INVOICE_PAYMENT_STATUS} /> : null}</TD>
+                {canCash ? (
+                  <TD className="text-right">
+                    {row.status === "issued" && Number(row.balance ?? 0) > 0 ? (
+                      <Button asChild variant="secondary" size="sm">
+                        <Link href={`/finances?onglet=paiements&encaisser=${row.invoice_id}`} aria-label={`Encaisser ${row.number}`}>
+                          <Wallet aria-hidden /> Encaisser
+                        </Link>
+                      </Button>
+                    ) : null}
+                  </TD>
+                ) : null}
               </TR>
             ))}
           </tbody>
@@ -617,6 +651,7 @@ async function OutstandingSection({ params }: { params: Params }) {
   const rows = await listOutstandingBalances(context.organization.id, { q: param(params, "q"), overdueOnly });
   const money = (n: number) => formatMoney(n, context.organization.currency);
   const canRemind = can(context, "finance.invoices.manage");
+  const canCash = can(context, "finance.payments.create");
   const totals = rows.reduce((t, r) => ({ balance: t.balance + r.balance, overdue: t.overdue + (r.overdue ? 1 : 0) }), { balance: 0, overdue: 0 });
   return (
     <div className="grid gap-4">
@@ -687,6 +722,13 @@ async function OutstandingSection({ params }: { params: Params }) {
                             {i.number}
                           </Link>
                           <span className="text-xs tabular-nums text-muted-foreground">{money(Number(i.balance))}</span>
+                          {canCash ? (
+                            <Button asChild variant="secondary" size="sm">
+                              <Link href={`/finances?onglet=paiements&encaisser=${i.invoice_id}`}>
+                                <Wallet aria-hidden /> Encaisser
+                              </Link>
+                            </Button>
+                          ) : null}
                           {canRemind && i.is_overdue ? (
                             <ConfirmAction
                               trigger={

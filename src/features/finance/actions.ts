@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { storeUpload } from "@/features/files/server";
 import { authorize } from "@/lib/auth/authorize";
+import { todayIn } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/utils/action-result";
 import { dbErrorMessage } from "@/lib/utils/db-error";
@@ -30,7 +31,11 @@ const paymentSchema = z.object({
   reference: z.string().trim().max(80).optional(),
   payer_name: z.string().trim().max(120).optional(),
   notes: z.string().trim().max(500).optional(),
+  paid_on: isoDate.optional(),
 });
+
+/** Jours en arrière acceptés pour la date d'un encaissement saisi après coup. */
+const MAX_BACKDATE_DAYS = 90;
 
 /**
  * Paiement reçu à l'administration : enregistré = validé. Le solde, le statut
@@ -40,16 +45,26 @@ const paymentSchema = z.object({
 export async function recordPayment(_: ActionResult<{ paymentId: string; balanceAfter: number }> | null, formData: FormData): Promise<ActionResult<{ paymentId: string; balanceAfter: number }>> {
   const auth = await authorize("finance.payments.create");
   if (!auth.ok) return auth;
-  const parsed = paymentSchema.safeParse(readFields(formData, ["invoice_id", "amount", "method", "reference", "payer_name", "notes"]));
+  const parsed = paymentSchema.safeParse(readFields(formData, ["invoice_id", "amount", "method", "reference", "payer_name", "notes", "paid_on"]));
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Champs invalides.", fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  const { paid_on, ...fields } = parsed.data;
+  // Date d'encaissement : aujourd'hui par défaut ; jamais dans le futur, au plus 90 jours en arrière.
+  let paidAt: string | undefined;
+  if (paid_on) {
+    const today = todayIn(auth.context.organization.timezone);
+    const oldest = new Date(Date.parse(`${today}T00:00:00Z`) - MAX_BACKDATE_DAYS * 86_400_000).toISOString().slice(0, 10);
+    if (Number.isNaN(Date.parse(`${paid_on}T00:00:00Z`)) || paid_on > today) return { ok: false, message: "La date du paiement ne peut pas être dans le futur.", fieldErrors: { paid_on: ["Date dans le futur."] } };
+    if (paid_on < oldest) return { ok: false, message: `La date du paiement ne peut pas remonter à plus de ${MAX_BACKDATE_DAYS} jours.`, fieldErrors: { paid_on: ["Date trop ancienne."] } };
+    if (paid_on !== today) paidAt = `${paid_on}T12:00:00Z`;
+  }
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("payments")
-    .insert({ organization_id: auth.context.organization.id, ...parsed.data })
+    .insert({ organization_id: auth.context.organization.id, ...fields, ...(paidAt ? { paid_at: paidAt } : {}) })
     .select("id, number, balance_after")
     .single();
   if (error || !data) return { ok: false, message: dbErrorMessage(error, "Le paiement n'a pas pu être enregistré.") };
-  refresh(parsed.data.invoice_id);
+  refresh(fields.invoice_id);
   return { ok: true, message: `Paiement ${data.number} enregistré. Reste dû : ${Number(data.balance_after ?? 0).toLocaleString("fr-FR")}.`, data: { paymentId: data.id, balanceAfter: Number(data.balance_after ?? 0) } };
 }
 
