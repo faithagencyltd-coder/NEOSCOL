@@ -1,13 +1,13 @@
 [
-  { "id": "chaos", "text": "Diriger une école, c'est jongler chaque jour avec des registres, des reçus, des cahiers… et des parents qui attendent des nouvelles." },
-  { "id": "unifie", "text": "NeoScool réunit tout dans une seule plateforme, de la maternelle au lycée." },
-  { "id": "inscription", "text": "Tout commence par l'inscription : le dossier de l'élève est prêt en quelques minutes, avec sa carte scolaire et son code QR." },
-  { "id": "arrivee", "text": "Le matin, l'élève badge à l'entrée. La tablette l'accueille… et ses parents sont prévenus aussitôt." },
-  { "id": "classe", "text": "En classe, l'enseignant fait l'appel sur son téléphone, et saisit ses notes." },
-  { "id": "bulletins", "text": "En fin de trimestre, moyennes, rangs et bulletins se calculent tout seuls." },
-  { "id": "caisse", "text": "À la caisse, chaque tranche est encaissée, en espèces ou par Mobile Money, avec un reçu immédiat. Les impayés sont suivis, et les familles relancées." },
-  { "id": "communication", "text": "Annonces, SMS, messages : toutes les familles sont informées en un clic." },
-  { "id": "documents", "text": "Certificats et attestations sont générés en un instant, et vérifiables par code QR." },
-  { "id": "pilotage", "text": "Et vous, vous pilotez tout depuis votre tableau de bord, en temps réel, et en toute sécurité." },
-  { "id": "signature", "text": "NeoScool : plus qu'un logiciel, une vision pour l'éducation. Essayez-le gratuitement pendant vingt jours." }
+  {"id": "chaos", "text": "Diriger une école, c'est jongler chaque jour avec des registres, des reçus, des cahiers… et des parents qui attendent des nouvelles."},
+  {"id": "unifie", "text": "NeoScool réunit tout dans une seule plateforme, de la maternelle au lycée."},
+  {"id": "inscription", "text": "Tout commence par l'inscription : le dossier de l'élève est prêt en quelques minutes, avec sa carte scolaire et son code QR."},
+  {"id": "arrivee", "text": "Le matin, l'enseignant badge sur la tablette : son arrivée est enregistrée, et l'appel de son cours s'ouvre."},
+  {"id": "classe", "text": "Il fait l'appel sur son téléphone, saisit ses notes… et les parents d'un élève absent sont prévenus aussitôt."},
+  {"id": "bulletins", "text": "En fin de trimestre, moyennes, rangs et bulletins se calculent tout seuls."},
+  {"id": "caisse", "text": "À la caisse, chaque tranche est encaissée, en espèces ou par Mobile Money, avec un reçu immédiat. Les impayés sont suivis, et les familles relancées."},
+  {"id": "communication", "text": "Annonces, SMS, messages : toutes les familles sont informées en un clic."},
+  {"id": "documents", "text": "Certificats et attestations sont générés en un instant, et vérifiables par code QR."},
+  {"id": "pilotage", "text": "Et vous, vous pilotez tout depuis votre tableau de bord, en temps réel, et en toute sécurité."},
+  {"id": "signature", "text": "NeoScool : plus qu'un logiciel, une vision pour l'éducation. Essayez-le gratuitement pendant vingt jours."}
 ]

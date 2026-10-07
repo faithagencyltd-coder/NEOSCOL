@@ -90,6 +90,20 @@
       .seg { width: 54px; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.16); overflow: hidden; }
       .seg i { display: block; width: 100%; height: 100%; background: linear-gradient(90deg, var(--sky), var(--blue)); transform-origin: left center; }
       .flash { position: absolute; inset: 0; background: radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.95), rgba(58, 160, 255, 0.35) 30%, transparent 60%); opacity: 0; }
+
+      /* ---------- Appareils (vraies pages filmées) ---------- */
+      .copy { left: 90px; width: 560px; }
+      .title { font-size: 54px; }
+      .dev { position: absolute; opacity: 0; }
+      .bezel { position: absolute; background: linear-gradient(160deg, #1b2a5a, #0a1330); box-shadow: 0 50px 110px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.22); }
+      .scr { position: absolute; overflow: hidden; background: #f4f7fc; }
+      .zm { position: absolute; inset: 0; transform-origin: 50% 50%; }
+      .zm video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; }
+      .lapbase { position: absolute; height: 26px; border-radius: 0 0 26px 26px; background: linear-gradient(180deg, #d5ddeb, #8e9bb8); box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45); }
+      .lapbase i { position: absolute; left: 50%; top: 0; width: 180px; height: 10px; margin-left: -90px; border-radius: 0 0 12px 12px; background: rgba(0, 0, 0, 0.18); }
+      .callout { position: absolute; opacity: 0; }
+      .callout .pill { font-size: 22px; padding: 14px 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4); }
+
     </style>
   </head>
   <body>
@@ -116,7 +130,23 @@
       <section id="s9" class="clip" data-start="66.2" data-duration="7.8" data-track-index="1"><div class="inner" id="s9i"></div></section>
       <section id="s10" class="clip" data-start="74" data-duration="8.4" data-track-index="1"><div class="inner" id="s10i"></div></section>
       <section id="s11" class="clip" data-start="82.4" data-duration="8.6" data-track-index="1"><div class="inner" id="s11i"></div></section>
-
+      <!-- Vraies pages de NeoScool filmées (école de démonstration) -->
+      <div id="devices" style="position:absolute;inset:0">
+        <div class="dev" id="d2" style="left:470px;top:330px;width:980px;height:649px"><div class="bezel" style="left:0;top:0;width:980px;height:623px;border-radius:22px"></div><div class="scr" style="left:14px;top:14px;width:952px;height:595px;border-radius:8px"><div class="zm" id="d2z"><video id="v2a" muted playsinline src="assets/ecrans/niveaux.mp4" data-start="11.1" data-duration="3.8" data-media-start="0.8" data-playback-rate="1.2" data-track-index="5"></video></div></div><div class="lapbase" style="left:-70px;top:623px;width:1120px"><i></i></div></div>
+        <div class="dev" id="d3" style="left:650px;top:160px;width:1100px;height:724px"><div class="bezel" style="left:0;top:0;width:1100px;height:698px;border-radius:22px"></div><div class="scr" style="left:14px;top:14px;width:1072px;height:670px;border-radius:8px"><div class="zm" id="d3z"><video id="v3a" muted playsinline src="assets/ecrans/inscription.mp4" data-start="15.3" data-duration="6" data-media-start="0.8" data-playback-rate="2.2" data-track-index="5"></video><video id="v3b" muted playsinline src="assets/ecrans/carte.mp4" data-start="21.3" data-duration="3.0" data-media-start="7.6" data-track-index="5"></video></div></div><div class="lapbase" style="left:-70px;top:698px;width:1240px"><i></i></div></div>
+        <div class="dev" id="d4" style="left:690px;top:180px;width:1100px;height:778px"><div class="bezel" style="left:0;top:0;width:1100px;height:778px;border-radius:40px"></div><div class="scr" style="left:22px;top:22px;width:1056px;height:734px;border-radius:18px"><div class="zm" id="d4z"><video id="v4a" muted playsinline src="assets/ecrans/tablette.mp4" data-start="24.6" data-duration="5.9" data-media-start="0.2" data-track-index="5"></video></div></div></div>
+        <div class="dev" id="d4p" style="left:1110px;top:150px;width:330px;height:686px"><div class="bezel" style="left:0;top:0;width:330px;height:686px;border-radius:50px"></div><div class="scr" style="left:12px;top:12px;width:306px;height:662px;border-radius:40px"><div class="zm" id="d4pz"><video id="v4b" muted playsinline src="assets/ecrans/appel.mp4" data-start="29.8" data-duration="3.1" data-media-start="0" data-track-index="5"></video></div></div></div>
+        <div class="dev" id="d5a" style="left:1080px;top:150px;width:350px;height:729px"><div class="bezel" style="left:0;top:0;width:350px;height:729px;border-radius:50px"></div><div class="scr" style="left:12px;top:12px;width:326px;height:705px;border-radius:40px"><div class="zm" id="d5az"><video id="v5a" muted playsinline src="assets/ecrans/appel.mp4" data-start="33.0" data-duration="7.3" data-media-start="3.2" data-track-index="5"></video></div></div></div>
+        <div class="dev" id="d5b" style="left:700px;top:150px;width:350px;height:729px"><div class="bezel" style="left:0;top:0;width:350px;height:729px;border-radius:50px"></div><div class="scr" style="left:12px;top:12px;width:326px;height:705px;border-radius:40px"><div class="zm" id="d5bz"><video id="v5b" muted playsinline src="assets/ecrans/notes.mp4" data-start="33.4" data-duration="6.9" data-media-start="5" data-playback-rate="1.5" data-track-index="5"></video></div></div></div>
+        <div class="dev" id="d5c" style="left:1460px;top:150px;width:350px;height:729px"><div class="bezel" style="left:0;top:0;width:350px;height:729px;border-radius:50px"></div><div class="scr" style="left:12px;top:12px;width:326px;height:705px;border-radius:40px"><div class="zm" id="d5cz"><video id="v5c" muted playsinline src="assets/ecrans/parent.mp4" data-start="38.4" data-duration="1.95" data-media-start="2.0" data-track-index="5"></video></div></div></div>
+        <div class="dev" id="d6" style="left:650px;top:160px;width:1100px;height:724px"><div class="bezel" style="left:0;top:0;width:1100px;height:698px;border-radius:22px"></div><div class="scr" style="left:14px;top:14px;width:1072px;height:670px;border-radius:8px"><div class="zm" id="d6z"><video id="v6a" muted playsinline src="assets/ecrans/bulletins.mp4" data-start="40.5" data-duration="2.4" data-media-start="0.2" data-track-index="5"></video><video id="v6b" muted playsinline src="assets/ecrans/bulletins.mp4" data-start="42.9" data-duration="4.8" data-media-start="10.4" data-track-index="5"></video></div></div><div class="lapbase" style="left:-70px;top:698px;width:1240px"><i></i></div></div>
+        <div class="dev" id="d7" style="left:650px;top:160px;width:1100px;height:724px"><div class="bezel" style="left:0;top:0;width:1100px;height:698px;border-radius:22px"></div><div class="scr" style="left:14px;top:14px;width:1072px;height:670px;border-radius:8px"><div class="zm" id="d7z"><video id="v7a" muted playsinline src="assets/ecrans/caisse.mp4" data-start="47.9" data-duration="7.6" data-media-start="3.6" data-playback-rate="2" data-track-index="5"></video><video id="v7b" muted playsinline src="assets/ecrans/caisse.mp4" data-start="55.5" data-duration="1.8" data-media-start="20.0" data-track-index="5"></video><video id="v7c" muted playsinline src="assets/ecrans/caisse.mp4" data-start="57.3" data-duration="1.45" data-media-start="28" data-track-index="5"></video></div></div><div class="lapbase" style="left:-70px;top:698px;width:1240px"><i></i></div></div>
+        <div class="dev" id="d8" style="left:650px;top:160px;width:1100px;height:724px"><div class="bezel" style="left:0;top:0;width:1100px;height:698px;border-radius:22px"></div><div class="scr" style="left:14px;top:14px;width:1072px;height:670px;border-radius:8px"><div class="zm" id="d8z"><video id="v8a" muted playsinline src="assets/ecrans/annonce.mp4" data-start="58.9" data-duration="6.6" data-media-start="3.5" data-playback-rate="2.3" data-track-index="5"></video></div></div><div class="lapbase" style="left:-70px;top:698px;width:1240px"><i></i></div></div>
+        <div class="dev" id="d8p" style="left:1530px;top:330px;width:300px;height:621px"><div class="bezel" style="left:0;top:0;width:300px;height:621px;border-radius:50px"></div><div class="scr" style="left:12px;top:12px;width:276px;height:597px;border-radius:40px"><div class="zm" id="d8pz"><video id="v8b" muted playsinline src="assets/ecrans/parent.mp4" data-start="63.4" data-duration="2.75" data-media-start="3.0" data-track-index="5"></video></div></div></div>
+        <div class="dev" id="d9" style="left:650px;top:160px;width:1100px;height:724px"><div class="bezel" style="left:0;top:0;width:1100px;height:698px;border-radius:22px"></div><div class="scr" style="left:14px;top:14px;width:1072px;height:670px;border-radius:8px"><div class="zm" id="d9z"><video id="v9a" muted playsinline src="assets/ecrans/documents.mp4" data-start="66.3" data-duration="3.3" data-media-start="1.6" data-playback-rate="1.4" data-track-index="5"></video><video id="v9b" muted playsinline src="assets/ecrans/documents.mp4" data-start="69.6" data-duration="1.6" data-media-start="9.6" data-track-index="5"></video><video id="v9c" muted playsinline src="assets/ecrans/verifier.mp4" data-start="71.2" data-duration="2.75" data-media-start="0" data-track-index="5"></video></div></div><div class="lapbase" style="left:-70px;top:698px;width:1240px"><i></i></div></div>
+        <div class="dev" id="d10" style="left:650px;top:160px;width:1100px;height:724px"><div class="bezel" style="left:0;top:0;width:1100px;height:698px;border-radius:22px"></div><div class="scr" style="left:14px;top:14px;width:1072px;height:670px;border-radius:8px"><div class="zm" id="d10z"><video id="v10a" muted playsinline src="assets/ecrans/tableau.mp4" data-start="74.1" data-duration="8.0" data-media-start="0.3" data-playback-rate="1.3" data-track-index="5"></video></div></div><div class="lapbase" style="left:-70px;top:698px;width:1240px"><i></i></div></div>
+      </div>
+      <div id="callouts" style="position:absolute;inset:0"></div>
       <!-- Marque et progression des chapitres (scènes 3 à 10) -->
       <div id="brand" class="clip" data-start="15" data-duration="67.4" data-track-index="2">
         <div id="brand-in" class="inner">
@@ -131,8 +161,8 @@
       <audio id="v1" src="assets/audio/chaos.wav" data-start="0.6" data-duration="7.04" data-track-index="11"></audio>
       <audio id="v2" src="assets/audio/unifie.wav" data-start="9.1" data-duration="4.42" data-track-index="11"></audio>
       <audio id="v3" src="assets/audio/inscription.wav" data-start="15.5" data-duration="7.21" data-track-index="11"></audio>
-      <audio id="v4" src="assets/audio/arrivee.wav" data-start="24.9" data-duration="5.42" data-track-index="11"></audio>
-      <audio id="v5" src="assets/audio/classe.wav" data-start="33.5" data-duration="4.14" data-track-index="11"></audio>
+      <audio id="v4" src="assets/audio/arrivee.wav" data-start="24.9" data-duration="6.17" data-track-index="11"></audio>
+      <audio id="v5" src="assets/audio/classe.wav" data-start="33.5" data-duration="6.27" data-track-index="11"></audio>
       <audio id="v6" src="assets/audio/bulletins.wav" data-start="40.9" data-duration="4.16" data-track-index="11"></audio>
       <audio id="v7" src="assets/audio/caisse.wav" data-start="48.3" data-duration="8.77" data-track-index="11"></audio>
       <audio id="v8" src="assets/audio/communication.wav" data-start="59.3" data-duration="4.57" data-track-index="11"></audio>
@@ -243,253 +273,32 @@
                 <div id="s2word" style="font-size:64px;font-weight:800;letter-spacing:-1.5px;white-space:nowrap"><span class="o">.</span>Neo<span class="s">Scool</span></div>
               </div>`;
         h += `</div>`;
-        const levels = [["Baby", "t-orange", "Maternelle", "PS → GS"], ["Backpack", "t-green", "Primaire", "CI → CM2"], ["BookOpen", "t-sky", "Collège", "6e → 3e"], ["GraduationCap", "t-violet", "Lycée", "2nde → Tle"]];
-        h += `<div id="s2line" class="abs" style="left:420px;top:676px;width:1080px;height:4px;border-radius:2px;background:linear-gradient(90deg,#f7931e,#1e9e6a,#3aa0ff,#8b5cf6);transform-origin:left center"></div>`;
-        levels.forEach(([icon, cls, name, sub], i) => {
-          h += `<div class="glass s2card" id="s2c${i}" style="left:${330 + i * 330}px;top:600px;width:300px;height:150px;display:flex;align-items:center;gap:18px;padding:0 24px">
-                  ${tile(icon, cls, 84, 42)}<div><div style="font-size:30px;font-weight:700">${name}</div><div class="muted" style="font-size:17px">${sub}</div></div></div>`;
-        });
         h += `<div class="caption" id="s2cap" style="bottom:96px"><div class="big">${words("Une seule plateforme. De la [h]maternelle au [h]lycée.")}</div></div>`;
         $("#s2i").innerHTML = h;
       })();
 
       // ======================================================================
-      // Scène 3 — inscription
+      // Scènes 3 à 10 — textes (les écrans sont de vraies séquences filmées)
       // ======================================================================
-      (() => {
-        const fields = [["Nom et prénoms", "ADJOVI Ama Grâce"], ["Date de naissance", "12 mars 2014"], ["Classe", "6e A · Collège"], ["Parent / tuteur", "M. Koffi ADJOVI · +229 01 97 …"]];
-        let form = `<div class="glass" id="s3form" style="left:40px;top:40px;width:560px;height:660px;padding:34px">
-            <div style="display:flex;align-items:center;gap:16px">${tile("UserPlus", "t-blue", 64, 32)}<div><div style="font-size:28px;font-weight:700">Nouvelle inscription</div><div class="muted" style="font-size:16px">Année scolaire 2026 – 2027</div></div></div>
-            <div style="position:relative;margin:28px 0 26px;height:30px">
-              <div style="position:absolute;left:15px;right:15px;top:13px;height:4px;background:rgba(255,255,255,.18);border-radius:2px"></div>
-              <div id="s3step" style="position:absolute;left:15px;width:470px;top:13px;height:4px;background:linear-gradient(90deg,#3aa0ff,#1e9e6a);border-radius:2px;transform-origin:left center"></div>
-              ${[0, 1, 2].map((i) => `<div id="s3dot${i}" style="position:absolute;left:${i * 235}px;top:0;width:30px;height:30px;border-radius:50%;background:#1f6bff;border:3px solid #9fd0ff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">${i + 1}</div>`).join("")}
-            </div>`;
-        fields.forEach(([l, v], i) => {
-          form += `<div style="margin-bottom:18px"><div class="muted" style="font-size:15px;margin-bottom:6px">${l}</div>
-                   <div style="height:54px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;padding:0 18px;font-size:21px;font-weight:600">
-                   <span class="s3val" id="s3v${i}" style="display:block;white-space:nowrap">${v}</span><span id="s3caret${i}" style="width:2px;height:26px;background:#3aa0ff;margin-left:2px"></span></div></div>`;
-        });
-        form += `<div id="s3btn" style="margin-top:8px;height:64px;border-radius:18px;background:linear-gradient(135deg,#1f6bff,#3aa0ff);display:flex;align-items:center;justify-content:center;gap:12px;font-size:22px;font-weight:700;position:relative;overflow:hidden;box-shadow:0 16px 40px rgba(31,107,255,.45)">
-                   ${ic("Check", 26, "#fff", 3)} Valider l'inscription<span id="s3ripple" class="abs" style="left:230px;top:-110px;width:280px;height:280px;border-radius:50%;background:rgba(255,255,255,.35)"></span></div>
-                 <div id="s3toast" class="abs" style="right:-40px;top:-30px"><div class="pill" style="background:#1e9e6a;color:#fff;font-size:20px;padding:12px 22px;box-shadow:0 14px 40px rgba(30,158,106,.5)">${ic("BadgeCheck", 24, "#fff")} Matricule CSL-26-0142</div></div>
-               </div>`;
-        const card = `<div id="s3card" class="abs" style="left:190px;top:150px;width:600px;height:376px;border-radius:30px;overflow:hidden;background:linear-gradient(135deg,#0f2a74,#1f6bff 60%,#3aa0ff);box-shadow:0 50px 110px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.4)">
-              <div style="position:absolute;right:-80px;top:-120px;width:340px;height:340px;border-radius:50%;background:rgba(255,255,255,.1)"></div>
-              <div style="display:flex;align-items:center;gap:12px;padding:26px 30px 0"><img src="assets/logo-mark.png" style="width:46px;height:46px" /><div><div style="font-size:15px;opacity:.85;letter-spacing:2px">CARTE SCOLAIRE 2026 – 2027</div><div style="font-size:24px;font-weight:700">CSP Les Lauriers</div></div></div>
-              <div style="display:flex;gap:24px;padding:24px 30px">
-                <div style="width:126px;height:150px;border-radius:18px;background:linear-gradient(160deg,#e8eefb,#c9d6f0);display:flex;align-items:flex-end;justify-content:center;overflow:hidden">${ic("User", 120, "#7e93bf", 1.4)}</div>
-                <div style="flex:1"><div style="font-size:30px;font-weight:800;line-height:1.1">ADJOVI Ama Grâce</div><div style="font-size:18px;opacity:.85;margin-top:8px">Classe : 6e A</div><div style="font-size:18px;opacity:.85">Matricule : CSL-26-0142</div><div class="pill" style="margin-top:12px;background:rgba(255,255,255,.18);font-size:15px;padding:6px 14px">${ic("CircleCheck", 18, "#7ef0c0")} Inscription validée</div></div>
-                <div style="width:132px;height:132px;padding:8px;background:#fff;border-radius:16px;align-self:center">${qr(42, 116)}</div>
-              </div>
-              <div id="s3sheen" class="abs" style="left:-300px;top:-100px;width:160px;height:600px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent)"></div>
-            </div>`;
-        $("#s3i").innerHTML = copy("01", "Inscription", "Un dossier [h]prêt en quelques minutes.", ["Formulaire guidé", "Matricule automatique", "Carte scolaire QR"]) + `<div class="stage">${form}${card}</div>`;
-      })();
-
-      // ======================================================================
-      // Scène 4 — arrivée à l'école
-      // ======================================================================
-      (() => {
-        const tablet = `<div id="s4tab" class="abs" style="left:0;top:150px;width:560px;height:400px;border-radius:36px;padding:14px;background:linear-gradient(160deg,#1d2c5e,#0a1330);box-shadow:0 50px 100px rgba(0,0,0,.5)">
-            <div style="position:absolute;inset:14px;border-radius:26px;overflow:hidden;background:linear-gradient(180deg,#0b1f4f,#123a92)">
-              <div style="display:flex;align-items:center;gap:10px;padding:18px 22px;font-size:17px;font-weight:600;opacity:.9"><img src="assets/logo-mark.png" style="width:30px;height:30px" /> Entrée principale · 07:42</div>
-              <div id="s4frame" class="abs" style="left:166px;top:72px;width:200px;height:200px">
-                ${["0 0", "auto 0", "0 auto", "auto auto"].map((p, i) => { const [t, l] = p.split(" "); return `<div class="s4corner" style="position:absolute;${i < 2 ? "top:0" : "bottom:0"};${i % 2 === 0 ? "left:0" : "right:0"};width:44px;height:44px;border:6px solid #3aa0ff;border-${i < 2 ? "bottom" : "top"}:none;border-${i % 2 === 0 ? "right" : "left"}:none;border-radius:${i === 0 ? "14px 0 0 0" : i === 1 ? "0 14px 0 0" : i === 2 ? "0 0 0 14px" : "0 0 14px 0"}"></div>`; }).join("")}
-                <div id="s4scan" class="abs" style="left:12px;right:12px;top:20px;height:4px;border-radius:2px;background:#3aa0ff;box-shadow:0 0 18px #3aa0ff"></div>
-              </div>
-              <div id="s4hint" class="abs" style="left:0;right:0;bottom:30px;text-align:center;font-size:20px;opacity:.8">Présentez votre carte</div>
-              <div id="s4ok" class="abs" style="left:0;right:0;bottom:0;height:150px;background:linear-gradient(180deg,rgba(30,158,106,.0),rgba(30,158,106,.95) 40%);display:flex;align-items:flex-end;padding:0 28px 22px;gap:16px">
-                <div style="width:64px;height:64px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center">${ic("Check", 40, "#1e9e6a", 3.5)}</div>
-                <div><div style="font-size:26px;font-weight:800">Bonjour Ama, bienvenue !</div><div style="font-size:16px;opacity:.9">07:42 · À l'heure</div></div>
-                <div style="margin-left:auto;display:flex;gap:5px;align-items:center;height:50px">${[0, 1, 2, 3, 4].map((i) => `<div class="s4bar" style="width:6px;height:40px;border-radius:3px;background:#fff;transform-origin:center"></div>`).join("")}</div>
-              </div>
-            </div></div>
-          <div class="abs" style="left:230px;top:548px;width:100px;height:150px;background:linear-gradient(180deg,#1d2c5e,#0a1330);border-radius:0 0 12px 12px"></div>
-          <div class="abs" style="left:150px;top:690px;width:260px;height:18px;border-radius:9px;background:#1d2c5e"></div>`;
-        const mini = `<div id="s4card" class="abs" style="left:-260px;top:470px;width:270px;height:170px;border-radius:18px;background:linear-gradient(135deg,#0f2a74,#1f6bff 60%,#3aa0ff);box-shadow:0 30px 60px rgba(0,0,0,.5);padding:16px;display:flex;gap:12px">
-            <div style="width:62px;height:76px;border-radius:10px;background:#dfe7f7;display:flex;align-items:flex-end;justify-content:center;overflow:hidden">${ic("User", 60, "#7e93bf", 1.4)}</div>
-            <div style="flex:1;font-size:15px;font-weight:700;line-height:1.2">ADJOVI Ama<div style="font-weight:500;opacity:.8;font-size:12px;margin-top:4px">6e A · CSL-26-0142</div></div>
-            <div style="width:74px;height:74px;padding:5px;background:#fff;border-radius:10px;align-self:flex-end">${qr(42, 64)}</div></div>`;
-        const path = `<svg class="abs" style="left:0;top:0;overflow:visible" width="980" height="800"><path id="s4path" d="M 560 330 C 640 330, 640 230, 700 230" fill="none" stroke="#7cc4ff" stroke-width="4" stroke-dasharray="10 10" /></svg>
-            <div id="s4dot" class="abs" style="left:-10px;top:-10px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 0 24px #3aa0ff"></div>`;
-        const phone = `<div class="phone" id="s4phone" style="left:670px;top:40px"><div class="notch"></div><div class="screen" style="background:linear-gradient(180deg,#1b3d9a,#0b1f4f);color:#fff">
-            <div style="text-align:center;padding-top:76px;font-size:17px;opacity:.85">Mardi 7 octobre</div>
-            <div style="text-align:center;font-size:86px;font-weight:700;letter-spacing:-2px;line-height:1.1">07:42</div>
-            <div id="s4notif" class="abs" style="left:14px;right:14px;top:250px;padding:16px;border-radius:22px;background:rgba(255,255,255,.95);color:#0b1f4f;box-shadow:0 20px 40px rgba(0,0,0,.35)">
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;opacity:.7"><img src="assets/logo-mark.png" style="width:22px;height:22px" /> NeoScool · maintenant</div>
-              <div style="font-size:17px;font-weight:700;margin-top:6px">Ama est bien arrivée ✓</div>
-              <div style="font-size:14px;opacity:.75">Entrée à l'école à 07:42.</div>
-            </div></div></div>`;
-        $("#s4i").innerHTML = copy("02", "Arrivée", "Pointage par carte. Parents [h]prévenus en temps réel.", ["Tablette à l'entrée", "Accueil vocal", "Notification parent"]) + `<div class="stage">${tablet}${path}${phone}${mini}</div>`;
-      })();
-
-      // ======================================================================
-      // Scène 5 — en classe
-      // ======================================================================
-      (() => {
-        const cols = ["#3aa0ff", "#f7931e", "#1e9e6a", "#8b5cf6", "#e4572e"];
-        let tt = `<div class="abs" style="left:0;top:150px;transform:rotateY(18deg);transform-origin:right center"><div class="glass" id="s5tt" style="position:relative;width:360px;height:440px;padding:24px">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">${tile("CalendarDays", "t-violet", 52, 26)}<div style="font-size:22px;font-weight:700">Emploi du temps</div></div>
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">`;
-        for (let i = 0; i < 24; i++) tt += `<div class="s5blk" style="height:48px;border-radius:10px;background:${(i * 7) % 5 === 3 ? "rgba(255,255,255,.07)" : cols[(i * 3) % 5]};opacity:.9"></div>`;
-        tt += `</div></div></div>`;
-        const students = [["AA", "ADJOVI Ama", "P"], ["BK", "BIO Kevin", "P"], ["DS", "DOSSOU Sarah", "A"], ["HM", "HOUNSA Marc", "P"], ["KF", "KPADE Fifa", "R"], ["ZY", "ZINSOU Yao", "P"]];
-        const st = { P: ["#1e9e6a", "Présent"], A: ["#e4572e", "Absent"], R: ["#f7931e", "Retard"] };
-        let ph = `<div class="phone" id="s5phone" style="left:360px;top:40px"><div class="notch"></div><div class="screen">
-            <div class="app-bar"><b>Mes cours</b><span>6e A · Mathématiques · 08:00</span></div><div style="padding:10px 14px">`;
-        students.forEach(([ini, n, s], i) => {
-          ph += `<div style="display:flex;align-items:center;gap:10px;padding:9px 6px;border-bottom:1px solid #e1e7f2">
-                  <div style="width:36px;height:36px;border-radius:50%;background:${cols[i % 5]};color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center">${ini}</div>
-                  <div style="font-size:14px;font-weight:600;flex:1">${n}</div>
-                  <div class="s5st" id="s5st${i}" style="font-size:12px;font-weight:700;color:#fff;background:${st[s][0]};padding:5px 10px;border-radius:999px">${st[s][1]}</div></div>`;
-        });
-        ph += `</div><div id="s5valid" class="abs" style="left:14px;right:14px;bottom:18px;height:50px;border-radius:14px;background:linear-gradient(135deg,#1f6bff,#3aa0ff);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px">Valider l'appel</div>
-               <div id="s5toast" class="abs" style="left:24px;right:24px;bottom:80px;padding:12px;border-radius:14px;background:#1e9e6a;color:#fff;font-weight:700;font-size:15px;text-align:center">${ic("CircleCheck", 18, "#fff")} Appel validé · 4 P · 1 A · 1 R</div></div></div>`;
-        const grades = [["ADJOVI Ama", "15"], ["BIO Kevin", "12,5"], ["DOSSOU Sarah", "17"], ["HOUNSA Marc", "9"], ["KPADE Fifa", "14"]];
-        let gc = `<div class="glass" id="s5grades" style="left:700px;top:180px;width:290px;height:400px;padding:22px">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">${tile("PenLine", "t-orange", 50, 24)}<div><div style="font-size:20px;font-weight:700">Devoir n°1</div><div class="muted" style="font-size:14px">Notes sur 20</div></div></div>`;
-        grades.forEach(([n, g], i) => (gc += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.12);font-size:16px"><span>${n}</span><b class="s5g" id="s5g${i}" style="display:block;font-size:20px;color:${parseFloat(g) >= 10 ? "#7ef0c0" : "#ff9a7a"}">${g}</b></div>`));
-        gc += `<div id="s5saved" class="pill" style="margin-top:16px;background:rgba(30,158,106,.25);border:1px solid #1e9e6a;font-size:15px">${ic("Check", 18, "#7ef0c0", 3)} Notes enregistrées</div></div>`;
-        $("#s5i").innerHTML = copy("03", "En classe", "L'appel et les notes, [h]depuis le téléphone.", ["Mes cours du jour", "Présent · Absent · Retard", "Saisie des notes"]) + `<div class="stage">${tt}${ph}${gc}</div>`;
-      })();
-
-      // ======================================================================
-      // Scène 6 — bulletins
-      // ======================================================================
-      (() => {
-        const subs = [["Maths", "15"], ["Français", "13,5"], ["SVT", "16"], ["Anglais", "14"], ["Hist-Géo", "12"], ["PCT", "17"]];
-        let h = "";
-        subs.forEach(([s, n], i) => (h += `<div class="abs s6chip" id="s6c${i}" style="left:${(i % 2) * 190}px;top:${60 + Math.floor(i / 2) * 90}px"><div class="pill" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);font-size:19px">${s} <b style="color:#7cc4ff">${n}</b></div></div>`));
-        const C = 2 * Math.PI * 150;
-        h += `<div id="s6gauge" class="abs" style="left:40px;top:330px;width:360px;height:360px">
-              <svg width="360" height="360" style="position:absolute;inset:0"><defs><linearGradient id="g6" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3aa0ff"/><stop offset="1" stop-color="#1e9e6a"/></linearGradient></defs>
-              <circle cx="180" cy="180" r="150" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.12)" stroke-width="22"/>
-              <circle id="s6arc" cx="180" cy="180" r="150" fill="none" stroke="url(#g6)" stroke-width="22" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C}" transform="rotate(-90 180 180)"/></svg>
-              <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="muted" style="font-size:18px">Moyenne T1</div><div style="font-size:78px;font-weight:800;letter-spacing:-2px;line-height:1"><span id="s6num">0,00</span></div><div class="muted" style="font-size:20px">/ 20</div></div></div>
-            <div id="s6medal" class="abs" style="left:405px;top:430px">${tile("Award", "t-orange", 110, 56)}<div class="pill" style="position:absolute;left:-10px;top:118px;background:#f7931e;color:#fff;font-size:20px">3e / 42</div></div>`;
-        const rows = [["Mathématiques", 4, "15,00"], ["Français", 3, "13,50"], ["SVT", 2, "16,00"], ["Anglais", 2, "14,00"], ["Histoire-Géo", 2, "12,00"], ["PCT", 2, "17,00"]];
-        h += `<div class="doc" id="s6doc" style="left:540px;top:40px;width:430px;height:600px">
-              <div style="background:linear-gradient(135deg,#0b1f4f,#1f6bff);color:#fff;padding:22px 24px"><div style="font-size:14px;letter-spacing:2px;opacity:.85">BULLETIN · 1ER TRIMESTRE</div><div style="font-size:22px;font-weight:700">ADJOVI Ama Grâce · 6e A</div></div>
-              <div style="padding:14px 24px"><div style="display:flex;font-size:13px;font-weight:700;color:#7e8bab;padding:6px 0"><span style="flex:1">Matière</span><span style="width:60px;text-align:center">Coef.</span><span style="width:80px;text-align:right">Moyenne</span></div>
-              ${rows.map((r, i) => `<div class="s6row" id="s6r${i}" style="display:flex;font-size:16px;padding:10px 0;border-top:1px solid #e6ebf4"><span style="flex:1;font-weight:600">${r[0]}</span><span style="width:60px;text-align:center">${r[1]}</span><b style="width:80px;text-align:right;color:#1f6bff">${r[2]}</b></div>`).join("")}
-              <div id="s6tot" style="margin-top:12px;padding:14px 16px;border-radius:12px;background:#eef3fc;display:flex;justify-content:space-between;font-size:17px"><b>Moyenne générale 14,75</b><b style="color:#f7931e">Rang 3e / 42</b></div></div>
-              <div id="s6stamp" class="abs" style="right:26px;bottom:26px;padding:10px 18px;border:4px solid #1e9e6a;border-radius:12px;color:#1e9e6a;font-weight:800;font-size:22px;letter-spacing:1px;transform:rotate(-10deg)">TABLEAU D'HONNEUR</div>
-            </div>`;
-        $("#s6i").innerHTML = copy("04", "Bulletins", "Moyennes, rangs et bulletins [h]calculés automatiquement.", ["Coefficients", "Rangs", "Bulletin PDF"]) + `<div class="stage">${h}</div>`;
-      })();
-
-      // ======================================================================
-      // Scène 7 — la caisse
-      // ======================================================================
-      (() => {
-        const tr = [["Tranche 1", "50 000 FCFA", "paid"], ["Tranche 2", "50 000 FCFA", "due"], ["Tranche 3", "15 mars", "todo"]];
-        let h = `<div class="glass" id="s7sched" style="left:0;top:20px;width:420px;height:330px;padding:24px">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">${tile("CalendarDays", "t-blue", 52, 26)}<div><div style="font-size:20px;font-weight:700">Frais de scolarité</div><div class="muted" style="font-size:14px">150 000 FCFA · 3 tranches</div></div></div>`;
-        tr.forEach(([n, v, s], i) => {
-          h += `<div id="s7row${i}" style="position:relative;display:flex;align-items:center;gap:12px;padding:13px 14px;margin-top:10px;border-radius:14px;background:${s === "due" ? "rgba(247,147,30,.16)" : "rgba(255,255,255,.06)"};border:1px solid ${s === "due" ? "rgba(247,147,30,.7)" : "rgba(255,255,255,.12)"}">
-                <div style="width:30px;height:30px;border-radius:50%;background:${s === "paid" ? "#1e9e6a" : "rgba(255,255,255,.15)"};display:flex;align-items:center;justify-content:center">${s === "paid" ? ic("Check", 18, "#fff", 3) : ""}</div>
-                <div style="flex:1;font-size:17px;font-weight:600">${n}</div><div style="font-size:16px" class="muted">${v}</div>
-                ${s === "due" ? `<div id="s7rowok" class="abs" style="left:-1px;top:-1px;right:-1px;bottom:-1px;border-radius:14px;background:#1e9e6a;display:flex;align-items:center;gap:12px;padding:0 14px;font-size:17px;font-weight:700"><div style="width:30px;height:30px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center">${ic("Check", 18, "#1e9e6a", 3)}</div>Tranche 2 · payée</div>` : ""}
-              </div>`;
-        });
-        h += `</div>`;
-        h += `<div class="phone" id="s7phone" style="left:40px;top:390px;width:240px;height:400px;border-radius:40px;padding:10px"><div class="screen" style="inset:10px;border-radius:32px">
-              <div style="padding:26px 18px 0;text-align:center"><div style="font-size:14px;font-weight:600;color:#7e8bab">Mobile Money</div><div style="font-size:15px;margin-top:6px">Payer à <b>CSP Les Lauriers</b></div><div style="font-size:34px;font-weight:800;margin-top:14px;color:#0b1f4f">50 000</div><div style="font-size:15px;color:#7e8bab">FCFA</div></div>
-              <div id="s7pay" class="abs" style="left:18px;right:18px;bottom:22px;height:48px;border-radius:14px;background:#f7931e;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:16px">Confirmer</div></div></div>`;
-        for (let i = 0; i < 7; i++) h += `<div class="abs s7coin" id="s7coin${i}" style="left:150px;top:560px;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe08a,#f7b52e 55%,#c9861a);box-shadow:0 8px 20px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;color:#7a4c06;font-weight:800;font-size:18px">F</div>`;
-        h += `<div class="abs" style="left:400px;top:290px;width:320px;height:470px;overflow:hidden"><div class="doc" id="s7rec" style="left:30px;top:0;width:260px;height:380px;border-radius:6px;padding:22px">
-                <div style="text-align:center"><img src="assets/logo-mark.png" style="width:40px;height:40px" /><div style="font-weight:800;font-size:17px">REÇU DE PAIEMENT</div><div style="font-size:13px;color:#7e8bab">N° R-2026-0142</div></div>
-                <div style="border-top:2px dashed #d3dbea;margin:14px 0"></div>
-                <div style="font-size:14px;line-height:1.9"><div>Élève : <b>ADJOVI Ama</b></div><div>Classe : <b>6e A</b></div><div>Motif : <b>Tranche 2</b></div><div>Mode : <b>Mobile Money</b></div></div>
-                <div style="font-size:26px;font-weight:800;text-align:center;margin-top:10px;color:#0b1f4f">50 000 FCFA</div>
-                <div id="s7paid" class="abs" style="left:70px;top:318px;padding:6px 16px;border:4px solid #1e9e6a;border-radius:10px;color:#1e9e6a;font-weight:800;font-size:24px;transform:rotate(-12deg)">✓ PAYÉ</div>
-              </div></div>
-              <div class="abs" style="left:410px;top:740px;width:300px;height:56px;border-radius:16px;background:linear-gradient(180deg,#2a3a70,#141f45);box-shadow:0 20px 40px rgba(0,0,0,.45)"><div style="position:absolute;left:20px;right:20px;top:10px;height:8px;border-radius:4px;background:#0a1330"></div><div style="position:absolute;right:22px;top:28px;width:12px;height:12px;border-radius:50%;background:#1e9e6a"></div></div>`;
-        h += `<div class="glass" id="s7left" style="left:660px;top:20px;width:320px;height:200px;padding:24px">
-              <div class="muted" style="font-size:16px">Reste à payer · Ama</div><div style="font-size:48px;font-weight:800;letter-spacing:-1px"><span id="s7rest">100 000</span> <span style="font-size:20px;opacity:.7">FCFA</span></div>
-              <div style="margin-top:14px;height:14px;border-radius:7px;background:rgba(255,255,255,.12);overflow:hidden"><div id="s7bar" style="width:100%;height:100%;border-radius:7px;background:linear-gradient(90deg,#1e9e6a,#3aa0ff);transform-origin:left center"></div></div>
-              <div class="muted" style="font-size:14px;margin-top:8px"><span id="s7pct">33</span> % réglé</div></div>`;
-        h += `<div id="s7relance" class="abs" style="left:740px;top:420px"><div class="glass" style="position:relative;width:250px;padding:18px 20px">${tile("BellRing", "t-red", 56, 28)}<div style="font-size:19px;font-weight:700;margin-top:12px">Relance envoyée</div><div class="muted" style="font-size:15px">12 familles · tranche 2 en retard · par SMS</div></div></div>`;
-        $("#s7i").innerHTML = copy("05", "Caisse", "Chaque tranche encaissée, chaque [o]reçu prêt.", ["Espèces et Mobile Money", "Reçu immédiat", "Relances automatiques"]) + `<div class="stage">${h}</div>`;
-      })();
-
-      // ======================================================================
-      // Scène 8 — communication
-      // ======================================================================
-      const S8_PH = [];
-      (() => {
-        let h = `<svg class="abs" style="left:0;top:0" width="1920" height="1080" id="s8lines"></svg>`;
-        let lines = "";
-        for (let i = 0; i < 12; i++) {
-          const a = Math.PI + (i / 11) * Math.PI;
-          const x = 960 + Math.cos(a) * 700, y = 470 + Math.sin(a) * 300 + 120;
-          S8_PH.push({ x, y });
-          lines += `<line class="s8l" id="s8l${i}" x1="960" y1="430" x2="${x}" y2="${y}" stroke="rgba(124,196,255,.45)" stroke-width="2" stroke-dasharray="6 8"/>`;
-          h += `<div class="abs s8ph" id="s8ph${i}" style="left:${x - 34}px;top:${y - 62}px;width:68px;height:124px;border-radius:16px;background:linear-gradient(160deg,#1d2c5e,#0a1330);padding:5px;box-shadow:0 14px 30px rgba(0,0,0,.4)"><div class="s8scr" id="s8scr${i}" style="width:100%;height:100%;border-radius:12px;background:#132a66;display:flex;align-items:center;justify-content:center">${ic("Bell", 26, "#7cc4ff")}</div></div>`;
-          const icons = ["Megaphone", "MessageCircle", "Mail", "BellRing"];
-          h += `<div class="abs s8msg" id="s8m${i}" style="left:936px;top:406px">${tile(icons[i % 4], ["t-orange", "t-green", "t-sky", "t-red"][i % 4], 48, 24)}</div>`;
-        }
-        h = h.replace(`id="s8lines"></svg>`, `id="s8lines">${lines}</svg>`);
-        h += `<div id="s8school" class="abs" style="left:880px;top:350px">${tile("School", "t-blue", 160, 80, "box-shadow:0 0 80px rgba(58,160,255,.7),0 30px 60px rgba(0,0,0,.4)")}</div>`;
-        const tiles = [["GraduationCap", "t-violet", "Notes", "14,75"], ["ClipboardCheck", "t-green", "Présences", "98 %"], ["Wallet", "t-orange", "Paiements", "À jour"], ["FileText", "t-sky", "Documents", "3"]];
-        h += `<div class="phone" id="s8parent" style="left:810px;top:170px"><div class="notch"></div><div class="screen"><div class="app-bar"><b>Espace parent</b><span>ADJOVI Ama · 6e A</span></div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px">${tiles.map(([icn, c, l, v], i) => `<div class="s8tile" id="s8t${i}" style="background:#fff;border-radius:18px;padding:14px;box-shadow:0 8px 20px rgba(11,31,79,.1)">${tile(icn, c, 44, 22)}<div style="font-size:13px;color:#7e8bab;margin-top:10px">${l}</div><div style="font-size:22px;font-weight:800">${v}</div></div>`).join("")}</div>
-              <div style="margin:0 16px;padding:14px;border-radius:16px;background:#fff7ec;border:1px solid #f7c58a;font-size:14px"><b>Annonce</b> · Réunion parents-professeurs samedi à 9h.</div></div></div>`;
-        h += `<div class="caption" id="s8cap2" style="bottom:70px"><div class="big" style="font-size:48px">${words("Et chaque parent suit [h]tout depuis son téléphone.")}</div></div>`;
-        h += `<div class="caption" id="s8cap" style="bottom:70px"><div class="big">${words("Toutes les familles [h]informées, en un clic.")}</div></div>`;
-        $("#s8i").innerHTML = h;
-      })();
-
-      // ======================================================================
-      // Scène 9 — documents
-      // ======================================================================
-      (() => {
-        const docs = [["Certificat de scolarité", "#1f6bff", -14, 40], ["Attestation d'inscription", "#1e9e6a", -5, 250], ["Reçu de paiement", "#f7931e", 5, 460], ["Relevé de notes", "#8b5cf6", 14, 670]];
-        let h = `<div class="abs" style="left:300px;top:0;width:380px;height:40px;border-radius:14px;background:linear-gradient(180deg,#2a3a70,#141f45)"></div>`;
-        docs.forEach(([t, c, r, x], i) => {
-          h += `<div class="abs s9wrap" id="s9w${i}" style="left:${x}px;top:120px;transform:rotate(${r}deg)"><div class="doc s9doc" id="s9d${i}" style="position:relative;width:270px;height:360px">
-                  <div style="height:14px;background:${c}"></div><div style="padding:20px">
-                  <img src="assets/logo-mark.png" style="width:36px;height:36px" /><div style="font-size:17px;font-weight:800;margin:8px 0 14px;line-height:1.2">${t}</div>
-                  <div class="line" style="margin-bottom:9px"></div><div class="line" style="margin-bottom:9px"></div><div class="line" style="width:70%;margin-bottom:9px"></div><div class="line" style="width:85%"></div>
-                  <div style="position:absolute;left:20px;bottom:22px;font-size:11px;color:#7e8bab;width:120px">Cachet et signature</div>
-                  <div style="position:absolute;right:16px;bottom:16px;width:84px;height:84px">${qr(100 + i, 84)}</div></div></div></div>`;
-        });
-        h += `<div id="s9lens" class="abs" style="left:700px;top:560px;width:170px;height:170px"><div style="width:130px;height:130px;border-radius:50%;border:10px solid #e8eefb;background:rgba(124,196,255,.18);box-shadow:0 20px 50px rgba(0,0,0,.45)"></div><div style="position:absolute;left:112px;top:112px;width:22px;height:70px;border-radius:11px;background:#e8eefb;transform:rotate(-45deg)"></div></div>`;
-        h += `<div id="s9ok" class="abs" style="left:280px;top:560px"><div class="glass" style="position:relative;padding:18px 24px;display:flex;align-items:center;gap:16px;border-color:rgba(30,158,106,.7)">${tile("ShieldCheck", "t-green", 62, 32)}<div><div style="font-size:21px;font-weight:700">Document authentique</div><div class="muted" style="font-size:15px">Vérifié par QR code · NeoScool</div></div></div></div>`;
-        $("#s9i").innerHTML = copy("07", "Documents", "Documents officiels, [h]vérifiables par QR code.", ["Certificats", "Attestations", "Vérification en ligne"]) + `<div class="stage">${h}</div>`;
-      })();
-
-      // ======================================================================
-      // Scène 10 — pilotage
-      // ======================================================================
-      (() => {
-        const kpis = [["Users", "t-blue", "Élèves", "s10k0", "842"], ["ClipboardCheck", "t-green", "Présence", "s10k1", "96 %"], ["Wallet", "t-orange", "Encaissé", "s10k2", "12,4 M"], ["TrendingUp", "t-violet", "Impayés", "s10k3", "-18 %"]];
-        let h = `<div id="s10lap" class="abs" style="left:0;top:70px;width:720px">
-            <div style="width:720px;height:460px;border-radius:24px;padding:14px;background:linear-gradient(160deg,#1d2c5e,#0a1330);box-shadow:0 50px 100px rgba(0,0,0,.5)">
-            <div style="width:100%;height:100%;border-radius:14px;overflow:hidden;background:linear-gradient(180deg,#f6f8fd,#e6ecf8);color:#0b1f4f;display:flex">
-              <div style="width:64px;background:#0b1f4f;display:flex;flex-direction:column;align-items:center;gap:18px;padding-top:18px"><img src="assets/logo-mark.png" style="width:34px;height:34px" />${["LayoutDashboard", "Users", "ClipboardCheck", "Wallet", "FileText"].map((n) => ic(n, 22, "#7cc4ff")).join("")}</div>
-              <div style="flex:1;padding:18px">
-                <div style="font-size:18px;font-weight:800;margin-bottom:12px">Tableau de bord · CSP Les Lauriers</div>
-                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">${kpis.map(([icn, c, l, id, v], i) => `<div class="s10kpi" id="s10kp${i}" style="background:#fff;border-radius:14px;padding:12px;box-shadow:0 6px 16px rgba(11,31,79,.08)">${tile(icn, c, 34, 18)}<div style="font-size:12px;color:#7e8bab;margin-top:8px">${l}</div><div style="font-size:22px;font-weight:800" id="${id}">${v}</div></div>`).join("")}</div>
-                <div style="display:flex;gap:10px;margin-top:12px">
-                  <div style="flex:1.4;background:#fff;border-radius:14px;padding:12px;height:220px;position:relative"><div style="font-size:13px;font-weight:700">Encaissements</div>
-                    <svg width="340" height="170" style="position:absolute;left:12px;bottom:10px"><path id="s10line" d="M0 150 C 40 140, 60 110, 100 115 S 160 70, 200 80 S 270 30, 340 20" fill="none" stroke="#1f6bff" stroke-width="4" stroke-linecap="round"/><path id="s10area" d="M0 150 C 40 140, 60 110, 100 115 S 160 70, 200 80 S 270 30, 340 20 L 340 170 L 0 170 Z" fill="rgba(31,107,255,.12)"/></svg></div>
-                  <div style="flex:1;background:#fff;border-radius:14px;padding:12px;height:220px;position:relative"><div style="font-size:13px;font-weight:700">Présence par classe</div>
-                    <div style="position:absolute;left:14px;right:14px;bottom:14px;height:150px;display:flex;align-items:flex-end;gap:12px">${[0.7, 0.92, 0.85, 0.97, 0.8].map((v, i) => `<div class="s10bar" style="flex:1;height:${v * 100}%;border-radius:8px 8px 4px 4px;background:${i === 3 ? "#f7931e" : "#3aa0ff"};transform-origin:bottom center"></div>`).join("")}</div></div>
-                </div></div></div></div>
-            <div style="width:820px;height:24px;margin-left:-50px;border-radius:0 0 22px 22px;background:linear-gradient(180deg,#c9d3e6,#9aa7c2)"></div></div>`;
-        h += `<div class="phone" id="s10ph" style="left:740px;top:170px;width:250px;height:520px;border-radius:44px;padding:10px"><div class="screen" style="inset:10px;border-radius:36px">
-              <div class="app-bar" style="padding:30px 18px 12px"><b style="font-size:18px">${ic("Sparkles", 18, "#fff")} Assistant</b></div>
-              <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
-                <div id="s10q" style="align-self:flex-end;max-width:85%;background:#1f6bff;color:#fff;padding:10px 12px;border-radius:16px 16px 4px 16px;font-size:13px;font-weight:600">Quels élèves ont plus de 3 absences ce mois-ci ?</div>
-                <div id="s10typing" style="align-self:flex-start;background:#fff;padding:10px 14px;border-radius:16px;display:flex;gap:5px">${[0, 1, 2].map((i) => `<span class="s10d" style="width:7px;height:7px;border-radius:50%;background:#9aa7c2;display:block"></span>`).join("")}</div>
-                <div id="s10a" style="align-self:flex-start;max-width:90%;background:#fff;padding:10px 12px;border-radius:16px 16px 16px 4px;font-size:13px;box-shadow:0 6px 16px rgba(11,31,79,.08)"><b>4 élèves</b> sont concernés :<br/>DOSSOU Sarah (6e A), BIO Kevin (6e A), AGBO Luc (5e B), SOSSA Inès (4e C).</div>
-              </div></div></div>`;
-        const chips = [["Lock", "Rôles et permissions", 0, 720], ["ShieldCheck", "Journal d'audit", 300, 720], ["Search", "Données isolées par école", 560, 720]];
-        chips.forEach(([icn, t, x, y], i) => (h += `<div class="abs s10chip" id="s10ch${i}" style="left:${x}px;top:${y}px"><div class="pill" style="background:rgba(30,158,106,.18);border:1px solid rgba(30,158,106,.8);font-size:18px">${ic(icn, 20, "#7ef0c0")} ${t}</div></div>`));
-        $("#s10i").innerHTML = copy("08", "Pilotage", "Tout l'établissement, [h]en temps réel et [h]en sécurité.", ["Tableau de bord", "Assistant IA", "Rôles et audit"]) + `<div class="stage">${h}</div>`;
-      })();
+      const COPY = {
+        3: ["01", "Inscription", "Un dossier complet [h]en quelques minutes.", ["Assistant en 9 étapes", "Carte scolaire 3D", "Code QR"]],
+        4: ["02", "Arrivée", "L'enseignant badge, [h]l'appel s'ouvre.", ["Tablette de pointage", "Accueil vocal", "Retards enregistrés"]],
+        5: ["03", "En classe", "Appel, notes, [h]familles prévenues.", ["Appel sur téléphone", "Saisie des notes", "Alerte absence"]],
+        6: ["04", "Bulletins", "Moyennes et rangs [h]calculés tout seuls.", ["Coefficients", "Rangs", "Bulletin PDF"]],
+        7: ["05", "Caisse", "Chaque tranche encaissée, [o]reçu immédiat.", ["Espèces", "Mobile Money", "Impayés et relances"]],
+        8: ["06", "Communication", "Toutes les familles [h]informées en un clic.", ["Annonces", "SMS", "Messagerie"]],
+        9: ["07", "Documents", "Des documents [h]officiels et vérifiables.", ["Certificats", "Attestations", "Vérification QR"]],
+        10: ["08", "Pilotage", "Tout l'établissement, [h]en temps réel.", ["Tableau de bord", "Rôles et permissions", "Journal d'audit"]],
+      };
+      for (const [n, c] of Object.entries(COPY)) $(`#s${n}i`).innerHTML = copy(...c);
+      $("#callouts").innerHTML = `
+        <div class="callout" id="c3" style="left:1290px;top:760px"><div class="pill" style="background:linear-gradient(135deg,#1f6bff,#3aa0ff);color:#fff">${ic("IdCard", 24, "#fff")} Carte scolaire + code QR</div></div>
+        <div class="callout" id="c4" style="left:760px;top:820px"><div class="pill" style="background:linear-gradient(135deg,#1e9e6a,#34c48a);color:#fff">${ic("Volume2", 24, "#fff")} « Bonjour Ibrahim, bienvenue »</div></div>
+        <div class="callout" id="c5" style="left:1300px;top:925px"><div class="pill" style="background:linear-gradient(135deg,#e4572e,#ff7a52);color:#fff">${ic("BellRing", 24, "#fff")} Parents prévenus</div></div>
+        <div class="callout" id="c6" style="left:1330px;top:800px"><div class="pill" style="background:linear-gradient(135deg,#8b5cf6,#a989ff);color:#fff">${ic("Award", 24, "#fff")} Moyennes et rangs automatiques</div></div>
+        <div class="callout" id="c7" style="left:1360px;top:800px"><div class="pill" style="background:linear-gradient(135deg,#f7931e,#ffb04d);color:#fff">${ic("Receipt", 24, "#fff")} Reçu immédiat</div></div>
+        <div class="callout" id="c8" style="left:760px;top:850px"><div class="pill" style="background:linear-gradient(135deg,#1f6bff,#3aa0ff);color:#fff">${ic("Send", 24, "#fff")} Publiée : familles notifiées</div></div>
+        <div class="callout" id="c9" style="left:1310px;top:800px"><div class="pill" style="background:linear-gradient(135deg,#1e9e6a,#34c48a);color:#fff">${ic("ShieldCheck", 24, "#fff")} Vérifié par code QR</div></div>`;
 
       // ======================================================================
       // Scène 11 — signature
@@ -504,7 +313,7 @@
                 <div id="s11tag" style="font-size:34px;font-weight:600;margin-top:18px;color:#d9e8ff">Plus qu'un logiciel, une vision pour l'éducation</div>
                 <div style="display:flex;justify-content:center;gap:18px;margin-top:40px;align-items:center">
                   <div id="s11cta" class="pill" style="position:relative;overflow:hidden;background:linear-gradient(135deg,#f7931e,#ffb04d);color:#fff;font-size:28px;padding:18px 36px;box-shadow:0 20px 50px rgba(247,147,30,.5)">${ic("Sparkles", 28, "#fff")} Essai gratuit 20 jours<span id="s11shine" class="abs" style="left:-120px;top:-20px;width:80px;height:120px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.7),transparent);transform:skewX(-20deg)"></span></div>
-                  <div id="s11url" class="pill" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);font-size:26px;padding:18px 30px">neoscol.vercel.app</div>
+                  <div id="s11url" class="pill" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);font-size:26px;padding:18px 30px">www.neoscool.com</div>
                 </div>
                 <div id="s11lv" style="margin-top:34px;font-size:22px;letter-spacing:4px;text-transform:uppercase;color:#9fc4ff">Maternelle · Primaire · Collège · Lycée</div>
               </div>`;
@@ -533,7 +342,7 @@
           if (s < 11) tl.to(`#s${s}i`, { opacity: 0, scale: 0.96, filter: "blur(8px)", duration: 0.45, ease: "power2.in" }, en - 0.45);
           if (s > 1) tl.fromTo(`#fl${s}`, { opacity: 0 }, { opacity: 0.55, duration: 0.18, ease: "power1.out", yoyo: true, repeat: 1 }, st - 0.12);
           // Textes de gauche : mots qui montent, puis étiquettes
-          if ([3, 4, 5, 6, 7, 9, 10].includes(s)) {
+          if (s >= 3 && s <= 10) {
             tl.fromTo(`#s${s}i .eyebrow`, { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.6 }, st + 0.25);
             tl.fromTo(`#s${s}i .title .w`, { opacity: 0, y: 46 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.06 }, st + 0.4);
             tl.fromTo(`#s${s}i .chip`, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.12 }, st + 1.2);
@@ -543,7 +352,6 @@
         for (let i = 0; i < 8; i++) tl.fromTo(`#seg${i}`, { scaleX: 0 }, { scaleX: 1, duration: SC[i + 3] - SC[i + 2], ease: "none" }, SC[i + 2]);
         tl.fromTo("#brand-in", { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.6 }, 15.1);
         tl.to("#brand-in", { opacity: 0, duration: 0.4 }, 82);
-
         // ---------------- Scène 1 ----------------
         S1_ITEMS.forEach((it, i) => {
           const el = `#s1it${i}`;
@@ -561,7 +369,6 @@
         tl.fromTo("#s1cap .w", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.12 }, 0.8);
         tl.fromTo("#s1i", { scale: 1 }, { scale: 1.06, duration: 7.2, ease: "sine.inOut" }, 0);
         tl.fromTo("#fl1", { opacity: 0 }, { opacity: 0.9, duration: 0.25, yoyo: true, repeat: 1 }, 8.0);
-
         // ---------------- Scène 2 ----------------
         const R2 = rng(77);
         for (let i = 0; i < 70; i++) {
@@ -572,132 +379,51 @@
         tl.fromTo("#s2logo img", { scale: 0, rotation: -40 }, { scale: 1, rotation: 0, duration: 0.9, ease: "back.out(1.8)" }, at(2, 0.9));
         tl.fromTo("#s2ring", { scale: 0.5, opacity: 0.9 }, { scale: 2.4, opacity: 0, duration: 1.2, ease: "power2.out" }, at(2, 1.0));
         tl.fromTo("#s2word", { opacity: 0, clipPath: "inset(0 100% 0 0)" }, { opacity: 1, clipPath: "inset(0 0% 0 0)", duration: 0.8, ease: "power2.out" }, at(2, 1.4));
-        tl.to("#s2center", { y: -150, scale: 0.72, duration: 0.9, ease: "power3.inOut" }, at(2, 2.4));
-        tl.fromTo("#s2line", { scaleX: 0 }, { scaleX: 1, duration: 1.0, ease: "power2.inOut" }, at(2, 2.7));
-        tl.fromTo("#s2i .s2card", { opacity: 0, y: 60, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.7, stagger: 0.15, ease: "back.out(1.6)" }, at(2, 2.8));
+        tl.to("#s2center", { y: -250, scale: 0.6, duration: 0.9, ease: "power3.inOut" }, at(2, 2.4));
+        tl.to("#s2cap", { opacity: 0, y: 30, duration: 0.4, ease: "power2.in" }, at(2, 2.2));
         tl.fromTo("#s2cap .w", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.08 }, at(2, 0.6));
 
-        // ---------------- Scène 3 ----------------
-        tl.fromTo("#s3form", { opacity: 0, y: 60, rotationY: -12, transformPerspective: 1400 }, { opacity: 1, y: 0, rotationY: 0, duration: 0.9 }, at(3, 0.3));
-        for (let i = 0; i < 4; i++) {
-          tl.fromTo(`#s3v${i}`, { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.6, ease: "steps(14)" }, at(3, 1.1 + i * 0.7));
-          tl.fromTo(`#s3caret${i}`, { opacity: 0 }, { opacity: 1, duration: 0.05, yoyo: true, repeat: 7 }, at(3, 1.1 + i * 0.7));
-        }
-        tl.fromTo("#s3step", { scaleX: 0 }, { scaleX: 1, duration: 2.8, ease: "power1.inOut" }, at(3, 1.1));
-        for (let i = 0; i < 3; i++) tl.fromTo(`#s3dot${i}`, { backgroundColor: "#1f6bff" }, { backgroundColor: "#1e9e6a", duration: 0.3 }, at(3, 1.2 + i * 1.3));
-        tl.fromTo("#s3btn", { scale: 1 }, { scale: 0.94, duration: 0.12, yoyo: true, repeat: 1, ease: "power1.inOut" }, at(3, 4.3));
-        tl.fromTo("#s3ripple", { scale: 0, opacity: 0.9 }, { scale: 2.6, opacity: 0, duration: 0.7, ease: "power2.out" }, at(3, 4.35));
-        tl.fromTo("#s3toast", { opacity: 0, y: -20, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(2)" }, at(3, 4.6));
-        tl.to("#s3form", { rotationY: 90, x: -120, opacity: 0, duration: 0.6, ease: "power3.in" }, at(3, 5.5));
-        tl.fromTo("#s3card", { opacity: 0, rotationY: -90, transformPerspective: 1600, scale: 0.9 }, { opacity: 1, rotationY: 0, scale: 1, duration: 0.9, ease: "back.out(1.4)" }, at(3, 6.0));
-        tl.to("#s3card", { rotationY: 10, rotationX: -6, duration: 1.4, ease: "sine.inOut", yoyo: true, repeat: 1 }, at(3, 6.9));
-        tl.fromTo("#s3sheen", { x: 0 }, { x: 1100, duration: 1.1, ease: "power2.inOut" }, at(3, 6.9));
-
-        // ---------------- Scène 4 ----------------
-        tl.fromTo("#s4tab", { opacity: 0, x: -60 }, { opacity: 1, x: 0, duration: 0.8 }, at(4, 0.3));
-        tl.fromTo("#s4phone", { opacity: 0, y: 80 }, { opacity: 1, y: 0, duration: 0.8 }, at(4, 0.5));
-        tl.fromTo("#s4scan", { y: 0 }, { y: 150, duration: 0.7, ease: "sine.inOut", yoyo: true, repeat: 2 }, at(4, 0.6));
-        tl.fromTo("#s4card", { x: 0, y: 0, rotation: -10 }, { x: 410, y: -300, rotation: 0, duration: 0.9, ease: "power3.inOut" }, at(4, 1.1));
-        tl.to("#s4card", { opacity: 0, scale: 0.9, duration: 0.4 }, at(4, 2.6));
-        tl.to("#s4i .s4corner", { borderColor: "#1e9e6a", duration: 0.2 }, at(4, 2.1));
-        tl.fromTo("#s4frame", { scale: 1 }, { scale: 1.1, duration: 0.15, yoyo: true, repeat: 1 }, at(4, 2.1));
-        tl.to(["#s4hint", "#s4scan"], { opacity: 0, duration: 0.2 }, at(4, 2.1));
-        tl.fromTo("#s4ok", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.5 }, at(4, 2.2));
-        tl.fromTo("#s4i .s4bar", { scaleY: 0.3 }, { scaleY: 1, duration: 0.18, stagger: { each: 0.05, yoyo: true, repeat: 9 }, ease: "sine.inOut" }, at(4, 2.4));
-        const P4 = { p: 0 };
-        const bez = (t, a, b, c, d) => (1 - t) ** 3 * a + 3 * (1 - t) ** 2 * t * b + 3 * (1 - t) * t * t * c + t ** 3 * d;
-        tl.fromTo("#s4path", { strokeDashoffset: 400, opacity: 0 }, { strokeDashoffset: 0, opacity: 1, duration: 0.9, ease: "power2.inOut" }, at(4, 2.8));
-        tl.fromTo(P4, { p: 0 }, { p: 1, duration: 0.9, ease: "power2.inOut", onUpdate: () => { const t = P4.p; gsap.set("#s4dot", { x: bez(t, 560, 640, 640, 700), y: bez(t, 330, 330, 230, 230), opacity: t > 0 && t < 1 ? 1 : 0 }); } }, at(4, 2.8));
-        tl.fromTo("#s4notif", { opacity: 0, y: -80, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "back.out(1.8)" }, at(4, 3.8));
-        tl.fromTo("#s4phone", { rotation: 0 }, { rotation: 3, duration: 0.06, yoyo: true, repeat: 7, ease: "none" }, at(4, 3.8));
-
-        // ---------------- Scène 5 ----------------
-        tl.fromTo("#s5tt", { opacity: 0, x: -80 }, { opacity: 1, x: 0, duration: 0.8 }, at(5, 0.3));
-        tl.fromTo("#s5i .s5blk", { scale: 0, opacity: 0 }, { scale: 1, opacity: 0.9, duration: 0.35, stagger: 0.03, ease: "back.out(2)" }, at(5, 0.6));
-        tl.fromTo("#s5phone", { opacity: 0, y: 90 }, { opacity: 1, y: 0, duration: 0.8 }, at(5, 0.4));
-        tl.fromTo("#s5i .s5st", { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.35, stagger: 0.32, ease: "back.out(2.5)" }, at(5, 1.3));
-        tl.fromTo("#s5valid", { scale: 1 }, { scale: 0.94, duration: 0.12, yoyo: true, repeat: 1 }, at(5, 3.5));
-        tl.fromTo("#s5toast", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: "back.out(2)" }, at(5, 3.7));
-        tl.fromTo("#s5grades", { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 0.8 }, at(5, 1.0));
-        tl.fromTo("#s5i .s5g", { opacity: 0, scale: 1.8 }, { opacity: 1, scale: 1, duration: 0.35, stagger: 0.22, ease: "back.out(2)" }, at(5, 4.2));
-        tl.fromTo("#s5saved", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.4 }, at(5, 5.5));
-
-        // ---------------- Scène 6 ----------------
-        tl.fromTo("#s6i .s6chip", { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.5, stagger: 0.08 }, at(6, 0.3));
-        for (let i = 0; i < 6; i++) tl.to(`#s6c${i}`, { x: 200 - (i % 2) * 190, y: 450 - (60 + Math.floor(i / 2) * 90), scale: 0.3, opacity: 0, duration: 0.6, ease: "power3.in" }, at(6, 1.0 + i * 0.12));
-        tl.fromTo("#s6gauge", { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.7, ease: "back.out(1.6)" }, at(6, 0.6));
-        const C6 = 2 * Math.PI * 150;
-        tl.fromTo("#s6arc", { strokeDashoffset: C6 }, { strokeDashoffset: C6 * (1 - 14.75 / 20), duration: 1.6, ease: "power2.inOut" }, at(6, 1.4));
-        const N6 = { v: 0 };
-        tl.fromTo(N6, { v: 0 }, { v: 14.75, duration: 1.6, ease: "power2.inOut", onUpdate: () => { document.getElementById("s6num").textContent = N6.v.toFixed(2).replace(".", ","); } }, at(6, 1.4));
-        tl.fromTo("#s6medal", { opacity: 0, scale: 0, rotation: -30 }, { opacity: 1, scale: 1, rotation: 0, duration: 0.6, ease: "back.out(2.4)" }, at(6, 3.0));
-        tl.fromTo("#s6doc", { opacity: 0, x: 120, rotationY: -25, transformPerspective: 1400 }, { opacity: 1, x: 0, rotationY: 0, duration: 0.9 }, at(6, 2.6));
-        tl.fromTo("#s6i .s6row", { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.4, stagger: 0.12 }, at(6, 3.2));
-        tl.fromTo("#s6tot", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4 }, at(6, 4.1));
-        tl.fromTo("#s6stamp", { opacity: 0, scale: 2.6 }, { opacity: 1, scale: 1, duration: 0.35, ease: "power4.in" }, at(6, 4.8));
-        tl.fromTo("#s6doc", { y: 0 }, { y: 6, duration: 0.08, yoyo: true, repeat: 1 }, at(6, 5.15));
-
-        // ---------------- Scène 7 ----------------
-        tl.fromTo("#s7sched", { opacity: 0, y: -40 }, { opacity: 1, y: 0, duration: 0.8 }, at(7, 0.3));
-        tl.fromTo("#s7row1", { scale: 1 }, { scale: 1.04, duration: 0.3, yoyo: true, repeat: 3, ease: "sine.inOut" }, at(7, 1.0));
-        tl.fromTo("#s7phone", { opacity: 0, y: 80 }, { opacity: 1, y: 0, duration: 0.8 }, at(7, 0.7));
-        tl.fromTo("#s7pay", { scale: 1 }, { scale: 0.92, duration: 0.12, yoyo: true, repeat: 1 }, at(7, 2.2));
-        for (let i = 0; i < 7; i++) {
-          tl.fromTo(`#s7coin${i}`, { x: 0, y: 0, opacity: 0, scale: 0.4 }, { x: 160, y: -240 - (i % 3) * 30, opacity: 1, scale: 1, duration: 0.35, ease: "power2.out" }, at(7, 2.4 + i * 0.1));
-          tl.to(`#s7coin${i}`, { x: 400, y: -150, scale: 0.5, opacity: 0, duration: 0.35, ease: "power2.in" }, at(7, 2.75 + i * 0.1));
-        }
-        tl.fromTo("#s7rec", { y: 400 }, { y: 30, duration: 1.4, ease: "power1.inOut" }, at(7, 3.3));
-        tl.fromTo("#s7paid", { opacity: 0, scale: 2.5 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power4.in" }, at(7, 4.8));
-        tl.fromTo("#s7rowok", { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2)" }, at(7, 5.0));
-        tl.fromTo("#s7left", { opacity: 0, x: 60 }, { opacity: 1, x: 0, duration: 0.8 }, at(7, 0.9));
-        tl.fromTo("#s7bar", { scaleX: 0.33 }, { scaleX: 0.66, duration: 1.0, ease: "power2.inOut" }, at(7, 5.2));
-        const N7 = { v: 100000 };
-        tl.fromTo(N7, { v: 100000 }, { v: 50000, duration: 1.0, ease: "power2.inOut", onUpdate: () => { const v7 = Math.round(N7.v / 500) * 500; document.getElementById("s7rest").textContent = String(v7).replace(/\B(?=(\d{3})+(?!\d))/g, " "); document.getElementById("s7pct").textContent = String(Math.round(100 - (N7.v / 150000) * 100)); } }, at(7, 5.2));
-        tl.fromTo("#s7relance", { opacity: 0, x: 120 }, { opacity: 1, x: 0, duration: 0.6, ease: "back.out(1.6)" }, at(7, 7.2));
-
-        // ---------------- Scène 8 ----------------
-        tl.fromTo("#s8school", { opacity: 0, scale: 0.3 }, { opacity: 1, scale: 1, duration: 0.7, ease: "back.out(2)" }, at(8, 0.3));
-        tl.fromTo("#s8i .s8ph", { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.5, stagger: 0.05, ease: "back.out(2)" }, at(8, 0.5));
-        tl.fromTo("#s8i .s8l", { strokeDashoffset: 60, opacity: 0 }, { strokeDashoffset: 0, opacity: 1, duration: 0.6, stagger: 0.04 }, at(8, 0.8));
-        S8_PH.forEach((p, i) => {
-          tl.fromTo(`#s8m${i}`, { x: 0, y: 0, opacity: 0, scale: 0.4 }, { x: p.x - 960, y: p.y - 430, opacity: 1, scale: 1, duration: 0.7, ease: "power2.inOut" }, at(8, 1.2 + i * 0.14));
-          tl.to(`#s8m${i}`, { opacity: 0, scale: 0.4, duration: 0.2 }, at(8, 1.9 + i * 0.14));
-          tl.fromTo(`#s8scr${i}`, { backgroundColor: "#132a66" }, { backgroundColor: "#1f6bff", duration: 0.25 }, at(8, 1.9 + i * 0.14));
-        });
-        tl.to(["#s8i .s8ph", "#s8lines", "#s8school"], { opacity: 0, scale: 0.8, duration: 0.5, ease: "power2.in" }, at(8, 4.2));
-        tl.fromTo("#s8parent", { opacity: 0, y: 160, scale: 0.85 }, { opacity: 1, y: -30, scale: 1, duration: 0.8 }, at(8, 4.4));
-        tl.fromTo("#s8i .s8tile", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.4, stagger: 0.1, ease: "back.out(2)" }, at(8, 4.9));
-        tl.fromTo("#s8cap .w", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.08 }, at(8, 0.6));
-        tl.to("#s8cap", { opacity: 0, duration: 0.3 }, at(8, 4.2));
-        tl.fromTo("#s8cap2 .w", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.06 }, at(8, 4.8));
-
-        // ---------------- Scène 9 ----------------
-        for (let i = 0; i < 4; i++) tl.fromTo(`#s9d${i}`, { opacity: 0, y: -300, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.7, ease: "back.out(1.4)" }, at(9, 0.5 + i * 0.25));
-        tl.fromTo("#s9lens", { x: 300, y: 200, opacity: 0 }, { x: -300, y: -200, opacity: 1, duration: 1.0, ease: "power3.inOut" }, at(9, 2.6));
-        tl.to("#s9lens", { x: -315, y: -212, duration: 0.25, yoyo: true, repeat: 3, ease: "sine.inOut" }, at(9, 3.6));
-        tl.fromTo("#s9d1", { boxShadow: "0 40px 80px rgba(0,0,0,.4)" }, { boxShadow: "0 0 0 6px #1e9e6a, 0 40px 80px rgba(0,0,0,.4)", duration: 0.3 }, at(9, 4.2));
-        tl.fromTo("#s9ok", { opacity: 0, y: 30, scale: 0.85 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(2)" }, at(9, 4.3));
-
-        // ---------------- Scène 10 ----------------
-        tl.fromTo("#s10lap", { opacity: 0, y: 80, rotationX: 18, transformPerspective: 1600 }, { opacity: 1, y: 0, rotationX: 0, duration: 1.0 }, at(10, 0.3));
-        tl.fromTo("#s10i .s10kpi", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, stagger: 0.12 }, at(10, 0.9));
-        const K = { a: 0 };
-        tl.fromTo(K, { a: 0 }, { a: 1, duration: 1.4, ease: "power2.out", onUpdate: () => {
-          document.getElementById("s10k0").textContent = String(Math.round(842 * K.a));
-          document.getElementById("s10k1").textContent = Math.round(96 * K.a) + " %";
-          document.getElementById("s10k2").textContent = (12.4 * K.a).toFixed(1).replace(".", ",") + " M";
-          document.getElementById("s10k3").textContent = "-" + Math.round(18 * K.a) + " %";
-        } }, at(10, 1.0));
-        tl.fromTo("#s10line", { strokeDasharray: 460, strokeDashoffset: 460 }, { strokeDashoffset: 0, duration: 1.4, ease: "power2.inOut" }, at(10, 1.1));
-        tl.fromTo("#s10area", { opacity: 0 }, { opacity: 1, duration: 0.8 }, at(10, 1.8));
-        tl.fromTo("#s10i .s10bar", { scaleY: 0 }, { scaleY: 1, duration: 0.6, stagger: 0.08, ease: "back.out(1.6)" }, at(10, 1.3));
-        tl.fromTo("#s10ph", { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 0.8 }, at(10, 1.6));
-        tl.fromTo("#s10q", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.4 }, at(10, 2.4));
-        tl.fromTo("#s10typing", { opacity: 0 }, { opacity: 1, duration: 0.2 }, at(10, 2.9));
-        tl.fromTo("#s10i .s10d", { y: 0 }, { y: -5, duration: 0.2, stagger: { each: 0.1, yoyo: true, repeat: 3 } }, at(10, 2.9));
-        tl.to("#s10typing", { opacity: 0, duration: 0.15 }, at(10, 3.7));
-        tl.fromTo("#s10a", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.45 }, at(10, 3.8));
-        tl.fromTo("#s10i .s10chip", { opacity: 0, y: 24, scale: 0.85 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, stagger: 0.15, ease: "back.out(2)" }, at(10, 5.2));
+        // ---------------- Appareils : entrée / sortie, zooms, bulles ----------------
+        const dev = (id, a, b, from = { y: 70, rotationX: 10 }) => {
+          tl.fromTo(id, { opacity: 0, scale: 0.94, ...from, transformPerspective: 1800 }, { opacity: 1, scale: 1, x: 0, y: 0, rotationX: 0, rotationY: 0, duration: 0.8 }, a);
+          tl.to(id, { opacity: 0, scale: 0.97, duration: 0.4, ease: "power2.in" }, b - 0.42);
+        };
+        const zoom = (id, a, d, s, ox, oy) => {
+          tl.fromTo(id, { scale: 1, transformOrigin: `${ox}% ${oy}%` }, { scale: s, transformOrigin: `${ox}% ${oy}%`, duration: 0.9, ease: "power2.inOut" }, a);
+          tl.to(id, { scale: 1, duration: 0.7, ease: "power2.inOut" }, a + d);
+        };
+        const pop = (id, a, b) => {
+          tl.fromTo(id, { opacity: 0, y: 24, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(2.2)" }, a);
+          tl.to(id, { opacity: 0, y: -10, duration: 0.3 }, b - 0.35);
+        };
+        dev("#d2", 10.9, 15, { y: 90, rotationX: 14 });
+        dev("#d3", 15.15, 24.4, { x: 80, rotationY: -10 });
+        zoom("#d3z", 22.0, 1.5, 1.4, 22, 50);
+        pop("#c3", 22.2, 24.4);
+        dev("#d4", 24.5, 30.9, { x: -60, rotationY: 8 });
+        zoom("#d4z", 26.8, 2.2, 1.28, 30, 40);
+        pop("#c4", 27.0, 30.4);
+        dev("#d4p", 29.9, 33, { y: 120 });
+        dev("#d5a", 33.0, 40.4, { y: 120 });
+        dev("#d5b", 33.3, 40.4, { y: 120 });
+        dev("#d5c", 38.2, 40.4, { y: 120 });
+        pop("#c5", 38.9, 40.4);
+        dev("#d6", 40.5, 47.8, { x: 80, rotationY: -10 });
+        zoom("#d6z", 43.6, 3.0, 1.32, 62, 58);
+        pop("#c6", 43.8, 47.8);
+        dev("#d7", 47.9, 58.8, { x: 80, rotationY: -10 });
+        zoom("#d7z", 55.5, 1.4, 1.35, 50, 45);
+        pop("#c7", 55.7, 58.8);
+        dev("#d8", 58.9, 66.2, { x: 80, rotationY: -10 });
+        dev("#d8p", 63.2, 66.2, { y: 140 });
+        pop("#c8", 64.0, 66.2);
+        dev("#d9", 66.3, 74, { x: 80, rotationY: -10 });
+        zoom("#d9z", 71.4, 1.6, 1.3, 50, 40);
+        pop("#c9", 71.5, 74);
+        dev("#d10", 74.1, 82.4, { y: 90, rotationX: 12 });
+        zoom("#d10z", 75.6, 2.4, 1.22, 35, 30);
+        // Légère respiration des appareils (jamais figés)
+        ["#d3", "#d6", "#d7", "#d8", "#d9", "#d10"].forEach((id, i) => tl.fromTo(id, { rotationY: 0 }, { rotationY: -2, duration: 3, ease: "sine.inOut", yoyo: true, repeat: 1 }, [16.2, 41.5, 49, 60, 67.3, 75.2][i]));
 
         // ---------------- Scène 11 ----------------
         const R11 = rng(11);

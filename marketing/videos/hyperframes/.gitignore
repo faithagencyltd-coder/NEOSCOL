@@ -4,3 +4,5 @@ neoscool-90s/snapshots
 neoscool-90s/.hyperframes
 # Audio régénéré par les scripts (voix Kokoro + musique de synthèse)
 neoscool-90s/assets/audio
+# Séquences filmées du logiciel (régénérées par scripts/record-pages.mjs)
+neoscool-90s/assets/ecrans
