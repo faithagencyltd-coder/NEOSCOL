@@ -88,10 +88,21 @@ export function reportConfig(raw: unknown, organization: DocOrganization): Repor
     primary_color: typeof c.primary_color === "string" ? c.primary_color : organization.primary_color,
     accent_color: typeof c.accent_color === "string" ? c.accent_color : organization.accent_color,
     footer_note: typeof c.footer_note === "string" ? c.footer_note : "",
+    decimals: [0, 1, 2, 3].includes(Number(c.decimals)) ? Number(c.decimals) : 2,
   };
 }
 
 /** Données calculées d'un bulletin (report_cards.data ou aperçu). */
+/** Détail du calcul conservé par le moteur (absent des bulletins calculés avant cette version). */
+function subjectTrace(detail: unknown): Pick<ReportSubjectRow, "formula" | "notes"> {
+  if (!detail || typeof detail !== "object") return {};
+  const d = detail as Record<string, unknown>;
+  const notes = Array.isArray(d.notes)
+    ? (d.notes as Record<string, unknown>[]).map((n) => ({ title: String(n.title ?? ""), score: Number(n.score), max: Number(n.max), on20: Number(n.on20) }))
+    : [];
+  return { formula: typeof d.formula === "string" ? d.formula : null, notes };
+}
+
 export function reportCardData(data: unknown) {
   const d = (data && typeof data === "object" && !Array.isArray(data) ? data : {}) as Record<string, unknown>;
   const columns: ReportColumn[] = Array.isArray(d.columns)
@@ -110,6 +121,7 @@ export function reportCardData(data: unknown) {
         min: num(s.min),
         max: num(s.max),
         mention: typeof s.mention === "string" ? s.mention : null,
+        ...subjectTrace(s.detail),
       }))
     : [];
   const attendance = d.attendance && typeof d.attendance === "object" ? (d.attendance as Record<string, number>) : null;

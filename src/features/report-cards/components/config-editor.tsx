@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { saveReportConfig } from "@/features/report-cards/actions";
-import { BOOLEAN_OPTIONS, type ReportConfig } from "@/features/report-cards/config";
+import { BOOLEAN_OPTIONS, CALCULATION_LABELS, DEFAULT_GROUPS, ROUNDING_LABELS, type ReportConfig } from "@/features/report-cards/config";
 import { ASSESSMENT_KINDS } from "@/lib/labels";
 import { cn } from "@/lib/utils/cn";
 import { useFeedbackAction } from "@/components/motion/use-feedback-action";
@@ -39,6 +39,34 @@ function move<T>(list: T[], index: number, delta: number): T[] {
   if (target < 0 || target >= next.length) return list;
   [next[index], next[target]] = [next[target]!, next[index]!];
   return next;
+}
+
+/** Exemple chiffré de la règle choisie : interros 12, 14, 10 ; devoirs 13, 15, 14, 16. */
+function FormulaExample({ config }: { config: ReportConfig }) {
+  const sample: Record<string, number[]> = { test: [12, 14, 10], homework: [13, 15, 14, 16] };
+  const terms: { value: number; weight: number; label: string }[] = [];
+  for (const g of config.groups) {
+    const notes = g.kinds.flatMap((k) => sample[k] ?? []);
+    if (!notes.length) continue;
+    if (g.mode === "average") {
+      const avg = notes.reduce((a, b) => a + b, 0) / notes.length;
+      terms.push({ value: avg, weight: g.weight, label: `moy. ${g.label.toLowerCase()} ${avg.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}` });
+    } else {
+      for (const n of notes) terms.push({ value: n, weight: g.weight, label: String(n) });
+    }
+  }
+  const total = terms.reduce((a, t) => a + t.weight, 0);
+  if (!total) return null;
+  const result = terms.reduce((a, t) => a + t.value * t.weight, 0) / total;
+  const shown = terms.map((t) => (t.weight === 1 ? t.label : `${t.label} × ${t.weight}`)).join(" + ");
+  return (
+    <div className="rounded-lg bg-muted/60 p-3 text-sm" data-testid="rc-formula-example">
+      <p className="font-medium">Exemple : interrogations 12, 14, 10 · devoirs 13, 15, 14, 16</p>
+      <p className="mt-1 font-mono text-xs">
+        ({shown}) ÷ {total.toLocaleString("fr-FR")} = {result.toFixed(config.decimals).replace(".", ",")}
+      </p>
+    </div>
+  );
 }
 
 /** Éditeur du bulletin : colonnes, pondérations, calcul, mentions, décisions, signatures, identité visuelle. */
@@ -108,16 +136,154 @@ export function ReportConfigEditor({ initial }: { initial: ReportConfig }) {
               <div className="grid gap-1.5 sm:col-span-2">
                 <Label htmlFor="rc-calc">Règle de calcul de la moyenne par matière</Label>
                 <Select id="rc-calc" value={config.calculation} onChange={(e) => set("calculation", e.target.value as ReportConfig["calculation"])}>
-                  <option value="assessments">Moyenne pondérée des évaluations (coefficient de chaque évaluation)</option>
-                  <option value="columns">Moyenne pondérée des colonnes (pondération de chaque colonne)</option>
+                  {(Object.keys(CALCULATION_LABELS) as ReportConfig["calculation"][]).map((key) => (
+                    <option key={key} value={key}>
+                      {CALCULATION_LABELS[key]}
+                    </option>
+                  ))}
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Moyenne générale = Σ (moyenne de la matière × coefficient de la matière) ÷ Σ coefficients. Recalcul automatique à chaque note ou coefficient modifié.
+                  Notes ramenées sur 20 quel que soit le barème. Une note vide n&apos;est jamais comptée comme zéro. Moyenne générale = Σ (moyenne de la
+                  matière × coefficient de la matière) ÷ Σ coefficients des matières notées. Recalcul automatique à chaque note ou coefficient modifié.
                 </p>
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="rc-decimals">Nombre de décimales</Label>
+                <Select id="rc-decimals" value={String(config.decimals)} onChange={(e) => set("decimals", Number(e.target.value))}>
+                  {[0, 1, 2, 3].map((d) => (
+                    <option key={d} value={d}>
+                      {d === 0 ? "Aucune (14)" : `${d} (${(14).toFixed(d).replace(".", ",")})`}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="rc-rounding">Règle d&apos;arrondi</Label>
+                <Select id="rc-rounding" value={config.rounding} onChange={(e) => set("rounding", e.target.value as ReportConfig["rounding"])}>
+                  {(Object.keys(ROUNDING_LABELS) as ReportConfig["rounding"][]).map((key) => (
+                    <option key={key} value={key}>
+                      {ROUNDING_LABELS[key]}
+                    </option>
+                  ))}
+                </Select>
               </div>
             </CardContent>
           </Card>
 
+          {config.calculation === "groups" ? (
+            <Card data-testid="rc-groups">
+              <CardHeader>
+                <CardTitle>Types d&apos;évaluation pris en compte</CardTitle>
+                <CardDescription>
+                  Aucun nombre d&apos;interrogations ou de devoirs n&apos;est imposé : chaque note saisie entre dans le calcul. « Moyenne du groupe » : les notes
+                  du groupe donnent une seule valeur (leur moyenne). « Chaque note compte » : chaque note est une valeur.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-3">
+                {config.groups.map((g, i) => {
+                  const update = (patch: Partial<ReportConfig["groups"][number]>) => set("groups", config.groups.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+                  return (
+                    <div key={g.key} className="grid gap-3 rounded-xl border border-border p-3">
+                      <div className="flex flex-wrap items-end gap-2">
+                        <div className="grid min-w-32 flex-1 gap-1">
+                          <Label htmlFor={`grp-label-${i}`} className="text-xs">
+                            Libellé (colonne du bulletin)
+                          </Label>
+                          <Input id={`grp-label-${i}`} value={g.label} maxLength={20} onChange={(e) => update({ label: e.target.value.toUpperCase() })} className="h-10" />
+                        </div>
+                        <div className="grid min-w-44 gap-1">
+                          <Label htmlFor={`grp-mode-${i}`} className="text-xs">
+                            Prise en compte
+                          </Label>
+                          <Select id={`grp-mode-${i}`} value={g.mode} onChange={(e) => update({ mode: e.target.value as "average" | "each" })} className="h-10">
+                            <option value="average">Moyenne du groupe</option>
+                            <option value="each">Chaque note compte</option>
+                          </Select>
+                        </div>
+                        <div className="grid w-24 gap-1">
+                          <Label htmlFor={`grp-weight-${i}`} className="text-xs">
+                            Poids
+                          </Label>
+                          <Input
+                            id={`grp-weight-${i}`}
+                            type="number"
+                            min={0.25}
+                            max={100}
+                            step="0.25"
+                            value={g.weight}
+                            onChange={(e) => update({ weight: Number(e.target.value) })}
+                            className="h-10"
+                          />
+                        </div>
+                        <Button type="button" variant="ghost" size="icon" aria-label={`Monter ${g.label}`} disabled={i === 0} onClick={() => set("groups", move(config.groups, i, -1))}>
+                          <ArrowUp aria-hidden />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Descendre ${g.label}`}
+                          disabled={i === config.groups.length - 1}
+                          onClick={() => set("groups", move(config.groups, i, 1))}
+                        >
+                          <ArrowDown aria-hidden />
+                        </Button>
+                        <Button type="button" variant="ghost" size="icon" className="text-danger" aria-label={`Supprimer ${g.label}`} onClick={() => set("groups", config.groups.filter((_, j) => j !== i))}>
+                          <Trash2 aria-hidden />
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1">
+                        {Object.entries(ASSESSMENT_KINDS).map(([kind, label]) => {
+                          const elsewhere = config.groups.some((x, j) => j !== i && x.kinds.includes(kind as never));
+                          return (
+                            <label key={kind} className={cn("flex items-center gap-2 text-sm", elsewhere && "opacity-50")}>
+                              <input
+                                type="checkbox"
+                                className="size-4 accent-[var(--primary)]"
+                                checked={g.kinds.includes(kind as never)}
+                                disabled={elsewhere}
+                                onChange={(e) => update({ kinds: e.target.checked ? [...g.kinds, kind as never] : g.kinds.filter((k) => k !== kind) })}
+                              />
+                              {label}
+                            </label>
+                          );
+                        })}
+                      </div>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          className="size-4 accent-[var(--primary)]"
+                          checked={g.use_coefficients}
+                          onChange={(e) => update({ use_coefficients: e.target.checked })}
+                        />
+                        Tenir compte du coefficient de chaque évaluation (moyenne pondérée) — sinon moyenne simple
+                      </label>
+                    </div>
+                  );
+                })}
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    disabled={config.groups.length >= 8}
+                    onClick={() => {
+                      const label = `GROUPE ${config.groups.length + 1}`;
+                      set("groups", [...config.groups, { key: slug(label, config.groups.map((g) => g.key)), label, kinds: [], mode: "each", weight: 1, use_coefficients: false }]);
+                    }}
+                  >
+                    <Plus aria-hidden /> Ajouter un groupe
+                  </Button>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => set("groups", DEFAULT_GROUPS)}>
+                    Rétablir la règle par défaut
+                  </Button>
+                </div>
+                <FormulaExample config={config} />
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {config.calculation !== "groups" ? (
           <Card>
             <CardHeader>
               <CardTitle>Colonnes d&apos;évaluation</CardTitle>
@@ -210,6 +376,7 @@ export function ReportConfigEditor({ initial }: { initial: ReportConfig }) {
               </Button>
             </CardContent>
           </Card>
+          ) : null}
 
           <div className="grid gap-5 lg:grid-cols-2">
             {rulesEditor("mentions", "Mentions", "Appréciation automatique selon la moyenne.")}
@@ -233,7 +400,7 @@ export function ReportConfigEditor({ initial }: { initial: ReportConfig }) {
                     <thead>
                       <tr style={{ backgroundColor: config.primary_color }} className="text-white">
                         <th className="px-2 py-1 text-left">Matière</th>
-                        {config.columns.map((c) => (
+                        {(config.calculation === "groups" ? config.groups : config.columns).map((c) => (
                           <th key={c.key} className="px-2 py-1">
                             {c.label}
                           </th>
@@ -247,12 +414,12 @@ export function ReportConfigEditor({ initial }: { initial: ReportConfig }) {
                     <tbody>
                       <tr>
                         <td className="px-2 py-1">Mathématiques</td>
-                        {config.columns.map((c, i) => (
+                        {(config.calculation === "groups" ? config.groups : config.columns).map((c, i) => (
                           <td key={c.key} className="px-2 py-1 text-center">
-                            {(12 + i).toFixed(2).replace(".", ",")}
+                            {(12 + i).toFixed(config.decimals).replace(".", ",")}
                           </td>
                         ))}
-                        <td className="px-2 py-1 text-center font-semibold">13,50</td>
+                        <td className="px-2 py-1 text-center font-semibold">{(13.5).toFixed(config.decimals).replace(".", ",")}</td>
                         <td className="px-2 py-1 text-center">4</td>
                         {config.show_class_stats ? <td className="px-2 py-1 text-center">11,80</td> : null}
                         {config.show_appreciation ? <td className="px-2 py-1">{config.mentions.find((m) => 13.5 >= m.min)?.label ?? ""}</td> : null}

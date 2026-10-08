@@ -62,6 +62,9 @@ export type ReportSubjectRow = {
   mention?: string | null;
   /** Crédits (ECTS) de la matière / unité d'enseignement, si l'établissement en utilise. */
   credits?: number | null;
+  /** Traçabilité : formule appliquée (ex. « (12 + 13 + 15) ÷ 3 ») et notes retenues. */
+  formula?: string | null;
+  notes?: { title: string; score: number; max: number; on20: number }[];
 };
 
 /** Crédits acquis : une matière est validée si sa moyenne atteint le seuil. */
@@ -82,6 +85,8 @@ export type ReportCardConfig = {
   primary_color: string;
   accent_color: string;
   footer_note: string;
+  /** Décimales affichées pour les moyennes (règle de l'établissement, 0 à 3). */
+  decimals: number;
 };
 
 export type ReportCardSnapshot = {

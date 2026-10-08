@@ -25,6 +25,7 @@ export function ReportCardPage({
   const accent = config.accent_color || org.accent_color;
   const showRank = snapshot.ranking_enabled && config.show_rank;
   const draft = card.status !== "published";
+  const dec = config.decimals ?? 2;
   const v = vocabularyFor(org.type);
 
   const columns: Column[] = [{ label: "Matière", width: config.show_teacher ? "17%" : "24%" }];
@@ -42,16 +43,16 @@ export function ReportCardPage({
 
   const rows = card.subjects.map((s) => {
     const row = [s.subject];
-    for (const column of card.columns) row.push(pdfNumber(s.columns?.[column.key]));
-    row.push(pdfNumber(s.average), pdfNumber(s.coefficient, 0), pdfNumber(s.points ?? (s.average !== null ? s.average * s.coefficient : null)));
+    for (const column of card.columns) row.push(pdfNumber(s.columns?.[column.key], dec));
+    row.push(pdfNumber(s.average, dec), pdfNumber(s.coefficient, 0), pdfNumber(s.points ?? (s.average !== null ? s.average * s.coefficient : null), dec));
     if (credits) row.push(s.credits ? `${s.average !== null && s.average >= credits.threshold ? creditLabel(s.credits) : "0"} / ${creditLabel(s.credits)}` : "—");
     if (config.show_subject_rank && showRank) row.push(rankLabel(s.rank));
-    if (config.show_class_stats) row.push(pdfNumber(s.class_average), `${pdfNumber(s.min)} / ${pdfNumber(s.max)}`);
+    if (config.show_class_stats) row.push(pdfNumber(s.class_average, dec), `${pdfNumber(s.min, dec)} / ${pdfNumber(s.max, dec)}`);
     if (config.show_teacher) row.push(s.teacher ?? "—");
     if (config.show_appreciation) row.push(s.mention ?? "");
     return row;
   });
-  const footer = ["TOTAL", ...card.columns.map(() => ""), "", pdfNumber(card.coefficient_total, 0), pdfNumber(card.points_total)];
+  const footer = ["TOTAL", ...card.columns.map(() => ""), "", pdfNumber(card.coefficient_total, 0), pdfNumber(card.points_total, dec)];
   if (credits) footer.push(`${creditLabel(credits.earned)} / ${creditLabel(credits.total)}`);
   while (footer.length < columns.length) footer.push("");
 
@@ -90,7 +91,7 @@ export function ReportCardPage({
       <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }} wrap={false}>
         <View style={[styles.box, { flex: 1, borderLeftWidth: 3, borderLeftColor: accent }]}>
           <Text style={{ color: COLORS.muted }}>Moyenne générale</Text>
-          <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 18, color }}>{pdfNumber(card.average)} / 20</Text>
+          <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 18, color }}>{pdfNumber(card.average, dec)} / 20</Text>
           {card.mention ? <Text style={styles.bold}>{pdfText(card.mention)}</Text> : null}
         </View>
         {credits ? (
@@ -111,8 +112,8 @@ export function ReportCardPage({
         {config.show_class_stats ? (
           <View style={[styles.box, { flex: 1.2 }]}>
             <Text style={{ color: COLORS.muted }}>{v.klass}</Text>
-            <Text>Moyenne : {pdfNumber(card.class_average)}</Text>
-            <Text>Plus forte : {pdfNumber(card.best_average)} · Plus faible : {pdfNumber(card.worst_average)}</Text>
+            <Text>Moyenne : {pdfNumber(card.class_average, dec)}</Text>
+            <Text>Plus forte : {pdfNumber(card.best_average, dec)} · Plus faible : {pdfNumber(card.worst_average, dec)}</Text>
           </View>
         ) : null}
         {config.show_attendance && card.attendance ? (

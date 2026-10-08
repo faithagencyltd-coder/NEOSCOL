@@ -82,10 +82,15 @@ export async function getReportCardConfig(organizationId: string) {
   return (data?.config ?? {}) as Record<string, unknown>;
 }
 
-/** Colonnes d'évaluation du bulletin (INTERRO 1, DEVOIR, EXAMEN…). */
+/**
+ * Colonnes d'évaluation du bulletin proposées à la création d'une évaluation :
+ * groupes (INTERRO, DEVOIR, COMPO…) en calcul par type d'évaluation, sinon
+ * colonnes (INTERRO 1, DEVOIR, EXAMEN…).
+ */
 export async function getReportColumns(organizationId: string): Promise<{ key: string; label: string }[]> {
   const config = await getReportCardConfig(organizationId);
-  return Array.isArray(config.columns)
-    ? (config.columns as Record<string, unknown>[]).flatMap((c) => (typeof c.key === "string" && typeof c.label === "string" ? [{ key: c.key, label: c.label }] : []))
+  const list = config.calculation === "groups" && Array.isArray(config.groups) ? config.groups : config.columns;
+  return Array.isArray(list)
+    ? (list as Record<string, unknown>[]).flatMap((c) => (typeof c.key === "string" && typeof c.label === "string" ? [{ key: c.key, label: c.label }] : []))
     : [];
 }

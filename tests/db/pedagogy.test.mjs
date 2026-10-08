@@ -244,6 +244,9 @@ describe("Bulletins", () => {
     await as(USERS.director, async (q) => {
       const [klass] = await q("select id from classes where name = '6e A'");
       const [period] = await q("select id from academic_periods where name = '1er trimestre'");
+      // Mode « moyenne pondérée des évaluations » (toujours proposé) ; la règle par
+      // défaut par type d'évaluation est vérifiée dans calcul-bulletins.test.mjs.
+      await q(`update report_card_settings set config = config || '{"calculation":"assessments"}'::jsonb where organization_id = $1`, [ORG_DEMO]);
       const [{ compute_report_cards: count }] = await q("select compute_report_cards($1, $2)", [klass.id, period.id]);
       assert.equal(count, 6);
       const [kofi] = await q(

@@ -21,7 +21,8 @@ import { isUuid, param } from "@/lib/utils/search-params";
 
 export const metadata: Metadata = { title: "Aperçu du bulletin" };
 
-const fmt = (n: number | null | undefined) => (n === null || n === undefined ? "—" : n.toFixed(2).replace(".", ","));
+const plain = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
+const fmtWith = (decimals: number) => (n: number | null | undefined) => (n === null || n === undefined ? "—" : n.toFixed(decimals).replace(".", ","));
 
 /**
  * Aperçu À L'ÉCRAN du bulletin (calcul en direct, rien n'est enregistré).
@@ -42,6 +43,7 @@ export default async function ReportPreviewPage({ searchParams }: PageProps<"/bu
     getReportCardConfig(organizationId),
   ]);
   const config = readReportConfig(rawConfig);
+  const fmt = fmtWith(config.decimals);
   const today = todayIn(context.organization.timezone);
   const classId = isUuid(param(params, "classe")) && classes.some((c) => c.id === param(params, "classe")) ? param(params, "classe")! : classes[0]?.id;
   const period = periods.find((p) => p.id === param(params, "periode")) ?? periods.find((p) => p.starts_on <= today && p.ends_on >= today) ?? periods[0];
@@ -150,6 +152,32 @@ export default async function ReportPreviewPage({ searchParams }: PageProps<"/bu
                     </tbody>
                   </table>
                 </div>
+                {data.subjects.some((s) => s.notes?.length) ? (
+                  <details className="rounded-lg border border-[#e3e9f4] p-3" data-testid="calcul-detail">
+                    <summary className="cursor-pointer font-semibold">Détail du calcul</summary>
+                    <ul className="mt-2 grid gap-1.5">
+                      {data.subjects
+                        .filter((s) => s.notes?.length)
+                        .map((s) => (
+                          <li key={s.subject}>
+                            <strong>{s.subject}</strong> :{" "}
+                            {s.formula ? (
+                              <span className="font-mono">
+                                {s.formula.replaceAll(".", ",")} = {fmt(s.average)}
+                              </span>
+                            ) : (
+                              <span>moyenne {fmt(s.average)}</span>
+                            )}
+                            <span className="text-[#5b6b8c]">
+                              {" "}
+                              — notes retenues :{" "}
+                              {s.notes!.map((n) => `${n.title} ${plain(n.score)}/${plain(n.max)}${n.max !== 20 ? ` (${plain(n.on20)}/20)` : ""}`).join(", ")}
+                            </span>
+                          </li>
+                        ))}
+                    </ul>
+                  </details>
+                ) : null}
                 <div className="flex flex-wrap gap-4 rounded-lg bg-[#f3f6fc] p-3">
                   <span>
                     Moyenne générale : <strong className="text-base">{fmt(selected.average)} / 20</strong>

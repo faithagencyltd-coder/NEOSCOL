@@ -7,10 +7,22 @@ const kinds = Object.keys(ASSESSMENT_KINDS) as [keyof typeof ASSESSMENT_KINDS, .
 const color = z.string().regex(/^#[0-9A-Fa-f]{6}$/, { error: "Couleur invalide (#RRGGBB)." });
 const rule = z.object({ min: z.coerce.number().min(0).max(20), label: z.string().trim().min(1).max(80) });
 
+const group = z.object({
+  key: z.string().regex(/^[a-z0-9_]{1,30}$/, { error: "Identifiant de groupe invalide." }),
+  label: z.string().trim().min(1, { error: "Libellé de groupe requis." }).max(20),
+  kinds: z.array(z.enum(kinds)).max(7),
+  mode: z.enum(["average", "each"]),
+  weight: z.coerce.number().positive({ error: "Poids positif attendu." }).max(100),
+  use_coefficients: z.boolean(),
+});
+
 export const reportConfigSchema = z
   .object({
     title: z.string().trim().min(3).max(80),
-    calculation: z.enum(["assessments", "columns"]),
+    calculation: z.enum(["groups", "assessments", "columns"]),
+    groups: z.array(group).max(8),
+    decimals: z.coerce.number().int().min(0).max(3),
+    rounding: z.enum(["half_up", "down", "up"]),
     columns: z
       .array(
         z.object({
@@ -43,6 +55,21 @@ export const reportConfigSchema = z
       if (keys.has(c.key)) ctx.addIssue({ code: "custom", message: `Colonne en double : ${c.label}`, path: ["columns", i] });
       keys.add(c.key);
     });
+    const groupKeys = new Set<string>();
+    const groupedKinds = new Set<string>();
+    config.groups.forEach((g, i) => {
+      if (groupKeys.has(g.key)) ctx.addIssue({ code: "custom", message: `Groupe en double : ${g.label}`, path: ["groups", i] });
+      groupKeys.add(g.key);
+      for (const kind of g.kinds) {
+        if (groupedKinds.has(kind)) {
+          ctx.addIssue({ code: "custom", message: `Le type « ${ASSESSMENT_KINDS[kind]} » est rangé dans deux groupes.`, path: ["groups", i] });
+        }
+        groupedKinds.add(kind);
+      }
+    });
+    if (config.calculation === "groups" && groupedKinds.size === 0) {
+      ctx.addIssue({ code: "custom", message: "Le calcul par type d'évaluation nécessite au moins un groupe avec un type.", path: ["groups"] });
+    }
     if (config.calculation === "columns" && config.columns.length === 0) {
       ctx.addIssue({ code: "custom", message: "Le calcul par colonnes nécessite au moins une colonne.", path: ["columns"] });
     }
@@ -50,9 +77,19 @@ export const reportConfigSchema = z
 
 export type ReportConfig = z.infer<typeof reportConfigSchema>;
 
+/** Règle par défaut : (moyenne des interrogations + chaque devoir + chaque composition) ÷ (1 + nombre de devoirs et compositions). */
+export const DEFAULT_GROUPS: ReportConfig["groups"] = [
+  { key: "interro", label: "INTERRO", kinds: ["test", "oral"], mode: "average", weight: 1, use_coefficients: false },
+  { key: "devoir", label: "DEVOIR", kinds: ["homework", "practical", "project"], mode: "each", weight: 1, use_coefficients: false },
+  { key: "compo", label: "COMPO", kinds: ["exam", "other"], mode: "each", weight: 1, use_coefficients: false },
+];
+
 export const DEFAULT_REPORT_CONFIG: ReportConfig = {
   title: "BULLETIN DE NOTES",
-  calculation: "assessments",
+  calculation: "groups",
+  groups: DEFAULT_GROUPS,
+  decimals: 2,
+  rounding: "half_up",
   columns: [
     { key: "interro1", label: "INTERRO 1", kinds: ["test", "oral"], weight: 1 },
     { key: "interro2", label: "INTERRO 2", kinds: ["test", "oral"], weight: 1 },
@@ -92,6 +129,18 @@ export function readReportConfig(raw: unknown): ReportConfig {
   const parsed = reportConfigSchema.safeParse(merged);
   return parsed.success ? parsed.data : DEFAULT_REPORT_CONFIG;
 }
+
+export const CALCULATION_LABELS: Record<ReportConfig["calculation"], string> = {
+  groups: "Par type d'évaluation (moyenne des interrogations, puis devoirs et compositions)",
+  assessments: "Moyenne pondérée de toutes les évaluations (coefficient de chaque évaluation)",
+  columns: "Moyenne pondérée des colonnes du bulletin (pondération de chaque colonne)",
+};
+
+export const ROUNDING_LABELS: Record<ReportConfig["rounding"], string> = {
+  half_up: "Au plus proche (12,345 → 12,35)",
+  down: "Par défaut, vers le bas (12,349 → 12,34)",
+  up: "Par excès, vers le haut (12,341 → 12,35)",
+};
 
 export const BOOLEAN_OPTIONS: { key: keyof ReportConfig; label: string }[] = [
   { key: "show_teacher", label: "Nom de l'enseignant par matière" },

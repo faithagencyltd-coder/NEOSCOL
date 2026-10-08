@@ -98,7 +98,7 @@ export default async function GradeBookPage({ params, searchParams }: PageProps<
                       label: "Colonne du bulletin",
                       type: "select" as const,
                       options: columns.map((c) => ({ value: c.key, label: c.label })),
-                      hint: "Vide : placée automatiquement selon le type (1re interrogation → INTERRO 1…).",
+                      hint: "Compte dans cette colonne du bulletin (ex. INTERRO, DEVOIR, COMPO). Vide : placée automatiquement selon le type.",
                     },
                   ]),
             ]}
