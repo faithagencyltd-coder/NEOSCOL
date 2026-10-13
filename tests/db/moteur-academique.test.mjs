@@ -18,7 +18,12 @@ async function seedClass(q, averages = [[12, 14, 16], [8, 9, 7], [10, null, 11]]
     const avgs = averages[i % averages.length];
     for (let p = 0; p < periods.length; p++) {
       if (avgs[p] === null || avgs[p] === undefined) continue;
-      await q("insert into report_cards (organization_id, student_id, class_id, academic_period_id, average) values ($1, $2, $3, $4, $5)", [ORG_DEMO, pupils[i].student_id, c.id, periods[p].id, avgs[p]]);
+      // Bulletins publiés (figés) : moyennes de période sans notes derrière, que le
+      // recalcul automatique des brouillons ne doit pas remplacer.
+      await q(
+        "insert into report_cards (organization_id, student_id, class_id, academic_period_id, average, status, published_at) values ($1, $2, $3, $4, $5, 'published', now())",
+        [ORG_DEMO, pupils[i].student_id, c.id, periods[p].id, avgs[p]],
+      );
     }
   }
   return { classId: c.id, pupils: pupils.map((p) => p.student_id) };

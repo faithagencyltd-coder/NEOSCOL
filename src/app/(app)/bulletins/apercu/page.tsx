@@ -130,6 +130,8 @@ export default async function ReportPreviewPage({ searchParams }: PageProps<"/bu
                         <th className="px-2 py-1.5">COEF.</th>
                         <th className="px-2 py-1.5">Points</th>
                         {config.show_class_stats ? <th className="px-2 py-1.5">Moy. cl.</th> : null}
+                        {config.show_class_stats ? <th className="px-2 py-1.5">Min / Max</th> : null}
+                        {config.show_teacher ? <th className="px-2 py-1.5 text-left">Enseignant</th> : null}
                         {config.show_appreciation ? <th className="px-2 py-1.5 text-left">Appréciation</th> : null}
                       </tr>
                     </thead>
@@ -146,6 +148,12 @@ export default async function ReportPreviewPage({ searchParams }: PageProps<"/bu
                           <td className="px-2 py-1.5 text-center">{s.coefficient}</td>
                           <td className="px-2 py-1.5 text-center tabular-nums">{fmt(s.points)}</td>
                           {config.show_class_stats ? <td className="px-2 py-1.5 text-center tabular-nums">{fmt(s.class_average)}</td> : null}
+                          {config.show_class_stats ? (
+                            <td className="px-2 py-1.5 text-center whitespace-nowrap tabular-nums">
+                              {fmt(s.min)} / {fmt(s.max)}
+                            </td>
+                          ) : null}
+                          {config.show_teacher ? <td className="px-2 py-1.5">{s.teacher ?? "—"}</td> : null}
                           {config.show_appreciation ? <td className="px-2 py-1.5">{s.mention ?? ""}</td> : null}
                         </tr>
                       ))}
@@ -191,8 +199,34 @@ export default async function ReportPreviewPage({ searchParams }: PageProps<"/bu
                       </strong>
                     </span>
                   ) : null}
-                  {data.proposed_decision ? <span>Décision proposée : {data.proposed_decision}</span> : null}
                 </div>
+                {data.annual ? (
+                  <div className="grid gap-1 rounded-lg border-l-4 bg-[#f3f6fc] p-3" style={{ borderColor: config.accent_color }} data-testid="recap-annuel">
+                    <p className="font-semibold" style={{ color: config.primary_color }}>
+                      RÉCAPITULATIF ANNUEL
+                    </p>
+                    {data.annual.periods.map((p) => (
+                      <p key={p.name}>
+                        Moyenne générale {p.name} : <strong>{p.average === null ? "—" : `${fmt(p.average)}/20`}</strong>
+                      </p>
+                    ))}
+                    <p className="mt-1">
+                      Moyenne générale annuelle : <strong className="text-base">{data.annual.average === null ? "—" : `${fmt(data.annual.average)}/20`}</strong>
+                      {data.annual.formula ? <span className="font-mono text-[#5b6b8c]"> — {data.annual.formula.replaceAll(".", ",")}</span> : null}
+                    </p>
+                    {data.annual.complete ? null : (
+                      <p className="text-xs text-[#9a5b00]" data-testid="recap-incomplet">
+                        Année incomplète : moyenne calculée sur les périodes disponibles.
+                      </p>
+                    )}
+                    {data.annual.decision ? (
+                      <p>
+                        Décision : <strong>{data.annual.decision}</strong>
+                        {data.annual.decision_source === "rules" ? <span className="text-[#5b6b8c]"> (proposition — le conseil la confirme dans Résultats annuels)</span> : null}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
               </article>
             </>
           ) : (

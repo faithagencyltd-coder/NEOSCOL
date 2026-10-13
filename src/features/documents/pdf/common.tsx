@@ -128,18 +128,34 @@ export function InfoGrid({ rows }: { rows: [string, string | null | undefined][]
 
 export type Column = { label: string; width: string | number; align?: "left" | "right" | "center" };
 
-export function DataTable({ columns, rows, color, zebra = true, footer }: { columns: Column[]; rows: string[][]; color: string; zebra?: boolean; footer?: string[] }) {
+export function DataTable({
+  columns,
+  rows,
+  color,
+  zebra = true,
+  footer,
+  compact = false,
+}: {
+  columns: Column[];
+  rows: string[][];
+  color: string;
+  zebra?: boolean;
+  footer?: string[];
+  /** Tableau dense (bulletin à nombreuses colonnes de notes) : marges et police réduites. */
+  compact?: boolean;
+}) {
   const cell = (column: Column) => ({
     width: column.width,
     textAlign: column.align ?? "left",
     paddingVertical: 3.5,
-    paddingHorizontal: 4,
+    paddingHorizontal: compact ? 2 : 4,
+    ...(compact ? { fontSize: 7 } : {}),
   });
   return (
     <View style={{ borderWidth: 1, borderColor: COLORS.line, borderRadius: 4 }}>
       <View style={{ flexDirection: "row", backgroundColor: color }}>
         {columns.map((column) => (
-          <Text key={column.label} style={[cell(column), { color: "#FFFFFF", fontFamily: "Helvetica-Bold", fontSize: 7.5 }]}>
+          <Text key={column.label} style={[cell(column), { color: "#FFFFFF", fontFamily: "Helvetica-Bold", fontSize: compact ? 6.5 : 7.5 }]}>
             {pdfText(column.label)}
           </Text>
         ))}

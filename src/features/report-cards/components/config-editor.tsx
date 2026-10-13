@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 import { ActionForm } from "@/components/shared/action-form";
@@ -12,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { saveReportConfig } from "@/features/report-cards/actions";
-import { BOOLEAN_OPTIONS, CALCULATION_LABELS, DEFAULT_GROUPS, ROUNDING_LABELS, type ReportConfig } from "@/features/report-cards/config";
+import { BOOLEAN_OPTIONS, CALCULATION_LABELS, DEFAULT_GROUPS, groupColumnLabels, ROUNDING_LABELS, type ReportConfig } from "@/features/report-cards/config";
 import { ASSESSMENT_KINDS } from "@/lib/labels";
 import { cn } from "@/lib/utils/cn";
 import { useFeedbackAction } from "@/components/motion/use-feedback-action";
@@ -41,23 +42,35 @@ function move<T>(list: T[], index: number, delta: number): T[] {
   return next;
 }
 
-/** Exemple chiffré de la règle choisie : interros 12, 14, 10 ; devoirs 13, 15, 14, 16. */
-function FormulaExample({ config }: { config: ReportConfig }) {
-  const sample: Record<string, number[]> = { test: [12, 14, 10], homework: [13, 15, 14, 16] };
+const SAMPLE: Record<string, number[]> = { test: [12, 14, 10], homework: [13, 15, 14, 16] };
+
+/** Calcul de l'exemple (interros 12, 14, 10 ; devoirs 13, 15, 14, 16) : termes, colonnes du bulletin, moyenne. */
+function sampleCalculation(config: ReportConfig) {
   const terms: { value: number; weight: number; label: string }[] = [];
+  const columns: { key: string; label: string; value: number }[] = [];
   for (const g of config.groups) {
-    const notes = g.kinds.flatMap((k) => sample[k] ?? []);
-    if (!notes.length) continue;
+    const notes = g.kinds.flatMap((k) => SAMPLE[k] ?? []);
+    const labels = groupColumnLabels(g);
+    notes.forEach((n, i) => columns.push({ key: `${g.key}#${i + 1}`, label: `${labels.note} ${i + 1}`, value: n }));
     if (g.mode === "average") {
-      const avg = notes.reduce((a, b) => a + b, 0) / notes.length;
+      const raw = notes.length ? notes.reduce((a, b) => a + b, 0) / notes.length : null;
+      if (raw === null) continue;
+      const avg = config.round_subject_first ? Number(raw.toFixed(config.decimals)) : raw;
+      columns.push({ key: g.key, label: labels.average, value: avg });
       terms.push({ value: avg, weight: g.weight, label: `moy. ${g.label.toLowerCase()} ${avg.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}` });
     } else {
       for (const n of notes) terms.push({ value: n, weight: g.weight, label: String(n) });
     }
   }
   const total = terms.reduce((a, t) => a + t.weight, 0);
-  if (!total) return null;
-  const result = terms.reduce((a, t) => a + t.value * t.weight, 0) / total;
+  const result = total ? terms.reduce((a, t) => a + t.value * t.weight, 0) / total : null;
+  return { terms, columns, total, result };
+}
+
+/** Exemple chiffré de la règle choisie : interros 12, 14, 10 ; devoirs 13, 15, 14, 16. */
+function FormulaExample({ config }: { config: ReportConfig }) {
+  const { terms, total, result } = sampleCalculation(config);
+  if (!total || result === null) return null;
   const shown = terms.map((t) => (t.weight === 1 ? t.label : `${t.label} × ${t.weight}`)).join(" + ");
   return (
     <div className="rounded-lg bg-muted/60 p-3 text-sm" data-testid="rc-formula-example">
@@ -72,6 +85,10 @@ function FormulaExample({ config }: { config: ReportConfig }) {
 /** Éditeur du bulletin : colonnes, pondérations, calcul, mentions, décisions, signatures, identité visuelle. */
 export function ReportConfigEditor({ initial }: { initial: ReportConfig }) {
   const [config, setConfig] = useState<ReportConfig>(initial);
+  // Aperçu : mêmes colonnes que le bulletin (INT 1…, MOYEN INTERRO, DEV 1…) sur l'exemple chiffré.
+  const sample = sampleCalculation(config);
+  const previewColumns = config.calculation === "groups" ? sample.columns : config.columns.map((c, i) => ({ key: c.key, label: c.label, value: 12 + i }));
+  const previewAverage = config.calculation === "groups" && sample.result !== null ? sample.result : 13.5;
   const [state, formAction, pending] = useFeedbackAction(saveReportConfig);
   const set = <K extends keyof ReportConfig>(key: K, value: ReportConfig[K]) => setConfig((c) => ({ ...c, [key]: value }));
 
@@ -167,6 +184,18 @@ export function ReportConfigEditor({ initial }: { initial: ReportConfig }) {
                   ))}
                 </Select>
               </div>
+              <label className="flex items-start gap-2 text-sm sm:col-span-2">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 size-4 accent-[var(--primary)]"
+                  checked={config.round_subject_first}
+                  onChange={(e) => set("round_subject_first", e.target.checked)}
+                />
+                <span>
+                  Arrondir la moyenne de chaque matière avant de calculer les points et la moyenne générale (ex. 15,67 × 4 = 62,68) : le calcul se
+                  refait à la main avec les chiffres imprimés.
+                </span>
+              </label>
             </CardContent>
           </Card>
 
@@ -191,6 +220,34 @@ export function ReportConfigEditor({ initial }: { initial: ReportConfig }) {
                           </Label>
                           <Input id={`grp-label-${i}`} value={g.label} maxLength={20} onChange={(e) => update({ label: e.target.value.toUpperCase() })} className="h-10" />
                         </div>
+                        <div className="grid w-28 gap-1">
+                          <Label htmlFor={`grp-note-${i}`} className="text-xs">
+                            Colonnes des notes
+                          </Label>
+                          <Input
+                            id={`grp-note-${i}`}
+                            value={g.note_label ?? ""}
+                            placeholder={groupColumnLabels({ label: g.label }).note}
+                            maxLength={20}
+                            onChange={(e) => update({ note_label: e.target.value.toUpperCase() })}
+                            className="h-10"
+                          />
+                        </div>
+                        {g.mode === "average" ? (
+                          <div className="grid w-40 gap-1">
+                            <Label htmlFor={`grp-avg-${i}`} className="text-xs">
+                              Colonne de la moyenne
+                            </Label>
+                            <Input
+                              id={`grp-avg-${i}`}
+                              value={g.average_label ?? ""}
+                              placeholder={groupColumnLabels({ label: g.label }).average}
+                              maxLength={30}
+                              onChange={(e) => update({ average_label: e.target.value.toUpperCase() })}
+                              className="h-10"
+                            />
+                          </div>
+                        ) : null}
                         <div className="grid min-w-44 gap-1">
                           <Label htmlFor={`grp-mode-${i}`} className="text-xs">
                             Prise en compte
@@ -380,7 +437,25 @@ export function ReportConfigEditor({ initial }: { initial: ReportConfig }) {
 
           <div className="grid gap-5 lg:grid-cols-2">
             {rulesEditor("mentions", "Mentions", "Appréciation automatique selon la moyenne.")}
-            {rulesEditor("decisions", "Décisions proposées", "Proposition du conseil selon la moyenne générale.")}
+            <Card>
+              <CardHeader>
+                <CardTitle>Décision de fin d&apos;année</CardTitle>
+                <CardDescription>
+                  Affichée uniquement en bas du dernier bulletin de l&apos;année (T3 ou S2), avec le récapitulatif annuel : moyenne de chaque période,
+                  moyenne annuelle et décision.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-2 text-sm">
+                <p>
+                  Le calcul de la moyenne annuelle (trimestres : (T1 + T2 + T3) ÷ 3 ; semestres : (S1 + S2 × 2) ÷ 3 par défaut) et les décisions se
+                  règlent dans les{" "}
+                  <Link href="/parametres/regles-academiques" className="font-medium text-primary hover:underline">
+                    Règles de calcul
+                  </Link>
+                  . La décision du conseil saisie dans Résultats annuels remplace la proposition.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
@@ -400,29 +475,35 @@ export function ReportConfigEditor({ initial }: { initial: ReportConfig }) {
                     <thead>
                       <tr style={{ backgroundColor: config.primary_color }} className="text-white">
                         <th className="px-2 py-1 text-left">Matière</th>
-                        {(config.calculation === "groups" ? config.groups : config.columns).map((c) => (
+                        {previewColumns.map((c) => (
                           <th key={c.key} className="px-2 py-1">
                             {c.label}
                           </th>
                         ))}
                         <th className="px-2 py-1">MOY.</th>
                         <th className="px-2 py-1">COEF.</th>
+                        <th className="px-2 py-1">Points</th>
                         {config.show_class_stats ? <th className="px-2 py-1">Moy. cl.</th> : null}
+                        {config.show_class_stats ? <th className="px-2 py-1">Min / Max</th> : null}
+                        {config.show_teacher ? <th className="px-2 py-1">Enseignant</th> : null}
                         {config.show_appreciation ? <th className="px-2 py-1">Appr.</th> : null}
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
                         <td className="px-2 py-1">Mathématiques</td>
-                        {(config.calculation === "groups" ? config.groups : config.columns).map((c, i) => (
+                        {previewColumns.map((c) => (
                           <td key={c.key} className="px-2 py-1 text-center">
-                            {(12 + i).toFixed(config.decimals).replace(".", ",")}
+                            {c.value.toFixed(config.decimals).replace(".", ",")}
                           </td>
                         ))}
-                        <td className="px-2 py-1 text-center font-semibold">{(13.5).toFixed(config.decimals).replace(".", ",")}</td>
+                        <td className="px-2 py-1 text-center font-semibold">{previewAverage.toFixed(config.decimals).replace(".", ",")}</td>
                         <td className="px-2 py-1 text-center">4</td>
+                        <td className="px-2 py-1 text-center">{(Number(previewAverage.toFixed(config.decimals)) * 4).toFixed(config.decimals).replace(".", ",")}</td>
                         {config.show_class_stats ? <td className="px-2 py-1 text-center">11,80</td> : null}
-                        {config.show_appreciation ? <td className="px-2 py-1">{config.mentions.find((m) => 13.5 >= m.min)?.label ?? ""}</td> : null}
+                        {config.show_class_stats ? <td className="px-2 py-1 text-center whitespace-nowrap">6,50 / 17,25</td> : null}
+                        {config.show_teacher ? <td className="px-2 py-1">Nom du professeur</td> : null}
+                        {config.show_appreciation ? <td className="px-2 py-1">{config.mentions.find((m) => previewAverage >= m.min)?.label ?? ""}</td> : null}
                       </tr>
                     </tbody>
                   </table>

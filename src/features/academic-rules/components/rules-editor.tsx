@@ -71,10 +71,10 @@ export function RulesEditor({
   const setMode = (mode: "weights" | "formula") =>
     setRules((r) => ({
       ...r,
-      annual: mode === "weights" ? { mode, weights: Array.from({ length: periods }, () => 1) } : { mode, formula: "(T1 + T2 + T3) / 3" },
+      annual: mode === "weights" ? { mode, weights: Array.from({ length: periods }, () => 1), semester_weights: [1, 2] } : { mode, formula: "(T1 + T2 + T3) / 3" },
     }));
   const setPeriods = (n: number) => {
-    setRules((r) => (r.annual.mode === "weights" ? { ...r, annual: { mode: "weights", weights: Array.from({ length: n }, (_, i) => r.annual.mode === "weights" ? (r.annual.weights[i] ?? 1) : 1) } } : r));
+    setRules((r) => (r.annual.mode === "weights" ? { ...r, annual: { ...r.annual, weights: Array.from({ length: n }, (_, i) => r.annual.mode === "weights" ? (r.annual.weights[i] ?? 1) : 1) } } : r));
     setValues((v) => Array.from({ length: n }, (_, i) => v[i] ?? null));
   };
   const setDecision = (i: number, patch: Partial<AcademicRules["decisions"][number]>) =>
@@ -100,7 +100,7 @@ export function RulesEditor({
           <CardTitle className="flex items-center gap-2">
             <Sigma className="size-5 text-primary" aria-hidden /> Calcul de la moyenne annuelle
           </CardTitle>
-          <CardDescription>Pondération des périodes (trimestres, semestres) ou formule personnalisée. T1, T2… sont les moyennes des périodes dans l&apos;ordre de l&apos;année.</CardDescription>
+          <CardDescription>Pondération des trimestres et des semestres, ou formule personnalisée. T1, T2… sont les moyennes des périodes dans l&apos;ordre de l&apos;année. Le résultat et la décision s&apos;affichent en bas du dernier bulletin de l&apos;année (T3 ou S2).</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-5">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -141,11 +141,38 @@ export function RulesEditor({
                       className="w-24"
                       value={w}
                       onChange={(e) =>
-                        setRules((r) => (r.annual.mode === "weights" ? { ...r, annual: { mode: "weights", weights: r.annual.weights.map((x, j) => (j === i ? Number(e.target.value) : x)) } } : r))
+                        setRules((r) => (r.annual.mode === "weights" ? { ...r, annual: { ...r.annual, weights: r.annual.weights.map((x, j) => (j === i ? Number(e.target.value) : x)) } } : r))
                       }
                     />
                   </div>
                 ))}
+              </div>
+              <div className="grid gap-2 rounded-lg border border-border p-3" data-testid="semester-weights">
+                <p className="text-sm font-medium">
+                  Années en 2 semestres <span className="font-normal text-muted-foreground">— par défaut (S1 + S2 × 2) ÷ 3</span>
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {(rules.annual.semester_weights ?? [1, 2]).map((w, i) => (
+                    <div key={i} className="grid gap-1">
+                      <Label htmlFor={`semester-weight-${i}`}>Poids S{i + 1}</Label>
+                      <Input
+                        id={`semester-weight-${i}`}
+                        type="number"
+                        min={0}
+                        step="0.5"
+                        className="w-24"
+                        value={w}
+                        onChange={(e) =>
+                          setRules((r) =>
+                            r.annual.mode === "weights"
+                              ? { ...r, annual: { ...r.annual, semester_weights: (r.annual.semester_weights ?? [1, 2]).map((x, j) => (j === i ? Number(e.target.value) : x)) } }
+                              : r,
+                          )
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           ) : (

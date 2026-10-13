@@ -336,6 +336,8 @@ describe("Recalcul, traçabilité, établissements", () => {
       const cfg = async (id) => (await q("select config from report_card_settings where organization_id = $1", [id]))[0].config;
       assert.equal((await cfg(school)).calculation, "groups");
       assert.equal((await cfg(uni)).calculation, "assessments");
+      assert.equal((await cfg(school)).round_subject_first, true, "école : moyenne de matière arrondie avant la moyenne générale");
+      assert.equal((await cfg(uni)).round_subject_first, false, "université : calcul inchangé");
     });
   });
 });

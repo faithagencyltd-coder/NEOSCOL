@@ -46,7 +46,8 @@ export type DocStudent = {
   photo_file_id?: string | null;
 };
 
-export type ReportColumn = { key: string; label: string; weight: number };
+/** Colonne de notes du bulletin : une note (INT 1, DEV 1…) ou la moyenne d'un groupe (MOYEN INTERRO). */
+export type ReportColumn = { key: string; label: string; weight: number; type?: "note" | "average"; group?: string };
 
 export type ReportSubjectRow = {
   subject: string;
@@ -119,7 +120,21 @@ export type ReportCardSnapshot = {
     mention: string | null;
     proposed_decision: string | null;
     attendance: { absences: number; justified: number; lates: number } | null;
+    /** Récapitulatif annuel : uniquement sur le dernier bulletin de l'année (T3 ou S2). */
+    annual?: AnnualRecap | null;
   };
+};
+
+export type AnnualRecap = {
+  system: "trimester" | "semester";
+  periods: { name: string; average: number | null }[];
+  average: number | null;
+  formula: string | null;
+  /** false : au moins une période sans moyenne (calcul sur les périodes disponibles). */
+  complete: boolean;
+  mention: string | null;
+  decision: string | null;
+  decision_source: "council" | "rules";
 };
 
 export type ReceiptSnapshot = {

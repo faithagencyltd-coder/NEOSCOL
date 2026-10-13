@@ -37,9 +37,14 @@ export function ReportCardPage({
   if (config.show_class_stats) columns.push({ label: "Moy. cl.", width: "7%", align: "center" }, { label: "Min / Max", width: "10%", align: "center" });
   if (config.show_teacher) columns.push({ label: "Enseignant", width: "12%" });
   if (config.show_appreciation) columns.push({ label: "Appréciation", width: "11%" });
-  // Répartit la largeur restante sur la colonne « Matière ».
+  // Répartit la largeur restante sur la colonne « Matière » (14 % au moins) ; avec
+  // beaucoup de colonnes de notes (INT 1…, DEV 1…), toutes les colonnes rétrécissent
+  // dans les mêmes proportions : même ordre, même contenu, sur une seule page A4.
   const used = columns.slice(1).reduce((sum, c) => sum + Number.parseFloat(String(c.width)), 0);
-  columns[0] = { label: "Matière", width: `${Math.max(14, 100 - used)}%` };
+  const scale = used > 86 ? 86 / used : 1;
+  for (let i = 1; i < columns.length; i++) columns[i] = { ...columns[i]!, width: `${(Number.parseFloat(String(columns[i]!.width)) * scale).toFixed(2)}%` };
+  columns[0] = { label: "Matière", width: `${Math.max(14, 100 - used * scale)}%` };
+  const compact = scale < 1;
 
   const rows = card.subjects.map((s) => {
     const row = [s.subject];
@@ -85,7 +90,7 @@ export function ReportCardPage({
         ]}
       />
       <View style={{ marginTop: 10 }}>
-        <DataTable columns={columns} rows={rows} color={color} footer={footer} />
+        <DataTable columns={columns} rows={rows} color={color} footer={footer} compact={compact} />
       </View>
 
       <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }} wrap={false}>
@@ -138,13 +143,36 @@ export function ReportCardPage({
             <Text>{pdfText(card.appreciation)}</Text>
           </View>
         ) : null}
-        {card.decision || card.proposed_decision ? (
+        {/* Décision du conseil saisie pour la période (félicitations, avertissement…). La décision
+            de fin d'année figure uniquement dans le récapitulatif annuel du dernier bulletin. */}
+        {card.decision ? (
           <View style={[styles.box, { borderLeftWidth: 3, borderLeftColor: color }]}>
             <Text>
-              <Text style={styles.bold}>Décision : </Text>
-              {pdfText(card.decision ?? card.proposed_decision)}
-              {!card.decision ? " (proposition)" : ""}
+              <Text style={styles.bold}>Décision du conseil : </Text>
+              {pdfText(card.decision)}
             </Text>
+          </View>
+        ) : null}
+        {card.annual ? (
+          <View style={[styles.box, { borderLeftWidth: 3, borderLeftColor: accent, gap: 3 }]} wrap={false}>
+            <Text style={[styles.bold, { color }]}>RÉCAPITULATIF ANNUEL</Text>
+            {card.annual.periods.map((p) => (
+              <Text key={p.name}>
+                Moyenne générale {pdfText(p.name)} : {p.average === null ? "—" : `${pdfNumber(p.average, dec)}/20`}
+              </Text>
+            ))}
+            <Text style={{ marginTop: 3 }}>
+              <Text style={styles.bold}>Moyenne générale annuelle : {card.annual.average === null ? "—" : `${pdfNumber(card.annual.average, dec)}/20`}</Text>
+              {card.annual.formula ? <Text style={styles.small}>  ({pdfText(card.annual.formula.replaceAll(".", ","))})</Text> : null}
+            </Text>
+            {card.annual.complete ? null : <Text style={styles.small}>Année incomplète : moyenne calculée sur les périodes disponibles.</Text>}
+            {card.annual.decision ? (
+              <Text>
+                <Text style={styles.bold}>Décision : </Text>
+                {pdfText(card.annual.decision)}
+                {card.annual.decision_source === "rules" ? " (proposition)" : ""}
+              </Text>
+            ) : null}
           </View>
         ) : null}
       </View>

@@ -95,7 +95,8 @@ describe("Bulletin configurable", () => {
       assert.ok(near(maths.average, expected), `${maths.average} ≈ ${expected}`);
       assert.ok(near(maths.columns.interro1, interro), `${maths.columns.interro1} ≈ ${interro}`);
       assert.ok(typeof maths.mention === "string");
-      assert.ok(kofi.data.proposed_decision);
+      assert.equal(kofi.data.proposed_decision, null, "1er trimestre : aucune décision de fin d'année");
+      assert.equal(kofi.data.annual, null, "récapitulatif annuel réservé au dernier bulletin");
     });
   });
 

@@ -1,7 +1,7 @@
 // NEOSCOOL — Calcul paramétrable des bulletins : réglages (mode par type d'évaluation,
 // groupes, décimales, arrondi, exemple chiffré), enregistrement, recalcul et détail
 // du calcul dans l'aperçu du bulletin. La configuration initiale est restaurée.
-import { mkdirSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { chromium } from "playwright-core";
 import pg from "pg";
 
@@ -61,7 +61,44 @@ try {
   check(/× 2/.test(text), "pondération des devoirs visible dans la formule");
   const average = await page.getByText(/Moyenne générale :/).innerText();
   check(/\d+,\d \/ 20/.test(average), `moyenne générale à une décimale (${average.trim()})`);
+  const headers = (await page.locator("table thead th").allInnerTexts()).map((t) => t.trim());
+  const at = (label) => headers.findIndex((h) => h.toUpperCase() === label.toUpperCase());
+  const order = ["INT 1", "MOYEN INTERRO", "DEV 1", "MOY.", "COEF.", "Points", "Moy. cl.", "Min / Max", "Enseignant", "Appréciation"].map(at);
+  check(order.every((i, k) => i > 0 && (k === 0 || i > order[k - 1])), `colonnes du bulletin dans l'ordre (${headers.join(" | ")})`);
   await page.screenshot({ path: `${out}/02-apercu-detail.png`, fullPage: true });
+
+  console.log("\n=== 3 bis. PDF du bulletin ===");
+  const [rc] = (
+    await db.query(
+      `select rc.id from report_cards rc join academic_periods p on p.id = rc.academic_period_id
+       join academic_years y on y.id = p.academic_year_id
+       where rc.organization_id = $1 and y.is_current and p.sequence = 1 order by rc.average desc nulls last limit 1`,
+      [ORG],
+    )
+  ).rows;
+  const pdf = await page.request.get(`${base}/api/documents/bulletins/${rc.id}`);
+  const body = await pdf.body();
+  check(pdf.status() === 200 && body.subarray(0, 5).toString() === "%PDF-", "PDF du bulletin généré");
+  writeFileSync(`${out}/bulletin.pdf`, body);
+
+  console.log("\n=== 4. Récapitulatif annuel : seulement sur le dernier trimestre ===");
+  const periods = (
+    await db.query(
+      "select p.id, p.sequence from academic_periods p join academic_years y on y.id = p.academic_year_id where p.organization_id = $1 and y.is_current order by p.sequence",
+      [ORG],
+    )
+  ).rows;
+  await page.goto(`${base}/bulletins/apercu?periode=${periods[0].id}`);
+  await page.getByText(/Moyenne générale :/).waitFor({ timeout: 15000 });
+  check((await page.getByTestId("recap-annuel").count()) === 0, "1er trimestre : pas de récapitulatif annuel ni de décision");
+  await page.goto(`${base}/bulletins/apercu?periode=${periods.at(-1).id}`);
+  const recap = page.getByTestId("recap-annuel");
+  await recap.waitFor({ timeout: 15000 });
+  const recapText = await recap.innerText();
+  check(/RÉCAPITULATIF ANNUEL/.test(recapText) && /1er trimestre/.test(recapText) && /3e trimestre/.test(recapText), "dernier trimestre : moyennes T1, T2, T3 affichées");
+  check(/Moyenne générale annuelle/.test(recapText), "dernier trimestre : moyenne générale annuelle affichée");
+  check(/Année incomplète/.test(recapText), "trimestres sans notes signalés (année incomplète)");
+  await page.screenshot({ path: `${out}/03-recapitulatif-annuel.png`, fullPage: true });
 } finally {
   await db.query("update report_card_settings set config = $2 where organization_id = $1", [ORG, initial]);
   await browser.close();

@@ -10,7 +10,7 @@ import { RULE_STATUS, type RuleSetRow } from "@/features/academic-rules/types";
 
 function summary(r: RuleSetRow) {
   const a = r.rules.annual;
-  const calc = a.mode === "formula" ? `Formule ${a.formula}` : `Pondérations ${a.weights.join(" / ")}`;
+  const calc = a.mode === "formula" ? `Formule ${a.formula}` : `Trimestres ${a.weights.join(" / ")} · Semestres ${(a.semester_weights ?? [1, 2]).join(" / ")}`;
   return `${calc} · ${r.rules.decisions.length} décision(s)`;
 }
 

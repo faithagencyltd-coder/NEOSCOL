@@ -15,6 +15,7 @@ import type {
   ReportCardSnapshot,
   ReportColumn,
   ReportSubjectRow,
+  AnnualRecap,
   StudentCardSnapshot,
   TextDocumentKind,
   TranscriptSnapshot,
@@ -103,10 +104,33 @@ function subjectTrace(detail: unknown): Pick<ReportSubjectRow, "formula" | "note
   return { formula: typeof d.formula === "string" ? d.formula : null, notes };
 }
 
+function annualRecap(raw: unknown): AnnualRecap | null {
+  if (!raw || typeof raw !== "object") return null;
+  const a = raw as Record<string, unknown>;
+  return {
+    system: a.system === "semester" ? "semester" : "trimester",
+    periods: Array.isArray(a.periods)
+      ? (a.periods as Record<string, unknown>[]).map((p) => ({ name: String(p.name ?? ""), average: num(p.average) }))
+      : [],
+    average: num(a.average),
+    formula: typeof a.formula === "string" ? a.formula : null,
+    complete: a.complete !== false,
+    mention: typeof a.mention === "string" ? a.mention : null,
+    decision: typeof a.decision === "string" ? a.decision : null,
+    decision_source: a.decision_source === "council" ? "council" : "rules",
+  };
+}
+
 export function reportCardData(data: unknown) {
   const d = (data && typeof data === "object" && !Array.isArray(data) ? data : {}) as Record<string, unknown>;
   const columns: ReportColumn[] = Array.isArray(d.columns)
-    ? (d.columns as Record<string, unknown>[]).map((c) => ({ key: String(c.key), label: String(c.label), weight: Number(c.weight ?? 1) }))
+    ? (d.columns as Record<string, unknown>[]).map((c) => ({
+        key: String(c.key),
+        label: String(c.label),
+        weight: Number(c.weight ?? 1),
+        ...(c.type === "note" || c.type === "average" ? { type: c.type } : {}),
+        ...(typeof c.group === "string" ? { group: c.group } : {}),
+      }))
     : [];
   const subjects: ReportSubjectRow[] = Array.isArray(d.subjects)
     ? (d.subjects as Record<string, unknown>[]).map((s) => ({
@@ -135,6 +159,7 @@ export function reportCardData(data: unknown) {
     points_total: num(d.points_total),
     mention: typeof d.mention === "string" ? d.mention : null,
     proposed_decision: typeof d.proposed_decision === "string" ? d.proposed_decision : null,
+    annual: annualRecap(d.annual),
     attendance: attendance
       ? { absences: Number(attendance.absences ?? 0), justified: Number(attendance.justified ?? 0), lates: Number(attendance.lates ?? 0) }
       : null,

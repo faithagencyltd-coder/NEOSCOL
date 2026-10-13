@@ -14,7 +14,19 @@ const group = z.object({
   mode: z.enum(["average", "each"]),
   weight: z.coerce.number().positive({ error: "Poids positif attendu." }).max(100),
   use_coefficients: z.boolean(),
+  /** Libellé des colonnes de notes (« INT » → INT 1, INT 2…). Vide : déduit du libellé. */
+  note_label: z.string().trim().max(20).optional(),
+  /** Libellé de la colonne moyenne d'un groupe en moyenne (« MOYEN INTERRO »). */
+  average_label: z.string().trim().max(30).optional(),
 });
+
+/** Libellés effectifs des colonnes d'un groupe (même règle que le moteur en base). */
+export function groupColumnLabels(g: { label: string; note_label?: string; average_label?: string }) {
+  return {
+    note: g.note_label?.trim() || (g.label.length > 5 ? g.label.slice(0, 3) : g.label),
+    average: g.average_label?.trim() || `MOYEN ${g.label}`,
+  };
+}
 
 export const reportConfigSchema = z
   .object({
@@ -23,6 +35,7 @@ export const reportConfigSchema = z
     groups: z.array(group).max(8),
     decimals: z.coerce.number().int().min(0).max(3),
     rounding: z.enum(["half_up", "down", "up"]),
+    round_subject_first: z.boolean(),
     columns: z
       .array(
         z.object({
@@ -90,6 +103,7 @@ export const DEFAULT_REPORT_CONFIG: ReportConfig = {
   groups: DEFAULT_GROUPS,
   decimals: 2,
   rounding: "half_up",
+  round_subject_first: true,
   columns: [
     { key: "interro1", label: "INTERRO 1", kinds: ["test", "oral"], weight: 1 },
     { key: "interro2", label: "INTERRO 2", kinds: ["test", "oral"], weight: 1 },
@@ -125,7 +139,9 @@ export const DEFAULT_REPORT_CONFIG: ReportConfig = {
 
 /** Lit la configuration stockée en complétant les valeurs manquantes. */
 export function readReportConfig(raw: unknown): ReportConfig {
-  const merged = { ...DEFAULT_REPORT_CONFIG, ...(raw && typeof raw === "object" ? raw : {}) };
+  const stored = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  // Configurations enregistrées avant l'option : calcul inchangé (moyenne non arrondie).
+  const merged = { ...DEFAULT_REPORT_CONFIG, ...stored, round_subject_first: stored.round_subject_first === true || (Object.keys(stored).length === 0 && DEFAULT_REPORT_CONFIG.round_subject_first) };
   const parsed = reportConfigSchema.safeParse(merged);
   return parsed.success ? parsed.data : DEFAULT_REPORT_CONFIG;
 }

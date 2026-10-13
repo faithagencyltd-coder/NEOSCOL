@@ -4,7 +4,8 @@ export type AcademicMention = { min: number; label: string };
 export type AcademicRules = {
   grading_scale?: number;
   pass_mark?: number;
-  annual: { mode: "weights"; weights: number[] } | { mode: "formula"; formula: string };
+  /** weights : trimestres (T1, T2, T3…) ; semester_weights : années en 2 semestres (par défaut S1 × 1, S2 × 2). */
+  annual: { mode: "weights"; weights: number[]; semester_weights?: number[] } | { mode: "formula"; formula: string };
   missing_period?: "reweight" | "incomplete";
   round?: number;
   mentions?: AcademicMention[];
@@ -39,7 +40,7 @@ export type RuleSetRow = {
 export const DEFAULT_RULES: AcademicRules = {
   grading_scale: 20,
   pass_mark: 10,
-  annual: { mode: "weights", weights: [1, 1, 1] },
+  annual: { mode: "weights", weights: [1, 1, 1], semester_weights: [1, 2] },
   missing_period: "reweight",
   round: 2,
   mentions: [
