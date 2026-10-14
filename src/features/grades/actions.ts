@@ -56,6 +56,34 @@ export async function createAssessment(_: ActionResult | null, formData: FormDat
   redirect(`/notes/evaluations/${data.id}`);
 }
 
+/**
+ * Saisie simple : l'enseignant choisit une case (INT 1, DEV 2…) ; l'évaluation
+ * correspondante est retrouvée ou créée par la base (droits appliqués par la RLS,
+ * nombre de cases vérifié par la base), puis la grille de saisie s'ouvre.
+ */
+export async function openGradeSlot(formData: FormData): Promise<void> {
+  const classSubjectId = String(formData.get("class_subject_id") ?? "");
+  const periodId = String(formData.get("academic_period_id") ?? "");
+  const group = String(formData.get("group") ?? "");
+  const slot = Number(formData.get("slot"));
+  const back = (message: string) => redirect(`/notes/${classSubjectId}?periode=${periodId}&erreur=${encodeURIComponent(message)}`);
+  if (!isUuid(classSubjectId) || !isUuid(periodId) || !["interro", "devoir"].includes(group) || !Number.isInteger(slot) || slot < 1 || slot > 10) {
+    return back("Case invalide.");
+  }
+  const auth = await authorize("grades.enter", "grades.manage");
+  if (!auth.ok) return back(auth.message);
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("open_grade_slot", {
+    p_class_subject_id: classSubjectId,
+    p_period_id: periodId,
+    p_group: group,
+    p_slot: slot,
+  });
+  if (error || !data) return back(dbErrorMessage(error, "Impossible d'ouvrir cette case."));
+  revalidatePath(`/notes/${classSubjectId}`);
+  redirect(`/notes/evaluations/${data}`);
+}
+
 const gradesSchema = z
   .array(
     z.object({

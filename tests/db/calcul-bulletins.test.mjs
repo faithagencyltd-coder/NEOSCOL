@@ -91,8 +91,8 @@ describe("Règle par défaut (module scolaire)", () => {
         [
           ["interro", "average", 1],
           ["devoir", "each", 1],
-          ["compo", "each", 1],
         ],
+        "saisie simple : interrogations puis devoirs, pas de colonne COMPO",
       );
     });
   });

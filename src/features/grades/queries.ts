@@ -40,7 +40,7 @@ export async function getGradeBook(organizationId: string, classSubjectId: strin
     .select(
       `id, coefficient, teacher_id, class:classes(id, name, academic_year_id), subject:subjects(name),
        teacher:staff_members(first_name, last_name),
-       assessments(id, title, kind, assessed_on, coefficient, max_score, is_published, academic_period_id,
+       assessments(id, title, kind, assessed_on, coefficient, max_score, is_published, academic_period_id, column_key, slot,
          grades(score, is_absent, is_exempt))`,
     )
     .eq("organization_id", organizationId)

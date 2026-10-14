@@ -1430,6 +1430,7 @@ export type Database = {
           max_score: number
           organization_id: string
           published_at: string | null
+          slot: number | null
           subject_id: string
           title: string
           updated_at: string
@@ -1453,6 +1454,7 @@ export type Database = {
           max_score?: number
           organization_id: string
           published_at?: string | null
+          slot?: number | null
           subject_id?: string
           title: string
           updated_at?: string
@@ -1476,6 +1478,7 @@ export type Database = {
           max_score?: number
           organization_id?: string
           published_at?: string | null
+          slot?: number | null
           subject_id?: string
           title?: string
           updated_at?: string
@@ -14341,6 +14344,15 @@ export type Database = {
       my_tutor_space: {
         Args: never
         Returns: Json
+      }
+      open_grade_slot: {
+        Args: {
+          p_class_subject_id: string
+          p_period_id: string
+          p_group: string
+          p_slot: number
+        }
+        Returns: string
       }
       opportunities_search: {
         Args: {

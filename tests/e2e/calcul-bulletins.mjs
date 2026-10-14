@@ -1,6 +1,6 @@
-// NEOSCOOL — Calcul paramétrable des bulletins : réglages (mode par type d'évaluation,
-// groupes, décimales, arrondi, exemple chiffré), enregistrement, recalcul et détail
-// du calcul dans l'aperçu du bulletin. La configuration initiale est restaurée.
+// NEOSCOOL — Saisie simple des notes : l'école règle le nombre d'interrogations (INT)
+// et de devoirs (DEV), l'enseignant choisit INT 3 et saisit, le bulletin affiche
+// ces colonnes ; PDF et récapitulatif annuel. La configuration initiale est restaurée.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { chromium } from "playwright-core";
 import pg from "pg";
@@ -15,6 +15,7 @@ const problems = [];
 const check = (c, label) => (c ? console.log("OK", label) : (console.log("KO", label), problems.push(label)));
 const ORG = "10000000-0000-4000-a000-000000000001";
 const initial = (await db.query("select config from report_card_settings where organization_id = $1", [ORG])).rows[0].config;
+let createdSlot = null;
 
 const context = await browser.newContext({ viewport: { width: 1366, height: 900 }, locale: "fr-FR" });
 const page = await context.newPage();
@@ -27,44 +28,74 @@ try {
   await page.getByRole("button", { name: "Se connecter", exact: true }).click();
   await page.waitForURL((u) => !u.pathname.startsWith("/connexion"), { timeout: 30000 });
 
-  console.log("\n=== 1. Réglages : règle par défaut ===");
+  console.log("\n=== 1. Réglages : saisie simple (3 INT, 2 DEV) ===");
   await page.goto(`${base}/bulletins/configuration`);
-  check((await page.getByLabel("Règle de calcul de la moyenne par matière").inputValue()) === "groups", "mode « par type d'évaluation » sélectionné");
-  const groups = page.getByTestId("rc-groups");
-  check(await groups.isVisible(), "groupes d'évaluations affichés");
-  const example = await page.getByTestId("rc-formula-example").innerText();
-  check(/\(moy\. interro 12 \+ 13 \+ 15 \+ 14 \+ 16\) ÷ 5 = 14,00/.test(example), `exemple chiffré conforme (${example.split("\n").pop()})`);
+  const slotsCard = page.getByTestId("rc-slots");
+  check(await slotsCard.isVisible(), "carte « Notes de chaque matière » affichée en premier");
+  check((await page.locator("#slots-trimester-interro").inputValue()) === "3" && (await page.locator("#slots-trimester-devoir").inputValue()) === "2", "3 interrogations et 2 devoirs par trimestre");
+  const formula = () => page.getByTestId("rc-slots-formula").innerText();
+  check(/Moyenne interro = \(INT 1 \+ INT 2 \+ INT 3\) ÷ 3/.test(await formula()), "formule des interrogations en clair");
+  check(/Moyenne de la matière = \(Moyenne interro \+ DEV 1 \+ DEV 2\) ÷ 3/.test(await formula()), "formule de la matière en clair");
+  check(!(await page.getByTestId("rc-groups").isVisible().catch(() => false)), "réglages techniques (groupes) masqués");
   await page.screenshot({ path: `${out}/01-reglages.png`, fullPage: true });
 
-  console.log("\n=== 2. Poids des devoirs = 2, une décimale ===");
-  await page.getByLabel("Poids").nth(1).fill("2");
-  check(/÷ 9 = 14,22/.test(await page.getByTestId("rc-formula-example").innerText()), "exemple recalculé en direct (÷ 9 = 14,22)");
-  await page.getByLabel("Nombre de décimales").selectOption("1");
-  check(/= 14,2$/.test((await page.getByTestId("rc-formula-example").innerText()).trim()), "exemple à une décimale");
+  console.log("\n=== 2. L'école passe à 1 devoir par trimestre ===");
+  await page.locator("#slots-trimester-devoir").fill("1");
+  check(/\(Moyenne interro \+ DEV 1\) ÷ 2/.test(await formula()), "formule recalculée en direct (÷ 2)");
   await page.getByRole("button", { name: "Enregistrer la configuration" }).click();
   await page.getByText(/Configuration enregistrée/).first().waitFor({ timeout: 15000 });
   const saved = (await db.query("select config from report_card_settings where organization_id = $1", [ORG])).rows[0].config;
-  check(saved.groups[1].weight === 2 && saved.decimals === 1, "règles enregistrées en base (poids 2, 1 décimale)");
+  check(saved.slots?.trimester?.devoir === 1 && saved.slots?.trimester?.interro === 3, "réglage enregistré en base (3 INT, 1 DEV)");
 
-  console.log("\n=== 3. Bulletins recalculés et détail du calcul ===");
+  console.log("\n=== 3. Enseignant : choisir INT 3 et saisir les notes ===");
+  const [book] = (
+    await db.query(
+      `select cs.id from class_subjects cs join classes c on c.id = cs.class_id join subjects s on s.id = cs.subject_id
+       join academic_years y on y.id = c.academic_year_id where c.organization_id = $1 and y.is_current and c.name = '6e A' and s.code = 'MATH'`,
+      [ORG],
+    )
+  ).rows;
+  const teacherContext = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: "fr-FR" });
+  const teacher = await teacherContext.newPage();
+  teacher.on("pageerror", (e) => problems.push(e.message));
+  await teacher.goto(`${base}/connexion`);
+  await teacher.getByLabel("Adresse e-mail ou matricule").fill("enseignant@demo.neoscol.app");
+  await teacher.getByLabel("Mot de passe").fill("NeoScol-Demo-2026!");
+  await teacher.getByRole("button", { name: "Se connecter", exact: true }).click();
+  await teacher.waitForURL((u) => !u.pathname.startsWith("/connexion"), { timeout: 30000 });
+  await teacher.goto(`${base}/notes/${book.id}`);
+  const picker = teacher.getByTestId("slot-picker");
+  await picker.waitFor({ timeout: 15000 });
+  const pickerText = await picker.innerText();
+  check(["INT 1", "INT 2", "INT 3", "DEV 1"].every((l) => pickerText.includes(l)) && !pickerText.includes("DEV 2"), "cases INT 1, INT 2, INT 3, DEV 1 proposées (réglage de l'école)");
+  check(!(await teacher.getByRole("button", { name: "Nouvelle évaluation" }).isVisible().catch(() => false)), "plus de formulaire « Nouvelle évaluation »");
+  await teacher.screenshot({ path: `${out}/03-enseignant-cases.png`, fullPage: true });
+  await picker.getByRole("button", { name: /INT 3/ }).click();
+  await teacher.waitForURL(/\/notes\/evaluations\//, { timeout: 15000 });
+  check((await teacher.locator("h1").innerText()).trim() === "INT 3", "grille de saisie « INT 3 » ouverte");
+  await teacher.getByLabel(/^Note de /).first().fill("15");
+  await teacher.getByRole("button", { name: "Enregistrer les notes" }).click();
+  await teacher.getByText(/note\(s\) enregistrée\(s\)/).first().waitFor({ timeout: 15000 });
+  createdSlot = (
+    await db.query("select a.id, count(g.*) as n from assessments a left join grades g on g.assessment_id = a.id where a.class_subject_id = $1 and a.column_key = 'interro' and a.slot = 3 group by a.id", [book.id])
+  ).rows[0];
+  check(createdSlot && Number(createdSlot.n) >= 1, "note enregistrée dans la case INT 3");
+  await teacher.screenshot({ path: `${out}/04-enseignant-saisie.png`, fullPage: true });
+  await teacherContext.close();
+
+  console.log("\n=== 4. Bulletin : colonnes de l'école ===");
   await page.goto(`${base}/bulletins`);
   await page.getByRole("button", { name: /^(Re)?[Cc]alculer/ }).first().click();
   const dialog = page.getByRole("dialog");
   if (await dialog.isVisible().catch(() => false)) await dialog.getByRole("button", { name: "Calculer" }).click();
   await page.waitForTimeout(1500);
   await page.goto(`${base}/bulletins/apercu`);
-  const detail = page.getByTestId("calcul-detail");
-  await detail.waitFor({ timeout: 15000 });
-  await detail.locator("summary").click();
-  const text = await detail.innerText();
-  check(/÷/.test(text) && /notes retenues/.test(text), "détail du calcul affiché (formule + notes retenues)");
-  check(/× 2/.test(text), "pondération des devoirs visible dans la formule");
-  const average = await page.getByText(/Moyenne générale :/).innerText();
-  check(/\d+,\d \/ 20/.test(average), `moyenne générale à une décimale (${average.trim()})`);
+  await page.getByText(/Moyenne générale :/).waitFor({ timeout: 15000 });
   const headers = (await page.locator("table thead th").allInnerTexts()).map((t) => t.trim());
   const at = (label) => headers.findIndex((h) => h.toUpperCase() === label.toUpperCase());
-  const order = ["INT 1", "MOYEN INTERRO", "DEV 1", "MOY.", "COEF.", "Points", "Moy. cl.", "Min / Max", "Enseignant", "Appréciation"].map(at);
+  const order = ["INT 1", "INT 2", "INT 3", "MOYEN INTERRO", "DEV 1", "MOY.", "COEF.", "Points", "Moy. cl.", "Min / Max", "Enseignant", "Appréciation"].map(at);
   check(order.every((i, k) => i > 0 && (k === 0 || i > order[k - 1])), `colonnes du bulletin dans l'ordre (${headers.join(" | ")})`);
+  check(at("COMPO 1") === -1, "pas de colonne COMPO");
   await page.screenshot({ path: `${out}/02-apercu-detail.png`, fullPage: true });
 
   console.log("\n=== 3 bis. PDF du bulletin ===");
@@ -81,7 +112,7 @@ try {
   check(pdf.status() === 200 && body.subarray(0, 5).toString() === "%PDF-", "PDF du bulletin généré");
   writeFileSync(`${out}/bulletin.pdf`, body);
 
-  console.log("\n=== 4. Récapitulatif annuel : seulement sur le dernier trimestre ===");
+  console.log("\n=== 5. Récapitulatif annuel : seulement sur le dernier trimestre ===");
   const periods = (
     await db.query(
       "select p.id, p.sequence from academic_periods p join academic_years y on y.id = p.academic_year_id where p.organization_id = $1 and y.is_current order by p.sequence",
@@ -101,6 +132,7 @@ try {
   await page.screenshot({ path: `${out}/03-recapitulatif-annuel.png`, fullPage: true });
 } finally {
   await db.query("update report_card_settings set config = $2 where organization_id = $1", [ORG, initial]);
+  if (createdSlot) await db.query("delete from assessments where id = $1", [createdSlot.id]);
   await browser.close();
   await db.end();
 }

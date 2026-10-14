@@ -28,9 +28,16 @@ export function groupColumnLabels(g: { label: string; note_label?: string; avera
   };
 }
 
+const slotCounts = z.object({
+  interro: z.coerce.number().int().min(1, { error: "Au moins 1 interrogation." }).max(10, { error: "10 interrogations au plus." }),
+  devoir: z.coerce.number().int().min(0).max(10, { error: "10 devoirs au plus." }),
+});
+
 export const reportConfigSchema = z
   .object({
     title: z.string().trim().min(3).max(80),
+    /** Saisie simple : nombre d'interrogations (INT) et de devoirs (DEV) par trimestre et par semestre. */
+    slots: z.object({ trimester: slotCounts, semester: slotCounts }).optional(),
     calculation: z.enum(["groups", "assessments", "columns"]),
     groups: z.array(group).max(8),
     decimals: z.coerce.number().int().min(0).max(3),
@@ -90,15 +97,17 @@ export const reportConfigSchema = z
 
 export type ReportConfig = z.infer<typeof reportConfigSchema>;
 
-/** Règle par défaut : (moyenne des interrogations + chaque devoir + chaque composition) ÷ (1 + nombre de devoirs et compositions). */
+/** Règle par défaut : (moyenne des interrogations + chaque devoir) ÷ (1 + nombre de devoirs) ; pas de colonne COMPO. */
 export const DEFAULT_GROUPS: ReportConfig["groups"] = [
   { key: "interro", label: "INTERRO", kinds: ["test", "oral"], mode: "average", weight: 1, use_coefficients: false },
-  { key: "devoir", label: "DEVOIR", kinds: ["homework", "practical", "project"], mode: "each", weight: 1, use_coefficients: false },
-  { key: "compo", label: "COMPO", kinds: ["exam", "other"], mode: "each", weight: 1, use_coefficients: false },
+  { key: "devoir", label: "DEVOIR", kinds: ["homework", "practical", "project", "exam", "other"], mode: "each", weight: 1, use_coefficients: false },
 ];
+
+export const DEFAULT_SLOTS: NonNullable<ReportConfig["slots"]> = { trimester: { interro: 3, devoir: 2 }, semester: { interro: 3, devoir: 2 } };
 
 export const DEFAULT_REPORT_CONFIG: ReportConfig = {
   title: "BULLETIN DE NOTES",
+  slots: DEFAULT_SLOTS,
   calculation: "groups",
   groups: DEFAULT_GROUPS,
   decimals: 2,
@@ -141,7 +150,14 @@ export const DEFAULT_REPORT_CONFIG: ReportConfig = {
 export function readReportConfig(raw: unknown): ReportConfig {
   const stored = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
   // Configurations enregistrées avant l'option : calcul inchangé (moyenne non arrondie).
-  const merged = { ...DEFAULT_REPORT_CONFIG, ...stored, round_subject_first: stored.round_subject_first === true || (Object.keys(stored).length === 0 && DEFAULT_REPORT_CONFIG.round_subject_first) };
+  const empty = Object.keys(stored).length === 0;
+  const merged = {
+    ...DEFAULT_REPORT_CONFIG,
+    ...stored,
+    round_subject_first: stored.round_subject_first === true || (empty && DEFAULT_REPORT_CONFIG.round_subject_first),
+    // Saisie simple : seulement si l'établissement l'utilise (module scolaire).
+    slots: stored.slots ?? (empty ? DEFAULT_SLOTS : undefined),
+  };
   const parsed = reportConfigSchema.safeParse(merged);
   return parsed.success ? parsed.data : DEFAULT_REPORT_CONFIG;
 }

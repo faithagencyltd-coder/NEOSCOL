@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { saveReportConfig } from "@/features/report-cards/actions";
-import { BOOLEAN_OPTIONS, CALCULATION_LABELS, DEFAULT_GROUPS, groupColumnLabels, ROUNDING_LABELS, type ReportConfig } from "@/features/report-cards/config";
+import { BOOLEAN_OPTIONS, CALCULATION_LABELS, DEFAULT_GROUPS, DEFAULT_SLOTS, groupColumnLabels, ROUNDING_LABELS, type ReportConfig } from "@/features/report-cards/config";
 import { ASSESSMENT_KINDS } from "@/lib/labels";
 import { cn } from "@/lib/utils/cn";
 import { useFeedbackAction } from "@/components/motion/use-feedback-action";
@@ -45,9 +45,31 @@ function move<T>(list: T[], index: number, delta: number): T[] {
 const SAMPLE: Record<string, number[]> = { test: [12, 14, 10], homework: [13, 15, 14, 16] };
 
 /** Calcul de l'exemple (interros 12, 14, 10 ; devoirs 13, 15, 14, 16) : termes, colonnes du bulletin, moyenne. */
+/** « INT 1 + INT 2 + INT 3 » */
+const slotNames = (prefix: string, count: number) => Array.from({ length: count }, (_, i) => `${prefix} ${i + 1}`).join(" + ");
+
+const SAMPLE_INT = [12, 14, 10, 16, 11, 13, 15, 9, 17, 12];
+const SAMPLE_DEV = [13, 15, 14, 16, 12, 11, 17, 10, 15, 14];
+
 function sampleCalculation(config: ReportConfig) {
   const terms: { value: number; weight: number; label: string }[] = [];
   const columns: { key: string; label: string; value: number }[] = [];
+  if (config.slots) {
+    // Saisie simple : INT 1…n, MOYEN INTERRO, DEV 1…m (nombres du trimestre).
+    const ints = SAMPLE_INT.slice(0, config.slots.trimester.interro);
+    const devs = SAMPLE_DEV.slice(0, config.slots.trimester.devoir);
+    ints.forEach((n, i) => columns.push({ key: `interro#${i + 1}`, label: `INT ${i + 1}`, value: n }));
+    const raw = ints.reduce((a, b) => a + b, 0) / ints.length;
+    const avg = config.round_subject_first ? Number(raw.toFixed(config.decimals)) : raw;
+    columns.push({ key: "interro", label: "MOYEN INTERRO", value: avg });
+    terms.push({ value: avg, weight: 1, label: `moy. interro ${avg.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}` });
+    devs.forEach((n, i) => {
+      columns.push({ key: `devoir#${i + 1}`, label: `DEV ${i + 1}`, value: n });
+      terms.push({ value: n, weight: 1, label: String(n) });
+    });
+    const total = terms.length;
+    return { terms, columns, total, result: terms.reduce((a, t) => a + t.value, 0) / total };
+  }
   for (const g of config.groups) {
     const notes = g.kinds.flatMap((k) => SAMPLE[k] ?? []);
     const labels = groupColumnLabels(g);
@@ -72,9 +94,12 @@ function FormulaExample({ config }: { config: ReportConfig }) {
   const { terms, total, result } = sampleCalculation(config);
   if (!total || result === null) return null;
   const shown = terms.map((t) => (t.weight === 1 ? t.label : `${t.label} × ${t.weight}`)).join(" + ");
+  const intro = config.slots
+    ? `Exemple : INT ${SAMPLE_INT.slice(0, config.slots.trimester.interro).join(", ")}${config.slots.trimester.devoir ? ` · DEV ${SAMPLE_DEV.slice(0, config.slots.trimester.devoir).join(", ")}` : ""}`
+    : "Exemple : interrogations 12, 14, 10 · devoirs 13, 15, 14, 16";
   return (
     <div className="rounded-lg bg-muted/60 p-3 text-sm" data-testid="rc-formula-example">
-      <p className="font-medium">Exemple : interrogations 12, 14, 10 · devoirs 13, 15, 14, 16</p>
+      <p className="font-medium">{intro}</p>
       <p className="mt-1 font-mono text-xs">
         ({shown}) ÷ {total.toLocaleString("fr-FR")} = {result.toFixed(config.decimals).replace(".", ",")}
       </p>
@@ -91,6 +116,9 @@ export function ReportConfigEditor({ initial }: { initial: ReportConfig }) {
   const previewAverage = config.calculation === "groups" && sample.result !== null ? sample.result : 13.5;
   const [state, formAction, pending] = useFeedbackAction(saveReportConfig);
   const set = <K extends keyof ReportConfig>(key: K, value: ReportConfig[K]) => setConfig((c) => ({ ...c, [key]: value }));
+  const slots = config.slots;
+  const setSlot = (period: "trimester" | "semester", kind: "interro" | "devoir", value: number) =>
+    setConfig((c) => (c.slots ? { ...c, slots: { ...c.slots, [period]: { ...c.slots[period], [kind]: value } } } : c));
 
   const rulesEditor = (key: "mentions" | "decisions", title: string, description: string) => {
     const rules = config[key] as Rule[];
@@ -141,6 +169,64 @@ export function ReportConfigEditor({ initial }: { initial: ReportConfig }) {
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <div className="grid content-start gap-5">
+          {slots ? (
+            <Card data-testid="rc-slots">
+              <CardHeader>
+                <CardTitle>Notes de chaque matière</CardTitle>
+                <CardDescription>
+                  Combien d&apos;interrogations et de devoirs par période, pour toutes les classes et toutes les matières. Dans leur carnet de
+                  notes, les professeurs choisissent INT 1, INT 2… ou DEV 1, DEV 2… et saisissent les notes.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-4">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {(
+                    [
+                      ["trimester", "Par trimestre"],
+                      ["semester", "Par semestre"],
+                    ] as const
+                  ).map(([period, label]) => (
+                    <fieldset key={period} className="grid gap-2 rounded-xl border border-border p-3">
+                      <legend className="px-1 text-sm font-semibold">{label}</legend>
+                      {(
+                        [
+                          ["interro", "Interrogations (INT)", 1],
+                          ["devoir", "Devoirs (DEV)", 0],
+                        ] as const
+                      ).map(([kind, kindLabel, min]) => (
+                        <div key={kind} className="flex items-center justify-between gap-3">
+                          <Label htmlFor={`slots-${period}-${kind}`}>{kindLabel}</Label>
+                          <Input
+                            id={`slots-${period}-${kind}`}
+                            type="number"
+                            min={min}
+                            max={10}
+                            value={slots[period][kind]}
+                            onChange={(e) => setSlot(period, kind, Number(e.target.value))}
+                            className="h-10 w-20 text-center"
+                          />
+                        </div>
+                      ))}
+                    </fieldset>
+                  ))}
+                </div>
+                <div className="rounded-lg bg-muted/60 p-3 text-sm" data-testid="rc-slots-formula">
+                  <p>
+                    <strong>Moyenne interro</strong> = ({slotNames("INT", slots.trimester.interro)}) ÷ {slots.trimester.interro}
+                  </p>
+                  <p>
+                    <strong>Moyenne de la matière</strong> = (Moyenne interro{slots.trimester.devoir ? ` + ${slotNames("DEV", slots.trimester.devoir)}` : ""}) ÷{" "}
+                    {1 + slots.trimester.devoir}
+                  </p>
+                  <p className="mt-1 text-muted-foreground">
+                    Puis points = moyenne × coefficient, et moyenne générale = total des points ÷ total des coefficients. Une case vide n&apos;est
+                    jamais comptée comme zéro.
+                  </p>
+                </div>
+                <FormulaExample config={config} />
+              </CardContent>
+            </Card>
+          ) : null}
           <Card>
             <CardHeader>
               <CardTitle>Général</CardTitle>
@@ -150,9 +236,19 @@ export function ReportConfigEditor({ initial }: { initial: ReportConfig }) {
                 <Label htmlFor="rc-title">Titre du document</Label>
                 <Input id="rc-title" value={config.title} maxLength={80} onChange={(e) => set("title", e.target.value)} />
               </div>
+              {slots ? null : (
               <div className="grid gap-1.5 sm:col-span-2">
                 <Label htmlFor="rc-calc">Règle de calcul de la moyenne par matière</Label>
-                <Select id="rc-calc" value={config.calculation} onChange={(e) => set("calculation", e.target.value as ReportConfig["calculation"])}>
+                <Select
+                  id="rc-calc"
+                  value={config.calculation}
+                  onChange={(e) =>
+                    e.target.value === "simple"
+                      ? setConfig((c) => ({ ...c, slots: DEFAULT_SLOTS, calculation: "groups", groups: DEFAULT_GROUPS }))
+                      : set("calculation", e.target.value as ReportConfig["calculation"])
+                  }
+                >
+                  <option value="simple">Saisie simple : interrogations (INT) et devoirs (DEV)</option>
                   {(Object.keys(CALCULATION_LABELS) as ReportConfig["calculation"][]).map((key) => (
                     <option key={key} value={key}>
                       {CALCULATION_LABELS[key]}
@@ -164,6 +260,7 @@ export function ReportConfigEditor({ initial }: { initial: ReportConfig }) {
                   matière × coefficient de la matière) ÷ Σ coefficients des matières notées. Recalcul automatique à chaque note ou coefficient modifié.
                 </p>
               </div>
+              )}
               <div className="grid gap-1.5">
                 <Label htmlFor="rc-decimals">Nombre de décimales</Label>
                 <Select id="rc-decimals" value={String(config.decimals)} onChange={(e) => set("decimals", Number(e.target.value))}>
@@ -199,7 +296,31 @@ export function ReportConfigEditor({ initial }: { initial: ReportConfig }) {
             </CardContent>
           </Card>
 
-          {config.calculation === "groups" ? (
+          {slots ? (
+            <details className="rounded-xl border border-border bg-card p-4" data-testid="rc-advanced">
+              <summary className="cursor-pointer text-sm font-semibold">Réglages avancés (calcul personnalisé)</summary>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Facultatif. Pour revenir à un calcul personnalisé, choisissez une autre règle : la saisie simple INT / DEV est alors désactivée.
+              </p>
+              <div className="mt-3 grid gap-1.5">
+                <Label htmlFor="rc-calc">Règle de calcul de la moyenne par matière</Label>
+                <Select
+                  id="rc-calc"
+                  value="simple"
+                  onChange={(e) => setConfig((c) => ({ ...c, slots: undefined, calculation: e.target.value as ReportConfig["calculation"] }))}
+                >
+                  <option value="simple">Saisie simple : interrogations (INT) et devoirs (DEV)</option>
+                  {(Object.keys(CALCULATION_LABELS) as ReportConfig["calculation"][]).map((key) => (
+                    <option key={key} value={key}>
+                      {CALCULATION_LABELS[key]}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            </details>
+          ) : null}
+
+          {!slots && config.calculation === "groups" ? (
             <Card data-testid="rc-groups">
               <CardHeader>
                 <CardTitle>Types d&apos;évaluation pris en compte</CardTitle>
@@ -340,7 +461,7 @@ export function ReportConfigEditor({ initial }: { initial: ReportConfig }) {
             </Card>
           ) : null}
 
-          {config.calculation !== "groups" ? (
+          {!slots && config.calculation !== "groups" ? (
           <Card>
             <CardHeader>
               <CardTitle>Colonnes d&apos;évaluation</CardTitle>

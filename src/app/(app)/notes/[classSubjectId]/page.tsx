@@ -12,14 +12,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { getPeriods } from "@/features/academic/queries";
 import { canEditGradeBook } from "@/features/grades/access";
-import { createAssessment } from "@/features/grades/actions";
+import { createAssessment, openGradeSlot } from "@/features/grades/actions";
 import { getGradeBook, gradeStats } from "@/features/grades/queries";
 import { todayIn } from "@/lib/dates";
 import { requireOrganization } from "@/lib/auth/guards";
 import { canAny } from "@/lib/auth/session";
 import { isHigherOrg } from "@/features/university/config";
 import { assessmentKindLabel, assessmentKinds, options } from "@/lib/labels";
-import { getReportColumns } from "@/features/report-cards/queries";
+import { readReportConfig } from "@/features/report-cards/config";
+import { getReportCardConfig, getReportColumns } from "@/features/report-cards/queries";
+import { Alert } from "@/components/ui/alert";
 import { formatDate } from "@/lib/utils/format";
 import { isUuid, param } from "@/lib/utils/search-params";
 
@@ -36,9 +38,15 @@ export default async function GradeBookPage({ params, searchParams }: PageProps<
   const book = await getGradeBook(organizationId, classSubjectId);
   if (!book || !book.class) notFound();
 
-  const [periods, columns] = await Promise.all([getPeriods(organizationId, book.class.academic_year_id), getReportColumns(organizationId)]);
+  const [periods, columns, rawConfig] = await Promise.all([
+    getPeriods(organizationId, book.class.academic_year_id),
+    getReportColumns(organizationId),
+    getReportCardConfig(organizationId),
+  ]);
   const today = todayIn(context.organization.timezone);
-  const requested = param(await searchParams, "periode");
+  const query = await searchParams;
+  const requested = param(query, "periode");
+  const slotError = param(query, "erreur");
   const current =
     periods.find((p) => p.id === requested) ??
     periods.find((p) => p.starts_on <= today && p.ends_on >= today) ??
@@ -49,6 +57,15 @@ export default async function GradeBookPage({ params, searchParams }: PageProps<
     .sort((a, b) => (a.assessed_on < b.assessed_on ? 1 : -1));
   const title = `${book.subject?.name ?? "Matière"} · ${book.class.name}`;
   const higher = isHigherOrg(context.organization.type);
+  // Saisie simple (module scolaire) : cases INT 1…n et DEV 1…m fixées par l'école.
+  const slots = higher ? undefined : readReportConfig(rawConfig).slots;
+  const system = periods.length > 0 && periods.every((p) => p.type === "semester") ? "semester" : "trimester";
+  const slotCases = slots
+    ? [
+        ...Array.from({ length: slots[system].interro }, (_, i) => ({ group: "interro", slot: i + 1, label: `INT ${i + 1}` })),
+        ...Array.from({ length: slots[system].devoir }, (_, i) => ({ group: "devoir", slot: i + 1, label: `DEV ${i + 1}` })),
+      ]
+    : [];
 
   return (
     <div className="grid gap-5">
@@ -76,7 +93,7 @@ export default async function GradeBookPage({ params, searchParams }: PageProps<
             <a href={`/api/notes/carnets/${book.id}/export?format=csv`}>CSV</a>
           </Button>
         </div>
-        {canEdit && current && !current.is_locked ? (
+        {canEdit && current && !current.is_locked && !slots ? (
           <QuickFormDialog
             title={`Nouvelle évaluation — ${current.name}`}
             triggerLabel="Nouvelle évaluation"
@@ -124,6 +141,60 @@ export default async function GradeBookPage({ params, searchParams }: PageProps<
               count: book.assessments.filter((a) => a.academic_period_id === p.id).length,
             }))}
           />
+          {slotError ? <Alert tone="danger">{slotError}</Alert> : null}
+          {slots && current ? (
+            <Card data-testid="slot-picker">
+              <CardContent className="grid gap-3 pt-5">
+                <div className="grid gap-0.5">
+                  <h2 className="text-base font-semibold">Saisir des notes — {current.name}</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {canEdit && !current.is_locked
+                      ? "Choisissez l'interrogation ou le devoir, puis remplissez les notes des élèves."
+                      : "Notes saisies par case. Cliquez pour consulter."}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {slotCases.map((c) => {
+                    const existing = book.assessments.find(
+                      (a) => a.academic_period_id === current.id && a.column_key === c.group && a.slot === c.slot,
+                    );
+                    const filled = existing ? existing.grades.filter((g) => g.score !== null || g.is_exempt || g.is_absent).length : 0;
+                    const status = existing ? `${filled} note${filled > 1 ? "s" : ""}` : "à saisir";
+                    if (existing && !(canEdit && !current.is_locked)) {
+                      return (
+                        <Button key={c.label} asChild variant="secondary" className="h-auto min-w-24 flex-col gap-0 py-2">
+                          <Link href={`/notes/evaluations/${existing.id}`}>
+                            <span className="text-base font-semibold">{c.label}</span>
+                            <span className="text-xs font-normal text-muted-foreground">{status}</span>
+                          </Link>
+                        </Button>
+                      );
+                    }
+                    if (!(canEdit && !current.is_locked)) {
+                      return (
+                        <span key={c.label} className="grid min-w-24 place-items-center rounded-xl border border-dashed border-border px-3 py-2 text-sm text-muted-foreground">
+                          <span className="font-semibold">{c.label}</span>
+                          <span className="text-xs">aucune note</span>
+                        </span>
+                      );
+                    }
+                    return (
+                      <form key={c.label} action={openGradeSlot}>
+                        <input type="hidden" name="class_subject_id" value={book.id} />
+                        <input type="hidden" name="academic_period_id" value={current.id} />
+                        <input type="hidden" name="group" value={c.group} />
+                        <input type="hidden" name="slot" value={c.slot} />
+                        <Button type="submit" variant={existing ? "secondary" : "primary"} className="h-auto min-w-24 flex-col gap-0 py-2">
+                          <span className="text-base font-semibold">{c.label}</span>
+                          <span className={existing ? "text-xs font-normal text-muted-foreground" : "text-xs font-normal opacity-90"}>{status}</span>
+                        </Button>
+                      </form>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
           {current?.is_locked ? (
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
               <Lock className="size-4" aria-hidden /> Période verrouillée : les notes ne sont plus modifiables.
